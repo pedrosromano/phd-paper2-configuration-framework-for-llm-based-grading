@@ -405,7 +405,12 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   Jun 2026). **Install gotcha:** Homebrew *formula* `ollama` 0.30.6 ships an incomplete bottle (no
   `llama-server` GGUF runner → HTTP 500 on every generation); fixed by the official **cask `ollama-app`**
   (full runtime). Server run headless via `nohup ollama serve`.
-- ⬜ **Paid anchor choice** — Gemini 3.x Pro vs GPT-5.x vs Claude Sonnet; decide on price × clean reasoning toggle.
+- 🔧 **Paid anchor choice** — Gemini 3.x Pro vs GPT-5.x vs Claude Sonnet; decide on price × clean reasoning
+  toggle. **Rough cost per 1000 grading calls** (defaults: 1.5k in / 0.6k out off, 4k out on; EUR@0.92,
+  prices in `experiments/configs/pricing.yaml`, VERIFY): Gemini-3-Pro & GPT-5.1 ≈ **€7.3 off / €38.5 on**;
+  Claude-Sonnet-4.6 ≈ **€12.4 off / €59.3 on**. All three have a clean reasoning toggle (Gemini
+  thinking_budget=0; GPT reasoning_effort; Claude extended-thinking on/off). At k=3 on a reduced set the
+  reasoning-on anchor is the budget driver. **Decision pending user** (asked Phase 0.4, 2026-06-07).
 - ⬜ **N per condition** — stratified sample sizes, especially for expensive (reasoning × criterion) cells.
 - ⬜ **Interactions to probe** — which 2-way interactions are worth the cost vs main-effects-only.
 - ⬜ **Fine-tuning arm** — include or drop? If included, which model and QLoRA-local vs managed fine-tune.
@@ -426,6 +431,10 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   recoverable). If always joint, describe as consensus only and report no human ceiling.
 - ⬜ **EN translation quality** — auto-translation of questions/rubrics needs human validation **before** the
   master's uses it (not blocking this article).
-- ⬜ **Cost tracking** — keep the running paid-spend tally here; confirm we stay ≤ €150.
+- 🔧 **Cost tracking** — keep the running paid-spend tally here; confirm we stay ≤ €150. **Implemented
+  (Phase 0.4):** persistent ledger `data/processed/_spend.json` via `experiments/harness/cost_guard.py`
+  (pre-flight estimator refuses any arm that would breach the €150 ceiling; `record()` logs real token cost
+  per call). **Spent so far: €0.00** (no paid calls yet — keys not provisioned). Keys via env vars only,
+  never committed.
 - ⬜ **Statistical model** — paired tests for reasoning on/off; mixed-effects vs ANOVA for the factorial;
   multiple-comparison correction.

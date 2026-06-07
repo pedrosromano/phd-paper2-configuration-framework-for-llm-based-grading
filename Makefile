@@ -6,7 +6,7 @@ PYTHON := .venv/bin/python
 PIP    := .venv/bin/pip
 
 .DEFAULT_GOAL := help
-.PHONY: help install verify ingest run-local run-paid analyse figures paper paper-clean clean
+.PHONY: help install verify cost ingest run-local run-paid analyse figures paper paper-clean clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -19,6 +19,9 @@ install: ## Create .venv (Python 3.11+) and install deps from pyproject
 
 verify: ## Import-check the full dependency stack
 	$(PYTHON) -c "import pandas, pyarrow, numpy, scipy, sklearn, statsmodels, matplotlib, yaml, tenacity, tiktoken, bs4, lxml, mysql.connector, pymysql; print('all imports OK')"
+
+cost: ## Show the paid-spend ledger + remaining budget (cost guard)
+	$(PYTHON) -m experiments.harness.cost_guard status
 
 ingest: ## Phase 2 — parse datasets -> data/processed/corpus.parquet
 	$(PYTHON) -m experiments.ingest
