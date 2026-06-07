@@ -389,21 +389,22 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   to the reasoning and paid arms? Record go / adjust.
 - ⬜ **Artifact-release scope** — confirm what ships (harness, prompts, public-dataset configs/ingest) and
   whether the anonymised AI-comment-stripped PT-CS subset can be released (ethics-gated).
-- 🔧 **Local model selection** — which candidates actually run at acceptable speed on M1 Max 32 GB? Record
-  tokens/s and chosen set. **Candidate roster proposed (Phase 0.3, 2026-06-07), pending pull + benchmark:**
-  `qwen3:30b` (MoE 30B-A3B — primary D2 reasoning toggle via thinking param, one family covers on/off),
-  `qwen3:14b` (smaller dense for the reasoning arm, §7), `gemma3:27b` (second family, no native thinking),
-  `deepseek-r1:14b` (fast R1-distill reasoning arm), `qwen2.5-coder:32b` (optional code-domain specialist).
-  Exact tags/quant confirmed against what pulls in Jun 2026; "Gemma 4 ~26B" in §6.1 resolves to `gemma3:27b`
-  unless a Gemma 4 is on Ollama at pull time. **Install gotcha (2026-06-07):** the Homebrew *formula* `ollama`
-  0.30.6 ships an incomplete bottle (no `llama-server` GGUF runner → HTTP 500 on every generation); fixed by
-  switching to the official **cask `ollama-app`** (bundles the full runtime). Server run headless via
-  `nohup ollama serve`.
-  **Benchmarked so far (M1 Max 32 GB, Q4_K_M, via `python -m experiments.harness.ollama_check bench`):**
-  `qwen3:30b` (MoE 30B-A3B, ~3B active) — short 67.1 tok/s, long/reasoning **42.8 tok/s**;
-  `qwen3:14b` (dense) — short 23.5 tok/s, long/reasoning 19.6 tok/s. The 30B MoE is ~2× the dense 14B despite
-  2× params (sparse activation) — comfortable for overnight runs. Still to pull+bench: `gemma3:27b`,
-  `deepseek-r1:14b`, optional `qwen2.5-coder:32b`.
+- ✅ **Local model selection** (Phase 0.3, 2026-06-07) — roster pulled and benchmarked on M1 Max 32 GB
+  (Q4_K_M, via `python -m experiments.harness.ollama_check bench`). All run at acceptable speed. Chosen set:
+
+  | Model | Type | Params | short tok/s | long/reasoning tok/s | Role |
+  |---|---|---|---|---|---|
+  | `qwen3:30b` | MoE (≈3B active) | 30.5B | 67.1 | **42.8** | primary D2 reasoning toggle (thinking on/off, one family) |
+  | `deepseek-r1:14b` | dense (R1-distill) | 14.8B | 23.6 | 18.3 | fast reasoning arm |
+  | `qwen3:14b` | dense | 14.8B | 23.5 | 19.6 | smaller reasoning arm (§7) |
+  | `gemma3:27b` | dense | 27.4B | 17.1 | **9.6** | second family (no native thinking); slowest — heavy for long outputs |
+
+  The 30B MoE is ~2× the dense 14B despite 2× params (sparse activation) — best workhorse; `gemma3:27b` is the
+  cost ceiling for long reasoning outputs. `qwen2.5-coder:32b` (optional code specialist, §6.1) **deferred** to
+  the Phase 4 code arm — pull+bench then. "Gemma 4 ~26B" in §6.1 resolves to `gemma3:27b` (no Gemma 4 on Ollama
+  Jun 2026). **Install gotcha:** Homebrew *formula* `ollama` 0.30.6 ships an incomplete bottle (no
+  `llama-server` GGUF runner → HTTP 500 on every generation); fixed by the official **cask `ollama-app`**
+  (full runtime). Server run headless via `nohup ollama serve`.
 - ⬜ **Paid anchor choice** — Gemini 3.x Pro vs GPT-5.x vs Claude Sonnet; decide on price × clean reasoning toggle.
 - ⬜ **N per condition** — stratified sample sizes, especially for expensive (reasoning × criterion) cells.
 - ⬜ **Interactions to probe** — which 2-way interactions are worth the cost vs main-effects-only.
