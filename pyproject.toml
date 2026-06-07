@@ -1,0 +1,50 @@
+[project]
+name = "llm-grading-config-framework"
+version = "0.0.1"
+description = "A configuration framework for LLM-based grading in Computer Science (PhD Article 2)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Pedro Romano" }]
+
+# Dependencies per CLAUDE.md §4. Lower bounds only; resolve/lock in Phase 0.2.
+dependencies = [
+    # data wrangling
+    "pandas>=2.2",
+    "pyarrow>=16.0",
+    "numpy>=1.26",
+    # stats & metrics
+    "scipy>=1.13",
+    "scikit-learn>=1.5",
+    "statsmodels>=0.14",
+    # plotting
+    "matplotlib>=3.9",
+    # config & robustness
+    "pyyaml>=6.0",
+    "tenacity>=8.3",
+    # tokenisation / providers (provider SDKs added per-arm in Phase 0.4 / 3.x)
+    "tiktoken>=0.7",
+    # PT-CS MySQL export ingest
+    "mysql-connector-python>=9.0",
+    "pymysql>=1.1",
+    # HTML clean + SemEval XML
+    "beautifulsoup4>=4.12",
+    "lxml>=5.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "ruff>=0.5",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["experiments"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"

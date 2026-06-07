@@ -1,0 +1,56 @@
+# ---------------------------------------------------------------------------
+# Data: raw is sensitive/large (never commit); processed is a build artifact.
+# ---------------------------------------------------------------------------
+/data/raw/
+/data/processed/
+# keep the empty-folder placeholders so the tree survives a clone
+!/data/raw/
+!/data/raw/*/
+!/data/raw/**/.gitkeep
+!/data/processed/
+!/data/processed/**/.gitkeep
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.env
+.python-version
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---------------------------------------------------------------------------
+# LaTeX build artifacts (CLAUDE.md §9) — sources are *.tex / *.bib only
+# ---------------------------------------------------------------------------
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.synctex*
+*.pdf
+# but DO keep generated figures (they are the article's real figures)
+!/article/figures/*.pdf
+
+# ---------------------------------------------------------------------------
+# OS / editor cruft
+# ---------------------------------------------------------------------------
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Article 1 is a separate git repo embedded for reference; do not track its internals
+/article/related/slr_source/phd-paper1-automated-essay-grading-in-education-slr/
