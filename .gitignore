@@ -1,13 +1,14 @@
 # ---------------------------------------------------------------------------
 # Data: raw is sensitive/large (never commit); processed is a build artifact.
 # ---------------------------------------------------------------------------
-/data/raw/
-/data/processed/
-# keep the empty-folder placeholders so the tree survives a clone
-!/data/raw/
-!/data/raw/*/
+# Ignore ALL contents, but keep the directory tree + .gitkeep placeholders so the
+# layout survives a clone. (Trailing-slash negation re-includes dirs so git can
+# descend into them; the .gitkeep negation re-includes only the placeholder files.)
+/data/raw/**
+!/data/raw/**/
 !/data/raw/**/.gitkeep
-!/data/processed/
+/data/processed/**
+!/data/processed/**/
 !/data/processed/**/.gitkeep
 
 # ---------------------------------------------------------------------------
