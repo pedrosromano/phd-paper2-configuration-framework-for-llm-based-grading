@@ -439,7 +439,9 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   (Phase 0.4):** persistent ledger `data/processed/_spend.json` via `experiments/harness/cost_guard.py`
   (pre-flight estimator refuses any arm that would breach the €150 ceiling; `record()` logs real token cost
   per call). **GPT-5.1 anchor smoke test PASSED** (2026-06-07): replied "pong", 14+10 tok, €0.000108 charged
-  (reasoning_effort=none accepted). **Spent so far: €0.0001** of €150. DeepSeek smoke still pending (no key
-  yet). Keys via env vars / gitignored `.env` (loaded by `experiments/harness/env.py`), never committed.
+  (reasoning_effort=none accepted). **Spent so far: €0.0001** of €150. **DeepSeek**: key added and
+  authenticates, but the account returned HTTP 402 *Insufficient Balance* — needs top-up before any DeepSeek
+  arm can run (harness handled it cleanly, no charge recorded). Keys via env vars / gitignored `.env`
+  (loaded by `experiments/harness/env.py`), never committed.
 - ⬜ **Statistical model** — paired tests for reasoning on/off; mixed-effects vs ANOVA for the factorial;
   multiple-comparison correction.
