@@ -53,7 +53,8 @@ models:
     # off (behaves as a non-reasoning model) — NOT the same as the old GPT-5 "minimal".
     # The config schema (Phase 3.1) must use exactly this mapping for a clean on/off.
     reasoning_param: reasoning_effort
-    reasoning_values: { off: none, on: high }   # also available: low, medium
+    # NB: quote the keys — bare off/on are YAML 1.1 booleans (-> False/True).
+    reasoning_values: { "off": "none", "on": "high" }   # also available: low, medium
     note: Verify GPT-5.1 tier + price before any paid run; off=none, on=high.
 
   # --- Anchor candidates NOT chosen (kept for pricing reference / DO NOT reselect blindly) ---
