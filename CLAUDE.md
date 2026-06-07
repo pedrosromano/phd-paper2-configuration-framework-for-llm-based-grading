@@ -389,8 +389,14 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   to the reasoning and paid arms? Record go / adjust.
 - ⬜ **Artifact-release scope** — confirm what ships (harness, prompts, public-dataset configs/ingest) and
   whether the anonymised AI-comment-stripped PT-CS subset can be released (ethics-gated).
-- ⬜ **Local model selection** — which candidates actually run at acceptable speed on M1 Max 32 GB? Record
-  tokens/s and chosen set.
+- 🔧 **Local model selection** — which candidates actually run at acceptable speed on M1 Max 32 GB? Record
+  tokens/s and chosen set. **Candidate roster proposed (Phase 0.3, 2026-06-07), pending pull + benchmark:**
+  `qwen3:30b` (MoE 30B-A3B — primary D2 reasoning toggle via thinking param, one family covers on/off),
+  `qwen3:14b` (smaller dense for the reasoning arm, §7), `gemma3:27b` (second family, no native thinking),
+  `deepseek-r1:14b` (fast R1-distill reasoning arm), `qwen2.5-coder:32b` (optional code-domain specialist).
+  Exact tags/quant to be confirmed against what actually pulls in Jun 2026; tokens/s (short + long prompt)
+  to be recorded here via `python -m experiments.harness.ollama_check bench --report`. Note: "Gemma 4 ~26B"
+  in §6.1 resolves to `gemma3:27b` unless a Gemma 4 is on Ollama at pull time.
 - ⬜ **Paid anchor choice** — Gemini 3.x Pro vs GPT-5.x vs Claude Sonnet; decide on price × clean reasoning toggle.
 - ⬜ **N per condition** — stratified sample sizes, especially for expensive (reasoning × criterion) cells.
 - ⬜ **Interactions to probe** — which 2-way interactions are worth the cost vs main-effects-only.
