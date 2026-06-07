@@ -438,7 +438,8 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - 🔧 **Cost tracking** — keep the running paid-spend tally here; confirm we stay ≤ €150. **Implemented
   (Phase 0.4):** persistent ledger `data/processed/_spend.json` via `experiments/harness/cost_guard.py`
   (pre-flight estimator refuses any arm that would breach the €150 ceiling; `record()` logs real token cost
-  per call). **Spent so far: €0.00** (no paid calls yet — keys not provisioned). Keys via env vars only,
-  never committed.
+  per call). **GPT-5.1 anchor smoke test PASSED** (2026-06-07): replied "pong", 14+10 tok, €0.000108 charged
+  (reasoning_effort=none accepted). **Spent so far: €0.0001** of €150. DeepSeek smoke still pending (no key
+  yet). Keys via env vars / gitignored `.env` (loaded by `experiments/harness/env.py`), never committed.
 - ⬜ **Statistical model** — paired tests for reasoning on/off; mixed-effects vs ANOVA for the factorial;
   multiple-comparison correction.

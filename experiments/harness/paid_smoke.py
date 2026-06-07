@@ -23,17 +23,28 @@ import urllib.error
 import urllib.request
 
 from experiments.harness.cost_guard import CostGuard, load_pricing
+from experiments.harness.env import load_env
 
 SMOKE_PROMPT = "Reply with exactly the word: pong."
 
 
-def _openai_compatible_call(base_url: str, api_key: str, model: str) -> dict:
-    payload = {
+def _openai_compatible_call(cfg: dict, api_key: str, model: str) -> dict:
+    payload: dict = {
         "model": model,
         "messages": [{"role": "user", "content": SMOKE_PROMPT}],
-        "max_tokens": 16,
-        "temperature": 0.0,
     }
+    # GPT-5.x reasoning models: new token param, no custom temperature, and an explicit
+    # reasoning_effort. DeepSeek (and older OpenAI) take the classic params.
+    if cfg.get("provider") == "openai":
+        payload["max_completion_tokens"] = 256  # room for any reasoning tokens
+        rp = cfg.get("reasoning_param")
+        rv = cfg.get("reasoning_values", {})
+        if rp and "off" in rv:
+            payload[rp] = rv["off"]  # cheapest: reasoning OFF for the smoke
+    else:
+        payload["max_tokens"] = 16
+        payload["temperature"] = 0.0
+    base_url = cfg["base_url"]
     req = urllib.request.Request(
         f"{base_url.rstrip('/')}/chat/completions",
         data=json.dumps(payload).encode("utf-8"),
@@ -47,6 +58,7 @@ def _openai_compatible_call(base_url: str, api_key: str, model: str) -> dict:
 
 
 def smoke(model: str) -> int:
+    load_env()  # pull keys from .env if not already in the environment
     pricing = load_pricing()
     cfg = pricing.get("models", {}).get(model)
     if cfg is None:
@@ -70,7 +82,7 @@ def smoke(model: str) -> int:
 
     print(f"Smoke-testing {model} via {cfg['base_url']} ...")
     try:
-        resp = _openai_compatible_call(cfg["base_url"], api_key, model)
+        resp = _openai_compatible_call(cfg, api_key, model)
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", "replace")[:300]
         print(f"[fail] HTTP {e.code} {e.reason}: {body}")
