@@ -405,12 +405,16 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   Jun 2026). **Install gotcha:** Homebrew *formula* `ollama` 0.30.6 ships an incomplete bottle (no
   `llama-server` GGUF runner → HTTP 500 on every generation); fixed by the official **cask `ollama-app`**
   (full runtime). Server run headless via `nohup ollama serve`.
-- 🔧 **Paid anchor choice** — Gemini 3.x Pro vs GPT-5.x vs Claude Sonnet; decide on price × clean reasoning
-  toggle. **Rough cost per 1000 grading calls** (defaults: 1.5k in / 0.6k out off, 4k out on; EUR@0.92,
-  prices in `experiments/configs/pricing.yaml`, VERIFY): Gemini-3-Pro & GPT-5.1 ≈ **€7.3 off / €38.5 on**;
-  Claude-Sonnet-4.6 ≈ **€12.4 off / €59.3 on**. All three have a clean reasoning toggle (Gemini
-  thinking_budget=0; GPT reasoning_effort; Claude extended-thinking on/off). At k=3 on a reduced set the
-  reasoning-on anchor is the budget driver. **Decision pending user** (asked Phase 0.4, 2026-06-07).
+- ✅ **Paid anchor choice** (Phase 0.4, 2026-06-07) — **GPT-5.1**. Chosen over Gemini 3 Pro / Claude Sonnet
+  4.6 because it is the cheapest tier AND the only candidate with a genuinely **binary** reasoning toggle,
+  which RQ1's clean reasoning-off condition requires. **D2 mapping (record in the Phase 3.1 config schema):**
+  `reasoning_param: reasoning_effort`; **off → `none`** (a true off — behaves as a non-reasoning model; NOT
+  the old GPT-5 "minimal", which is different and does not apply here), **on → `high`** (`low`/`medium` also
+  exist). **Why not the others:** *Gemini 3 Pro* cannot truly disable reasoning — `thinking_level` minimum is
+  `low` (still reasons) and `thinking_budget=0` only disables thinking on Gemini 2.5 Flash/Flash-Lite, not
+  3 Pro → unfit for a clean reasoning-off (do not reselect). *Claude Sonnet 4.6* ~1.7× pricier. **Cost per
+  1000 grading calls** (defaults 1.5k in / 0.6k out off, 4k out on; EUR@0.92, prices in `pricing.yaml`,
+  VERIFY): ≈ **€7.3 off / €38.5 on**. Key via `OPENAI_API_KEY` (env only); smoke test pending key.
 - ⬜ **N per condition** — stratified sample sizes, especially for expensive (reasoning × criterion) cells.
 - ⬜ **Interactions to probe** — which 2-way interactions are worth the cost vs main-effects-only.
 - ⬜ **Fine-tuning arm** — include or drop? If included, which model and QLoRA-local vs managed fine-tune.

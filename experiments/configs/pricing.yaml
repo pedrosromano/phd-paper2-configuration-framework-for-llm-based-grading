@@ -38,26 +38,37 @@ models:
     reasoning: true
     note: China-hosted; anonymised data only.
 
-  # --- Paid frontier anchor candidates (pick exactly ONE — §11 / CLAUDE.md §6.1) ---
-  # All three offer a clean reasoning on/off toggle; prices drive the choice.
-  gemini-3-pro:                  # thinking_budget toggle (0 = off)
-    input_per_1m_usd: 1.25
-    output_per_1m_usd: 10.0
-    provider: google
-    api: gemini
-    base_url: https://generativelanguage.googleapis.com
-    env_key: GEMINI_API_KEY
-    reasoning: toggle
-    note: Anchor candidate. Verify Gemini 3.x Pro pricing + reasoning toggle param.
-  gpt-5.1:                       # reasoning_effort: minimal|low|medium|high
+  # --- Paid frontier anchor: GPT-5.1 (CHOSEN, Phase 0.4, 2026-06-07) ---
+  # Chosen over Gemini 3 Pro / Claude Sonnet on price + a genuinely BINARY reasoning
+  # toggle, which RQ1's clean reasoning-off condition requires.
+  gpt-5.1:
     input_per_1m_usd: 1.25
     output_per_1m_usd: 10.0
     provider: openai
     api: openai_compatible
     base_url: https://api.openai.com/v1
     env_key: OPENAI_API_KEY
-    reasoning: toggle
-    note: Anchor candidate. Verify GPT-5.x tier + price.
+    is_anchor: true
+    # The D2 reasoning factor maps to reasoning_effort on this model. "none" is a TRUE
+    # off (behaves as a non-reasoning model) — NOT the same as the old GPT-5 "minimal".
+    # The config schema (Phase 3.1) must use exactly this mapping for a clean on/off.
+    reasoning_param: reasoning_effort
+    reasoning_values: { off: none, on: high }   # also available: low, medium
+    note: Verify GPT-5.1 tier + price before any paid run; off=none, on=high.
+
+  # --- Anchor candidates NOT chosen (kept for pricing reference / DO NOT reselect blindly) ---
+  gemini-3-pro:
+    input_per_1m_usd: 1.25
+    output_per_1m_usd: 10.0
+    provider: google
+    api: gemini
+    base_url: https://generativelanguage.googleapis.com
+    env_key: GEMINI_API_KEY
+    is_anchor: false
+    # REJECTED as anchor: cannot truly disable reasoning. thinking_level minimum is
+    # "low" (still reasons); thinking_budget=0 only disables thinking on Gemini 2.5
+    # Flash/Flash-Lite, not 3 Pro. No clean reasoning-off -> unfit for RQ1.
+    note: Rejected anchor (no clean reasoning-off). Reference price only.
   claude-sonnet-4-6:             # extended thinking on/off
     input_per_1m_usd: 3.0
     output_per_1m_usd: 15.0
@@ -65,5 +76,5 @@ models:
     api: anthropic
     base_url: https://api.anthropic.com
     env_key: ANTHROPIC_API_KEY
-    reasoning: toggle
-    note: Anchor candidate. Verify Sonnet 4.x price; prompt-caching can cut input cost.
+    is_anchor: false
+    note: Not chosen (~1.7x pricier). Reference price only; prompt-caching can cut input.
