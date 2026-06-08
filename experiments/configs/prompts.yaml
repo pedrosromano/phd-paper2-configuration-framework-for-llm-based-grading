@@ -1,0 +1,59 @@
+# Prompt template blocks (Phase 3.2). Version-controlled; composed by the renderer
+# (experiments/harness/prompts.py) using the config's (domain, context_level, scope,
+# decomposition). $-placeholders are filled by the renderer (string.Template, so the
+# literal { } in the JSON output specs are safe). Reasoning on/off is NOT here -- it is a
+# model/API toggle, so the prompt stays identical across the D2 axis.
+
+instruction:
+  code: |
+    You are an experienced computer-science instructor grading a student's CODE submission
+    for a programming exam. Assess the LOGICAL correctness of the solution against the problem
+    requirements. Conceptual understanding and algorithmic correctness take precedence over
+    minor syntax errors. Be objective and consistent.
+  short_answer: |
+    You are an experienced instructor grading a student's SHORT ANSWER to an exam question.
+    Assess whether the answer is correct and complete with respect to what the question asks.
+    Be objective and consistent.
+
+grounding:
+  # chosen by the renderer: rubric (PT-CS/RIAYN) or reference (Mohler/SemEval)
+  rubric: |
+    Grade strictly according to the following question-specific rubric. Award and deduct marks
+    exactly as the rubric specifies; do not invent criteria.
+    RUBRIC:
+    $grounding_body
+  reference: |
+    Use the following reference answer as the standard of a fully-correct response. The student
+    answer need not match it word-for-word; judge semantic equivalence.
+    REFERENCE ANSWER:
+    $grounding_body
+  examples_header: |
+    For calibration, here are examples of previously-graded answers:
+    $examples
+
+body:
+  question_by_question: |
+    QUESTION:
+    $question
+
+    STUDENT ANSWER:
+    $answer
+
+output:
+  question_by_question__holistic: |
+    Return ONLY a single JSON object and nothing else (no markdown, no commentary):
+    {"score": <number between 0 and $max>}
+  question_by_question__criterion: |
+    Score EACH rubric criterion, then give the total. Return ONLY a single JSON object and
+    nothing else (no markdown, no commentary):
+    {"criteria": [{"criterion": "<short label>", "score": <number>}], "total": <number between 0 and $max>}
+  whole_exam__holistic: |
+    The EXAM below contains several questions, each with the student's answer. Grade EVERY
+    question. Return ONLY a single JSON object and nothing else, with one entry per question
+    (use the question_id shown for each):
+    {"answers": [{"question_id": "<id>", "score": <number>}]}
+  whole_exam__criterion: |
+    The EXAM below contains several questions, each with the student's answer and rubric. Grade
+    EVERY question criterion by criterion. Return ONLY a single JSON object and nothing else,
+    one entry per question (use the question_id shown):
+    {"answers": [{"question_id": "<id>", "criteria": [{"criterion": "<label>", "score": <number>}], "total": <number>}]}
