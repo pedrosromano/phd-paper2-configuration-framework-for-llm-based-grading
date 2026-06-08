@@ -475,15 +475,24 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   3 Pro → unfit for a clean reasoning-off (do not reselect). *Claude Sonnet 4.6* ~1.7× pricier. **Cost per
   1000 grading calls** (defaults 1.5k in / 0.6k out off, 4k out on; EUR@0.92, prices in `pricing.yaml`,
   VERIFY): ≈ **€7.3 off / €38.5 on**. Key via `OPENAI_API_KEY` (env only); smoke test pending key.
-- ⬜ **N per condition** — stratified sample sizes, especially for expensive (reasoning × criterion) cells.
+- 🔧 **N per condition** (4.1 PROPOSAL, 2026-06-09 — awaiting user confirm before any run) — in
+  `experiments/configs/matrix.yaml` `sampling:`. q-by-q items per (dataset:domain): mohler/semeval 150,
+  riayn 149 (all), ptcs:code 150, ptcs:short_answer 150; **reasoning-ON sampled to 60** (dominant output
+  cost, §7); whole-exam = 40 PT-CS submissions; conversation sub-study = 20 submissions × 2 order
+  permutations. **Estimated real (deduped) spend ≈ €3.35 DeepInfra + €6.60 OpenAI (~€10 total)** — far under
+  the two €150 ceilings, so N can be scaled up substantially for power (e.g. short-answer 150→500,
+  reasoning-ON cap 60→150) and still stay cheap. Print via `python -m experiments.run.matrix estimate`.
 - ✅ **Baseline (reference) config** (4.2, user 2026-06-08) — **Qwen3.5** (DeepInfra, reasoning off, with
   grounding, q-by-q, holistic), at k=5 across all datasets. Chosen over DeepSeek-V4-Flash as the internal
   reference because it is the RQ1 primary, Apache-2.0, neutral cross-domain, and continuous with Jayarao —
   all "better/worse than baseline" framing is relative to this. (GLM-5.1 rejected as baseline: code-leaning,
   less neutral.)
-- ⬜ **RQ6 transfer data dependency** (decide at 4.1) — RQ6 is a Phase-5 *analysis* (5.5b), not an arm, but the
-  config(s) expected to win on the public datasets MUST also be run on PT-CS so 5.5b has a like-for-like
-  counterpart. Record which config(s) get the PT-CS run when defining the 4.1 matrix.
+- ✅ **RQ6 transfer data dependency** (decided 4.1, 2026-06-09) — RQ6 is a Phase-5 *analysis* (5.5b), not an
+  arm. **Covered structurally, no separate transfer arm:** `matrix.yaml` includes **ptcs:code in baseline,
+  nonreasoning_main, reasoning_arm, context_arm AND anchor_reduced**, so EVERY candidate config (any model ×
+  {off,on} × {none,with_guidance}) already has a like-for-like PT-CS counterpart — whatever wins on the public
+  datasets, 5.5b can compare it on PT-CS. (Whole-exam/criterion/conversation are additionally PT-CS-only by
+  design.)
 - ✅ **Backend-conditional reproducibility** (2026-06-08) — recorded as a §6.4 threat + a Methods requirement:
   results are conditional on the DeepInfra/OpenAI served versions + sampling params (3.7: same-name models
   differ across backends). Per-run repro fields already logged (`runs/`); the *guidance* transfers, not the

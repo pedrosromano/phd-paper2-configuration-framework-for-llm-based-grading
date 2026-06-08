@@ -1,0 +1,123 @@
+# Pruned experimental matrix (Phase 4.1, CLAUDE.md §6/§7).
+#
+# Arms map 1:1 to the Phase 4 steps. expand_arm() crosses the list-valued axes and
+# SKIPS inapplicable cells (whole_exam / criterion = PT-CS only; domain must exist in the
+# dataset), so a single arm can name all datasets/domains and the invalid combinations
+# drop out automatically. Cells shared between arms collapse via the (config_hash,
+# run_index) cache -> the estimator reports both per-arm gross and the deduped real spend.
+#
+# Pruning levers (§7): full factorial on the cheap axes at k=5; the reasoning-ON cells are
+# SAMPLED (sampling.reasoning_on_subsample); the paid anchor runs a reduced set at k=3.
+# N-per-condition values here are PROPOSALS for §11 -- adjust before running.
+
+sampling:
+  # items sampled per (dataset:domain) for question-by-question cells (capped at availability)
+  question_by_question:
+    mohler:short_answer: 150
+    semeval:short_answer: 150
+    riayn:code: 149          # all of RIAYN (small)
+    ptcs:code: 150
+    ptcs:short_answer: 150
+  reasoning_on_subsample: 60   # reasoning-ON is the dominant output cost -> sample, don't fully cross (§7)
+  whole_exam_submissions: 40   # PT-CS submissions graded as one call each (scope arm)
+  conversation_submissions: 20 # PT-CS submissions for the conversation sub-study (4.9)
+  conversation_orders: 2       # answer-order permutations for order control (§11 open: shuffle vs fixed)
+
+# Per-call token assumptions (input, output) by domain|scope|decomposition|reasoning.
+# Seeded from the Phase 3.8 smoke + headroom; the cost guard logs real usage and reconciles.
+tokens:
+  short_answer|question_by_question|holistic|off: [200, 12]
+  short_answer|question_by_question|holistic|on:  [200, 280]
+  code|question_by_question|holistic|off:         [450, 120]
+  code|question_by_question|holistic|on:          [450, 900]
+  code|question_by_question|criterion|off:        [480, 180]
+  code|question_by_question|criterion|on:         [480, 1100]
+  code|whole_exam|holistic|off:                   [2800, 500]
+  code|whole_exam|holistic|on:                    [2800, 3000]
+
+arms:
+  - name: baseline                 # 4.2 internal reference (Qwen3.5, off, grounded, q-by-q, holistic)
+    model: qwen3.5
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 5
+
+  - name: nonreasoning_main        # 4.3 roster main effects, reasoning OFF
+    model: [qwen3.5, deepseek-v4-flash, glm-5.1]
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 5
+
+  - name: reasoning_arm            # 4.5 reasoning OFF vs ON across the roster (ON sampled)
+    model: [qwen3.5, deepseek-v4-flash, glm-5.1]
+    reasoning: [off, on]
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 5
+
+  - name: decomposition_arm        # 4.6 PT-CS holistic vs criterion-by-criterion
+    model: qwen3.5
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: [holistic, criterion]
+    dataset: ptcs
+    domain: code
+    k: 5
+
+  - name: scope_arm                # 4.7 PT-CS question-by-question vs whole-exam
+    model: qwen3.5
+    reasoning: off
+    context_level: with_guidance
+    scope: [question_by_question, whole_exam]
+    decomposition: holistic
+    dataset: ptcs
+    domain: code
+    k: 5
+
+  - name: context_arm              # 4.8 no-rubric vs with-guidance (few-shot deferred, §11)
+    model: qwen3.5
+    reasoning: off
+    context_level: [none, with_guidance]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 5
+
+  - name: conversation_substudy    # 4.9 PT-CS clean vs shared history (order-controlled)
+    model: qwen3.5
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    conversation_state: [clean, shared]
+    dataset: ptcs
+    domain: code
+    k: 3
+
+  - name: anchor_reduced           # 4.10 GPT-5.1 paid anchor, reduced set, k=3, OFF vs ON
+    model: gpt-5.1
+    reasoning: [off, on]
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 3
+
+# RQ6 transfer dependency (§11): the public-dataset winner needs a like-for-like PT-CS run
+# for 5.5b. SATISFIED structurally -- ptcs(code) is included in baseline, nonreasoning_main,
+# reasoning_arm, context_arm AND anchor_reduced, so EVERY candidate config (any model x
+# {off,on} x {none,with_guidance}) already has a PT-CS counterpart. No separate transfer arm.
