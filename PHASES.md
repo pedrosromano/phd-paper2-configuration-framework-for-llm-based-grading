@@ -182,6 +182,10 @@ main-effects at k=5 across the **DeepInfra roster**, the reduced reasoning arm, 
 reasoning×criterion cells, the context arm, the scope arm, and the reduced **paid-anchor (GPT-5.1)** set (k=3).
 **Print the estimated € per arm (DeepInfra + OpenAI, via the cost guard) and ask me to confirm** before
 running anything. Record N-per-condition decisions in §11.
+**Transfer dependency (RQ6):** RQ6 is an *analysis* step (5.5b), not an experimental arm — but it needs the
+data. Ensure the configuration you expect to be the **public-dataset winner is ALSO run on PT-CS**, so the
+transfer analysis has a like-for-like PT-CS counterpart for that config (otherwise 5.5b has nothing to
+compare). If unsure which config wins, include a small set of strong-candidate configs on PT-CS. Record in §11.
 
 **4.2** — **Establish OUR OWN baseline per dataset** (CLAUDE.md §6.3): run one sensible default config
 (e.g. **DeepSeek-V4-Flash on DeepInfra**, reasoning off, with grounding, question-by-question, holistic) across
@@ -245,6 +249,13 @@ the factorial; multiple-comparison correction. **Report effect sizes + confidenc
 p-values**; note that expensive-factor interactions are OFAT/underpowered and don't over-read single cells
 (CLAUDE.md §6.4). Document the model choice in §11.
 
+**5.5b** — **Transfer analysis (RQ6)** — *analysis only, NO new runs.* Using the data already collected in
+Phase 4, compare per-configuration **performance and ranking** between the public datasets (Mohler / SemEval /
+RIAYN) and **PT-CS**: does the configuration found optimal on the public sets **transfer** to the real
+Portuguese deployment context, and where does it diverge? This operationalises RQ6 as **generalisation** ("what
+we found holds here too"), NOT "beating a published score" (§6.3). Depends on the 4.1 transfer dependency (the
+public-winner config must have been run on PT-CS). Feeds the external-validity claim in the framework (5.6).
+
 **5.6** — **Synthesise the framework** (the actual deliverable, CLAUDE.md §1.2): from the controlled
 comparisons, build the **decision guide** — a compact table / rules mapping task characteristics (domain,
 rubric availability, budget) to a recommended configuration and its cost. This, not the raw numbers, is the
@@ -284,9 +295,11 @@ findings; do **not** rewrite it from scratch. State the **RQs (§1.2)** in the I
 around them; make the **synthesised framework (5.6) the centre of the Discussion**. Confirm framing for **TLT
 (primary)** and the **ToE** re-framing note (**if ToE, write a structured abstract** — prescribed sections).
 Stub the remaining sections (Intro, Design space, Datasets, Method, Results, Discussion incl. **external
-validity via public datasets**, Threats incl. **COI**, **ground-truth honesty** — two-teacher consensus,
-AI-seeded then human-validated, no measured human ceiling — **narrower code-domain evidence**, and the
-**model-set scope** of the guidance — Conclusion).
+validity via public datasets** and **transfer (RQ6, from 5.5b)**, Threats incl. **COI**, **ground-truth
+honesty** — two-teacher consensus, AI-seeded then human-validated, no measured human ceiling — **narrower
+code-domain evidence**, **backend-conditional reproducibility** (§6.4), and the **model-set scope** of the
+guidance — Conclusion). **Method must report the backend** (provider, served `model_id`, sampling params,
+run dates — all in `data/processed/runs/`).
 
 **7.2** — Wire in the auto-generated **tables** from `article/tables` (incl. the Phase 1.3 published-baseline
 table as external context, and the framework decision guide from 5.6).

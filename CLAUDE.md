@@ -291,6 +291,14 @@ validation**. Two distinct uses of "baseline" — keep them separate:
 - **Code-domain evidence is narrower than short-answer.** Code = PT-CS + RIAYN (~230), both Java/OOP/DSA;
   short-answer = Mohler + SemEval (larger, more varied). State code-specific conclusions more tentatively, and
   flag this as a threat to validity.
+- **Backend-conditional reproducibility (threat).** Results are conditional on the **DeepInfra-served** versions
+  of the models + their sampling defaults, NOT pure model properties. Phase 3.7 showed the "same" model differs
+  across backends (quantisation, chat template, reasoning/thinking handling, sampling/truncation → local Q4
+  π=0.60 vs DeepInfra π=1.00). Therefore: **(a) Methods must report the backend** — provider (DeepInfra/OpenAI),
+  exact served `model_id`, sampling params (temperature, max tokens, reasoning toggle), and **run dates** (all
+  already logged per-run in `data/processed/runs/`, §8); **(b) Threats must state** that someone running the
+  "same" models on another provider may not reproduce the exact numbers — the *configuration guidance* (which
+  config beats which) is the transferable claim, not the absolute scores.
 - **Statistics:** report **effect sizes + confidence intervals**, not just p-values. The design is
   full-factorial on the cheap axes but **OFAT for the expensive ones**, so interactions among expensive factors
   (e.g. reasoning × decomposition) are **not fully estimable** — with k=5 and sampled N those cells are
@@ -461,6 +469,13 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   1000 grading calls** (defaults 1.5k in / 0.6k out off, 4k out on; EUR@0.92, prices in `pricing.yaml`,
   VERIFY): ≈ **€7.3 off / €38.5 on**. Key via `OPENAI_API_KEY` (env only); smoke test pending key.
 - ⬜ **N per condition** — stratified sample sizes, especially for expensive (reasoning × criterion) cells.
+- ⬜ **RQ6 transfer data dependency** (decide at 4.1) — RQ6 is a Phase-5 *analysis* (5.5b), not an arm, but the
+  config(s) expected to win on the public datasets MUST also be run on PT-CS so 5.5b has a like-for-like
+  counterpart. Record which config(s) get the PT-CS run when defining the 4.1 matrix.
+- ✅ **Backend-conditional reproducibility** (2026-06-08) — recorded as a §6.4 threat + a Methods requirement:
+  results are conditional on the DeepInfra/OpenAI served versions + sampling params (3.7: same-name models
+  differ across backends). Per-run repro fields already logged (`runs/`); the *guidance* transfers, not the
+  absolute scores.
 - ⬜ **Interactions to probe** — which 2-way interactions are worth the cost vs main-effects-only.
 - ⬜ **Fine-tuning arm** — include or drop? If included, which model and QLoRA-local vs managed fine-tune.
 - ⬜ **QWK binning** — how to bin continuous PT-CS normalised scores into ordinal levels for QWK.
