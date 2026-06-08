@@ -29,7 +29,9 @@ yield low summative agreement~\cite{tate_can_2024}. Two design levers recur as d
 closed models with rubric grounding outperform open ones while remaining more lenient than human
 raters~\cite{sessler_canai_2025}. Second, \emph{repetition}: because single-shot scores are unstable,
 temporal-drift evidence~\cite{pack_large_2024} motivates reporting variance across runs rather than a point
-estimate. These two observations directly motivate our evaluation-guidance (RQ2) and consistency (RQ5) axes.
+estimate. Reliability is not optional here: grading errors can themselves harm learning, as false positives
+and negatives distort how students revise their work~\cite{li_am_2023}. These two observations directly
+motivate our evaluation-guidance (RQ2) and consistency (RQ5) axes.
 
 \textbf{Does reasoning help grading? An open question.}
 The headline uncertainty concerns \emph{extended reasoning}. In the general LLM-as-a-judge setting, explicit
