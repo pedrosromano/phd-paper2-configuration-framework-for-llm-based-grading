@@ -36,10 +36,20 @@ sensitive), so this tracked file is the reproducibility record (artifact stateme
 
 ## Private dataset (user-provided — pending)
 
-### PT-CS (GradeGenie MySQL export) — `data/raw/ptcs/`
-- **NOT fetched** — the author provides the MySQL export ("forneço em breve"). Parser (2.1) written
-  once it lands. PII dropped + AI comments stripped + pseudonymised at ingest (CLAUDE.md §2); ethics
-  workstream in progress (gates publication, not the pseudonymised ingest).
+### PT-CS (GradeGenie production MySQL) — connected live, READ ONLY
+- **Source:** DigitalOcean managed MySQL (`prod_gradegenie`), credentials in `.env` (gitignored) read by
+  `ptcs_db.py`. Read-only; the `utilizador` (student PII) table is **never queried**.
+- **Ingest:** `python -m experiments.ingest.ingest_ptcs` → `data/processed/corpus_ptcs.parquet` (gitignored).
+  Join `resposta_submissao  pergunta  teste_submissao`, keep open-response types only
+  (1=Teórica→short_answer, 4=Programação/Código→code; MCQ + True/False excluded). HTML cleaned (code
+  angle-brackets preserved), e-mails redacted, submissions pseudonymised (`sub_NNNN`), AI comments
+  (`criterio_correcao.comentario`) never selected.
+- **Result (2026-06-08):** **1,174 items** = 737 code + 437 short_answer; 181 submissions; 10 blank
+  answers dropped; 0 e-mail hits; `reference_answer` 100% null (no reference solution); rubric =
+  `pergunta.criterios`. Human-validation evidence: 49.3% of 775 criterion-scored responses had final
+  grade ≠ Σ partials (mean 1.43 when adjusted). Two-teacher **consensus** (no per-teacher scores).
+- **Ethics:** workstream in progress; gates publication/release, not the pseudonymised local ingest.
+  ⚠️ Production DB credentials were shared in chat — rotate after use.
 
 ## Re-fetch (all public)
 ```bash

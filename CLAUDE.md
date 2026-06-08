@@ -436,14 +436,20 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   decide how to parse per-question grades out of a whole-exam response.
 - ⬜ **Conversation-state sub-study** — order control: shuffle order vs test multiple fixed orders; subset
   size; which single config to freeze for it.
-- ⬜ **PT-CS reference** — keep "no synthetic reference" decision, or build one (confound risk)? Default: keep out.
+- ✅ **PT-CS reference** (Phase 2.1, 2026-06-08) — **kept OUT**, confirmed by data: `reference_answer` is
+  100% null for PT-CS (no reference solution in the source); grounding is the rubric (`pergunta.criterios`,
+  JSON `[{points,criteria}]`). No synthetic reference built (confound).
 - ⬜ **Context mapping** — finalise the per-dataset "context level" definitions (rubric vs reference) and
   document them so cross-dataset comparison is fair.
-- ⬜ **Human-validation evidence** — quantify, in PT-CS, the share of responses where `cotacao` ≠ Σ`nota_parcial`
-  and the mean adjustment magnitude (evidence that the two-teacher validation was substantive). Add to paper.
-- ⬜ **Consensus vs independent** — confirm grading was single joint (consensus) throughout, or whether any
-  separate per-teacher scores existed before reconciliation (if so, a partial inter-rater measure may be
-  recoverable). If always joint, describe as consensus only and report no human ceiling.
+- ✅ **Human-validation evidence** (Phase 2.1, 2026-06-08) — **substantive**: of 775 PT-CS responses with
+  per-criterion data, **49.3% have final `cotacao` ≠ Σ`nota_parcial`** (mean adjustment 0.70 overall, **1.43
+  points when adjusted**). Nearly half the final grades were moved off the AI-seeded per-criterion sum →
+  strong evidence the two-teacher validation was real, not rubber-stamping. Put this number in the paper
+  (Threats / ground-truth section).
+- ✅ **Consensus vs independent** (Phase 2.1, 2026-06-08) — **always joint/consensus**. The schema has **no
+  per-teacher score columns**: `criterio_correcao` holds a single `comentario` + `nota_parcial` per criterion,
+  and `resposta_submissao.cotacao` is the single final grade. **No separate per-teacher scores exist → no
+  inter-rater κ / human ceiling recoverable.** Describe as two-teacher consensus only (CLAUDE.md §2).
 - ⬜ **EN translation quality** — auto-translation of questions/rubrics needs human validation **before** the
   master's uses it (not blocking this article).
 - 🔧 **Cost tracking** — keep the running paid-spend tally here; confirm we stay ≤ €150. **Implemented
