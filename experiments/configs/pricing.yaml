@@ -10,7 +10,7 @@
 # Two separate ceilings (CLAUDE.md §6.1/§11): the OpenAI closed anchor, and DeepInfra
 # (the open-weight roster). Per-provider enforcement is wired at Phase 4.1.
 budget_eur_ceiling: 150.0          # OpenAI anchor (GPT-5.1)
-deepinfra_budget_eur_ceiling: null # TODO(user): set the DeepInfra spend ceiling
+deepinfra_budget_eur_ceiling: 150.0 # DeepInfra (open roster); runaway-guard, not a usage squeeze
 eur_per_usd: 0.92          # ~1 USD = 0.92 EUR (Jun 2026 approx; verify)
 
 # Default token assumptions for a single grading call, used by the pre-flight estimator
@@ -119,14 +119,6 @@ models:
     env_key: DEEPINFRA_API_KEY
     reasoning_param: enable_thinking
     reasoning_values: { "off": false, "on": true }
-    note: VERIFY id/price; GLM hybrid thinking toggle.
-  kimi-k2.6:                       # RQ4 breadth (no clean toggle -> default reasoning)
-    model_id: moonshotai/Kimi-K2.6     # TODO confirm exact id
-    input_per_1m_usd: 0.55
-    output_per_1m_usd: 1.10
-    provider: deepinfra
-    api: openai_compatible
-    base_url: https://api.deepinfra.com/v1/openai
-    env_key: DEEPINFRA_API_KEY
-    reasoning_param: null            # no clean on/off; run at default
-    note: VERIFY id/price; RQ4 breadth only, not in the within-family toggle arm.
+    # 3.4 CHECK: confirm GLM hybrid allows a CLEAN reasoning-OFF (genuinely disabled) since
+    # GLM is in the RQ1 toggle arm; if not, substitute or treat the axis with an honest caveat.
+    note: VERIFY id/price; confirm clean OFF (3.4).

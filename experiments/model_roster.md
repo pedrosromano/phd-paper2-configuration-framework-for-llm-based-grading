@@ -23,14 +23,20 @@ Guided by: (1) within-family reasoning toggle for RQ1 [priority]; (2) code/short
 |---|---|---|---|---|
 | **Qwen3.5** (mid MoE, e.g. 30B/235B) | **RQ1 primary** within-family toggle; Apache-2.0; continuity w/ Jayarao (same family); strong general+code | ✅ `enable_thinking` | DeepInfra (small variant also runs local) | ~$0.10–0.40 |
 | **DeepSeek-V4-Flash** (284B/13B) | RQ1 toggle + **cheap** SOTA + RQ4 breadth; the cost-floor workhorse | ✅ `enable_thinking` | DeepInfra | **$0.14 / $0.28** |
-| **GLM-5.1** | RQ1 toggle + **code domain** (strongest open coder 2026) | ✅ hybrid | DeepInfra | ~$0.40 / $0.60 |
-| **Kimi K2.6** | **RQ4 breadth** (4th major family) + code/agentic SOTA | ✗ (default reasoning) → not in RQ1 toggle arm | DeepInfra | ~$0.55 / $1.10 |
+| **GLM-5.1** | RQ1 toggle + **code domain** (strongest open coder 2026) | ✅ hybrid (confirm clean OFF at 3.4) | DeepInfra | ~$0.40 / $0.60 |
 | **GPT-5.1** (closed) | **Paid frontier anchor** (unchanged); closed-model reference | ✅ `reasoning_effort none/high` | OpenAI API | $1.25 / $10 |
 
 **RQ1 within-family toggle arm** = Qwen3.5, DeepSeek-V4-Flash, GLM-5.1 (each graded reasoning OFF vs
 ON) + GPT-5.1 anchor (none/high). Three open vendors + one closed → isolates reasoning from vendor
-robustly. **RQ4 model comparison** spans DeepSeek/Qwen/GLM/Kimi (open) vs GPT-5.1 (closed), with a
-cost range from $0.14/1M (V4-Flash) to $10/1M-out (GPT-5.1).
+robustly. **RQ4 model comparison** spans DeepSeek/Qwen/GLM (open) vs GPT-5.1 (closed) — four families,
+three with a clean toggle — with a cost range from $0.14/1M (V4-Flash) to $10/1M-out (GPT-5.1).
+
+**Kimi K2.6 — CUT (2026-06-08).** Considered for RQ4 breadth, but dropped on the minimal-effort
+principle: it is the priciest of the lot (~$0.55/$1.10), has **no clean reasoning toggle** (so it
+can't join the RQ1 arm, the study's focus), and RQ4 breadth is already well served by the four
+families above. Its distinctive strength is agentic/long-horizon work, not rubric-bounded
+short-answer/code grading — no grading-specific reason to keep it. Re-add only if a concrete
+grading-relevant case appears.
 
 **Optional convenience (not core):** the four models benchmarked locally in Phase 0.3
 (`qwen3:30b`, `qwen3:14b`, `gemma3:27b`, `deepseek-r1:14b`) remain available for **free local smoke
@@ -44,14 +50,18 @@ for the actual study. A small **Qwen3.5** variant can run local on 32 GB for the
 
 ## Cost / budget (two separate ceilings, like the anchor's)
 - **OpenAI anchor:** €150 ceiling (unchanged; cost guard enforces).
-- **DeepInfra (open models):** needs its own ceiling. Prices above are cheap, but **k=5 × full
-  matrix × 4 datasets** is the multiplier. The exact matrix (sample N, which cells get k=5 vs
-  reduced) is **Phase 4.1**; the per-arm € estimate + ceiling enforcement is wired then via the cost
-  guard (DeepInfra models added to `pricing.yaml`). **TODO (user):** set the DeepInfra spend ceiling
-  (proposed default below) and confirm exact DeepInfra model IDs/prices against the live model list.
+- **DeepInfra (open models): €150 ceiling** (user, 2026-06-08) — a **runaway guard** (catch bugs), not
+  a usage squeeze. The matrix estimate is ~€30–100, so €150 leaves margin over the worst case; since
+  the guard only refuses arms that *exceed* it, it never makes us spend more. Prices are cheap; the
+  multiplier is **k=5 × matrix × 4 datasets**, dominated by reasoning-ON output tokens. The exact
+  matrix (sample N, which cells get k=5 vs reduced) is **Phase 4.1**; per-arm € estimate + enforcement
+  wired then via the cost guard (DeepInfra models in `pricing.yaml`).
 
 ## To verify before Phase 4 (operational, not scientific)
-- Exact DeepInfra model IDs (`deepseek-ai/DeepSeek-V4-Flash` ✓ confirmed; Qwen3.5 / GLM-5.1 /
-  Kimi-K2.6 IDs + live prices) and the precise size variant of Qwen3.5/GLM to use.
+- **GLM-5.1 clean OFF (priority):** GLM is in the RQ1 toggle arm, so confirm its *hybrid* mode allows a
+  **genuinely disabled** reasoning-OFF (not just reduced). If not → substitute, or treat that axis with an
+  honest caveat (as we did for the anchor). Doesn't block now; smoke-test at 3.4.
+- Exact DeepInfra model IDs (`deepseek-ai/DeepSeek-V4-Flash` ✓ confirmed; Qwen3.5 / GLM-5.1 IDs + live
+  prices) and the precise size variant of Qwen3.5 / GLM to use.
 - Whether to include a small local Qwen3.5 for the cost-floor.
 - Re-benchmark is unnecessary (API), but confirm each model's reasoning-toggle param in a smoke test.

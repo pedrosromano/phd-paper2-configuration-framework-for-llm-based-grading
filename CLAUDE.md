@@ -244,10 +244,12 @@ we have an inference API (**DeepInfra**) for large models. Select by scientific 
 rationale: `experiments/model_roster.md`. This supersedes the inherited/stale roster benchmarked in Phase 0.3.
 - **RQ1 within-family reasoning toggle (priority):** **Qwen3.5** (`enable_thinking`; primary, Apache-2.0,
   continuity with Jayarao), **DeepSeek-V4-Flash** (`enable_thinking`; cheap 284B/13B SOTA), **GLM-5.1** (hybrid;
-  strongest open coder 2026). Each graded reasoning **OFF vs ON** — three open vendors isolate reasoning from vendor.
-- **RQ4 breadth:** **Kimi K2.6** (SOTA agentic/coding; no clean toggle → run at default reasoning, not in the
-  RQ1 toggle arm).
+  strongest open coder 2026 — confirm a clean OFF at 3.4). Each graded reasoning **OFF vs ON** — three open
+  vendors isolate reasoning from vendor.
 - **Paid frontier anchor (closed, exactly one):** **GPT-5.1** (`reasoning_effort` none/high; €150 ceiling).
+- **RQ4 breadth** is covered by these four families (3 open + closed), 3 with a clean toggle. **Kimi K2.6 was
+  CUT** (2026-06-08): priciest, no clean toggle, breadth already served — gold-plating vs minimal-effort. The
+  cost range $0.14/1M (V4-Flash) → $10/1M-out (GPT-5.1) gives the cost–quality axis.
 - **Infra:** most of the roster runs via **DeepInfra** (own spend ceiling, §8/§11); **local Ollama only** for
   models that fit 32 GB and we prefer them (smoke tests / cost-floor). The Phase 0.3 local models
   (`qwen3:30b`, `gemma3:27b`, `deepseek-r1:14b`, `qwen3:14b`) are **convenience only**, superseded by the above.
@@ -419,13 +421,15 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ✅ **Model roster** (2026-06-08, paradigm change — supersedes the 0.3 local-only selection below) — **32 GB
   is no longer an eligibility criterion** (Iscte-approved; DeepInfra API for large models). **Selected by
   scientific relevance** (full survey + rationale: `experiments/model_roster.md`, §6.1): **RQ1 within-family
-  toggle** = Qwen3.5 + DeepSeek-V4-Flash + GLM-5.1 (each OFF vs ON); **RQ4 breadth** = Kimi K2.6 (no clean
-  toggle); **closed anchor** = GPT-5.1. Infra per-model (mostly DeepInfra; local Ollama = convenience only).
-  Operational TODO (Phase 3.4/4.1): confirm exact DeepInfra model IDs/prices + each model's toggle param via
-  a smoke test; decide the Qwen3.5/GLM size variant.
-- 🔧 **DeepInfra spend ceiling** — open models now run on DeepInfra (user-provided key), so the cost guard
-  needs a **second ceiling** alongside the OpenAI €150. **TODO (user): set the DeepInfra budget.** Per-arm €
-  estimate + enforcement wired at Phase 4.1 (DeepInfra models + prices to be added to `pricing.yaml`).
+  toggle** = Qwen3.5 + DeepSeek-V4-Flash + GLM-5.1 (each OFF vs ON); **closed anchor** = GPT-5.1. RQ4 breadth
+  = these 4 families (3 with a clean toggle). **Kimi K2.6 CUT** (priciest, no toggle, breadth already served —
+  minimal-effort). Infra per-model (mostly DeepInfra; local Ollama = convenience only). **3.4 checks:** confirm
+  **GLM-5.1 clean reasoning-OFF** (it's in the RQ1 arm; substitute or caveat if hybrid won't disable); confirm
+  exact DeepInfra model IDs/prices + Qwen3.5/GLM size variant + each toggle param via smoke test.
+- ✅ **DeepInfra spend ceiling** (2026-06-08) — **€150** (separate from the OpenAI €150). A **runaway guard**
+  (catch bugs), not a usage squeeze: the matrix estimate is ~€30–100, so €150 leaves margin over the worst
+  case and only refuses arms that exceed it. In `pricing.yaml` as `deepinfra_budget_eur_ceiling`; per-provider
+  enforcement wired at Phase 4.1.
 - ⚠️ **Local model selection** (Phase 0.3, 2026-06-07) — **SUPERSEDED by the roster above** (kept as a record
   of local-convenience speeds). Roster pulled and benchmarked on M1 Max 32 GB (Q4_K_M). All ran at acceptable
   speed:
