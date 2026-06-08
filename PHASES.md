@@ -81,6 +81,22 @@ note on what to re-frame for **ToE** (foreground pedagogy). Write into `article/
 **Respect the ~2-page cap** (CLAUDE.md §9.1) — it is written before the results exist, so do not let it balloon
 and crowd out Results later.
 
+**1.6b** — **Auditoria de cobertura e integridade bibliográfica do Related Work (gate, antes do 1.7).**
+Antes de fechar a Fase 1, verifica e devolve-me três coisas — não assumas que "sem erros" = "tudo
+verdadeiro"; o que não conseguires confirmar, sinaliza:
+(a) **Cobertura:** cruza todos os PDFs em `article/related/library/pdfs/` (e as entradas de
+`refs_merged.csv` marcadas como relevância alta/média) com o que foi efetivamente citado no draft do
+Related Work. Devolve a **lista dos não-citados, com a razão de exclusão de cada um**, para eu fazer a
+chamada final de relevância (não decidas tu sozinho que um artigo "não importa").
+(b) **Integridade bibliográfica:** confirma que cada `\cite` no Related Work tem entrada em
+`references.bib`, que não há entradas órfãs (no `.bib` mas não citadas), e que cada entrada citada tem um
+DOI ou identificador (arXiv/DOI) resolúvel. **Sinaliza** as entradas sem identificador ou que não
+conseguiste confirmar (ex.: sem acesso à net) — em lista separada, para eu validar à mão.
+(c) **Rastreabilidade:** sinaliza qualquer referência cuja origem não consigas confirmar contra a
+`library/`, o SLR, ou uma fonte aberta — em especial nomes que possam ter vindo de planeamento e não de
+fonte real (lembra o caso "Gong"/"Walsh"). Não cites nada que caia nesta lista sem eu confirmar.
+Devolve as três listas e espera, antes do 1.7.
+
 **1.7** — **DECISION POINT — course-correction check (mandatory).** Compare what the refined state of the art
 shows against the planned direction. If anything material has changed — a sub-topic saturated since we planned,
 a new published baseline that changes what counts as a contribution, a newly released dataset or model worth
@@ -270,6 +286,14 @@ sections exceed their target rather than trimming blindly. Report what's still p
 **7.5** — **Reproducibility / data-availability**: write the statement and prepare the release bundle (harness
 code, prompt templates, config matrices, public-dataset ingest). Include the **anonymised, AI-comment-stripped
 PT-CS subset only if ethics permits** (CLAUDE.md §2 gate). State clearly what is and isn't shared and why.
+
+**7.6** — **Verificação bibliográfica final (fecho do paper).** Agora que o `references.bib` está completo
+(Related Work + métodos + datasets + discussão), repete a auditoria do 1.6b sobre o artigo **inteiro**:
+cada `\cite` tem entrada no `.bib`; sem órfãs; cada entrada tem DOI/ID resolúvel; e — crucial — os papers
+de **origem dos datasets** (Mohler, SemEval) e quaisquer baselines da tabela estão citados onde os dados
+são usados. Coerência de formato das entradas (campos obrigatórios do IEEEtran preenchidos). Sinaliza, em
+lista, tudo o que não tenha identificador ou que não consigas confirmar, para eu validar. Não declares o
+paper pronto enquanto esta lista não estiver resolvida.
 
 ---
 
