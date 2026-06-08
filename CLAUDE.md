@@ -26,8 +26,13 @@ should you use?*
 The paper answers a fixed set of RQs (refine wording in Phase 1, but keep them explicit — they anchor the
 whole study and the Results structure):
 - **RQ1 (headline).** How does **reasoning** (extended-thinking on/off) affect grading **quality, consistency,
-  and cost**, and does the effect differ between **code** and **short-answer**? (the divergence that motivates
-  the paper)
+  and cost**, and does the effect differ between **code** and **short-answer**? **Framing (refined Phase 1.7):**
+  an **open question**, not a two-field divergence (no peer-reviewed evidence that reasoning *worsens*
+  educational scoring exists). Reasoning helps *general* LLM-as-a-judge (Jayarao, arXiv 2509.13332, via the
+  same within-family Qwen3 toggle we use) but its effect is task/architecture-dependent (Larionov 2504.08120)
+  and overthinking can hurt calibration-sensitive tasks (Stop-Overthinking, TMLR 2025). **State RQ1 as
+  grading-specific** — extending the general result into rubric-bounded CS grading with **cost + consistency**
+  and the code-vs-short-answer contrast (the angle no prior work covers).
 - **RQ2.** How much does **evaluation guidance** (no-rubric vs rubric; optionally +examples) change quality and
   consistency?
 - **RQ3.** How do **scope** (whole-exam vs question-by-question) and **decomposition** (holistic vs
@@ -382,9 +387,14 @@ See **PHASES.md** for the copy-paste prompts. **State of the art and baselines c
 
 Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision + date).
 
-- ⬜ **Course-correction (Phase 1.7)** — after the refined state of the art, does the planned direction still
-  hold, or does something (saturation, new baseline/dataset/model, undercut claim) warrant a redirection?
-  Record the decision before experiments start.
+- ✅ **Course-correction (Phase 1.7, 2026-06-08)** — **PROCEED, no redirection** (user-approved). Refined SoA
+  still supports the planned direction; the field moved toward our axes but as point solutions, not a
+  systematic design-space study → the framework/decision-guide is the unfilled niche. **Three sharpenings
+  recorded:** (1) lead with the decision-guide deliverable, not per-axis numbers; (2) state RQ1 as
+  grading-specific (extends Jayarao 2509.13332 into rubric-bounded CS grading with cost+consistency); (3) cite
+  not adopt new benchmarks (SAS-Bench/EssayJudge), keep code claims tentative. Full analysis in
+  `article/related/course_correction_1.7.md`. Only real change = RQ1 motivation (divergence → open question),
+  already absorbed.
 - ⬜ **Interim results gate (Phase 4)** — after the first real results (baseline + non-reasoning main effects),
   is the harness sound (parse rates, sane scores) and the expected signal present before committing time/budget
   to the reasoning and paid arms? Record go / adjust.
