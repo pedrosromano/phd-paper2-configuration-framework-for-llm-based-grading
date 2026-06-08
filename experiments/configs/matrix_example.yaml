@@ -1,0 +1,24 @@
+# Example config matrix (Phase 3.1 demo). The full PRUNED matrix is written in Phase 4.1.
+# Each arm: axes are scalars or lists; the loader takes the cartesian product, drops
+# inapplicable cells (dataset<->domain, whole_exam/criterion = PT-CS only), expands run_index 0..k-1.
+arms:
+  - name: baseline               # one default config per (dataset, domain) at k=5
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    model: [qwen3.5]
+    reasoning: ["off"]
+    context_level: [with_guidance]
+    scope: [question_by_question]
+    decomposition: [holistic]
+    k: 5
+    temperature: 0.0
+  - name: ptcs_scope_decomp      # PT-CS-only scope x decomposition (k=3)
+    dataset: [ptcs]
+    domain: [code, short_answer]
+    model: [qwen3.5]
+    reasoning: ["off"]
+    context_level: [with_guidance]
+    scope: [question_by_question, whole_exam]
+    decomposition: [holistic, criterion]
+    k: 3
+    temperature: 0.0
