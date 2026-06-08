@@ -7,7 +7,10 @@
 # Budget is enforced in EUR (CLAUDE.md §4/§8 hard ceiling). USD prices are converted with
 # eur_per_usd below.
 
-budget_eur_ceiling: 150.0
+# Two separate ceilings (CLAUDE.md §6.1/§11): the OpenAI closed anchor, and DeepInfra
+# (the open-weight roster). Per-provider enforcement is wired at Phase 4.1.
+budget_eur_ceiling: 150.0          # OpenAI anchor (GPT-5.1)
+deepinfra_budget_eur_ceiling: null # TODO(user): set the DeepInfra spend ceiling
 eur_per_usd: 0.92          # ~1 USD = 0.92 EUR (Jun 2026 approx; verify)
 
 # Default token assumptions for a single grading call, used by the pre-flight estimator
@@ -79,3 +82,51 @@ models:
     env_key: ANTHROPIC_API_KEY
     is_anchor: false
     note: Not chosen (~1.7x pricier). Reference price only; prompt-caching can cut input.
+
+  # --- Open-weight roster via DeepInfra (CLAUDE.md §6.1 / experiments/model_roster.md) ---
+  # OpenAI-compatible. Prices APPROX (verify on https://deepinfra.com/models) and exact model
+  # IDs to confirm against the live list at Phase 3.4. Reasoning toggled via chat_template_kwargs
+  # (enable_thinking) for Qwen/DeepSeek/GLM; the config schema maps D2 off/on accordingly.
+  deepseek-v4-flash:               # 284B/13B MoE — RQ1 toggle + cheap cost-floor
+    model_id: deepseek-ai/DeepSeek-V4-Flash
+    input_per_1m_usd: 0.14
+    output_per_1m_usd: 0.28
+    provider: deepinfra
+    api: openai_compatible
+    base_url: https://api.deepinfra.com/v1/openai
+    env_key: DEEPINFRA_API_KEY
+    reasoning_param: enable_thinking
+    reasoning_values: { "off": false, "on": true }
+    note: VERIFY id/price; toggle via chat_template_kwargs.enable_thinking.
+  qwen3.5:                         # RQ1 primary toggle (Apache-2.0); size variant TBD
+    model_id: Qwen/Qwen3.5-235B-A22B   # TODO confirm exact variant + id
+    input_per_1m_usd: 0.20
+    output_per_1m_usd: 0.60
+    provider: deepinfra
+    api: openai_compatible
+    base_url: https://api.deepinfra.com/v1/openai
+    env_key: DEEPINFRA_API_KEY
+    reasoning_param: enable_thinking
+    reasoning_values: { "off": false, "on": true }
+    note: VERIFY id/price/variant.
+  glm-5.1:                         # RQ1 toggle + strongest open coder
+    model_id: zai-org/GLM-5.1          # TODO confirm exact id
+    input_per_1m_usd: 0.40
+    output_per_1m_usd: 0.60
+    provider: deepinfra
+    api: openai_compatible
+    base_url: https://api.deepinfra.com/v1/openai
+    env_key: DEEPINFRA_API_KEY
+    reasoning_param: enable_thinking
+    reasoning_values: { "off": false, "on": true }
+    note: VERIFY id/price; GLM hybrid thinking toggle.
+  kimi-k2.6:                       # RQ4 breadth (no clean toggle -> default reasoning)
+    model_id: moonshotai/Kimi-K2.6     # TODO confirm exact id
+    input_per_1m_usd: 0.55
+    output_per_1m_usd: 1.10
+    provider: deepinfra
+    api: openai_compatible
+    base_url: https://api.deepinfra.com/v1/openai
+    env_key: DEEPINFRA_API_KEY
+    reasoning_param: null            # no clean on/off; run at default
+    note: VERIFY id/price; RQ4 breadth only, not in the within-family toggle arm.

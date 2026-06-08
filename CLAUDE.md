@@ -144,14 +144,17 @@ experiments/run → data/processed/runs → experiments/analysis → experiments
 
 ## 4. Environment & toolchain
 
-- **Machine:** MacBook Pro **M1 Max, 32 GB unified memory**. Local model size is memory-bound; inference
-  via Metal is slower than a discrete GPU. Reasoning models with long traces are **slow** — design for
-  overnight runs (see §7 pruning).
-- **Local inference:** **Ollama** (default; scriptable, good Metal support). Fall back to **LM Studio /
-  MLX** only for a model not packaged for Ollama. Practical ceiling on 32 GB ≈ **~30B at Q4** (tight, slow);
-  prefer smaller variants for the reasoning arm.
-- **Paid APIs:** exactly **one frontier anchor** (reasoning toggle, reduced condition set) + optional
-  near-free **DeepSeek** API. **Hard budget ceiling: €150** — see §8 cost guard.
+- **Machine:** MacBook Pro **M1 Max, 32 GB unified memory** — used for orchestration + local convenience
+  inference only. **The 32 GB is NOT a constraint on model choice** (paradigm change 2026-06-08): models are
+  selected by scientific relevance and run via **DeepInfra** when they don't fit (§6.1).
+- **Inference paths (per model, §6.1):**
+  - **DeepInfra** (OpenAI-compatible API) — the default for the open-weight roster (Qwen3.5, DeepSeek-V4,
+    GLM-5.1, Kimi K2.6); key `DEEPINFRA_API_KEY` via env/`.env`. Has its **own spend ceiling** (§8/§11).
+  - **Local Ollama** — convenience only, for models that fit 32 GB and we prefer them (smoke tests, a
+    cost-floor point). Not a gate on eligibility.
+  - **OpenAI** — the closed paid anchor (GPT-5.1) only.
+- **Budgets (two separate ceilings, cost guard §8):** **OpenAI anchor €150** (hard) + a **DeepInfra ceiling**
+  (TODO §11: user to set). Estimate every arm's € before running.
 - **Python:** 3.11+. Deps: `pandas`, `pyarrow`, `numpy`, `scipy`, `scikit-learn`, `statsmodels`,
   `matplotlib`, `pyyaml`, `tenacity` (retries), `tiktoken`/provider SDKs, `mysql-connector-python`/`pymysql`,
   `beautifulsoup4`/`lxml` (HTML clean + SemEval XML). Pin in `pyproject.toml`.
@@ -234,13 +237,22 @@ examples) per dataset.
 **OUT OF SCOPE for this article:** PT-vs-EN language axis (→ master's; EN translation produced in 1.2 but not
 analysed here).
 
-### 6.1 Model roster (June 2026) — final selection is a §11 uncertainty
-- **Local (Ollama), workhorses, free:** a ~30B Qwen3 (instruct **and** thinking variants — primary D2 toggle);
-  Gemma 4 ~26B; a **small DeepSeek-R1 distill (7–14B)** for a *fast* reasoning arm; optionally a coder model
-  (e.g. Qwen2.5-Coder 32B) for the code domain. Confirm which actually run acceptably on 32 GB.
-- **Cheap API (near-free):** DeepSeek (V3.2/V4) — note China-hosted; only on **anonymised** data.
-- **Paid frontier anchor (exactly one):** a model with a clean reasoning on/off toggle (candidates: Gemini
-  3.x Pro, a GPT-5.x tier, or Claude Sonnet). Used on a **reduced** condition set, k=3, within budget.
+### 6.1 Model roster (June 2026) — selected by SCIENTIFIC RELEVANCE, not hardware
+**Paradigm (2026-06-08): the 32 GB ceiling is NOT an eligibility criterion.** Treatment is Iscte-approved and
+we have an inference API (**DeepInfra**) for large models. Select by scientific relevance; **infrastructure
+(local vs DeepInfra) is a per-model downstream note, never an upstream filter.** Full fresh survey + selection
+rationale: `experiments/model_roster.md`. This supersedes the inherited/stale roster benchmarked in Phase 0.3.
+- **RQ1 within-family reasoning toggle (priority):** **Qwen3.5** (`enable_thinking`; primary, Apache-2.0,
+  continuity with Jayarao), **DeepSeek-V4-Flash** (`enable_thinking`; cheap 284B/13B SOTA), **GLM-5.1** (hybrid;
+  strongest open coder 2026). Each graded reasoning **OFF vs ON** — three open vendors isolate reasoning from vendor.
+- **RQ4 breadth:** **Kimi K2.6** (SOTA agentic/coding; no clean toggle → run at default reasoning, not in the
+  RQ1 toggle arm).
+- **Paid frontier anchor (closed, exactly one):** **GPT-5.1** (`reasoning_effort` none/high; €150 ceiling).
+- **Infra:** most of the roster runs via **DeepInfra** (own spend ceiling, §8/§11); **local Ollama only** for
+  models that fit 32 GB and we prefer them (smoke tests / cost-floor). The Phase 0.3 local models
+  (`qwen3:30b`, `gemma3:27b`, `deepseek-r1:14b`, `qwen3:14b`) are **convenience only**, superseded by the above.
+- **Do NOT restrict any experiment to what fits 32 GB.** Hardware is at most a convenience note for models that
+  happen to fit.
 
 ### 6.2 Metrics
 - **Agreement:** QWK (binned for continuous PT-CS scores — binning strategy TBD §11), Cohen's κ, Spearman/Pearson r.
@@ -289,15 +301,19 @@ validation**. Two distinct uses of "baseline" — keep them separate:
 
 ---
 
-## 7. Pruning principle (because full factorial × k=5 on a Mac is infeasible)
+## 7. Pruning principle (because full factorial × k=5 across the roster is costly)
 
-- **Full factorial on cheap axes** (non-reasoning local models, short outputs) at **k=5**.
-- **Reduce the expensive combinations**: the reasoning arm uses **smaller** local models; reasoning ×
-  criterion-by-criterion is sampled, not fully crossed; the paid anchor runs a **reduced** set at **k=3**.
-- Use **OFAT from a baseline** for expensive interactions (vary one factor at a time from a sensible default),
-  rather than the full cartesian product.
+Cost is now **$/token + wall-clock**, not hardware memory (we run via DeepInfra; §6.1). The pruning logic is
+unchanged in spirit — keep the matrix affordable — but the lever is **token spend and k**, not model size.
+
+- **Full factorial on cheap axes** (cheap models e.g. DeepSeek-V4-Flash $0.14/$0.28; short outputs) at **k=5**.
+- **Reduce the expensive combinations**: the reasoning-ON arm (long traces → many output tokens, the dominant
+  cost) is **sampled**, not fully crossed; reasoning × criterion-by-criterion is sampled; the paid anchor
+  (GPT-5.1) runs a **reduced** set at **k=3**.
+- Use **OFAT from a baseline** for expensive interactions, rather than the full cartesian product.
 - Sample **N per condition** (stratified) rather than all items for the costly cells. Final N is a §11 decision.
-- Estimate wall-clock before launching any arm; if an arm > ~2 nights, prune further or flag.
+- **Estimate € (DeepInfra + OpenAI) before launching any arm** via the cost guard; if an arm exceeds its
+  ceiling, prune further or flag. (Wall-clock is rarely the bottleneck now that inference is API-side.)
 
 ---
 
@@ -400,8 +416,19 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   to the reasoning and paid arms? Record go / adjust.
 - ⬜ **Artifact-release scope** — confirm what ships (harness, prompts, public-dataset configs/ingest) and
   whether the anonymised AI-comment-stripped PT-CS subset can be released (ethics-gated).
-- ✅ **Local model selection** (Phase 0.3, 2026-06-07) — roster pulled and benchmarked on M1 Max 32 GB
-  (Q4_K_M, via `python -m experiments.harness.ollama_check bench`). All run at acceptable speed. Chosen set:
+- ✅ **Model roster** (2026-06-08, paradigm change — supersedes the 0.3 local-only selection below) — **32 GB
+  is no longer an eligibility criterion** (Iscte-approved; DeepInfra API for large models). **Selected by
+  scientific relevance** (full survey + rationale: `experiments/model_roster.md`, §6.1): **RQ1 within-family
+  toggle** = Qwen3.5 + DeepSeek-V4-Flash + GLM-5.1 (each OFF vs ON); **RQ4 breadth** = Kimi K2.6 (no clean
+  toggle); **closed anchor** = GPT-5.1. Infra per-model (mostly DeepInfra; local Ollama = convenience only).
+  Operational TODO (Phase 3.4/4.1): confirm exact DeepInfra model IDs/prices + each model's toggle param via
+  a smoke test; decide the Qwen3.5/GLM size variant.
+- 🔧 **DeepInfra spend ceiling** — open models now run on DeepInfra (user-provided key), so the cost guard
+  needs a **second ceiling** alongside the OpenAI €150. **TODO (user): set the DeepInfra budget.** Per-arm €
+  estimate + enforcement wired at Phase 4.1 (DeepInfra models + prices to be added to `pricing.yaml`).
+- ⚠️ **Local model selection** (Phase 0.3, 2026-06-07) — **SUPERSEDED by the roster above** (kept as a record
+  of local-convenience speeds). Roster pulled and benchmarked on M1 Max 32 GB (Q4_K_M). All ran at acceptable
+  speed:
 
   | Model | Type | Params | short tok/s | long/reasoning tok/s | Role |
   |---|---|---|---|---|---|
