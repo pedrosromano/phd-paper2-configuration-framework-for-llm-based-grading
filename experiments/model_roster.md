@@ -66,6 +66,14 @@ for the actual study. A small **Qwen3.5** variant can run local on 32 GB for the
   efficient 35B-A3B), `zai-org/GLM-5.1`. Anchor `gpt-5.1`. All grade a real Mohler item parse_ok; DeepInfra
   off-mode emits clean JSON in 7–10 tokens.
 
+## Phase 3.7 end-to-end smoke confirms the local/DeepInfra split (2026-06-08)
+Full pipeline (config→prompt→adapter→parser→cache/log) over 5 items × off/on × k=2 = 20 runs:
+- **Local `qwen3:30b`: pi=0.60** in BOTH modes — it rambles past the token cap before emitting JSON
+  (mean out 1919/3625 tok). **Unreliable for grading.**
+- **DeepInfra `deepseek-v4-flash`: pi=1.00** in both modes (off 7 tok/1.3s, on 242 tok/11s); cache rerun
+  skipped 20/20. → **confirms the decision: real runs on DeepInfra; local Ollama is convenience only.**
+  (Teaser RQ1 signal: on-mode mean_score 4.50 vs off 3.80 on Mohler, N=5 — the study quantifies it.)
+
 ## Still open (operational, not blocking)
 - Live DeepInfra prices to reconcile against `pricing.yaml` estimates (cost guard logs actual usage).
 - Whether to include a small local Qwen3.5 for a free cost-floor point.
