@@ -1,12 +1,32 @@
-% main.tex — Article 2 (IEEEtran). PLACEHOLDER stub created in Phase 0.1.
-% The real document is assembled in Phase 7.1 (reuse the Article 1 toolchain, CLAUDE.md §9):
-%   - class: IEEEtran[lettersize,journal], IEEEtran.cls vendored from Article 1
-%   - Related Work / state-of-the-art drafted earlier in Phase 1.6 (sota_draft.tex)
-%   - compile: latexmk -pdf -synctex=1 -interaction=nonstopmode main.tex
-% Do not flesh this out before Phase 7.
+% main.tex -- Article 2 (IEEEtran). Skeleton; full assembly in Phase 7.1.
+% Reuses the Article 1 toolchain (CLAUDE.md S9). Compile:
+%   eval "$(/usr/libexec/path_helper)"; latexmk -pdf -synctex=1 -interaction=nonstopmode main.tex
+% NOTE: \usepackage{url} is REQUIRED -- the BibTeX .bbl wraps Scopus URLs (with % and &)
+% in \url{}; without the url package the bbl's \providecommand{\url}[1]{#1} treats % as a
+% comment and swallows the bibliography (runaway argument). Do not remove it.
 \documentclass[lettersize,journal]{IEEEtran}
+\usepackage[table]{xcolor}
+\usepackage{array,amsmath,amssymb}
+\usepackage{url}
+
 \begin{document}
 \title{A Configuration Framework for LLM-Based Grading in Computer Science}
 \maketitle
-% Sections assembled in Phase 7.1.
+
+% --- Sections (stubbed; assembled in Phase 7.1) ---
+% \input{sections/introduction}
+\input{related/sota_draft}            % Related Work -- drafted in Phase 1.6
+% \input{sections/design_space}
+% \input{sections/method}
+% \input{sections/results}
+% \input{sections/discussion}
+% \input{sections/threats}
+% \input{sections/conclusion}
+
+% --- Auto-generated tables (Phase 5 / 1.5) ---
+\input{tables/published_baselines}    % Phase 1.5 context table (-> appendix in Phase 7)
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
 \end{document}
