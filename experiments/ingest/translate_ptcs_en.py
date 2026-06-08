@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import time
 import urllib.request
 from datetime import datetime, timezone
@@ -29,7 +30,10 @@ from pathlib import Path
 
 import pandas as pd
 
+from experiments.harness.env import load_env
 from experiments.ingest import schema
+
+DEEPINFRA_URL = "https://api.deepinfra.com/v1/openai/chat/completions"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC = REPO_ROOT / "data" / "processed" / "corpus_ptcs.parquet"
@@ -75,22 +79,43 @@ def translate(text: str, kind: str, model: str, cache: dict) -> str:
     if k in cache:
         return cache[k]
     prompt = PROMPT.format(kind=kind, KIND=kind.upper(), text=text)
-    if "qwen" in model.lower():
-        prompt += "\n/no_think"      # Qwen3's reliable thinking-off switch
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "stream": False,
-        "think": False,              # belt-and-suspenders; ignored by non-thinking models
-        "options": {"temperature": 0.0, "num_predict": 2048},
-    }
+    # backend by model name: "org/model" -> DeepInfra (OpenAI-compatible); else local Ollama
+    if "/" in model:
+        out = _deepinfra(prompt, model)
+    else:
+        if "qwen" in model.lower():
+            prompt += "\n/no_think"   # Qwen3's reliable thinking-off switch
+        out = _ollama(prompt, model)
+    out = _strip_thinking(out)
+    cache[k] = out
+    return out
+
+
+def _ollama(prompt: str, model: str) -> str:
+    payload = {"model": model, "prompt": prompt, "stream": False, "think": False,
+               "options": {"temperature": 0.0, "num_predict": 2048}}
     req = urllib.request.Request(f"{OLLAMA}/api/generate",
                                  data=json.dumps(payload).encode("utf-8"),
                                  headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=300) as r:
-        out = _strip_thinking(json.loads(r.read().decode("utf-8")).get("response", "").strip())
-    cache[k] = out
-    return out
+        return json.loads(r.read().decode("utf-8")).get("response", "").strip()
+
+
+def _deepinfra(prompt: str, model: str) -> str:
+    """OpenAI-compatible chat completion. For DeepSeek reasoning models the chain-of-thought
+    arrives in message.reasoning_content (ignored); message.content is the clean answer."""
+    load_env()
+    key = os.environ.get("DEEPINFRA_API_KEY")
+    if not key:
+        raise RuntimeError("DEEPINFRA_API_KEY missing from .env")
+    payload = {"model": model, "messages": [{"role": "user", "content": prompt}],
+               "temperature": 0.0, "max_tokens": 4096}
+    req = urllib.request.Request(
+        DEEPINFRA_URL, data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        msg = json.loads(r.read().decode("utf-8"))["choices"][0]["message"]
+    return (msg.get("content") or "").strip()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -136,11 +161,20 @@ def main(argv: list[str] | None = None) -> int:
     out = schema.validate(out, dataset="ptcs-en")
     schema.write_parquet(out, OUT)
 
+    is_api = "/" in args.model
     meta = {
         "produced": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "purpose": "MASTER'S PT-vs-EN comparison only; OUT of Article-2 experimental matrix",
         "source": "corpus_ptcs.parquet (anonymised 2.1 output) -- never the raw export",
-        "model": args.model, "host": "local Ollama", "temperature": 0.0,
+        "model": args.model,
+        "host": "DeepInfra (OpenAI-compatible API)" if is_api else "local Ollama",
+        "temperature": 0.0,
+        "data_residency_note": (
+            "Anonymised student answers + question stems were sent to DeepInfra (external "
+            "inference provider; DeepSeek model is China-origin). No PII (CLAUDE.md §6.1 'DeepSeek "
+            "only on anonymised data' satisfied). Authorised by the data controller (the author), "
+            "who provided the DeepInfra key. Master's artifact only."
+        ) if is_api else "All inference local; no data left the machine.",
         "translated": "question stems (all) + student answers (short_answer/theory only)",
         "not_translated": "code answers, PT comments in code, rubric_json criteria, numeric grades/scales",
         "prompt_template": PROMPT,
