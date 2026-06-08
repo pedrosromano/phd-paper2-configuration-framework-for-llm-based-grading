@@ -12,8 +12,10 @@ sensitive), so this tracked file is the reproducibility record (artifact stateme
 - **Shape:** 2,273 rows; cols `id, question, desired_answer, student_answer, score_me, score_other, score_avg`.
   Matches the canonical Mohler & Mihalcea 2011 "Texas" set (2 graders + average, 0–5; reference =
   `desired_answer`). `id` = `question.answer` (e.g. `1.1`). gold = `score_avg`, scale max = 5.
-- **Caveat:** a mirror ("edited" = CSV-formatted). Validate the score distribution in the 2.3 report;
-  the canonical origin is Mohler & Mihalcea (Rada Mihalcea's UNT page) — cite `mohler_learning_2011`.
+- **Caveat:** a mirror ("edited" = CSV-formatted); canonical origin is Mohler & Mihalcea — cite
+  `mohler_learning_2011`. **Ingested (2.3):** 2,273 items / 81 questions, 0% empty, scale 0-5 verified.
+  **Human-human ceiling computable** (two independent graders): Pearson r=0.597, mean|diff|=0.748 (0-5) —
+  reportable for Mohler (unlike the PT-CS consensus). `id` read as string (no 1.10/1.1 float collision).
 
 ### SemEval-2013 Task 7 (short-answer, science) — `data/raw/semeval/`
 - **Source:** `git clone https://github.com/myrosia/semeval-2013-task7` (Dzikovska's own release).
