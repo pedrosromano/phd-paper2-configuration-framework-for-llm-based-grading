@@ -41,10 +41,12 @@ translation and summarisation), one reasoning model improves with extended think
 ``overthinking'' literature shows that long reasoning traces add redundant computation and can degrade
 calibration-sensitive tasks~\cite{sui_stop_2025}. Grading a student answer is exactly such a task: it is
 bounded by a rubric and sensitive to score calibration rather than to open-ended deliberation. Whether
-reasoning helps or hurts here is therefore \emph{a priori} uncertain, and prior work has confounded it with
-model identity by comparing reasoning and non-reasoning systems from different vendors. This paper resolves
-the question empirically with a within-family on/off toggle (RQ1), the central contribution motivating the
-study.
+reasoning helps or hurts here is therefore \emph{a priori} uncertain. Within educational short-answer grading
+itself, the task is increasingly framed as a move ``from memorization to reasoning''~\cite{cong_memorization_2026},
+yet that work studies fine-tuning and rubric-based prompting rather than isolating the effect of \emph{model}
+reasoning, and prior comparisons confound reasoning with model identity by pitting reasoning and non-reasoning
+systems from different vendors. This paper resolves the question empirically with a within-family on/off toggle
+(RQ1), the central contribution motivating the study.
 
 \textbf{Code grading with rubrics.}
 Our code domain is narrower and less mature than short-answer grading. Locally-run open-source LLMs are
@@ -71,7 +73,9 @@ Crucially, these numbers were produced under \emph{different models, prompts, an
 our study but are \emph{not} its success criterion, which comes from our own like-for-like comparisons. The
 literature also illustrates why protocol matters: a reported QWK of $0.95$ on Mohler is an artefact of
 silently dropping unparseable answers~\cite{aminah_evaluating_2025}, underscoring our use of an
-extractable-rate ($\pi$) metric and our refusal to coerce unparseable output to zero.
+extractable-rate ($\pi$) metric and our refusal to coerce unparseable output to zero. Dedicated fine-grained
+benchmarks for LLM short-answer scoring are also beginning to appear~\cite{lai_sasbench_2026}, but none yet
+isolates the configuration axes we study.
 
 \textbf{From model rankings to a configuration framework.}
 A growing body of work compares LLMs \emph{as graders} --- large side-by-side studies of programming
@@ -82,9 +86,8 @@ TLT asks of evaluation-centred work, our contribution is a \emph{configuration f
 grounded decision guide mapping task characteristics (domain, rubric availability, budget) to a recommended
 grader configuration and its cost. This complements the learning-analytics literature on responsible,
 auditable LLM grading --- structured ``grading events'' with local hosting and fine-tuning on course
-data~\cite{arz_von_straussenburg_enabling_2025}, embedding-based short-answer
-grading~\cite{putnikovic_embeddings_2023}, and instructor-facing AI feedback tools deployed in the
-classroom~\cite{gasevic_feedback_tool_2025} --- and feeds the design decisions of a deployed assessment
+data~\cite{arz_von_straussenburg_enabling_2025} and embedding-based short-answer
+grading~\cite{putnikovic_embeddings_2023} --- and feeds the design decisions of a deployed assessment
 platform. Throughout, we treat the human reference as a teacher-validated consensus grade (not independent
 double annotation) and declare the conflict of interest arising from the platform context, in line with the
 ground-truth-honesty requirements such deployments demand.

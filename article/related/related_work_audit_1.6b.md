@@ -57,6 +57,24 @@ not whole clusters. The notable annotated papers deliberately *not* cited (blank
   source (arXiv/DOI). No new planning-phantoms detected (the "Gong"/"Walsh" cases were already
   removed).
 
+## RESOLUTION (user decisions applied 2026-06-08)
+- **grandel_applying_2024** added to `references.bib` (SLR ref 106, DOI 10.1145/3643795.3648375);
+  the baseline table now emits `\cite{...}` per row (CSV `ref` column remapped to bibkeys) -- no
+  uncited table row remains.
+- **From-Memorization-to-Reasoning** (`cong_memorization_2026`, LAK 2026) promoted to a 4th RQ1
+  anchor -- it is educational-domain ASAG, framing grading as reasoning (grounds the previously
+  thin educational side); cited without over-claiming a reasoning-on/off result it does not test.
+- **SAS-Bench** (`lai_sasbench_2026`, arXiv 2505.07247) added as one sentence (relevant short-answer
+  LLM benchmark).
+- **ACL Anthology IDs confirmed at the source** (aclanthology.org) and added: Mohler 2009 = E09-1065,
+  Mohler 2011 = P11-1076, Dzikovska 2013 = S13-2045 -> no cited entry now lacks an identifier.
+- **gasevic_feedback_tool_2025 removed** (cite + bib entry) -- unconfirmed nice-to-have; TLT venue
+  fit stands on Putnikovic \& Jovanovic 2023.
+- **romano_slr_2025** kept as a **TODO placeholder** (Article 1 not yet published; user supplies the
+  full entry later) so the draft still compiles.
+- Final state: `make paper` builds with **0 undefined**; 35 cited / 36 bib entries; one intentional
+  orphan (`li_am_2023`, reserved for the ToE reframing); one TODO (`romano_slr_2025`).
+
 ## Summary for the user
 - **Bib builds clean**, no missing entries, one intentional orphan.
 - **3 cited entries lack a DOI** (dataset papers) → add ACL Anthology IDs.

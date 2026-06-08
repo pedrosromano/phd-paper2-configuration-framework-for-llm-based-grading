@@ -72,10 +72,11 @@ def main() -> int:
         A(r"\rowcolor{gray!12}\multicolumn{7}{l}{\emph{" + esc(gtitle) + r"}}\\")
         A(r"\hline")
         for _, r in sub.iterrows():
-            study = f"{r.study} ({r.year})"
+            # study cell carries a resolvable \cite (do NOT escape the cite command)
+            study = esc(f"{r.study} ({r.year})") + (rf"~\cite{{{r.ref}}}" if r.ref else "")
             val = r.value if not r.note else f"{r.value} -- {r.note}"
             A(" & ".join([
-                esc(r.dataset), esc(study), esc(r.model_method),
+                esc(r.dataset), study, esc(r.model_method),
                 esc(r.protocol), esc(r.metric), esc(val),
                 PROV.get(r.provenance, r.provenance),
             ]) + r"\\")
