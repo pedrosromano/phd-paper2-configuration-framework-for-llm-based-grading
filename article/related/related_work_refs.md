@@ -28,15 +28,28 @@
   (*SEM 2013). SciEntsBank + Beetle, 5-way labels (correct/partially-correct/contradictory/irrelevant/non-domain),
   unseen-answers / unseen-questions splits. PDF fetched (`dzikovska_semeval2013_task7.pdf`). **Cite for SemEval.**
 
-### 3. RQ1 divergence (reasoning) — the heart of the contribution
+### 3. RQ1 reasoning — the heart of the contribution
+**Framing (user decision 2026-06-08):** NOT "two fields disagree" (there is **no** peer-reviewed paper showing
+reasoning *worsens* educational scoring — see list (c)). Instead frame RQ1 as an **open question**: explicit
+reasoning **helps judging in general** (Jayarao below), but its benefit in *assessment* is **task/architecture-
+dependent**, and the **overthinking** literature shows prolonged reasoning can degrade **calibration-sensitive**
+tasks. Student-answer grading is a **calibration-sensitive, rubric-bounded** task, so the effect of reasoning is
+**a priori uncertain** — and this study resolves it **empirically** (within-family toggle, RQ1).
 - **"Explicit Reasoning Makes Better Judges"** — Jayarao, Gupta, Varshney, Dwivedi, **arXiv 2509.13332**
   (Sep 2025). PDF fetched (`explicit_reasoning_judges_2509.13332.pdf`). **Verified:** thinking vs non-thinking
   in LLM-as-a-judge using **Qwen3 (0.6/1.7/4B) with the thinking toggle** → thinking ≈ +10% accuracy at <2×
-  cost. **Role:** general-domain "**reasoning helps judging**" anchor — and it uses the *exact* within-family
+  cost. **Role:** the "**reasoning helps judging (general domain)**" pole — and it uses the *exact* within-family
   Qwen3 toggle we adopt, so it both motivates RQ1 and validates the method. (Read before citing — done.)
+- **"DeepSeek-R1 vs. o3-mini: How Well can Reasoning LLMs Evaluate MT and Summarization?"** — **arXiv 2504.08120**
+  (May 2025). **Verified:** on WMT23/SummEval, o3-mini *improves* with reasoning on MT but **DeepSeek-R1 generally
+  underperforms its non-reasoning variant** (except summarization consistency). **Role:** the "**effect is
+  task/architecture-dependent**" pole. **Adjacent domain (MT/summarization, NOT education)** — characterise as
+  such; do not over-claim transfer to grading. (Register only; fine validation in 1.6.)
+- **"Stop Overthinking: A Survey on Efficient Reasoning for LLMs"** — Sui et al., **arXiv 2503.16419**, **accepted
+  TMLR Jul 2025 (peer-reviewed)**. **Role:** the **overthinking** mechanism — prolonged CoT adds redundant tokens
+  and can hurt; grounds the "calibration-sensitive task → reasoning may not help" half of the open question.
 - **RewardBench** (LLM-as-judge / reward-model benchmark) — **Located, verify final ID** (Lambert et al. 2024,
-  arXiv 2403.13787). **Role:** context for the LLM-as-a-judge framing. *I did not re-fetch it this pass — confirm
-  the ID before it enters the draft.*
+  arXiv 2403.13787). **Role:** context for the LLM-as-a-judge framing. *Confirm the ID before it enters the draft.*
 
 ### 4. Code-grading-with-rubric anchors (our domain)
 - **Mazzone et al. 2024** — `mazzone_exploring_2024` **[SLR 108]**. Locally-run open-source LLMs in intro CS;
@@ -72,6 +85,9 @@
 - **Gašević/Mello AI-feedback tool (TLT)** — **Located, verify exact paper/DOI:** candidate "Empowering
   Instructors with AI: Evaluating the Impact of an AI-driven Feedback Tool in Learning Analytics" (and/or TLT
   DOI **10.1109/TLT.2025.3562379**). **Role:** TLT deployed-tool citation. *Confirm which before drafting.*
+- **Third TLT LLM-grading paper (optional):** searched IEEE TLT specifically — **did not find** a clean,
+  TLT-*published* LLM-grading paper beyond the two above this pass (results were arXiv/conference, not the TLT
+  journal). The two confirmed TLT citations suffice; revisit in 1.6 if a third is wanted (don't mis-attribute venue).
 
 ### Support-claim citations (all ✓ in SLR — confirmed, ready to use)
 - **Li et al. 2023** `li_am_2023` **[75]** — "Am I Wrong, or Is the Autograder Wrong? Effects of AI Grading
@@ -92,17 +108,16 @@
 
 ---
 
-## (c) NOT LOCATABLE — please provide (do not draft from these until supplied & read)
-1. **Education "reasoning *worsens* essay scoring" leaderboard/paper** — the counter-signal to "Explicit
-   Reasoning Makes Better Judges", and the decisive half of the RQ1 divergence. I found only a **non-peer-
-   reviewed Substack analysis** ("A Clearer View of LLM Performance in Education", edtechinsiders) reporting
-   *"thinking models show no clear advantage for essay scoring; extended reasoning may drift from rubrics;
-   Gemini 2.0 Flash best cost-performance"* + an unnamed leaderboard. **No peer-reviewed source located.**
-   CLAUDE.md §1.1 calls it "Walsh / the educational reasoning leaderboard" — please give the exact ref
-   (author/arXiv/DOI or leaderboard URL). This is load-bearing for RQ1; I won't cite the blog as evidence.
-2. **Gong et al. 2025 (TLT)** — listed as a TLT LLM-grading citation; I could **not** confirm a Gong et al.
-   2025 paper in IEEE TLT (the SLR "gong" hits are unrelated; web search didn't surface it). Please provide
-   the exact title/DOI, or confirm if it was conflated with the Gašević/Mello TLT tool above.
+## (c) RESOLVED (user decisions 2026-06-08)
+1. **Education "reasoning *worsens* essay scoring"** — **CONFIRMED non-existent** as peer-reviewed work after a
+   directed search. **Do not cite** the Substack/leaderboard as evidence (at most a grey-literature footnote).
+   "Walsh / educational reasoning leaderboard" **removed** from the project files (was in PHASES.md §1.6, not
+   CLAUDE.md). RQ1 motivation **reframed** to the open-question framing in §3 above, anchored on Jayarao
+   (2509.13332), 2504.08120 (adjacent, task/arch-dependent), and Stop-Overthinking (2503.16419, TMLR).
+2. **Gong et al. 2025 (TLT)** — **ABANDONED** (unconfirmable, likely a planning phantom). **Do not cite.**
+   Removed from CLAUDE.md §1.1 and PHASES.md §1.6. TLT venue fit is covered by Putnikovic & Jovanovic 2023 +
+   the Gašević/Mello tool.
 
 ## PDFs fetched this pass (open sources; in `library/pdfs/`, gitignored)
 `explicit_reasoning_judges_2509.13332.pdf`, `mohler_2011_acl.pdf`, `dzikovska_semeval2013_task7.pdf`.
+(Anchors 2504.08120 and 2503.16419 are *registered only* — fetch/validate at 1.6, per the user's instruction.)

@@ -46,8 +46,9 @@ artifact explicitly in analysis (Phase 5) and make it the centre of the Discussi
 
 ### 1.1 Venue framing (design for TLT; keep ToE reachable)
 TLT scope explicitly includes *tools for formative/summative assessment* and *learning analytics / educational
-data mining*, and actively publishes LLM-grading work (e.g. Putnikovic & Jovanovic 2023; Gong et al. 2025;
-the Gašević/Mello AI-feedback tool, TLT vol. 18) — so frame this paper in that register.
+data mining*, and actively publishes LLM-grading work (e.g. Putnikovic & Jovanovic 2023; the Gašević/Mello
+AI-feedback tool, TLT vol. 18) — so frame this paper in that register. (Removed "Gong et al. 2025": a phantom
+ref from planning that could not be confirmed in TLT — do not cite it; see `related/related_work_refs.md`.)
 - **For TLT (primary):** lean into learning-analytics / EDM / assessment-tool vocabulary; the "configuration
   framework" + "deployed platform" framing fits directly; cite TLT papers in related work. **Note TLT's
   evaluation clause:** papers centred on *evaluating existing technologies* (here, LLMs) are in scope only if

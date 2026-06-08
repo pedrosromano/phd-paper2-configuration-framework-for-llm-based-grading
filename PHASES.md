@@ -75,8 +75,8 @@ models/protocols** — they situate our work, they are **not** the success crite
 (draft).
 
 **1.6** — **Draft the Related Work / state-of-the-art section**, framed for **TLT** (learning-analytics / EDM /
-assessment-tool register; cite TLT papers — Putnikovic & Jovanovic 2023, Gong et al. 2025, Gašević/Mello
-AI-feedback tool) and positioned vs Jukiewicz / Walsh / the educational reasoning leaderboard. Keep a margin
+assessment-tool register; cite TLT papers — Putnikovic & Jovanovic 2023, Gašević/Mello
+AI-feedback tool) and positioned vs Jukiewicz / Poličar / GraderAssist (model-comparison demarcation). Keep a margin
 note on what to re-frame for **ToE** (foreground pedagogy). Write into `article/` as a real draft, not notes.
 **Respect the ~2-page cap** (CLAUDE.md §9.1) — it is written before the results exist, so do not let it balloon
 and crowd out Results later.
