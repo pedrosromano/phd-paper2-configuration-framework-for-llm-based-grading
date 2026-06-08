@@ -26,7 +26,7 @@ CORPUS_PARQUET = PROCESSED / "corpus.parquet"
 
 DOMAINS = {"code", "short_answer"}
 LANGUAGES = {"en", "pt"}
-SPLITS = {"seen", "unseen_ans", "unseen_q", "none"}
+SPLITS = {"seen", "unseen_ans", "unseen_q", "unseen_domain", "none"}  # unseen_domain: SemEval SciEntsBank
 
 # Column order is canonical; parsers should build a frame with exactly these columns.
 COLUMNS: list[str] = [

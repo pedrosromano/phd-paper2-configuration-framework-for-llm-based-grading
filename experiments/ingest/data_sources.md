@@ -24,7 +24,12 @@ sensitive), so this tracked file is the reproducibility record (artifact stateme
   test-unseen-domains,reliability}/...xml` (SciEntsBank has unseen-domains; Beetle does not).
   5-way labels (correct / partially_correct_incomplete / contradictory / irrelevant / non_domain);
   3-way and 2-way derivable. Splits map to our `split` field (seen=train, unseen_ans, unseen_q).
-- Cite `dzikovska_semeval_2013`.
+- Cite `dzikovska_semeval_2013`. **Ingested (2.4):** **16,003 items** (SciEntsBank 10,804 + Beetle 5,199 —
+  canonical sizes), 252 questions. gold_score = binary correctness (0/1), labels in label_{2,3,5}way (3/2-way
+  derived from 5-way). Gotchas handled: Beetle stores some answers **tokenised** (`<token>` + `raw_text`
+  attr, empty `.text`) → recovered via `raw_text`; **Core/Dependency/Extra** replicate each answer with
+  identical text+label → deduped (verified 0 conflicts), keep Core references; `non-domain`/`non_domain`
+  normalised; **`reliability` subset excluded**.
 
 ### RIAYN "Rubric Is All You Need" (code, Java/DSA) — `data/raw/riayn/`
 - **Dataset (the real data):** `git clone https://huggingface.co/datasets/BITS-Pilani-GRC/RubricEval`
