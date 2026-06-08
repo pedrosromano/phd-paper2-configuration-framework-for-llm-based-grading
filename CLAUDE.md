@@ -423,9 +423,12 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   scientific relevance** (full survey + rationale: `experiments/model_roster.md`, §6.1): **RQ1 within-family
   toggle** = Qwen3.5 + DeepSeek-V4-Flash + GLM-5.1 (each OFF vs ON); **closed anchor** = GPT-5.1. RQ4 breadth
   = these 4 families (3 with a clean toggle). **Kimi K2.6 CUT** (priciest, no toggle, breadth already served —
-  minimal-effort). Infra per-model (mostly DeepInfra; local Ollama = convenience only). **3.4 checks:** confirm
-  **GLM-5.1 clean reasoning-OFF** (it's in the RQ1 arm; substitute or caveat if hybrid won't disable); confirm
-  exact DeepInfra model IDs/prices + Qwen3.5/GLM size variant + each toggle param via smoke test.
+  minimal-effort). Infra per-model (mostly DeepInfra; local Ollama = convenience only). **3.4 checks DONE**
+  (2026-06-08, smoke-tested live): confirmed DeepInfra IDs `deepseek-ai/DeepSeek-V4-Flash`,
+  `Qwen/Qwen3.5-35B-A3B` (the planned 235B-A22B does not exist — 3.5 MoE variants are 35B-A3B / 397B-A17B),
+  `zai-org/GLM-5.1`; anchor `gpt-5.1`. **All four toggles are CLEAN** (output tokens off→on: V4-Flash 7→342,
+  Qwen3.5 7→3584, **GLM-5.1 10→440 ← clean OFF confirmed, stays in the RQ1 arm**, GPT-5.1 15→569). All
+  parse_ok on a real Mohler item; DeepInfra off-mode follows "JSON only" perfectly (7–10 tok).
 - ✅ **DeepInfra spend ceiling** (2026-06-08) — **€150** (separate from the OpenAI €150). A **runaway guard**
   (catch bugs), not a usage squeeze: the matrix estimate is ~€30–100, so €150 leaves margin over the worst
   case and only refuses arms that exceed it. In `pricing.yaml` as `deepinfra_budget_eur_ceiling`; per-provider

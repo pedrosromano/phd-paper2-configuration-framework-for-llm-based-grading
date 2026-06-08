@@ -98,8 +98,8 @@ models:
     reasoning_param: enable_thinking
     reasoning_values: { "off": false, "on": true }
     note: VERIFY id/price; toggle via chat_template_kwargs.enable_thinking.
-  qwen3.5:                         # RQ1 primary toggle (Apache-2.0); size variant TBD
-    model_id: Qwen/Qwen3.5-235B-A22B   # TODO confirm exact variant + id
+  qwen3.5:                         # RQ1 primary toggle (Apache-2.0); MoE 35B/3B-active (efficient, realistic)
+    model_id: Qwen/Qwen3.5-35B-A3B     # confirmed on DeepInfra (alt: -397B-A17B flagship, -27B, -9B)
     input_per_1m_usd: 0.20
     output_per_1m_usd: 0.60
     provider: deepinfra

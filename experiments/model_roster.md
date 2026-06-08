@@ -57,11 +57,15 @@ for the actual study. A small **Qwen3.5** variant can run local on 32 GB for the
   matrix (sample N, which cells get k=5 vs reduced) is **Phase 4.1**; per-arm € estimate + enforcement
   wired then via the cost guard (DeepInfra models in `pricing.yaml`).
 
-## To verify before Phase 4 (operational, not scientific)
-- **GLM-5.1 clean OFF (priority):** GLM is in the RQ1 toggle arm, so confirm its *hybrid* mode allows a
-  **genuinely disabled** reasoning-OFF (not just reduced). If not → substitute, or treat that axis with an
-  honest caveat (as we did for the anchor). Doesn't block now; smoke-test at 3.4.
-- Exact DeepInfra model IDs (`deepseek-ai/DeepSeek-V4-Flash` ✓ confirmed; Qwen3.5 / GLM-5.1 IDs + live
-  prices) and the precise size variant of Qwen3.5 / GLM to use.
-- Whether to include a small local Qwen3.5 for the cost-floor.
-- Re-benchmark is unnecessary (API), but confirm each model's reasoning-toggle param in a smoke test.
+## Verified at Phase 3.4 (2026-06-08, live smoke test) ✅
+- **GLM-5.1 clean OFF — CONFIRMED.** Output tokens off→on: 10→440 → the hybrid toggle genuinely disables
+  reasoning. GLM stays in the RQ1 arm, no caveat needed. (All toggles clean: V4-Flash 7→342, Qwen3.5 7→3584,
+  GPT-5.1 15→569.)
+- **DeepInfra model IDs confirmed:** `deepseek-ai/DeepSeek-V4-Flash`, `Qwen/Qwen3.5-35B-A3B`
+  (the planned `Qwen3.5-235B-A22B` does NOT exist; 3.5 MoE variants are 35B-A3B and 397B-A17B — picked the
+  efficient 35B-A3B), `zai-org/GLM-5.1`. Anchor `gpt-5.1`. All grade a real Mohler item parse_ok; DeepInfra
+  off-mode emits clean JSON in 7–10 tokens.
+
+## Still open (operational, not blocking)
+- Live DeepInfra prices to reconcile against `pricing.yaml` estimates (cost guard logs actual usage).
+- Whether to include a small local Qwen3.5 for a free cost-floor point.

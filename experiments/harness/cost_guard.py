@@ -60,8 +60,27 @@ class CostGuard:
         self.pricing = pricing or load_pricing()
         self.ledger_path = ledger_path
         self.eur_per_usd = float(self.pricing["eur_per_usd"])
-        self.ceiling_eur = float(self.pricing["budget_eur_ceiling"])
+        self.ceiling_eur = float(self.pricing["budget_eur_ceiling"])  # OpenAI anchor
+        di = self.pricing.get("deepinfra_budget_eur_ceiling")
+        self.deepinfra_ceiling_eur = float(di) if di is not None else None
         self._ledger = self._load_ledger()
+
+    def provider_of(self, model: str) -> str:
+        return self.pricing.get("models", {}).get(model, {}).get("provider", "unknown")
+
+    def ceiling_for(self, provider: str) -> float:
+        if provider == "deepinfra":
+            return self.deepinfra_ceiling_eur if self.deepinfra_ceiling_eur is not None else float("inf")
+        if provider in ("openai",):
+            return self.ceiling_eur
+        return self.ceiling_eur  # default/anchor-style providers (deepseek/anthropic/google) on the €150
+
+    def spent_for(self, provider: str) -> float:
+        return round(sum(e["cost_eur"] for e in self._ledger["entries"]
+                         if e.get("meta", {}).get("provider") == provider), 6)
+
+    def remaining_for(self, provider: str) -> float:
+        return self.ceiling_for(provider) - self.spent_for(provider)
 
     # ---- ledger persistence -------------------------------------------------
     def _load_ledger(self) -> dict:
@@ -145,15 +164,18 @@ class CostGuard:
         output_tokens: int,
         meta: dict | None = None,
     ) -> float:
-        """Record one real paid call; persist; return the EUR charged."""
+        """Record one real paid call; persist; return the EUR charged. The provider is
+        auto-stamped into meta so per-provider spend (OpenAI vs DeepInfra) is computable."""
         cost = self.cost_eur(model, input_tokens, output_tokens)
+        m = dict(meta or {})
+        m.setdefault("provider", self.provider_of(model))
         self._ledger["entries"].append({
             "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "model": model,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
             "cost_eur": round(cost, 6),
-            "meta": meta or {},
+            "meta": m,
         })
         self._ledger["total_spent_eur"] = round(
             float(self._ledger["total_spent_eur"]) + cost, 6
