@@ -33,6 +33,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--domain", default="short_answer")
     p.add_argument("--n", type=int, default=5)
     p.add_argument("--k", type=int, default=2)
+    p.add_argument("--decomposition", default="holistic", choices=["holistic", "criterion"])
     p.add_argument("--fresh", action="store_true", help="ignore/overwrite the smoke cache")
     args = p.parse_args(argv)
 
@@ -54,14 +55,15 @@ def main(argv: list[str] | None = None) -> int:
         for ri in range(args.k):
             for it in items:
                 cfg = Config(args.dataset, args.domain, args.model, reasoning=reasoning,
-                             context_level="with_guidance", k=args.k, run_index=ri)
+                             context_level="with_guidance", decomposition=args.decomposition,
+                             k=args.k, run_index=ri)
                 row, cached = store.run_one(it, cfg, grade_fn, st)
                 rows.append(row)
                 n_calls += (0 if cached else 1)
                 tag = "cache" if cached else "call "
                 print(f"  [{tag}] {row['item_id']:18} r={reasoning:3} ri={ri} "
                       f"score={str(row['score']):>5} ok={row['parse_ok']!s:5} "
-                      f"tok={row['tokens_in']}+{row['tokens_out']} {row['latency_s']}s"
+                      f"tok={row['prompt_tokens']}+{row['completion_tokens']} {row['latency_s']}s"
                       + (f" ERR={row['error']}" if row['error'] else ""))
 
     print(f"\n--- readout ({n_calls} live calls, {len(rows)-n_calls} cached) ---")
@@ -70,7 +72,7 @@ def main(argv: list[str] | None = None) -> int:
         pi = compute_pi(g["parse_ok"])
         scored = g[g["parse_ok"]]
         print(f"  reasoning={reasoning}: pi={pi}  (parse_ok {int(g.parse_ok.sum())}/{len(g)}) | "
-              f"mean_out_tok={int(g.tokens_out.mean())} | mean_latency={g.latency_s.mean():.1f}s"
+              f"mean_out_tok={int(g.completion_tokens.mean())} | mean_latency={g.latency_s.mean():.1f}s"
               + (f" | mean_score={scored.score.mean():.2f}" if len(scored) else ""))
     err = rdf[rdf.error.notna()]
     if len(err):

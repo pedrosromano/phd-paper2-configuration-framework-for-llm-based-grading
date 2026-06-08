@@ -20,6 +20,9 @@ class GradeResult:
     per_criterion: list | None = None   # criterion decomposition: [{"criterion","score"}, ...]
     answers: list | None = None         # whole-exam: [{"question_id","score"|...}, ...]
     error: str | None = None
+    reasoning_tokens: int | None = None  # API-reported thinking tokens (None if backend hides them)
+    finish_reason: str | None = None     # natural stop | length (token cap) | content_filter | done_reason
+    cost_eur: float | None = None        # € charged for this call (paid models; None for local)
 
     def as_row(self) -> dict:
         return asdict(self)

@@ -36,11 +36,15 @@ def _is_thinking(model: str) -> bool:
        wait=wait_exponential(multiplier=1, min=2, max=20),
        retry=retry_if_exception_type((urllib.error.URLError, TimeoutError, ConnectionError)),
        reraise=True)
-def _call(model: str, prompt: str, think: bool) -> dict:
+def _call(model: str, prompt: str, think: bool, config) -> dict:
+    options = {"temperature": config.temperature, "top_p": config.top_p,
+               "num_predict": config.max_tokens}
+    if config.seed is not None:
+        options["seed"] = config.seed
     payload = {
         "model": model, "prompt": prompt, "stream": False,
         "think": think,                       # ignored by non-thinking models
-        "options": {"temperature": 0.0, "num_predict": 4096 if think else 2048},
+        "options": options,
     }
     req = urllib.request.Request(f"{OLLAMA}/api/generate",
                                  data=json.dumps(payload).encode("utf-8"),
@@ -57,7 +61,7 @@ def grade(item, config) -> GradeResult:
         prompt += "\n/no_think"
     t0 = time.perf_counter()
     try:
-        resp = _call(config.model, prompt, think)
+        resp = _call(config.model, prompt, think, config)
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ConnectionError) as e:
         return GradeResult(score=None, parse_ok=False, raw="", tokens_in=0, tokens_out=0,
                            latency_s=round(time.perf_counter() - t0, 3), model=config.model,
@@ -73,6 +77,7 @@ def grade(item, config) -> GradeResult:
         tokens_out=int(resp.get("eval_count", 0)),
         latency_s=latency, model=config.model, reasoning=config.reasoning,
         config_hash=config.config_hash,
+        finish_reason=resp.get("done_reason"),   # "stop" (natural) | "length" (token cap)
     )
 
 

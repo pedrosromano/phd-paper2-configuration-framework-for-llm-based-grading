@@ -51,3 +51,6 @@ venv/
 
 # Article 1 is a separate git repo embedded for reference; do not track its internals
 /article/related/slr_source/phd-paper1-automated-essay-grading-in-education-slr/
+
+# Local Claude Code session/settings
+.claude/

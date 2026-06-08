@@ -299,6 +299,13 @@ validation**. Two distinct uses of "baseline" — keep them separate:
   already logged per-run in `data/processed/runs/`, §8); **(b) Threats must state** that someone running the
   "same" models on another provider may not reproduce the exact numbers — the *configuration guidance* (which
   config beats which) is the transferable claim, not the absolute scores.
+  - **Reasoning-cost non-comparability across backends (Phase 3.8, 2026-06-09).** The DeepInfra-served open
+    models do **not** expose a separate `reasoning_tokens` field — thinking tokens are folded into
+    `completion_tokens` and are not separable. Only the GPT-5.1 anchor reports reasoning tokens distinctly. So
+    the cost analysis (5.4) must measure the **reasoning premium on total `completion_tokens`** (reasoning
+    included), and state explicitly that the per-token *reasoning* cost is **not** directly comparable between
+    DeepInfra and OpenAI (one bundles it, the other itemises it). `reasoning_tokens` is logged per run but is
+    null for DeepInfra by design, not by omission.
 - **Statistics:** report **effect sizes + confidence intervals**, not just p-values. The design is
   full-factorial on the cheap axes but **OFAT for the expensive ones**, so interactions among expensive factors
   (e.g. reasoning × decomposition) are **not fully estimable** — with k=5 and sampled N those cells are

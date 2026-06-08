@@ -48,21 +48,39 @@ def _chat(base_url: str, key: str, payload: dict) -> dict:
         raise _Transient(str(e)) from e
 
 
-def _build_payload(mcfg: dict, prompt: str, reasoning: str) -> dict:
+def _build_payload(mcfg: dict, prompt: str, config) -> dict:
+    """Sampling settings come from the Config (so they match config_hash exactly):
+    max_tokens, temperature, top_p, seed. The reasoning toggle maps per provider."""
+    reasoning = config.reasoning
     rv = mcfg.get("reasoning_values", {})
     payload = {"model": mcfg["model_id"], "messages": [{"role": "user", "content": prompt}]}
+    if config.seed is not None:
+        payload["seed"] = config.seed
     if mcfg.get("provider") == "openai":
-        payload["max_completion_tokens"] = 4096
+        # GPT-5.1 reasoning tier: only max_completion_tokens + reasoning_effort; it rejects
+        # temperature/top_p, so we deliberately omit them (config_hash still records them).
+        payload["max_completion_tokens"] = config.max_tokens
         rp = mcfg.get("reasoning_param")           # reasoning_effort
         if rp and reasoning in rv:
             payload[rp] = rv[reasoning]            # none | high
     else:                                          # deepinfra (OpenAI-compatible) + others
-        payload["max_tokens"] = 4096
-        payload["temperature"] = 0.0
+        payload["max_tokens"] = config.max_tokens
+        payload["temperature"] = config.temperature
+        payload["top_p"] = config.top_p
         rp = mcfg.get("reasoning_param")           # enable_thinking
         if rp and reasoning in rv:
             payload["chat_template_kwargs"] = {rp: rv[reasoning]}   # {"enable_thinking": bool}
     return payload
+
+
+def _reasoning_tokens(usage: dict) -> int | None:
+    """Thinking-token count if the backend exposes it (OpenAI nests it under
+    completion_tokens_details; some OpenAI-compatible backends put it at top level)."""
+    details = usage.get("completion_tokens_details") or {}
+    rt = details.get("reasoning_tokens")
+    if rt is None:
+        rt = usage.get("reasoning_tokens")
+    return int(rt) if rt is not None else None
 
 
 def grade(item, config, guard: CostGuard | None = None) -> GradeResult:
@@ -84,7 +102,7 @@ def grade(item, config, guard: CostGuard | None = None) -> GradeResult:
         return err(f"budget exhausted for provider {provider}")
 
     prompt = prompts.render(config, item)
-    payload = _build_payload(mcfg, prompt, config.reasoning)
+    payload = _build_payload(mcfg, prompt, config)
     t0 = time.perf_counter()
     try:
         resp = _chat(mcfg["base_url"], key, payload)
@@ -94,19 +112,24 @@ def grade(item, config, guard: CostGuard | None = None) -> GradeResult:
         return err(f"transient (retries exhausted): {str(e)[:120]}")
     latency = round(time.perf_counter() - t0, 3)
 
-    msg = resp.get("choices", [{}])[0].get("message", {})
-    raw = (msg.get("content") or "").strip()
+    choice = resp.get("choices", [{}])[0]
+    raw = (choice.get("message", {}).get("content") or "").strip()
+    finish = choice.get("finish_reason")
     usage = resp.get("usage", {})
     tin, tout = int(usage.get("prompt_tokens", 0)), int(usage.get("completion_tokens", 0))
+    rtok = _reasoning_tokens(usage)
+    cost = None
     if guard is not None:
-        guard.record(config.model, tin, tout, meta={"config_hash": config.config_hash,
-                                                     "reasoning": config.reasoning})
+        cost = round(guard.record(config.model, tin, tout,
+                                  meta={"config_hash": config.config_hash,
+                                        "reasoning": config.reasoning}), 6)
     parsed, ok = parse_output(raw, config.scope, config.decomposition)
     return GradeResult(score=parsed["score"], per_criterion=parsed["per_criterion"],
                        answers=parsed["answers"], parse_ok=ok, raw=raw,
                        tokens_in=tin, tokens_out=tout, latency_s=latency,
                        model=config.model, reasoning=config.reasoning,
-                       config_hash=config.config_hash)
+                       config_hash=config.config_hash, reasoning_tokens=rtok,
+                       finish_reason=finish, cost_eur=cost)
 
 
 def _smoke() -> int:
