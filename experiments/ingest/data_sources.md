@@ -40,6 +40,13 @@ sensitive), so this tracked file is the reproducibility record (artifact stateme
   `git clone https://github.com/BITS-Pilani-GRC/Rubric-Grader` — the grading CLI; `test/` shows the
   expected `prob.txt`/`sol.txt`/`rubric.txt`/`sub/*.java` input format.
 - 230 submissions total (80 OOP listed / 79 present + 150 DSA). Cite `pathak_rubric_2025`.
+- **Ingested (2.5): DSA only — 149 items, 25 problems** (25×6 categories − 1 cell with no human score:
+  "Missing in Array"/TLE). Each: question + question-specific rubric (rubric_json) + model solution
+  (reference_answer) + student code + consensus gold (`Total Marks` X/Y; per-step marks in source_meta).
+  Problem-name join is fuzzy (scores CSV has truncated/misspelled names, e.g. "Palindrom", "...of a Bina").
+  **OOP NOT ingested:** `oop_dataset.csv` has student code + two LLM feedback/appraise texts but **no
+  numeric human gold score and no question/rubric** → not gradeable in our schema. (Paper's OOP numbers
+  are in the Phase-1.5 context table from the PDF.) Grades = two-grader consensus.
 
 ## Private dataset (user-provided — pending)
 
