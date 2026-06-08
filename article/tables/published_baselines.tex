@@ -20,8 +20,10 @@ Mohler & Duong \& Meng (2024) & GPT-4 (few-shot) & few-shot; SE+Mohler & Pearson
 Mohler & Mello et al. (2025) & GPT-4o vs BERT & seen vs unseen split & MAE & BERT 0.34 (seen) / GPT-4o competitive (unseen) -- LLM value is generalisation to unseen, not beating tuned on seen & $\circ$\\
 SciEntsBank (SemEval-2013 T7) & Kazi \& Kahanda (2023) & RoBERTa + MNLI (entailment) & fine-tuned & weighted-F1 & \textasciitilde{}0.72 -- gains on 'contradiction' class & $\circ$\\
 SemEval-2013 T7 & Fischer et al. (NodeGrade) (2025) & sem-sim + LLM hybrid & public-set eval & (qualitative) & outperforms GPT-4 on SemEval-2013 T7 -- no single metric reported in abstract & $\circ$\\
-Mohler/SciEntsBank/Beetle & Chen et al. (CEM-FT) (2026) & LLM + contrastive error mining & fine-tune & (reports on all three) & see paper (abstract: stability of few-shot reasoning) -- reports on our three short-answer sets; numbers not in abstract & $\dagger$\\
-Mohler/SemEval/SciEntsBank/Beetle & Dada et al. (iAttention) (2025) & transformer + inter-sentence attention & supervised & (reports on all four) & see paper (numbers in PDF tables) -- covers all four of our short-answer sets & $\dagger$\\
+SciEntsBank (unseen ans.) & Chen et al. (CEM-FT) (2026) & CEM-FT (Qwen3-4B + LoRA) & fine-tune; unseen-answers & QWK & 0.767 -- vs BERT 0.20 / Qwen3-8B FT 0.729; Qwen family = our roster & $\bullet$\\
+Mohler (unseen ans.) & Chen et al. (CEM-FT) (2026) & CEM-FT (Qwen3-1.7B + LoRA) & fine-tune; unseen-answers & MAE / TAA & 0.402 / 0.715 -- Mohler is continuous (no QWK reported) & $\bullet$\\
+SciEntsBank & Dada et al. (iAttention) (2025) & iAttention-BERT & supervised; UA split & Accuracy / Macro-F1 & 0.828 / 0.823 (2-way); 0.690 / 0.662 (3-way) -- inter-sentence attention; beats RoBERTa-lrg/XLNet & $\bullet$\\
+SemEval-2013 Beetle & Dada et al. (iAttention) (2025) & iAttention-BERT & supervised; 2-way/3-way & Macro-F1 & 0.872 (2-way UA) / 0.666 (3-way UQ) -- beats XLNet/ETS/UKP-BIU & $\bullet$\\
 \hline
 \rowcolor{gray!12}\multicolumn{7}{l}{\emph{Our code datasets (RIAYN OOP/DSA) and nearest code-rubric analogues}}\\
 \hline
