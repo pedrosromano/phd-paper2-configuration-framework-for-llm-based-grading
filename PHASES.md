@@ -188,8 +188,9 @@ transfer analysis has a like-for-like PT-CS counterpart for that config (otherwi
 compare). If unsure which config wins, include a small set of strong-candidate configs on PT-CS. Record in §11.
 
 **4.2** — **Establish OUR OWN baseline per dataset** (CLAUDE.md §6.3): run one sensible default config
-(e.g. **DeepSeek-V4-Flash on DeepInfra**, reasoning off, with grounding, question-by-question, holistic) across
-all datasets at k=5. This is the **internal reference** against which every controlled comparison is measured —
+(**Qwen3.5 on DeepInfra**, reasoning off, with grounding, question-by-question, holistic) across all datasets
+at k=5 — the baseline MODEL is fixed (user, 2026-06-08): Qwen3.5 (RQ1 primary, Apache-2.0, neutral cross-domain,
+continuity with Jayarao). This is the **internal reference** against which every controlled comparison is measured —
 **not** the published numbers from Phase 1 (those sit alongside as external context). Record it.
 
 **4.3** — Run the **non-reasoning main-effects** arm across the **DeepInfra roster** (k=5). Resumable. Report

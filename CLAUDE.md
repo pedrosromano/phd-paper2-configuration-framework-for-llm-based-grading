@@ -469,6 +469,11 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   1000 grading calls** (defaults 1.5k in / 0.6k out off, 4k out on; EUR@0.92, prices in `pricing.yaml`,
   VERIFY): ≈ **€7.3 off / €38.5 on**. Key via `OPENAI_API_KEY` (env only); smoke test pending key.
 - ⬜ **N per condition** — stratified sample sizes, especially for expensive (reasoning × criterion) cells.
+- ✅ **Baseline (reference) config** (4.2, user 2026-06-08) — **Qwen3.5** (DeepInfra, reasoning off, with
+  grounding, q-by-q, holistic), at k=5 across all datasets. Chosen over DeepSeek-V4-Flash as the internal
+  reference because it is the RQ1 primary, Apache-2.0, neutral cross-domain, and continuous with Jayarao —
+  all "better/worse than baseline" framing is relative to this. (GLM-5.1 rejected as baseline: code-leaning,
+  less neutral.)
 - ⬜ **RQ6 transfer data dependency** (decide at 4.1) — RQ6 is a Phase-5 *analysis* (5.5b), not an arm, but the
   config(s) expected to win on the public datasets MUST also be run on PT-CS so 5.5b has a like-for-like
   counterpart. Record which config(s) get the PT-CS run when defining the 4.1 matrix.
