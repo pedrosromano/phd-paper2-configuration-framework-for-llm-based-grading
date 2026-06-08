@@ -20,7 +20,9 @@ the published-performance context and may change the plan. Experiments only star
 `.gitignore` covering `data/raw`, `data/processed`, run artifacts, and LaTeX build files). No logic yet.
 
 **0.2** — Set up the Python environment (3.11+, deps from CLAUDE.md §4). Add a `make`/`justfile` (or simple
-scripts) for: `ingest`, `run-local`, `run-paid`, `analyse`, `figures`, `paper`. Verify imports.
+scripts) for: `ingest`, `run` (Phase-4 matrix runner, DeepInfra + anchor), `smoke`, `analyse`, `figures`,
+`paper`. Verify imports. *(Renamed from `run-local`/`run-paid` after the 2026-06-08 paradigm change — most
+runs are DeepInfra, not local; see Phase 4.)*
 
 **0.3** — Local inference: write a tiny `experiments/harness/ollama_check.py` that lists installed Ollama
 models and runs a 1-token sanity generation. Then propose the **candidate local roster** (CLAUDE.md §6.1),
@@ -166,29 +168,38 @@ end, and show the resulting run rows + a parse-rate readout. Fix anything rough 
 
 ---
 
-## Phase 4 — Run experiments (local first/free, paid last/budgeted)
+## Phase 4 — Run experiments (DeepInfra roster + paid anchor; budgeted)
+
+> **Paradigm (2026-06-08, CLAUDE.md §6.1/§4):** the 32 GB ceiling is NOT a constraint. Models run on
+> **DeepInfra** (open roster: Qwen3.5, DeepSeek-V4-Flash, GLM-5.1) + **OpenAI** (GPT-5.1 anchor). **Local
+> Ollama is convenience/smoke only, NOT a study path** — Phase 3.7 showed a Q4 local model at π=0.60 vs
+> DeepInfra π=1.00, and same-name models differ across backends (quantisation, chat template, sampling), so
+> local and DeepInfra results are NOT comparable (see `experiments/model_roster.md`). Two separate ceilings
+> (cost guard §8): **DeepInfra €150 + OpenAI €150**. Cost is €/token, not wall-clock.
 
 **4.1** — **Define the pruned config matrix** (CLAUDE.md §7): write the YAML for the baseline config (4.2),
-main-effects-at-k=5 on cheap local models, the reduced reasoning arm (smaller models), the sampled
-reasoning×criterion cells, the context arm, the scope arm, and the reduced paid-anchor set (k=3). **Print
-estimated wall-clock and paid cost per arm and ask me to confirm** before running anything. Record
-N-per-condition decisions in §11.
+main-effects at k=5 across the **DeepInfra roster**, the reduced reasoning arm, the sampled
+reasoning×criterion cells, the context arm, the scope arm, and the reduced **paid-anchor (GPT-5.1)** set (k=3).
+**Print the estimated € per arm (DeepInfra + OpenAI, via the cost guard) and ask me to confirm** before
+running anything. Record N-per-condition decisions in §11.
 
 **4.2** — **Establish OUR OWN baseline per dataset** (CLAUDE.md §6.3): run one sensible default config
-(e.g. a mid local model, reasoning off, with grounding, question-by-question, holistic) across all datasets at
-k=5. This is the **internal reference** against which every controlled comparison is measured — **not** the
-published numbers from Phase 1 (those sit alongside as external context). Record it.
+(e.g. **DeepSeek-V4-Flash on DeepInfra**, reasoning off, with grounding, question-by-question, holistic) across
+all datasets at k=5. This is the **internal reference** against which every controlled comparison is measured —
+**not** the published numbers from Phase 1 (those sit alongside as external context). Record it.
 
-**4.3** — Run the **non-reasoning local main-effects** arm (k=5). Resumable. Report progress + parse rates.
+**4.3** — Run the **non-reasoning main-effects** arm across the **DeepInfra roster** (k=5). Resumable. Report
+progress + parse rates (π).
 
 **4.4** — **DECISION POINT — interim results review (mandatory).** With the first real results in hand
 (baseline + non-reasoning main effects), check: parse rates are healthy (π), scores are sane, the baseline
-behaves, and the expected signal is present. Re-estimate wall-clock and paid cost for the remaining arms.
-If the harness is off, the signal is absent, or the cost/time projection no longer makes sense, **stop, report,
+behaves, and the expected signal is present. Re-estimate **€ (DeepInfra + OpenAI)** for the remaining arms.
+If the harness is off, the signal is absent, or the cost projection no longer makes sense, **stop, report,
 and propose adjusting scope before the expensive arms.** Wait for my go-ahead before 4.5+.
 
-**4.5** — Run the **reasoning arm** on the smaller local models. Watch wall-clock; if an arm balloons, pause
-and propose further pruning.
+**4.5** — Run the **reasoning arm** across the roster (reasoning ON via each model's toggle — the dominant
+output-token cost). Watch **€ spend** against the DeepInfra ceiling; if an arm balloons, pause and propose
+further pruning.
 
 **4.6** — Run the **decomposition arm** (holistic vs criterion-by-criterion; PT-CS for criterion-level),
 scored against the final grade.
@@ -205,8 +216,11 @@ question-by-question) and compare clean-conversation vs shared-history on a subs
 **4.10** — Run the **paid anchor** on the reduced set at k=3 — **only after** the cost guard confirms it fits
 the remaining budget. Update the spend tally and §11 cost tracking.
 
-**4.11** — *(optional, gated by §11)* **Fine-tuning arm**: prepare the train/eval split, run the minimal
-QLoRA-local or managed fine-tune on one model, grade with it, compare to its base self.
+**4.11** — *(optional, gated by §11)* **Fine-tuning arm**: prepare the train/eval split, run a minimal
+fine-tune on one model — **prefer a managed/DeepInfra-served LoRA** (consistent with the DeepInfra-first
+paradigm and comparable to the base served model); QLoRA-local is a fallback only if a managed path is
+unavailable. Grade with it, compare to its base self **on the same backend** (don't compare a local
+fine-tune against a DeepInfra base — backends aren't comparable).
 
 ---
 

@@ -6,7 +6,7 @@ PYTHON := .venv/bin/python
 PIP    := .venv/bin/pip
 
 .DEFAULT_GOAL := help
-.PHONY: help install verify test cost ingest run-local run-paid analyse figures paper paper-clean clean
+.PHONY: help install verify test cost ingest run smoke analyse figures paper paper-clean clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -29,11 +29,11 @@ cost: ## Show the paid-spend ledger + remaining budget (cost guard)
 ingest: ## Phase 2 — unify per-dataset corpora -> data/processed/corpus.parquet
 	$(PYTHON) -m experiments.ingest.unify   # per-dataset: ingest_{ptcs,mohler,semeval,riayn}; ptcs needs DB
 
-run-local: ## Phase 4 — local (Ollama) grading arms, resumable
-	$(PYTHON) -m experiments.run.local
+run: ## Phase 4 — run a config-matrix arm (DeepInfra roster + GPT-5.1 anchor; cost-guarded, resumable)
+	$(PYTHON) -m experiments.run.matrix $(ARGS)   # local Ollama is convenience/smoke only (see model_roster.md)
 
-run-paid: ## Phase 4 — paid grading arms (routed through the cost guard)
-	$(PYTHON) -m experiments.run.paid
+smoke: ## Phase 3.7 — end-to-end harness smoke test
+	$(PYTHON) -m experiments.run.smoke $(ARGS)
 
 analyse: ## Phase 5 — metrics, consistency, stats -> article/tables
 	$(PYTHON) -m experiments.analysis
