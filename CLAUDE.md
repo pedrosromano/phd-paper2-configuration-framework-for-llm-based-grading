@@ -450,8 +450,15 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   per-teacher score columns**: `criterio_correcao` holds a single `comentario` + `nota_parcial` per criterion,
   and `resposta_submissao.cotacao` is the single final grade. **No separate per-teacher scores exist → no
   inter-rater κ / human ceiling recoverable.** Describe as two-teacher consensus only (CLAUDE.md §2).
-- ⬜ **EN translation quality** — auto-translation of questions/rubrics needs human validation **before** the
-  master's uses it (not blocking this article).
+- 🔧 **EN translation quality** — auto-translation needs human validation **before** the master's uses it
+  (not blocking this article). **`corpus_en.parquet` produced in Phase 2.2 (2026-06-08) for the master's
+  PT-vs-EN comparison only — OUT of the Article-2 experimental matrix (Phase 4 never touches it).** It is a
+  parallel, 1:1-aligned view of `corpus_ptcs.parquet` (same `item_id` → same row → same grade), differing
+  only in translated text. **How:** translated from the *anonymised* 2.1 output (never the raw export; GDPR);
+  **local model `gemma3:27b`** (Ollama, temp 0, free — does not spend the paid budget); only **question stems
+  (all) + student answers for short_answer/theory** are translated — **code answers, PT code-comments,
+  rubric_json criteria, and all numeric grades/scales are left untouched**. Provenance (model/prompt/date) in
+  `data/processed/corpus_en_translation_meta.json`. Still **requires human validation** before reuse.
 - 🔧 **Cost tracking** — keep the running paid-spend tally here; confirm we stay ≤ €150. **Implemented
   (Phase 0.4):** persistent ledger `data/processed/_spend.json` via `experiments/harness/cost_guard.py`
   (pre-flight estimator refuses any arm that would breach the €150 ceiling; `record()` logs real token cost
