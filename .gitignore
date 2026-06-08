@@ -1,15 +1,11 @@
 # ---------------------------------------------------------------------------
 # Data: raw is sensitive/large (never commit); processed is a build artifact.
 # ---------------------------------------------------------------------------
-# Ignore ALL contents, but keep the directory tree + .gitkeep placeholders so the
-# layout survives a clone. (Trailing-slash negation re-includes dirs so git can
-# descend into them; the .gitkeep negation re-includes only the placeholder files.)
+# Ignore ALL contents (incl. subdirectories, so cloned dataset repos / embedded .git
+# are never added as gitlinks). The .gitkeep placeholders are already tracked from
+# Phase 0.1, so the directory tree survives without re-including dirs here.
 /data/raw/**
-!/data/raw/**/
-!/data/raw/**/.gitkeep
 /data/processed/**
-!/data/processed/**/
-!/data/processed/**/.gitkeep
 
 # ---------------------------------------------------------------------------
 # Python
