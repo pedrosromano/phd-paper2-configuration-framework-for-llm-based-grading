@@ -475,13 +475,16 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   3 Pro → unfit for a clean reasoning-off (do not reselect). *Claude Sonnet 4.6* ~1.7× pricier. **Cost per
   1000 grading calls** (defaults 1.5k in / 0.6k out off, 4k out on; EUR@0.92, prices in `pricing.yaml`,
   VERIFY): ≈ **€7.3 off / €38.5 on**. Key via `OPENAI_API_KEY` (env only); smoke test pending key.
-- 🔧 **N per condition** (4.1 PROPOSAL, 2026-06-09 — awaiting user confirm before any run) — in
-  `experiments/configs/matrix.yaml` `sampling:`. q-by-q items per (dataset:domain): mohler/semeval 150,
-  riayn 149 (all), ptcs:code 150, ptcs:short_answer 150; **reasoning-ON sampled to 60** (dominant output
-  cost, §7); whole-exam = 40 PT-CS submissions; conversation sub-study = 20 submissions × 2 order
-  permutations. **Estimated real (deduped) spend ≈ €3.35 DeepInfra + €6.60 OpenAI (~€10 total)** — far under
-  the two €150 ceilings, so N can be scaled up substantially for power (e.g. short-answer 150→500,
-  reasoning-ON cap 60→150) and still stay cheap. Print via `python -m experiments.run.matrix estimate`.
+- 🔧 **N per condition** (4.1, scaled per user 2026-06-09 — awaiting final go before any run) — in
+  `experiments/configs/matrix.yaml` `sampling:`. **Criterion: strong power where we infer, containment where
+  we only reference.** Cheap OFF main-effect cells scaled aggressively (they dedupe into baseline/non-reasoning/
+  context + the reasoning-OFF side): **Mohler all 2273, SemEval 800, RIAYN all 149, PT-CS code all 737, PT-CS
+  theory all 437**. **Reasoning-ON sampled to 175** (RQ1 axis — moderate power; was 60). Whole-exam = 60 PT-CS
+  submissions. Conversation sub-study = 20 submissions × 2 orders. **Paid anchor GPT-5.1 pinned at item_cap=60,
+  k=3** (reference point, not inference). **Estimated real (deduped) spend ≈ €11.25 DeepInfra (~14.5 h wall @
+  8× parallel) + €5.45 OpenAI (~40 min) ≈ €16.7 total** — far under the two €150 ceilings. Print via
+  `python -m experiments.run.matrix estimate`. Note (§6.4): this powers the **main effects + reasoning
+  contrast**; interactions among expensive factors stay OFAT/underpowered by design — do not over-read them.
 - ✅ **Baseline (reference) config** (4.2, user 2026-06-08) — **Qwen3.5** (DeepInfra, reasoning off, with
   grounding, q-by-q, holistic), at k=5 across all datasets. Chosen over DeepSeek-V4-Flash as the internal
   reference because it is the RQ1 primary, Apache-2.0, neutral cross-domain, and continuous with Jayarao —
@@ -500,8 +503,13 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ⬜ **Interactions to probe** — which 2-way interactions are worth the cost vs main-effects-only.
 - ⬜ **Fine-tuning arm** — include or drop? If included, which model and QLoRA-local vs managed fine-tune.
 - ⬜ **QWK binning** — how to bin continuous PT-CS normalised scores into ordinal levels for QWK.
-- ⬜ **Few-shot context level** — include the optional third context level (+examples / few-shot of graded
-  answers) or keep context to no-rubric vs with-rubric? Decision pending.
+- ✅ **Few-shot context level** (4.1, user 2026-06-09) — **KEPT OUT.** Context arm stays {none,
+  with_guidance}. **Not** excluded for cost (trivial) but because (a) doing it rigorously needs an
+  example-selection sub-dimension — a confound we don't want to introduce carelessly — and (b) it is a third
+  level of a *secondary* axis (RQ2) while the focus is RQ1. **Reopening is a data decision:** if Phase 5 shows
+  with_guidance (rubric/reference) has a strong effect on agreement, +examples becomes a justified extension
+  and is added then, **with its own example-selection protocol**. Recorded as a decision + revision condition,
+  not a silent omission.
 - ✅ **Scope & decomposition** (Phase 2.6, 2026-06-08) — **PT-CS only**, confirmed by data: PT-CS is the only
   dataset with multi-question submissions (181 `submission_id`s grouping items) AND rubric criteria, so
   whole-exam (D5a) and criterion-by-criterion (D5b) apply to it alone. Mohler/SemEval/RIAYN have

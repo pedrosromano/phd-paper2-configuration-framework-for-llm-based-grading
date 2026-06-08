@@ -11,17 +11,28 @@
 # N-per-condition values here are PROPOSALS for §11 -- adjust before running.
 
 sampling:
-  # items sampled per (dataset:domain) for question-by-question cells (capped at availability)
+  # Items per (dataset:domain) for question-by-question cells (capped at availability).
+  # Scaled AGGRESSIVELY for the cheap OFF cells (user 2026-06-09): they power the
+  # non-reasoning main effects (RQ4) + context arm (RQ2) and dedupe into the reasoning-OFF
+  # side -- whole dataset where viable. The expensive ON cells are capped separately below;
+  # the paid anchor is pinned small via its own item_cap (it is a reference point, not an
+  # object of inference). Strong power where we infer, containment where we only reference.
   question_by_question:
-    mohler:short_answer: 150
-    semeval:short_answer: 150
-    riayn:code: 149          # all of RIAYN (small)
-    ptcs:code: 150
-    ptcs:short_answer: 150
-  reasoning_on_subsample: 60   # reasoning-ON is the dominant output cost -> sample, don't fully cross (§7)
-  whole_exam_submissions: 40   # PT-CS submissions graded as one call each (scope arm)
-  conversation_submissions: 20 # PT-CS submissions for the conversation sub-study (4.9)
-  conversation_orders: 2       # answer-order permutations for order control (§11 open: shuffle vs fixed)
+    mohler:short_answer: 2273    # all of Mohler
+    semeval:short_answer: 800    # SemEval is 16k -> sample (still the largest cell)
+    riayn:code: 149              # all of RIAYN
+    ptcs:code: 737               # all PT-CS code
+    ptcs:short_answer: 437       # all PT-CS theory
+  reasoning_on_subsample: 175    # RQ1 axis: moderate power on the key contrast (was 60); still a few €
+  whole_exam_submissions: 60     # PT-CS submissions graded as one call each (scope arm, RQ3)
+  conversation_submissions: 20   # PT-CS submissions for the conversation sub-study (4.9)
+  conversation_orders: 2         # answer-order permutations for order control (§11 open: shuffle vs fixed)
+  conversation_shared_input_factor: 4   # shared-history input inflation (accumulating context)
+
+# Rough wall-clock model (seconds/call) for the time estimate; reconciled from real latency
+# at the 4.4 gate. DeepInfra/OpenAI tolerate parallel requests -> divide by `concurrency`.
+latency_s: { "off": 2.0, "on": 18.0, "whole_exam_off": 5.0, "whole_exam_on": 45.0 }  # quote off/on (YAML 1.1 booleans)
+concurrency: 8
 
 # Per-call token assumptions (input, output) by domain|scope|decomposition|reasoning.
 # Seeded from the Phase 3.8 smoke + headroom; the cost guard logs real usage and reconciles.
@@ -116,6 +127,7 @@ arms:
     dataset: [mohler, semeval, riayn, ptcs]
     domain: [short_answer, code]
     k: 3
+    item_cap: 60                   # PIN small: a reference point ($10/1M out), not statistical inference
 
 # RQ6 transfer dependency (§11): the public-dataset winner needs a like-for-like PT-CS run
 # for 5.5b. SATISFIED structurally -- ptcs(code) is included in baseline, nonreasoning_main,
