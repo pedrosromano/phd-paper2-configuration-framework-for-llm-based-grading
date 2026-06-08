@@ -463,15 +463,22 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ⬜ **QWK binning** — how to bin continuous PT-CS normalised scores into ordinal levels for QWK.
 - ⬜ **Few-shot context level** — include the optional third context level (+examples / few-shot of graded
   answers) or keep context to no-rubric vs with-rubric? Decision pending.
-- ⬜ **Scope & decomposition** — confirm whole-exam (D5a) and criterion-by-criterion (D5b) stay PT-CS-only;
-  decide how to parse per-question grades out of a whole-exam response.
+- ✅ **Scope & decomposition** (Phase 2.6, 2026-06-08) — **PT-CS only**, confirmed by data: PT-CS is the only
+  dataset with multi-question submissions (181 `submission_id`s grouping items) AND rubric criteria, so
+  whole-exam (D5a) and criterion-by-criterion (D5b) apply to it alone. Mohler/SemEval/RIAYN have
+  `submission_id`=null (independent items) → question-by-question + holistic only. (Still open: how to parse
+  per-question grades out of a whole-exam response — a Phase 3.2 prompt-template concern.)
 - ⬜ **Conversation-state sub-study** — order control: shuffle order vs test multiple fixed orders; subset
   size; which single config to freeze for it.
 - ✅ **PT-CS reference** (Phase 2.1, 2026-06-08) — **kept OUT**, confirmed by data: `reference_answer` is
   100% null for PT-CS (no reference solution in the source); grounding is the rubric (`pergunta.criterios`,
   JSON `[{points,criteria}]`). No synthetic reference built (confound).
-- ⬜ **Context mapping** — finalise the per-dataset "context level" definitions (rubric vs reference) and
-  document them so cross-dataset comparison is fair.
+- ✅ **Context mapping** (Phase 2.6, 2026-06-08) — finalised + verified in the unified corpus: grounding =
+  **rubric** for PT-CS (100% rubric, 0% ref) and RIAYN (100% rubric; also has a model solution available),
+  **reference answer** for Mohler (100% ref) and SemEval (100% ref). The question stem + student answer are
+  always present; only this guidance varies. Encoded in `experiments/ingest/unify.py` (`CONTEXT_MAP`) and
+  printed by `make ingest`. Cross-dataset note: **SemEval dominates** raw counts (16,003 of 19,599 = 82%) →
+  the experiments must **sample N per condition** (the §11 N decision), not run all items, esp. for SemEval.
 - ✅ **Human-validation evidence** (Phase 2.1, 2026-06-08) — **substantive**: of 775 PT-CS responses with
   per-criterion data, **49.3% have final `cotacao` ≠ Σ`nota_parcial`** (mean adjustment 0.70 overall, **1.43
   points when adjusted**). Nearly half the final grades were moved off the AI-seeded per-criterion sum →

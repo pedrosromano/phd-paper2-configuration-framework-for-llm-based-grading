@@ -23,8 +23,8 @@ verify: ## Import-check the full dependency stack
 cost: ## Show the paid-spend ledger + remaining budget (cost guard)
 	$(PYTHON) -m experiments.harness.cost_guard status
 
-ingest: ## Phase 2 — parse datasets -> data/processed/corpus.parquet
-	$(PYTHON) -m experiments.ingest
+ingest: ## Phase 2 — unify per-dataset corpora -> data/processed/corpus.parquet
+	$(PYTHON) -m experiments.ingest.unify   # per-dataset: ingest_{ptcs,mohler,semeval,riayn}; ptcs needs DB
 
 run-local: ## Phase 4 — local (Ollama) grading arms, resumable
 	$(PYTHON) -m experiments.run.local
