@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -63,6 +64,7 @@ class CostGuard:
         self.ceiling_eur = float(self.pricing["budget_eur_ceiling"])  # OpenAI anchor
         di = self.pricing.get("deepinfra_budget_eur_ceiling")
         self.deepinfra_ceiling_eur = float(di) if di is not None else None
+        self._lock = threading.Lock()   # serialises ledger read-modify-write under concurrency
         self._ledger = self._load_ledger()
 
     def provider_of(self, model: str) -> str:
@@ -169,18 +171,19 @@ class CostGuard:
         cost = self.cost_eur(model, input_tokens, output_tokens)
         m = dict(meta or {})
         m.setdefault("provider", self.provider_of(model))
-        self._ledger["entries"].append({
-            "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "model": model,
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "cost_eur": round(cost, 6),
-            "meta": m,
-        })
-        self._ledger["total_spent_eur"] = round(
-            float(self._ledger["total_spent_eur"]) + cost, 6
-        )
-        self._save_ledger()
+        with self._lock:
+            self._ledger["entries"].append({
+                "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "model": model,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "cost_eur": round(cost, 6),
+                "meta": m,
+            })
+            self._ledger["total_spent_eur"] = round(
+                float(self._ledger["total_spent_eur"]) + cost, 6
+            )
+            self._save_ledger()
         return cost
 
     # ---- reporting ----------------------------------------------------------
