@@ -32,9 +32,16 @@ def _expected(spec, sampler, by_id, seed):
     cells: dict = {}
     keys: set = set()
     arm_of: dict = {}
-    for name in GATE_PHASE1 + GATE_PHASE2:
-        arm = next(a for a in spec["arms"] if a["name"] == name)
+    # Effective matrix = the core arms PLUS the reasoning-ON re-run (max_tokens=32768). The
+    # original ON cells at max_tokens=4096 are superseded/archived, so we DON'T expect them.
+    arms = GATE_PHASE1 + GATE_PHASE2 + ["reasoning_on_fix", "anchor_on_fix"]
+    for name in arms:
+        arm = next((a for a in spec["arms"] if a["name"] == name), None)
+        if arm is None:
+            continue
         for it, c in _arm_tasks(arm, sampler, by_id, seed, order_cache):
+            if c.reasoning == "on" and c.max_tokens == 4096:
+                continue                      # superseded by the 32768 re-run -> not expected
             ch = c.config_hash
             arm_of.setdefault(ch, name)
             cell = cells.setdefault(ch, {"info": _info(c), "n_items": set(), "ris": set()})
