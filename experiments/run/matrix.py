@@ -101,8 +101,9 @@ def estimate(arm_filter: str | None = None) -> int:
     print(f"{'arm':<22} {'provider':<10} {'cells':>6} {'calls':>9} {'est €':>9} {'wall':>8}")
     print("-" * 70)
 
+    wanted = {a.strip() for a in arm_filter.split(",")} if arm_filter else None
     for arm in spec["arms"]:
-        if arm_filter and arm["name"] != arm_filter:
+        if wanted and arm["name"] not in wanted:
             continue
         cap = arm.get("item_cap")
         configs = expand_arm(arm)
@@ -224,11 +225,23 @@ def _gate_ok(st: store.RunStore, tasks: list[tuple]) -> tuple[bool, dict]:
                 "distinct_scores": len(set(scores)), "degenerate": degenerate}
 
 
-def _preflight(spec, sampler, guard) -> bool:
+def _on_pi_check(rows: list) -> tuple[bool, dict]:
+    """Mandatory post-run check on reasoning-ON extractability (the gate's blind spot:
+    the live 4.4 gate only saw OFF cells; truncation is an ON-only failure mode)."""
+    on = [r for r in rows if r and r.get("reasoning") == "on"]
+    if not on:
+        return True, {"note": "no ON rows"}
+    pi = sum(bool(r["parse_ok"]) for r in on) / len(on)
+    trunc = sum(1 for r in on if r.get("finish_reason") == "length")
+    return pi >= GATE_MIN_PI, {"n_on": len(on), "pi_on": round(pi, 4),
+                               "truncated": trunc, "threshold": GATE_MIN_PI}
+
+
+def _preflight(spec, sampler, guard, arm_names) -> bool:
     """Refuse to start if a provider's projected spend would breach its ceiling."""
     prov_eur = {}
     for arm in spec["arms"]:
-        if arm["name"] not in CORE_ARMS:
+        if arm["name"] not in arm_names:
             continue
         cap = arm.get("item_cap")
         for c in expand_arm(arm):
@@ -282,43 +295,59 @@ def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
     order_cache: dict = {}
     t0 = time.time()
 
-    _log(f"Phase 4 run | seed={seed} | concurrency={concurrency} | store={RUNS_FILE.name}")
-    if not _preflight(spec, sampler, guard):
+    requested = [a.strip() for a in arm_filter.split(",")] if arm_filter else None
+    if requested:
+        unknown = [a for a in requested if a not in arm_by_name]
+        if unknown:
+            _log(f"REFUSED: unknown arm(s) {unknown}. Known: {list(arm_by_name)}")
+            return 1
+    gated = requested is None                 # only the default full run uses the live gate
+    pf_arms = CORE_ARMS if gated else requested
+
+    _log(f"Phase 4 run | seed={seed} | concurrency={concurrency} | arms={pf_arms} | store={RUNS_FILE.name}")
+    if not _preflight(spec, sampler, guard, pf_arms):
         _log("REFUSED: a provider would breach its ceiling. Adjust matrix.yaml and retry.")
         return 1
 
-    phase1 = arm_filter and [arm_filter] or GATE_PHASE1
-    phase2 = [] if arm_filter else GATE_PHASE2
-    if arm_filter and arm_filter not in CORE_ARMS:
-        _log(f"REFUSED: '{arm_filter}' is not a core arm ({CORE_ARMS}).")
-        return 1
-
     arm_rows: dict = {}
-    p1_tasks_all: list[tuple] = []
-    for name in phase1:
-        _log(f"ARM {name} (phase 1)")
-        tasks = _arm_tasks(arm_by_name[name], sampler, by_id, seed, order_cache)
-        if limit:
-            tasks = tasks[:limit]
-        _execute(tasks, st, guard, concurrency)
-        p1_tasks_all += tasks
-        arm_rows[name] = [st.get(it["item_id"], c.config_hash, c.run_index) for it, c in tasks]
-
-    gate_ok, gate = (True, {"skipped": "single-arm run"})
-    if phase2:
+    if gated:
+        p1_tasks_all: list[tuple] = []
+        for name in GATE_PHASE1:
+            _log(f"ARM {name} (phase 1)")
+            tasks = _arm_tasks(arm_by_name[name], sampler, by_id, seed, order_cache)
+            tasks = tasks[:limit] if limit else tasks
+            _execute(tasks, st, guard, concurrency)
+            p1_tasks_all += tasks
+            arm_rows[name] = [st.get(it["item_id"], c.config_hash, c.run_index) for it, c in tasks]
         gate_ok, gate = _gate_ok(st, p1_tasks_all)
         _log(f"AUTOMATED 4.4 GATE: {'PASS' if gate_ok else 'FAIL'} {gate}")
         if not gate_ok:
             REPORT_FILE.write_text(_report(arm_rows, gate, guard, aborted=True, t0=t0))
             _log(f"Gate FAILED -> stopped before expensive arms. Report: {REPORT_FILE.name}")
             return 2
-        for name in phase2:
+        for name in GATE_PHASE2:
             _log(f"ARM {name} (phase 2)")
             tasks = _arm_tasks(arm_by_name[name], sampler, by_id, seed, order_cache)
-            if limit:
-                tasks = tasks[:limit]
+            tasks = tasks[:limit] if limit else tasks
             _execute(tasks, st, guard, concurrency)
             arm_rows[name] = [st.get(it["item_id"], c.config_hash, c.run_index) for it, c in tasks]
+    else:
+        # direct mode (e.g. the reasoning-ON re-run): no gate; mandatory ON π check after.
+        all_rows: list = []
+        for name in requested:
+            _log(f"ARM {name} (direct)")
+            tasks = _arm_tasks(arm_by_name[name], sampler, by_id, seed, order_cache)
+            tasks = tasks[:limit] if limit else tasks
+            _execute(tasks, st, guard, concurrency)
+            rws = [st.get(it["item_id"], c.config_hash, c.run_index) for it, c in tasks]
+            arm_rows[name] = rws
+            all_rows += rws
+        ok, gate = _on_pi_check(all_rows)
+        _log(f"REASONING-ON π CHECK: {'PASS' if ok else 'FAIL'} {gate}")
+        REPORT_FILE.write_text(_report(arm_rows, gate, guard, aborted=not ok, t0=t0))
+        if not ok:
+            _log(f"ON π below {GATE_MIN_PI} -> investigate before Phase 5. Report: {REPORT_FILE.name}")
+            return 2
 
     REPORT_FILE.write_text(_report(arm_rows, gate, guard, aborted=False, t0=t0))
     _log(f"DONE in {_hms(time.time() - t0)}. Report: {REPORT_FILE.name}")
@@ -329,7 +358,7 @@ def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["estimate", "run"], nargs="?", default="estimate")
-    ap.add_argument("--arm", default=None, help="limit to one arm by name")
+    ap.add_argument("--arm", default=None, help="limit to arm(s) by name (comma-separated)")
     ap.add_argument("--concurrency", type=int, default=16)
     ap.add_argument("--seed", type=int, default=DEFAULT_SEED)
     ap.add_argument("--limit", type=int, default=None, help="cap tasks/arm (runner validation only)")

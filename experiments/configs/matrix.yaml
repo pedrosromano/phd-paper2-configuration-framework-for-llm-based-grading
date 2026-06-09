@@ -38,9 +38,9 @@ concurrency: 8
 # Seeded from the Phase 3.8 smoke + headroom; the cost guard logs real usage and reconciles.
 tokens:
   short_answer|question_by_question|holistic|off: [200, 12]
-  short_answer|question_by_question|holistic|on:  [200, 280]
+  short_answer|question_by_question|holistic|on:  [200, 1200]   # observed ON mean ~0.9k, p90 ~2.5k
   code|question_by_question|holistic|off:         [450, 120]
-  code|question_by_question|holistic|on:          [450, 900]
+  code|question_by_question|holistic|on:          [450, 3000]   # code reasoning runs longer
   code|question_by_question|criterion|off:        [480, 180]
   code|question_by_question|criterion|on:         [480, 1100]
   code|whole_exam|holistic|off:                   [2800, 500]
@@ -128,6 +128,35 @@ arms:
     domain: [short_answer, code]
     k: 3
     item_cap: 60                   # PIN small: a reference point ($10/1M out), not statistical inference
+
+  # --- reasoning-ON RE-RUN (2026-06-09): the original ON cells truncated at max_tokens=4096
+  #     (finish_reason=length; Qwen3.5 lost 50% of its long traces -> RQ1 bias). These re-run
+  #     the ON cells ONLY at max_tokens=32768 (a NEW config_hash, so the clean OFF cells stay
+  #     cached and are NOT touched). High cap chosen because the 4096 p99 was censored (it
+  #     excluded the very traces that overflowed); over-spec costs only the long tail's real
+  #     tokens, under-spec costs a third re-run. Pairs against the existing OFF rows for RQ1.
+  - name: reasoning_on_fix         # open roster, reasoning ON, full token budget
+    model: [qwen3.5, deepseek-v4-flash, glm-5.1]
+    reasoning: on
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 5
+    max_tokens: 32768
+
+  - name: anchor_on_fix            # GPT-5.1 anchor, reasoning ON, full token budget (k=3, capped)
+    model: gpt-5.1
+    reasoning: on
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 3
+    item_cap: 60
+    max_tokens: 32768
 
 # RQ6 transfer dependency (§11): the public-dataset winner needs a like-for-like PT-CS run
 # for 5.5b. SATISFIED structurally -- ptcs(code) is included in baseline, nonreasoning_main,
