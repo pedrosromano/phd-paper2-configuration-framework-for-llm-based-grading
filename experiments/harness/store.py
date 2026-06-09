@@ -85,7 +85,7 @@ class RunStore:
 
 
 def build_run_row(item, config, result, prompt: str, *,
-                  session_id=None, order_id=None, order_index=None) -> dict:
+                  session_id=None, order_id=None, order_index=None, call_group=None) -> dict:
     """The LOCKED run-row schema. Because the cache keys on config_hash, a field missing
     here cannot be back-filled without re-running -- so everything Phase 5/6/7 needs is
     logged at write time. Tokens are kept SEPARATE (never an aggregate total); config is
@@ -108,6 +108,9 @@ def build_run_row(item, config, result, prompt: str, *,
         "submission_id": _strornone(item.get("submission_id")),
         # --- conversation sub-study linkage (Phase 4.9; None for the main factorial) ---
         "session_id": session_id, "order_id": order_id, "order_index": order_index,
+        # --- whole-exam grouping: the N questions of one submission share ONE call; cost/
+        #     tokens repeat on each row, so dedupe by call_group for per-call cost (5.4) ---
+        "call_group": call_group,
         # --- sampling / reproducibility bundle (CLAUDE.md §8) ---
         "quant": meta["quant"], "temperature": config.temperature,
         "top_p": config.top_p, "max_tokens": config.max_tokens, "seed": config.seed,
