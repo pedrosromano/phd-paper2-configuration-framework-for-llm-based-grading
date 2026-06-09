@@ -106,8 +106,11 @@ def render_whole_exam(config, items: list) -> str:
     instruction = b["instruction"][config.domain]
     parts = []
     for it in items:
-        seg = f"--- QUESTION (question_id={it['question_id']}) ---\n{str(it['question_text']).strip()}"
-        if config.decomposition == "criterion" and it.get("rubric_json"):
+        seg = (f"--- QUESTION (question_id={it['question_id']}, max_score={_fmt(it.get('gold_scale_max', 1))}) "
+               f"---\n{str(it['question_text']).strip()}")
+        # grounding (rubric) per question whenever context_level != none -- matches the
+        # q-by-q render() so the scope contrast holds grounding constant.
+        if config.context_level != "none" and _has(it.get("rubric_json")):
             seg += f"\nRUBRIC:\n{rubric_to_text(it['rubric_json'])}"
         seg += f"\n\nSTUDENT ANSWER:\n{str(it['student_answer']).strip()}"
         parts.append(seg)

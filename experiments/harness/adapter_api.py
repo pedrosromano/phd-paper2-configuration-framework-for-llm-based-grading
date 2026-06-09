@@ -157,6 +157,69 @@ def grade(item, config, guard: CostGuard | None = None) -> GradeResult:
                        finish_reason=finish, cost_eur=cost)
 
 
+def grade_whole_exam(items, config, guard: CostGuard | None = None):
+    """Grade ALL questions of one submission in a SINGLE call (scope=whole_exam). Returns
+    (per_question, meta): per_question is [{item, score, parse_ok}] mapped back by question_id;
+    meta carries the shared call's prompt/raw/tokens/cost/latency/finish_reason. The same call
+    covers N questions -> the runner writes N rows tagged with call_group (the submission) so
+    cost is counted once per group, while each question keeps its own score for agreement."""
+    load_env()
+    pricing = (guard.pricing if guard else load_pricing())
+    mcfg = dict(pricing["models"][config.model])
+    mcfg.setdefault("model_id", config.model)
+    provider = mcfg.get("provider", "unknown")
+    key = os.environ.get(mcfg["env_key"])
+    prompt = prompts.render_whole_exam(config, items)
+
+    def fail(msg):
+        per = [{"item": it, "score": None, "parse_ok": False} for it in items]
+        return per, {"prompt": prompt, "raw": "", "tokens_in": 0, "tokens_out": 0,
+                     "reasoning_tokens": None, "latency_s": 0.0, "finish_reason": None,
+                     "cost_eur": None, "error": msg}
+
+    if not key:
+        return fail(f"{mcfg['env_key']} not set")
+    if guard is not None and guard.remaining_for(provider) <= 0:
+        return fail(f"budget exhausted for provider {provider}")
+    payload = _build_payload(mcfg, prompt, config)
+    t0 = time.perf_counter()
+    try:
+        resp = _chat(mcfg["base_url"], key, payload)
+    except urllib.error.HTTPError as e:
+        return fail(f"HTTP {e.code}: {e.read().decode('utf-8', 'replace')[:160]}")
+    except _Transient as e:
+        return fail(f"transient (retries exhausted): {str(e)[:120]}")
+    latency = round(time.perf_counter() - t0, 3)
+    choice = resp.get("choices", [{}])[0]
+    raw = (choice.get("message", {}).get("content") or "").strip()
+    usage = resp.get("usage", {})
+    tin, tout = int(usage.get("prompt_tokens", 0)), int(usage.get("completion_tokens", 0))
+    cost = round(guard.record(config.model, tin, tout,
+                              meta={"config_hash": config.config_hash, "whole_exam": True}), 6) \
+        if guard is not None else None
+    parsed, _ = parse_output(raw, "whole_exam", config.decomposition)
+    answers = parsed.get("answers") or []
+    key_field = "total" if config.decomposition == "criterion" else "score"
+    by_qid = {}
+    for a in answers:
+        if isinstance(a, dict) and a.get("question_id") is not None:
+            by_qid[str(a["question_id"])] = a.get(key_field, a.get("score"))
+    per = []
+    for it in items:
+        sc = by_qid.get(str(it["question_id"]))
+        per.append({"item": it, "score": _num_or_none(sc), "parse_ok": sc is not None})
+    return per, {"prompt": prompt, "raw": raw, "tokens_in": tin, "tokens_out": tout,
+                 "reasoning_tokens": _reasoning_tokens(usage), "latency_s": latency,
+                 "finish_reason": choice.get("finish_reason"), "cost_eur": cost, "error": None}
+
+
+def _num_or_none(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
 def _smoke() -> int:
     import pandas as pd
     from pathlib import Path
