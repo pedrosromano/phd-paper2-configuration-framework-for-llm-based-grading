@@ -503,6 +503,12 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ⬜ **Interactions to probe** — which 2-way interactions are worth the cost vs main-effects-only.
 - ⬜ **Fine-tuning arm** — include or drop? If included, which model and QLoRA-local vs managed fine-tune.
 - ⬜ **QWK binning** — how to bin continuous PT-CS normalised scores into ordinal levels for QWK.
+- 🔧 **Score clamping to [0, max]** (Phase 4, 2026-06-09) — Phase 5 must **clamp predicted scores to
+  [0, gold_scale_max]** before metrics. Discovered by the integrity audit: 18 PT-CS criterion items
+  (88 rows, Qwen3.5, reasoning-off, criterion decomposition) sum to a **negative total** (e.g. -0.5) because
+  the rubric has **penalty criteria** ("Descontar caso ordene ao contrário") and the model applied only the
+  penalty. The parser is correct (sum matches); negative grades just aren't valid (a question can't score
+  below 0), so clamp -0.5→0. Not corruption — a normalisation decision. (No scores ABOVE max exist.)
 - ✅ **Few-shot context level** (4.1, user 2026-06-09) — **KEPT OUT.** Context arm stays {none,
   with_guidance}. **Not** excluded for cost (trivial) but because (a) doing it rigorously needs an
   example-selection sub-dimension — a confound we don't want to introduce carelessly — and (b) it is a third
