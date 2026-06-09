@@ -509,6 +509,17 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   the rubric has **penalty criteria** ("Descontar caso ordene ao contrário") and the model applied only the
   penalty. The parser is correct (sum matches); negative grades just aren't valid (a question can't score
   below 0), so clamp -0.5→0. Not corruption — a normalisation decision. (No scores ABOVE max exist.)
+- ⚠️ **Code-grading 0-collapse (discrimination, not just severity)** (Phase 4, 2026-06-09) — on **PT-CS code**,
+  **Qwen3.5 OFF (the baseline)** collapses a large share of grades to **0**: in the whole-exam arm (60
+  submissions, all data, not just the validation sample) **42% of scores are exactly 0**, mean 0.82; and the
+  q-by-q baseline gives the **same 0s on the same items** (so it's the model, scope-independent, and the raw
+  shows explicit `"score":0` with `parse_ok=true` — real judgments, not coercions). This is **discrimination
+  collapse at the lower end**, not mere severity — consistent with PT-CS having the **lowest QWK (0.47)** of
+  the datasets. **Three Phase-5 watchpoints:** **(a)** for **RQ1 on code**, do NOT conclude "reasoning helps"
+  from a level shift alone — check whether reasoning changes **discrimination at the lower end** (e.g. QWK /
+  spread among the 0-clustered items), not just the mean; **(b)** read any "**better than baseline on code**"
+  with the caveat that the baseline itself collapses to 0 (a low bar — say so); **(c)** ties to **§6.4** (code
+  evidence is narrower — PT-CS + RIAYN, Java/OOP — state code conclusions more tentatively).
 - ✅ **Few-shot context level** (4.1, user 2026-06-09) — **KEPT OUT.** Context arm stays {none,
   with_guidance}. **Not** excluded for cost (trivial) but because (a) doing it rigorously needs an
   example-selection sub-dimension — a confound we don't want to introduce carelessly — and (b) it is a third
@@ -521,8 +532,13 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   whole-exam (D5a) and criterion-by-criterion (D5b) apply to it alone. Mohler/SemEval/RIAYN have
   `submission_id`=null (independent items) → question-by-question + holistic only. (Still open: how to parse
   per-question grades out of a whole-exam response — a Phase 3.2 prompt-template concern.)
-- ⬜ **Conversation-state sub-study** — order control: shuffle order vs test multiple fixed orders; subset
-  size; which single config to freeze for it.
+- 🔧 **Conversation-state sub-study (4.9)** — order control: shuffle vs fixed orders; subset size; which
+  config to freeze. **User leaning (2026-06-09, NOT yet fixed — confirm next session before building):**
+  **fixed orders (natural vs inverse)** — isolates the position effect cleanly, cheap (fits a secondary
+  sub-study), easy to describe; shuffle would only win if quantifying order *variance* were a headline, which
+  it isn't. Build requirement: run **sequentially within a session** (parallelise only across sessions, else
+  the order effect — the whole point — is destroyed). Decision deferred deliberately: it determines what the
+  sub-study measures, so not to be rushed at the end of a long session.
 - ✅ **PT-CS reference** (Phase 2.1, 2026-06-08) — **kept OUT**, confirmed by data: `reference_answer` is
   100% null for PT-CS (no reference solution in the source); grounding is the rubric (`pergunta.criterios`,
   JSON `[{points,criteria}]`). No synthetic reference built (confound).
