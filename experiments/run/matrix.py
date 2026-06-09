@@ -195,10 +195,11 @@ def _execute(tasks: list[tuple], st: store.RunStore, guard: CostGuard, concurren
             st.append(row)
             done["n"] += 1
             done["ok"] += int(bool(row["parse_ok"]))
-            if done["n"] % 250 == 0:
+            if done["n"] % 100 == 0:
                 pi = done["ok"] / done["n"]
                 _log(f"  ... {done['n']:,}/{len(todo):,}  π={pi:.3f}  "
-                     f"DeepInfra €{guard.spent_for('deepinfra'):.2f} | OpenAI €{guard.spent_for('openai'):.2f}")
+                     f"DeepInfra €{guard.spent_for('deepinfra'):.2f} | OpenAI €{guard.spent_for('openai'):.2f}"
+                     f"  retries={adapter_api.retry_stats()}")
         return row
 
     if todo:

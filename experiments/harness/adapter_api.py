@@ -13,11 +13,12 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 import time
 import urllib.error
 import urllib.request
 
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
 
 from experiments.harness import prompts
 from experiments.harness.cost_guard import BudgetExceeded, CostGuard, load_pricing
@@ -30,7 +31,26 @@ class _Transient(Exception):
     pass
 
 
-@retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=1, min=2, max=30),
+# Transient-retry counters (for tuning concurrency: watch the 429 rate per step).
+_RETRY = {"429": 0, "5xx": 0, "net": 0}
+_RETRY_LOCK = threading.Lock()
+
+
+def _bump(kind: str) -> None:
+    with _RETRY_LOCK:
+        _RETRY[kind] += 1
+
+
+def retry_stats() -> dict:
+    with _RETRY_LOCK:
+        return dict(_RETRY)
+
+
+# Jittered exponential backoff: random spread (0..2^n, capped 30s) so workers that hit a
+# 429 together do NOT retreat in lockstep -> avoids a synchronized retry storm at high
+# concurrency. Retries only on transient server/network errors (429 + 5xx gateway + net);
+# 4xx like 400/401/403/404 re-raise immediately (not retried).
+@retry(stop=stop_after_attempt(4), wait=wait_random_exponential(multiplier=1, max=30),
        retry=retry_if_exception_type(_Transient), reraise=True)
 def _chat(base_url: str, key: str, payload: dict) -> dict:
     req = urllib.request.Request(
@@ -41,10 +61,15 @@ def _chat(base_url: str, key: str, payload: dict) -> dict:
         with urllib.request.urlopen(req, timeout=600) as r:
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
-        if e.code in (429, 500, 502, 503, 504):
+        if e.code == 429:
+            _bump("429")
+            raise _Transient("HTTP 429") from e
+        if e.code in (500, 502, 503, 504):
+            _bump("5xx")
             raise _Transient(f"HTTP {e.code}") from e
         raise
     except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        _bump("net")
         raise _Transient(str(e)) from e
 
 
