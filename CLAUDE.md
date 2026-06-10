@@ -263,7 +263,11 @@ rationale: `experiments/model_roster.md`. This supersedes the inherited/stale ro
 - **Consistency:** SD/variance across k, ICC. (Needs no ground truth — a clean axis regardless of the
   reference; note PT-CS reference is now a two-teacher consensus, more reliable than a single rater.)
 - **Operational:** tokens; **cost — € for paid models, wall-clock/compute for local** (define per model class,
-  don't conflate); latency; throughput. The headline reasoning premium (≈5–10×) must state **which** cost metric.
+  don't conflate); latency; throughput. The headline reasoning premium must state **which** cost metric — and
+  it is **measured on `completion_tokens`** (Phase 4 found it **far larger than the old ≈5–10× guess**: ON
+  output ran tens× the OFF output, esp. Qwen long traces; the stale "5–10×" is superseded — compute it from
+  the data per 5.4, DeepInfra bundles reasoning into completion_tokens; GPT-5.1 itemises reasoning_tokens but
+  the two aren't comparable, §6.4).
 - **Leniency:** strictness vs human (cf. "Rubric Is All You Need").
 - **Extractable-rate (π):** fraction of runs yielding a parseable grade (cf. local-model studies).
 
