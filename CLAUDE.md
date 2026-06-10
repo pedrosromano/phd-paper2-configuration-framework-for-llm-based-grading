@@ -525,10 +525,40 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   intervened-PT-CS winner **gpt-5.1|on 0.897**). **KEY:** the rubric "non-transfer" was a **GOLD ARTIFACT** —
   full PT-CS dQWK +0.007 (ns) but INTERVENED **+0.149** (like RIAYN +0.124) → on items where a human actually
   aligned the grade to criteria, the rubric helps. So the earlier "rubric doesn't help on PT-CS" is RESOLVED
-  (gold quality, not the rubric). **Consequences:** results held → **assertive** wording; PT-CS = illustrative
-  case study; gold reliability = first-line threat; the non-transfer has **two non-separable explanations**
-  (real-context vs unreliable gold) → same prescription (validate locally). Framework rests on the public
-  datasets; conversation is gold-independent.
+  (gold quality, not the rubric). **Consequences:** results held → **assertive** wording. **PROMOTION (user
+  2026-06-10):** the intervened stratum is promoted to a **transfer dataset of full right — "PT-CS-verified"**
+  (curated by the auditable criterion `cotacao ≠ Σnota_parcial`); the rest is **excluded by declared criterion**
+  (answers "if you don't trust the gold, why use it?" → we didn't, we curated). RQ6 = **demonstration at
+  reduced, declared N** (not case study). **5.7 main tables report PT-CS-verified with per-config N; full-PT-CS
+  appears once in a full-vs-verified SENSITIVITY that is itself a result** ("non-validated gold distorts: QWK
+  0.31→0.47, and masks real effects: rubric +0.007→+0.149").
+  - **Transfer framing (locked):** stated via the **open models (N=84 OFF / 32 ON, declared)** — reasoning helps
+    them on verified short-answer (qwen 0.65→0.80, glm 0.69→0.77), ranking differs from public. **The GPT-5.1
+    anchor is N=11 → directional corroboration ONLY, never headline/abstract/highlight table**; show its CI
+    beside the QWK (0.897 on 11 items self-defends with a wide CI).
+  - **Strata asymmetry (Discussion):** short-answer verified = **19% (84/437)** vs code **295** — short-answer
+    transfer rests on a small fraction (say it). Curious inversion: **code**, the "narrow" domain (§6.4), has the
+    **comfortable** verified N in transfer.
+  - **Criterion LIMIT (threat):** the criterion detects **intervention, not correction** — an exact-sum may be a
+    teacher who reviewed and agreed (→ filed "no evidence"); a **conservative proxy**, "intervention evidence" ≠
+    "validation guarantee". Declare reduced N in every transfer claim.
+  - **Rubric (rewritten):** NOT a "second non-transfer" — the apparent null was a **gold artifact**; on the
+    verified stratum the rubric helps (+0.149), consistent with RIAYN (+0.124) → **the rubric benefit transfers
+    when the gold is reliable.** Remaining non-transfer = the **model-ranking** one (thread 1); the **gold
+    lesson** = thread 2. Framework rests on the public datasets; conversation is gold-independent.
+- ⚠️ **PT-CS gold — GRADE INFLATION (second, distinct threat; document, don't exclude)** (2026-06-10) — beyond
+  incomplete validation (resolved by stratification), the source course was a **lower-rigour requalification**
+  with a probably **lenient grading standard** (1–2 marks where strict gives 0). **No mechanical exclusion**
+  (not detectable by any field) → **first-line threat alongside validation**, with the distinction:
+  stratification resolves *"who validated"*; inflation is *"with what standard"*, and the verified stratum does
+  **not** resolve it. **Quantified proxy (5b): WEAK/ambiguous** — model−gold deviation on PT-CS-verified code
+  (−0.154) ≈ Mohler (−0.149), only slightly > RIAYN (−0.116); models are stricter than humans *everywhere*, no
+  PT-CS-specific over-strictness → **report as not strongly supporting inflation** (don't manufacture). (Sharper
+  finding: the unreliable gold *masked* the deviation — full PT-CS −0.048 vs verified −0.104 — reinforcing the
+  validation threat.) **5.5c competing explanation:** part of the Qwen-0 vs gold-1/2 gap may be **model severity
+  × gold leniency**, not only discrimination failure — **comparative** readings (same gold) hold; **absolute**
+  ones are qualified; use the **leniency** metric (§6.2) as the lens. **Article 3 lesson — two floors:**
+  traceable validation **and** a calibrated rigour standard.
 - ✅ **Backend-conditional reproducibility** (2026-06-08) — recorded as a §6.4 threat + a Methods requirement:
   results are conditional on the DeepInfra/OpenAI served versions + sampling params (3.7: same-name models
   differ across backends). Per-run repro fields already logged (`runs/`); the *guidance* transfers, not the

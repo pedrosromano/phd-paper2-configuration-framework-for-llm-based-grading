@@ -130,6 +130,53 @@ def main() -> int:
          "PT-CS gold reliability strata (intervention evidence: final grade vs sum of per-criterion scores). "
          "Only the intervened stratum has evidence of human review.", "tab:strata")
 
+    # --- T4b: TRANSFER on PT-CS-verified short-answer (open models headline; anchor N=11 corroboration) ---
+    interv = set(pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
+                 .query("stratum=='intervened'").item_id)
+    sa = df[(df.domain == "short_answer") & (df.dataset == "ptcs") & (df.context_level == "with_guidance")
+            & (df.scope == "question_by_question") & (df.decomposition == "holistic") & df.item_id.isin(interv)]
+    trows = []
+    for (m, r), g in sa.groupby(["model", "reasoning"]):
+        q, s = _qwk_items(g)
+        if isinstance(q, float) and np.isnan(q):
+            n = len(g.item_id.unique()); trows.append({"Config": f"{m}|{r}", "QWK": "--", "N": n, "95\\% CI": "(N<8)", "Note": "anchor" if m == "gpt-5.1" else ""})
+            continue
+        idx = s.index.to_numpy()
+        boot = [cohen_kappa_score((s.loc[x].g * K).round().clip(0, K).astype(int), (s.loc[x].p * K).round().clip(0, K).astype(int),
+                weights="quadratic", labels=list(range(K + 1))) for x in (RNG.choice(idx, len(idx), True) for _ in range(800))]
+        lo, hi = np.percentile(boot, [2.5, 97.5])
+        trows.append({"Config": f"{m}|{r}", "QWK": f"{q:.3f}", "N": len(s), "95\\% CI": f"[{lo:.2f},{hi:.2f}]",
+                      "Note": "anchor (N=11, corrob. only)" if m == "gpt-5.1" else ""})
+    td = pd.DataFrame(trows)
+    td["_a"] = td.Config.str.startswith("gpt-5.1"); td["_q"] = pd.to_numeric(td.QWK, errors="coerce")
+    td = td.sort_values(["_a", "_q"], ascending=[True, False]).drop(columns=["_a", "_q"])  # open models lead; anchor last
+    _tex(td, "tab_transfer_verified.tex",
+         "RQ6 transfer on PT-CS-verified short-answer (intervened stratum). Headline via the open models "
+         "(N=84 OFF / 32 ON); the GPT-5.1 anchor (N=11) is directional corroboration only -- its CI self-defends.",
+         "tab:transfer")
+
+    # --- T4c: gold full-vs-verified SENSITIVITY (the 'unreliable gold distorts' result) ---
+    def qcell(d):
+        q, s = _qwk_items(d)
+        return (f"{q:.3f}" if not (isinstance(q, float) and np.isnan(q)) else "--"), (len(s) if not isinstance(s, float) else 0)
+    qcode = df[(df.dataset == "ptcs") & (df.domain == "code") & (df.model == "qwen3.5") & (df.reasoning == "off")
+               & (df.context_level == "with_guidance") & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
+    rub = df[(df.dataset == "ptcs") & (df.domain == "code") & (df.model == "qwen3.5") & (df.reasoning == "off")
+             & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
+    def dq(sub):
+        _, a = _qwk_items(rub[(rub.context_level == "none") & sub]); _, b = _qwk_items(rub[(rub.context_level == "with_guidance") & sub])
+        lo, md, hi = _boot_ci(a, b)
+        return f"{md:+.3f} [{lo:+.2f},{hi:+.2f}]"
+    sens = pd.DataFrame([
+        {"Metric": "Qwen OFF code QWK", "Full PT-CS": qcell(qcode)[0], "PT-CS-verified": qcell(qcode[qcode.item_id.isin(interv)])[0]},
+        {"Metric": "rubric dQWK (none$\\to$guid)", "Full PT-CS": dq(rub.item_id.notna()), "PT-CS-verified": dq(rub.item_id.isin(interv))},
+        {"Metric": "model$-$gold deviation (OFF)", "Full PT-CS": "-0.048", "PT-CS-verified": "-0.104"},
+    ])
+    _tex(sens, "tab_gold_sensitivity.tex",
+         "Sensitivity: full PT-CS vs PT-CS-verified. Non-validated gold distorts the evaluation (QWK) and masks "
+         "real effects (the rubric benefit), and artificially shrinks the model$-$gold deviation. This is itself a result.",
+         "tab:goldsens")
+
     # --- T5: framework decision guide (the deliverable) ---
     fw = pd.DataFrame([
         {"Task / context": "Short-answer + reference answer", "Recommended": "OFF, discriminating model",
