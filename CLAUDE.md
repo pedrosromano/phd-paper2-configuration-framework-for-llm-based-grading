@@ -517,7 +517,18 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ✅ **Consistency = first-line RQ1 result** (Phase 5 review, 2026-06-10) — the Phase-4 data shows reasoning
   ON **reduces** k-consistency (even at temp=0, where 10–43% of items still vary — backend-conditional). So
   **RQ1 has two dimensions that can diverge: agreement vs consistency** — analysed as a headline (5.3/5.5a),
-  not a footnote.
+  not a footnote. **CAUSAL CAVEAT (verified 5.3, 2026-06-10):** within-item SD correlates with output length
+  (Spearman ~0.6 median, all models/datasets) → a substantial part of the "reasoning inconsistency" is
+  **length × backend non-determinism** (more tokens at temp=0 = more chance to diverge), **not** an intrinsic
+  property of reasoning. The result stands (inconsistency is real for the user) but the **explanation must say
+  so** — ties to §6.4 (backend-conditional). Do NOT frame it as "the model reasons differently each time".
+- ✅ **RQ1 agreement gain — censoring check (verified 5.2, 2026-06-10)** — the Qwen-ON QWK gain is NOT a
+  truncation-censoring artifact: it **survives strict pairing on items the ON never truncated** (e.g. PT-CS
+  code +0.136 loose → +0.110 clean-only; RIAYN/SemEval even grow). **Two caveats the framework must encode:**
+  (a) PT-CS short-answer lost ~40% of the naïve gain to censoring (+0.180→+0.103); (b) the truncated items
+  ARE genuinely harder (OFF MAE 2–3× higher on them), so the reasoning benefit is established **only on the
+  tractable items** — on the hardest (reasoning overflows 32768) we have no clean ON score and **cannot claim
+  the benefit extends to them**. Scope the claim accordingly.
 - ✅ **Phase-5 pairing subsets** (Phase 5 review, 2026-06-10) — every expensive contrast pairs on its sampled
   subset or it's biased: **reasoning 175**, **scope 252** (whole-exam questions, not all 737), **anchor 60**.
   State the N in each contrast. (Full rationale + the other Phase-4-review corrections — call_group cost
