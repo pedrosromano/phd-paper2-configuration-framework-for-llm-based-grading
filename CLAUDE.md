@@ -40,8 +40,12 @@ whole study and the Results structure):
 - **RQ4.** How do **current-generation models** (incl. 2026 open-weight, untested as graders) compare, and what
   is the **cost–quality trade-off** (local vs paid frontier)?
 - **RQ5 (sub-study).** Does **conversation state** (clean vs shared history) affect consistency/fairness?
-- **RQ6 (transfer).** Does the best configuration found on public datasets **transfer** to a real deployment
-  context in Portuguese (PT-CS)?
+- **RQ6 (transfer — ILLUSTRATED, not demonstrated).** Does the best configuration found on public datasets
+  appear to **transfer** to a real Portuguese deployment context (PT-CS)? **Reframed (2026-06-10):** PT-CS gold
+  is of limited/uneven reliability (§2.3), so PT-CS is an **illustrative case study**, not a transfer proof.
+  The observed **non-transfer** (the public-winner config is not the PT-CS winner) is reported with its **two
+  non-separable explanations** (real-context difference vs unreliable gold) — both pointing to the same
+  prescription: validate locally with a trusted gold.
 
 **The deliverable is a framework, not a leaderboard.** The headline output is a **compact, empirically-grounded
 decision guide** — a table / set of rules mapping task characteristics (domain, rubric availability, budget) to
@@ -84,13 +88,23 @@ These are not features; they gate submission. Keep them visible and track them a
    dataset **must not** contain `nome`, `email`, `password`, `reset_token`, or any direct identifier.
    This is a parallel workstream starting now, not at submission time. **Gate:** PT-CS experiments and any
    data release must not proceed **to publication** before the legal basis / ethics opinion is confirmed.
-3. **Ground-truth honesty.** PT-CS grades are a **consensus grade by two teachers in agreement**, on top of
-   *human validation/correction (often substantial) of model-generated suggestions*. Describe them as
-   **consensus** (two teachers agreeing on one grade), **not** independent double annotation: there are no two
-   separate scores, so **inter-rater agreement / a measured "human ceiling" cannot be reported**. Do not imply
-   otherwise — a reviewer will ask for the kappa. Consensus does make the reference more reliable than a single
-   rater, which strengthens using LLM-vs-human agreement as a quality measure (not merely "alignment with one
-   grader").
+3. **Ground-truth honesty — PT-CS gold has LIMITED, HETEROGENEOUS reliability (revised 2026-06-10, do NOT
+   over-claim).** The earlier "two-teacher consensus, human-validated" premise is **OVERSTATED** for much of
+   PT-CS. Reality (author, 2026-06-10): PT-CS comes from a **lower-rigour requalification course** (grades
+   possibly inflated) and from **early platform tests** — **not all grades were teacher-reviewed**; some may be
+   **AI-generated without review**; there may be **bugs**, and some **final grades were adjusted incoherently
+   with the per-criterion scores**. So: describe the gold as **mixed-provenance, of limited and uneven
+   reliability** — *where* teachers intervened it is a consensus correction of AI-seeded suggestions; elsewhere
+   it may be unreviewed AI output. **No inter-rater κ / "human ceiling" is recoverable** (no per-teacher
+   scores). **The intervention evidence is quantifiable** (Phase 2.1: % of responses where final `cotacao` ≠
+   Σ`nota_parcial` = evidence of a human moving the AI sum); use it to **stratify** PT-CS into *intervened* vs
+   *suspected-unreviewed* and report results on the reliable stratum (Phase 5). **This is a first-line threat**,
+   not a footnote — and it gives the **PT-CS non-transfer two non-separable explanations** (the real context
+   differs *vs* the gold is unreliable) that point to the **same** prescription: validate locally against a
+   gold you trust. **PT-CS is therefore an *illustrative case study with limited-reliability gold*, NOT a
+   transfer *demonstration*** (RQ6 reframed as illustrated, not demonstrated; see §11). The framework rests on
+   the public datasets and does not depend on PT-CS gold; the conversation sub-study measures model behaviour
+   and is gold-independent.
 4. **No circularity.** Data used to *evaluate* configurations in Article 2 must stay conceptually separate
    from the GradeGenie *system* evaluated in Article 3. Do not validate an improved GradeGenie against
    grades a previous GradeGenie helped produce.
@@ -500,14 +514,30 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   {off,on} × {none,with_guidance}) already has a like-for-like PT-CS counterpart — whatever wins on the public
   datasets, 5.5b can compare it on PT-CS. (Whole-exam/criterion/conversation are additionally PT-CS-only by
   design.)
+- ✅ **PT-CS gold reliability — STRATIFIED (Phase 5, 2026-06-10), RQ6 = illustrative not demonstrated** —
+  PT-CS gold is mixed-provenance, limited reliability (§2.3). Stratified by intervention evidence (`cotacao`
+  vs Σ`nota_parcial`, re-queried READ-ONLY from the DB → `data/processed/_ptcs_strata.parquet`): of 1184
+  responses, only **32.3% INTERVENED** (final ≠ sum, human moved it; mean adjustment 1.43), **33.2% exact-sum**
+  (suspected unreviewed), **34.5% no-criteria** (unassessable). **Two-thirds lack evidence of human review.**
+  **Re-ran the key contrasts on the INTERVENED stratum (analysis only): the central results HOLD →** collapse
+  persists (Qwen frac0 0.49) but QWK rises 0.31→**0.47** (low full-PT-CS QWK was partly gold-quality);
+  reasoning ptcs-code dQWK **+0.17** (holds, 0.44→0.61); **ranking inversion holds** (public winner qwen|off →
+  intervened-PT-CS winner **gpt-5.1|on 0.897**). **KEY:** the rubric "non-transfer" was a **GOLD ARTIFACT** —
+  full PT-CS dQWK +0.007 (ns) but INTERVENED **+0.149** (like RIAYN +0.124) → on items where a human actually
+  aligned the grade to criteria, the rubric helps. So the earlier "rubric doesn't help on PT-CS" is RESOLVED
+  (gold quality, not the rubric). **Consequences:** results held → **assertive** wording; PT-CS = illustrative
+  case study; gold reliability = first-line threat; the non-transfer has **two non-separable explanations**
+  (real-context vs unreliable gold) → same prescription (validate locally). Framework rests on the public
+  datasets; conversation is gold-independent.
 - ✅ **Backend-conditional reproducibility** (2026-06-08) — recorded as a §6.4 threat + a Methods requirement:
   results are conditional on the DeepInfra/OpenAI served versions + sampling params (3.7: same-name models
   differ across backends). Per-run repro fields already logged (`runs/`); the *guidance* transfers, not the
   absolute scores.
 - ⬜ **Interactions to probe** — which 2-way interactions are worth the cost vs main-effects-only.
 - ⬜ **Fine-tuning arm** — include or drop? If included, which model and QLoRA-local vs managed fine-tune.
-- 🔧 **QWK binning** — bin the **normalised** 0–1 score (NOT the native scale — PT-CS scales are heterogeneous,
-  1–12) into K ordinal levels. K still TBD (record when fixed). See Phase 5.0.
+- ✅ **QWK binning** (Phase 5, 2026-06-10) — bin the **normalised** 0–1 score into **K = 5** ordinal levels
+  (0..5, 6 bins ≈ Mohler's native 0–5, so QWK is comparable across datasets); fixed a priori, with a
+  **sensitivity over K∈{4,5,6}** reported. See Phase 5.0.
 - ✅ **SemEval score→label + splits** (Phase 5 review, user 2026-06-10) — the model emits a continuous 0–1
   score; SemEval gold is a **binary 2-way label** (correct/incorrect; gold_score 0/1). Map with a **fixed
   threshold 0.5** on the normalised score — **NOT data-tuned** (would be circular). Report accuracy + macro-F1
@@ -582,11 +612,13 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   always present; only this guidance varies. Encoded in `experiments/ingest/unify.py` (`CONTEXT_MAP`) and
   printed by `make ingest`. Cross-dataset note: **SemEval dominates** raw counts (16,003 of 19,599 = 82%) →
   the experiments must **sample N per condition** (the §11 N decision), not run all items, esp. for SemEval.
-- ✅ **Human-validation evidence** (Phase 2.1, 2026-06-08) — **substantive**: of 775 PT-CS responses with
-  per-criterion data, **49.3% have final `cotacao` ≠ Σ`nota_parcial`** (mean adjustment 0.70 overall, **1.43
-  points when adjusted**). Nearly half the final grades were moved off the AI-seeded per-criterion sum →
-  strong evidence the two-teacher validation was real, not rubber-stamping. Put this number in the paper
-  (Threats / ground-truth section).
+- ✅ **Human-validation evidence** (Phase 2.1, 2026-06-08; **recontextualised 2026-06-10**) — of 775 PT-CS
+  responses with per-criterion data, **49.3% have `cotacao` ≠ Σ`nota_parcial`** (mean adjustment 1.43 when
+  adjusted) — evidence of intervention. **BUT do NOT read this as "validation was real across PT-CS"** (the
+  earlier framing): over ALL 1184 responses only **32.3% are intervened**; **33.2% are exact-sum** (suspected
+  unreviewed) and **34.5% have no per-criterion record** at all → **two-thirds lack review evidence**. Use the
+  intervened/exact-sum/no-criteria **stratification** (see the PT-CS-gold-reliability item above), not a single
+  "half were validated" claim, in the Threats section.
 - ✅ **Consensus vs independent** (Phase 2.1, 2026-06-08) — **always joint/consensus**. The schema has **no
   per-teacher score columns**: `criterio_correcao` holds a single `comentario` + `nota_parcial` per criterion,
   and `resposta_submissao.cotacao` is the single final grade. **No separate per-teacher scores exist → no
