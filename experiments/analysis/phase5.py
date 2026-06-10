@@ -126,6 +126,83 @@ def aggregate(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _agreement(d: pd.DataFrame, k: int = QWK_K) -> dict:
+    """QWK(binned k) / Spearman / MAE on a slice, using parsed rows with a gold. Unparsed
+    rows are excluded (NOT coerced) -- so π carries the non-random-exclusion caveat."""
+    from scipy import stats
+    from sklearn.metrics import cohen_kappa_score
+    s = d[d["pred_norm"].notna() & d["gold_norm"].notna()]
+    n = len(s)
+    if n < 2:
+        return {"n": n, "qwk": np.nan, "spearman": np.nan, "mae": np.nan}
+    po, go = to_ordinal(s["pred_norm"], k).astype(int), to_ordinal(s["gold_norm"], k).astype(int)
+    qwk = cohen_kappa_score(go, po, weights="quadratic", labels=list(range(k + 1)))
+    p, g = s["pred_norm"].to_numpy(), s["gold_norm"].to_numpy()
+    sr = stats.spearmanr(p, g).statistic if np.ptp(p) and np.ptp(g) else np.nan
+    return {"n": n, "qwk": round(float(qwk), 3), "spearman": round(float(sr), 3) if sr == sr else np.nan,
+            "mae": round(float(np.mean(np.abs(p - g))), 3)}
+
+
+def _consistency(d: pd.DataFrame) -> float:
+    """Mean within-item SD of the normalised score across the k repetitions (lower = more
+    consistent). Ground-truth-free."""
+    s = d[d["pred_norm"].notna()]
+    if s.empty:
+        return np.nan
+    sd = s.groupby("item_id")["pred_norm"].std()
+    return round(float(sd.dropna().mean()), 4) if sd.notna().any() else np.nan
+
+
+def reasoning_contrast(df: pd.DataFrame) -> pd.DataFrame:
+    """RQ1 headline (5.2+5.3+5.5a): OFF vs ON on the PAIRED 175 subset, per (dataset,domain,
+    model) -- agreement (QWK) AND consistency (within-item SD), so the two axes can diverge."""
+    rp = reasoning_paired(df)
+    base = rp[(rp.context_level == "with_guidance") & (rp.scope == "question_by_question")
+              & (rp.decomposition == "holistic")]
+    rows = []
+    for (ds, dom, m), g in base.groupby(["dataset", "domain", "model"]):
+        o, n = g[g.reasoning == "off"], g[g.reasoning == "on"]
+        if o.empty or n.empty:
+            continue
+        ao, an = _agreement(o), _agreement(n)
+        rows.append({"dataset": ds, "domain": dom, "model": m, "n_items": o.item_id.nunique(),
+                     "QWK_off": ao["qwk"], "QWK_on": an["qwk"], "dQWK": _d(an["qwk"], ao["qwk"]),
+                     "MAE_off": ao["mae"], "MAE_on": an["mae"],
+                     "SDk_off": _consistency(o), "SDk_on": _consistency(n),
+                     "frac0_off": round((o.pred_norm < 1e-9).mean(), 3),
+                     "frac0_on": round((n.pred_norm < 1e-9).mean(), 3),
+                     "pi_on": round(n.parse_ok.mean(), 3)})
+    return pd.DataFrame(rows)
+
+
+def semeval_splits(df: pd.DataFrame) -> pd.DataFrame:
+    """5.2 SemEval: fixed-0.5 threshold -> accuracy + macro-F1 per split (separately), plus
+    threshold-free AUROC / MAE / Spearman of the continuous score vs the 0/1 gold."""
+    from scipy import stats
+    from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
+    se = df[(df.dataset == "semeval") & df.pred_norm.notna()].copy()
+    se["goldbin"] = (pd.to_numeric(se.gold_score, errors="coerce") >= 0.5).astype(int)
+    se["predbin"] = (se.pred_norm >= 0.5).astype(int)        # fixed 0.5, pre-registered
+    rows = []
+    for (m, rsn, split), g in se.groupby(["model", "reasoning", "split"]):
+        if g.goldbin.nunique() < 2:
+            continue
+        try:
+            auroc = round(roc_auc_score(g.goldbin, g.pred_norm), 3)
+        except ValueError:
+            auroc = np.nan
+        rows.append({"model": m, "reasoning": rsn, "split": split, "n": len(g),
+                     "acc": round(accuracy_score(g.goldbin, g.predbin), 3),
+                     "macroF1": round(f1_score(g.goldbin, g.predbin, average="macro"), 3),
+                     "AUROC": auroc,
+                     "spearman": round(stats.spearmanr(g.pred_norm, g.goldbin).statistic, 3)})
+    return pd.DataFrame(rows)
+
+
+def _d(a, b):
+    return round(a - b, 3) if (a == a and b == b) else np.nan
+
+
 def main() -> int:
     df = load_main()
     print(f"main store: {len(df):,} rows  | conversation: {len(load_conversation()):,} rows\n")
