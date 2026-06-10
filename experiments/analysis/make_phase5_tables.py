@@ -123,8 +123,9 @@ def main() -> int:
     sc["pct"] = (100 * sc.n / sc.n.sum()).round(1)
     lab = {"intervened": "intervened (review evidence)", "exact_sum": "exact-sum (suspected unreviewed)",
            "no_criteria": "no-criteria (unassessable)"}
-    sc = sc.reset_index().rename(columns={"index": "Stratum"})
-    sc["Stratum"] = sc["Stratum"].map(lambda s: lab.get(s, s))
+    sc = sc.reset_index()
+    sc["stratum"] = sc["stratum"].map(lambda s: lab.get(s, s))
+    sc = sc.rename(columns={"stratum": "Stratum"})
     _tex(sc, "tab_ptcs_strata.tex",
          "PT-CS gold reliability strata (intervention evidence: final grade vs sum of per-criterion scores). "
          "Only the intervened stratum has evidence of human review.", "tab:strata")
