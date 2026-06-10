@@ -642,3 +642,9 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   (loaded by `experiments/harness/env.py`), never committed.
 - ⬜ **Statistical model** — paired tests for reasoning on/off; mixed-effects vs ANOVA for the factorial;
   multiple-comparison correction.
+- ✅ **5.8 emergent observations (Phase 5 close, 2026-06-10)** — the gate (log unexpected patterns, promote
+  only with sign-off, label exploratory/post-hoc) holds **one** item: **reasoning ON improves SemEval
+  generalisation to NEW domains more than seen** (AUROC unseen_domain rises most with reasoning) — exploratory,
+  not pre-registered. **NOT emergent (these were pre-registered RQs → confirmatory):** the ranking
+  non-transfer (RQ6) and the rubric "non-transfer" (RQ2, now resolved as a PT-CS-gold artifact). The
+  `unseen_ans` ON split (N 27–30) is noise — not interpreted.
