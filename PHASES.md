@@ -231,39 +231,93 @@ fine-tune against a DeepInfra base — backends aren't comparable).
 
 ## Phase 5 — Analysis
 
-**5.1** — **Aggregate** all run rows into per-`(dataset, model, config)` records (mean score, per-criterion
-where present, π, mean tokens/latency/cost).
+> **Phase-4 full-data review gates this analysis (2026-06-10).** The §5.0 conventions and the
+> **pairing subsets** below are NOT optional — skipping them corrupts central results (three
+> contrasts come out biased; SemEval has no metric path as-was; whole-exam cost overcounts 4.5×).
+> Apply §5.0 everywhere before any metric.
 
-**5.2** — **Agreement & error metrics** (CLAUDE.md §6.2): QWK (with the chosen binning — record it in §11),
-Cohen's κ, Spearman/Pearson, MAE, RMSE; macro-F1/accuracy for SemEval labels. Per dataset (never pooled
-across incompatible scales). Report each against **our own baseline** (4.2); show published numbers alongside
-as external context only.
+**5.0** — **Analysis conventions (apply before any metric; record concretes in §11).**
+- **Clamp** predicted scores to **[0, gold_scale_max]** — 88 PT-CS criterion rows go **negative** via
+  penalty criteria (the parser is correct; grades just can't be < 0).
+- **Normalise** to 0–1 (`score / gold_scale_max`) for every cross-item / cross-dataset step. **Never pool
+  raw scores** — scales differ (Mohler 5, SemEval 1, **PT-CS heterogeneous 1–12**, RIAYN 4–12).
+- **QWK binning (PT-CS):** bin the **normalised** 0–1 score into K ordinal levels (decide K; record in §11) —
+  PT-CS native scales are heterogeneous (1–12), so bin on the normalised score, never the native one.
+- **SemEval score→label (decided 2026-06-10):** the model emits a continuous 0–1 score but the gold is a
+  **binary 2-way label** (correct/incorrect; `gold_score` 0/1). Map with a **fixed, pre-registered threshold
+  of 0.5** on the normalised score — **NOT tuned on the data** (tuning would be circular). Report accuracy +
+  macro-F1 **per split SEPARATELY** — **seen / unseen_domain / unseen_q / unseen_ans** (distinct
+  generalisations; never grouped; `unseen_domain` is the largest unseen, 5.4k). **Also** report threshold-free
+  **MAE / Spearman** of the continuous score vs the 0/1 gold (keeps the continuous signal; adds no
+  circularity). (3/5-way labels exist but are unused — the model was not asked for them.)
+- **Whole-exam cost:** the N question-rows of a submission share ONE call (cost repeats on each row);
+  **dedupe by `call_group`** for any token/€ aggregate — **4.5× overcount** otherwise (confirmed).
+- **Pairing subsets (MANDATORY — state the N in every contrast or it is biased):**
+  - **Reasoning (RQ1):** ON is sampled to **175 items**; pair OFF↔ON on those **175**, never OFF-full-N.
+  - **Scope (RQ3):** whole-exam covers **252 questions** (60 PT-CS submissions); restrict the q-by-q
+    comparator to the **same 252**, never all 737.
+  - **Anchor (RQ4):** GPT-5.1 ran **60 items/dataset**; compare it to the open models on those **60**.
+- **Conversation sub-study** = separate `conversation.jsonl` (key incl. `order_id`); `clean` exists only for
+  natural order (order-independent by design); analyse order (shared natural vs inverse) and state (clean vs
+  shared) **separately, per model** — and read Qwen under the 0-collapse caveat (5.5c).
 
-**5.3** — **Consistency**: SD/variance across the k runs and ICC per cell. (Ground-truth-free; robust given the
-PT-CS two-teacher consensus reference.)
+**5.1** — **Aggregate** run rows into per-cell records (mean/median score, per-criterion where present, **π**,
+tokens/latency/cost). Whole-exam cost deduped by `call_group`. **Flag the Qwen-ON truncation exclusion** per
+cell (π < 1 there is a non-random drop — see 5.5c / threats).
 
-**5.4** — **Cost analysis**: cost/latency/tokens per configuration; the reasoning **5–10× premium**; the
-cost-vs-agreement trade-off table.
+**5.2** — **Agreement & error** (CLAUDE.md §6.2), **per dataset only, never pooled**, after §5.0 clamp+normalise:
+QWK (binned per §5.0), Cohen's κ, Spearman/Pearson, MAE, RMSE; **SemEval per §5.0** (fixed-0.5 accuracy +
+macro-F1 **per the 4 splits**, plus continuous MAE/Spearman). Report each **against our own baseline (4.2)**;
+published numbers alongside as external context only (§6.3). **Context (RQ2) is two different interventions —
+rubric (PT-CS/RIAYN) vs reference answer (Mohler/SemEval) — never pool the "context effect" across them.**
 
-**5.5** — **Statistical tests**: paired tests for reasoning on/off; a mixed-effects model (or ANOVA) across
-the factorial; multiple-comparison correction. **Report effect sizes + confidence intervals, not just
-p-values**; note that expensive-factor interactions are OFAT/underpowered and don't over-read single cells
-(CLAUDE.md §6.4). Document the model choice in §11.
+**5.3** — **Consistency — a FIRST-LINE RQ1 result, not a footnote.** SD/variance/ICC across the k runs per
+cell (ground-truth-free). **Headline to test: reasoning ON *reduces* consistency** (k-agreement drops OFF→ON
+on most cells) even where it shifts agreement — so **RQ1 has TWO dimensions that can diverge: agreement vs
+consistency.** Report both and where they disagree (code vs short-answer). Note **temp=0 is NOT determinism**
+(10–43% of items vary across k; backend-conditional, §6.4).
 
-**5.5b** — **Transfer analysis (RQ6)** — *analysis only, NO new runs.* Using the data already collected in
-Phase 4, compare per-configuration **performance and ranking** between the public datasets (Mohler / SemEval /
-RIAYN) and **PT-CS**: does the configuration found optimal on the public sets **transfer** to the real
-Portuguese deployment context, and where does it diverge? This operationalises RQ6 as **generalisation** ("what
-we found holds here too"), NOT "beating a published score" (§6.3). Depends on the 4.1 transfer dependency (the
-public-winner config must have been run on PT-CS). Feeds the external-validity claim in the framework (5.6).
+**5.4** — **Cost analysis**: tokens/latency/€ per configuration, **deduped by `call_group`** (whole-exam).
+Reasoning premium on **total `completion_tokens`** (DeepInfra bundles reasoning) — **not** comparable to
+GPT-5.1's itemised `reasoning_tokens` (anchor only; §6.4). Cost-vs-agreement trade-off **on the paired
+subsets** (reasoning 175 / anchor 60).
 
-**5.6** — **Synthesise the framework** (the actual deliverable, CLAUDE.md §1.2): from the controlled
-comparisons, build the **decision guide** — a compact table / rules mapping task characteristics (domain,
-rubric availability, budget) to a recommended configuration and its cost. This, not the raw numbers, is the
-contribution; it becomes the centre of the Discussion.
+**5.5** — **Statistical tests** on the **paired subsets** (175 / 252 / 60 — state N): paired tests for
+reasoning on/off; mixed-effects (or ANOVA) across the factorial; multiple-comparison correction. **Effect
+sizes + CIs, not just p**; expensive-factor interactions are OFAT/underpowered — don't over-read single cells
+(§6.4). Document the model in §11.
 
-**5.7** — **Tidy results tables** → `article/tables/*.tex` (auto-generated). One table per claim; no
-hand-editing.
+**5.5a** — **RQ1, two-dimensional + model-specific.** Cross **agreement × consistency**, **code vs
+short-answer**, per model. The reasoning effect is **model-specific** (see 5.5c); the two axes can diverge —
+that divergence is a headline angle, not a caveat.
+
+**5.5b** — **Transfer (RQ6)** — *analysis only, NO new runs.* Compare per-configuration performance + ranking
+between the public datasets and **PT-CS**: does the public-winner config **transfer** (generalisation, not
+"beating a score", §6.3)? Uses the paired PT-CS counterparts already in the matrix (4.1).
+
+**5.5c** — **The code 0-collapse as a DEDICATED result (feeds the framework).** On PT-CS code the **baseline
+(Qwen3.5 OFF) collapses ~42% of grades to 0** — *discrimination* collapse, tied to the lowest QWK (0.47).
+**Reasoning ON corrects it for Qwen** (paired 175: frac0 0.53→0.28, meanN 0.26→0.43) **but NOT for GLM /
+DeepSeek** (flat/worse) → **model-specific**: when a model collapses, reasoning is the lever; when it already
+discriminates, it isn't. Characterise the **distributional shapes** in interpretation: **SemEval bimodal /
+0-heavy across all models; Mohler top-heavy** (reference-answer matching). This result, and the
+agreement-vs-consistency trade-off (5.5a), are inputs to the framework.
+
+**5.6** — **Synthesise the framework** (the deliverable, §1.2): a **decision guide** mapping task
+characteristics **(domain, model baseline-behaviour, rubric availability, budget)** → recommended config + its
+cost. Fold in: collapse → **reasoning-as-lever (model-specific)**; **agreement-vs-consistency** trade-off;
+**context = two interventions** (rubric vs reference); scope/decomposition **on the paired subsets**; cost
+(deduped). The guide, not the raw numbers, is the contribution — centre of the Discussion.
+
+**5.7** — **Tidy results tables** → `article/tables/*.tex` (auto-generated). One table per claim; **state the
+paired-subset N**; SemEval **per split**; no hand-editing.
+
+**Threats to carry to Phase 7 (§6.4):** **(a)** Qwen-ON agreement is computed on a **non-random subset** — 337
+longest-reasoning items truncated at 32768 and excluded (all Qwen; worst on SemEval 145 / Mohler 111) → report
+π + the exclusion, since the hardest cases drop out; **(b)** consistency at temp=0 is **backend-conditional,
+not determinism**; **(c)** the **context effect is two interventions** (rubric vs reference); **(d)** the
+**anchor is small-N (60)** — a reference point, not an inference target; **(e)** **code evidence is narrower**
+(PT-CS + RIAYN, Java/OOP) — state code conclusions tentatively.
 
 ---
 

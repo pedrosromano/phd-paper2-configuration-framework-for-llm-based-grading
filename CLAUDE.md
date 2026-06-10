@@ -502,7 +502,23 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   absolute scores.
 - ⬜ **Interactions to probe** — which 2-way interactions are worth the cost vs main-effects-only.
 - ⬜ **Fine-tuning arm** — include or drop? If included, which model and QLoRA-local vs managed fine-tune.
-- ⬜ **QWK binning** — how to bin continuous PT-CS normalised scores into ordinal levels for QWK.
+- 🔧 **QWK binning** — bin the **normalised** 0–1 score (NOT the native scale — PT-CS scales are heterogeneous,
+  1–12) into K ordinal levels. K still TBD (record when fixed). See Phase 5.0.
+- ✅ **SemEval score→label + splits** (Phase 5 review, user 2026-06-10) — the model emits a continuous 0–1
+  score; SemEval gold is a **binary 2-way label** (correct/incorrect; gold_score 0/1). Map with a **fixed
+  threshold 0.5** on the normalised score — **NOT data-tuned** (would be circular). Report accuracy + macro-F1
+  **per split separately**: seen / unseen_domain / unseen_q / unseen_ans (distinct generalisations; never
+  grouped). **Also** report threshold-free MAE/Spearman of the continuous score vs the 0/1 gold. (3/5-way
+  labels unused — model wasn't asked for them.)
+- ✅ **Consistency = first-line RQ1 result** (Phase 5 review, 2026-06-10) — the Phase-4 data shows reasoning
+  ON **reduces** k-consistency (even at temp=0, where 10–43% of items still vary — backend-conditional). So
+  **RQ1 has two dimensions that can diverge: agreement vs consistency** — analysed as a headline (5.3/5.5a),
+  not a footnote.
+- ✅ **Phase-5 pairing subsets** (Phase 5 review, 2026-06-10) — every expensive contrast pairs on its sampled
+  subset or it's biased: **reasoning 175**, **scope 252** (whole-exam questions, not all 737), **anchor 60**.
+  State the N in each contrast. (Full rationale + the other Phase-4-review corrections — call_group cost
+  dedupe 4.5×, context = two interventions, code 0-collapse model-specific, non-random truncation exclusion
+  threat — are in the revised Phase 5 in PHASES.md.)
 - 🔧 **Score clamping to [0, max]** (Phase 4, 2026-06-09) — Phase 5 must **clamp predicted scores to
   [0, gold_scale_max]** before metrics. Discovered by the integrity audit: 18 PT-CS criterion items
   (88 rows, Qwen3.5, reasoning-off, criterion decomposition) sum to a **negative total** (e.g. -0.5) because
