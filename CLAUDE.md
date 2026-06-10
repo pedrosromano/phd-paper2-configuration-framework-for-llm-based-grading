@@ -532,13 +532,16 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   whole-exam (D5a) and criterion-by-criterion (D5b) apply to it alone. Mohler/SemEval/RIAYN have
   `submission_id`=null (independent items) → question-by-question + holistic only. (Still open: how to parse
   per-question grades out of a whole-exam response — a Phase 3.2 prompt-template concern.)
-- 🔧 **Conversation-state sub-study (4.9)** — order control: shuffle vs fixed orders; subset size; which
-  config to freeze. **User leaning (2026-06-09, NOT yet fixed — confirm next session before building):**
-  **fixed orders (natural vs inverse)** — isolates the position effect cleanly, cheap (fits a secondary
-  sub-study), easy to describe; shuffle would only win if quantifying order *variance* were a headline, which
-  it isn't. Build requirement: run **sequentially within a session** (parallelise only across sessions, else
-  the order effect — the whole point — is destroyed). Decision deferred deliberately: it determines what the
-  sub-study measures, so not to be rushed at the end of a long session.
+- ✅ **Conversation-state sub-study (4.9, done 2026-06-10)** — **fixed orders (natural vs inverse)**, NOT
+  shuffle (isolates position cleanly, cheap, easy to describe); **sequential within a session, parallel only
+  across**; frozen config = reasoning off, with_guidance, q-by-q, holistic, PT-CS code, k=3, 20 submissions.
+  **Run on TWO models** (user 2026-06-09): qwen3.5 (RQ1 continuity) **and** glm-5.1 — because Qwen's code
+  0-collapse can MASK the order effect (a 0-early/0-late answer can't reveal position). Separate store
+  `conversation.jsonl` (keyed incl. order_id so natural/inverse don't collide). **Result:** order effect real
+  and **stronger in GLM** (mean|nat-inv|=0.33, 51% of questions change with position) than Qwen (0.26, 36%) —
+  the collapse partially masks it in Qwen, vindicating the two-model design. Shared history also lowers the
+  mean slightly (clean>shared) — anchoring signal for Phase 5. **Phase-5 interpretation:** report Qwen with
+  the 0-collapse caveat; GLM is the cleaner read of whether position/anchoring matters.
 - ✅ **PT-CS reference** (Phase 2.1, 2026-06-08) — **kept OUT**, confirmed by data: `reference_answer` is
   100% null for PT-CS (no reference solution in the source); grounding is the rubric (`pergunta.criterios`,
   JSON `[{points,criteria}]`). No synthetic reference built (confound).
