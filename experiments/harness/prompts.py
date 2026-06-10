@@ -89,15 +89,22 @@ def _join(*parts: str) -> str:
 
 def render(config, item) -> str:
     """Render a question-by-question prompt for one item (dict/Series with schema fields)."""
+    return render_turn(config, item, first=True)
+
+
+def render_turn(config, item, first: bool = True) -> str:
+    """One conversational turn for an item. first=True includes the instruction header (turn 1
+    of a shared session / a standalone clean call); first=False omits it (the model already
+    has the instruction in history) so follow-up turns are just the next question + format."""
     b = _blocks()
-    instruction = b["instruction"][config.domain]
     grounding = _grounding(config, item)
     body = Template(b["body"]["question_by_question"]).safe_substitute(
         question=str(item["question_text"]).strip(),
         answer=str(item["student_answer"]).strip())
     out_key = f"{config.scope}__{config.decomposition}"
     output = Template(b["output"][out_key]).safe_substitute(max=_fmt(item.get("gold_scale_max", 1)))
-    return _join(instruction, grounding, body, output)
+    parts = ([b["instruction"][config.domain]] if first else []) + [grounding, body, output]
+    return _join(*parts)
 
 
 def render_whole_exam(config, items: list) -> str:

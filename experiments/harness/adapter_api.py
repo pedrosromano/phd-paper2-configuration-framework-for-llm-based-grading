@@ -74,11 +74,17 @@ def _chat(base_url: str, key: str, payload: dict) -> dict:
 
 
 def _build_payload(mcfg: dict, prompt: str, config) -> dict:
-    """Sampling settings come from the Config (so they match config_hash exactly):
-    max_tokens, temperature, top_p, seed. The reasoning toggle maps per provider."""
+    """Single-turn payload (one user message)."""
+    return _build_payload_msgs(mcfg, [{"role": "user", "content": prompt}], config)
+
+
+def _build_payload_msgs(mcfg: dict, messages: list, config) -> dict:
+    """Build the request from a messages list (supports multi-turn shared conversations).
+    Sampling settings come from the Config (so they match config_hash exactly): max_tokens,
+    temperature, top_p, seed. The reasoning toggle maps per provider."""
     reasoning = config.reasoning
     rv = mcfg.get("reasoning_values", {})
-    payload = {"model": mcfg["model_id"], "messages": [{"role": "user", "content": prompt}]}
+    payload = {"model": mcfg["model_id"], "messages": messages}
     if config.seed is not None:
         payload["seed"] = config.seed
     if mcfg.get("provider") == "openai":
@@ -218,6 +224,54 @@ def _num_or_none(v):
         return float(v)
     except (TypeError, ValueError):
         return None
+
+
+def grade_conversation(items, config, guard: CostGuard | None = None):
+    """Grade `items` IN THE GIVEN ORDER inside ONE shared conversation: each turn's request
+    carries the full prior history (questions + the model's own earlier grades), so position /
+    anchoring can act (Phase 4.9 shared condition). Sequential by construction. Returns a list
+    [{item, score, parse_ok, position, ...per-turn metrics, prompt}] -- one per item, in order."""
+    load_env()
+    pricing = (guard.pricing if guard else load_pricing())
+    mcfg = dict(pricing["models"][config.model]); mcfg.setdefault("model_id", config.model)
+    provider = mcfg.get("provider", "unknown")
+    key = os.environ.get(mcfg["env_key"])
+    out, messages = [], []
+    for pos, it in enumerate(items):
+        user = prompts.render_turn(config, it, first=(pos == 0))
+        rec = {"item": it, "position": pos, "prompt": user, "score": None, "parse_ok": False,
+               "tokens_in": 0, "tokens_out": 0, "reasoning_tokens": None, "latency_s": 0.0,
+               "finish_reason": None, "cost_eur": None, "error": None, "raw": ""}
+        if not key:
+            rec["error"] = f"{mcfg['env_key']} not set"; out.append(rec); continue
+        messages.append({"role": "user", "content": user})
+        payload = _build_payload_msgs(mcfg, messages, config)
+        t0 = time.perf_counter()
+        try:
+            resp = _chat(mcfg["base_url"], key, payload)
+        except urllib.error.HTTPError as e:
+            rec["error"] = f"HTTP {e.code}: {e.read().decode('utf-8', 'replace')[:120]}"
+        except _Transient as e:
+            rec["error"] = f"transient (retries exhausted): {str(e)[:100]}"
+        if rec["error"]:
+            messages.append({"role": "assistant", "content": "{}"})   # keep the turn structure
+            out.append(rec); continue
+        rec["latency_s"] = round(time.perf_counter() - t0, 3)
+        choice = resp.get("choices", [{}])[0]
+        raw = (choice.get("message", {}).get("content") or "").strip()
+        usage = resp.get("usage", {})
+        tin, tout = int(usage.get("prompt_tokens", 0)), int(usage.get("completion_tokens", 0))
+        if guard is not None:
+            rec["cost_eur"] = round(guard.record(config.model, tin, tout,
+                                    meta={"config_hash": config.config_hash, "conversation": True}), 6)
+        parsed, ok = parse_output(raw, config.scope, config.decomposition)
+        rec.update({"raw": raw, "tokens_in": tin, "tokens_out": tout,
+                    "reasoning_tokens": _reasoning_tokens(usage),
+                    "finish_reason": choice.get("finish_reason"),
+                    "score": parsed["score"], "parse_ok": ok})
+        messages.append({"role": "assistant", "content": raw})
+        out.append(rec)
+    return out
 
 
 def _smoke() -> int:
