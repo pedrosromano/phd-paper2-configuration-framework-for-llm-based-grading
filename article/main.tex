@@ -11,10 +11,44 @@
 
 \begin{document}
 \title{A Configuration Framework for LLM-Based Grading in Computer Science}
+
+\author{Pedro~S.~Romano$^{\dagger}$, Daniel~F.~S.~Fernandes$^{*}$, and Pedro~J.~A.~Sebastião$^{*}$\\
+\small $^{*}$Instituto de Telecomunicações, Lisbon 1049-001, Portugal\\
+\small $^{\dagger}$Iscte -- Instituto Universitário de Lisboa, Lisbon 1649-026, Portugal}
+
+\markboth{IEEE Transactions on Learning Technologies, Vol. XX, No. X, Month Year}%
+         {Romano \MakeLowercase{\textit{et al.}}: A Configuration Framework for LLM-Based Grading in Computer Science}
+
 \maketitle
 
-% --- Sections (stubbed; assembled in Phase 7.1) ---
-% \input{sections/introduction}
+% Register: CLAUDE.md S9.2 (no em/en dashes as prose punctuation). RQ1 fence: no
+% "significant across all datasets"; the GPT-5.1 anchor never appears in the abstract.
+\begin{abstract}
+Instructors adopting graders based on large language models (LLMs) face a configuration problem:
+should the model reason before scoring, what guidance should it receive, should an exam be graded in
+one call or question by question, and which model is worth its cost? We study this design space
+systematically for computer science assessment, crossing extended reasoning, evaluation guidance,
+grading scope, rubric decomposition, model family, and conversation state under one protocol, on four
+datasets covering short answers and code. Reasoning is isolated within each of three open-weight
+model families, and every measurement is repeated, so its effect on cost and on run-to-run
+consistency is measured alongside quality. Reasoning raised agreement with teacher grades in only
+seven of twenty model-dataset combinations, at 10 to 925 times the output tokens and with reduced
+consistency in nearly every cell. Evaluation guidance helped wherever the human reference was
+trustworthy; on grades from a real Portuguese deployment, an unvalidated reference masked a real
+rubric benefit until evaluation was restricted to teacher-verified grades. Transfer of public-dataset
+results to that deployment was partial: the top configuration carried over, the mid-ranking did not.
+We synthesise these comparisons into a decision guide mapping task characteristics to a recommended
+configuration and its cost, governed by one rule: validate locally against a reference you trust. The
+harness, prompts, and configurations are released.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Automated grading, large language models, learning analytics, computer science education,
+short-answer grading, code assessment, configuration framework.
+\end{IEEEkeywords}
+
+% --- Sections (assembly in progress, Phase 7.1) ---
+\input{sections/introduction}
 \input{related/sota_draft}            % Related Work -- drafted in Phase 1.6
 % \input{sections/design_space}
 % \input{sections/method}

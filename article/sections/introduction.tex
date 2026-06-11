@@ -1,0 +1,88 @@
+%% sections/introduction.tex -- Phase 7.1. Register: CLAUDE.md S9.2 (no em/en dashes as prose
+%% punctuation; one idea per sentence; numbers with meaning; paragraph openers carry the argument).
+%% RQ1 abstract/intro fence: never "significant across all datasets"; enumerate cells instead.
+%% QWK is deliberately NOT used in this section: its first use, with the mandatory calibration
+%% sentence, is in Method (PHASES 7.1).
+
+\section{Introduction}
+\label{sec:intro}
+
+Large language models (LLMs) are moving from demonstrations to deployed graders in computer science
+(CS) courses. The promise for learning analytics is well documented: rubric-conditioned LLMs approach
+human raters on well-specified short-answer tasks, and they return criterion-level feedback at a scale
+no teaching team can match~\cite{sessler_canai_2025,henkel_roars_2025}. The risk is equally well
+documented. Grading errors distort how students revise their work~\cite{li_am_2023}, repeated scoring
+of the same answer is unstable~\cite{pack_large_2024,moazzez_assessing_2024}, and agreement with
+teachers varies sharply between models and prompts~\cite{tate_can_2024}. An instructor who adopts an
+LLM grader is therefore not making one decision but several: whether the model should reason at length
+before scoring, what evaluation guidance to place in the context, whether to grade a whole exam in one
+call or question by question, whether to score a rubric criterion by criterion or holistically, and
+which model family to run or pay for.
+
+The literature answers these questions only in fragments. Reasoning is the clearest example. Extended
+thinking improves general LLM-as-a-judge accuracy~\cite{jayarao_explicit_2025}, but its effect is task-
+and architecture-dependent~\cite{larionov_deepseek_2025}, long reasoning traces can degrade
+calibration-sensitive tasks~\cite{sui_stop_2025}, and no peer-reviewed study isolates its effect on
+rubric-bounded educational grading. Model comparisons exist for programming and course
+deployments~\cite{jukiewicz_comparison_2026,policar_automated_2025}, but they rank systems under one
+fixed prompt configuration, so they cannot say how the ranking moves when the configuration does.
+Guidance, scope, decomposition, and conversation state have each been touched as point solutions
+(Section~\ref{sec:related}), never crossed under one protocol. What is missing is the practical
+synthesis: for a given CS assessment task, which configuration should you use, and what does it cost?
+
+This paper studies the configuration space systematically and delivers the synthesis as a decision
+guide. We cross six design dimensions: extended reasoning (on or off), evaluation guidance (none
+versus a rubric or reference answer), grading scope (whole exam versus question by question), rubric
+decomposition (holistic versus criterion by criterion), model family, and conversation state (a clean
+conversation per answer versus shared history). Three open-weight model families (Qwen3.5,
+DeepSeek-V4-Flash, GLM-5.1) expose a within-family reasoning toggle, so the reasoning effect is
+isolated from model identity, a confound in prior comparisons; a closed frontier model (GPT-5.1)
+serves as a paid reference point. The study runs on four datasets in two domains: the Mohler corpus
+and SemEval-2013 Task~7 for CS short answers, and the Rubric Is All You Need corpus plus PT-CS, an
+export of a real Portuguese university grading deployment, for code. Every cell is repeated five times
+(three for the paid model), so consistency is measured rather than assumed, and every call's token
+cost is recorded.
+
+Six research questions structure the study:
+\begin{itemize}
+  \item \textbf{RQ1.} How does extended reasoning affect grading quality, consistency, and cost, and
+        does the effect differ between code and short answers?
+  \item \textbf{RQ2.} How much does evaluation guidance (none versus a rubric or reference answer)
+        change quality and consistency?
+  \item \textbf{RQ3.} How do grading scope (whole exam versus question by question) and rubric
+        decomposition (holistic versus criterion by criterion) affect agreement with the final grade?
+  \item \textbf{RQ4.} How do current-generation models compare as graders, and what is the
+        cost-quality trade-off between local open-weight and paid frontier models?
+  \item \textbf{RQ5.} Does conversation state (clean versus shared history) affect consistency and
+        fairness?
+  \item \textbf{RQ6.} Does the configuration guidance found on public datasets transfer to a real
+        Portuguese deployment context?
+\end{itemize}
+
+The findings motivate a framework rather than a leaderboard. Reasoning turned out to be a trade, not
+an upgrade: it raised agreement with teacher grades in seven of the twenty model-dataset combinations
+we tested, while increasing output tokens by 10 to 925 times (model- and domain-dependent) and making
+repeated grades of the same answer less consistent in nearly every cell. Where a grading model
+collapsed, assigning zero to roughly half of the code answers, reasoning repaired it; where the model
+already discriminated, the gain was unpredictable. Evaluation guidance helped wherever the human
+reference was trustworthy, and that qualifier became a finding in itself: on the deployment dataset,
+an unvalidated human reference masked a real rubric benefit, which only became visible on the stratum
+of grades with evidence of teacher review. Transfer of the public-dataset results to the deployment
+context was partial: the top configuration carried over, but the ranking below it reshuffled. Together
+these results yield the central design rule of the framework: configuration priors are starting
+points, and a deployment must validate them locally against a reference it trusts.
+
+The contribution is fourfold. First, a configuration decision guide for LLM grading in CS, keyed by
+observable task and model behaviour rather than by model identity. Second, the first
+grading-specific, within-family isolation of the reasoning effect, measured jointly on agreement,
+consistency, and cost. Third, an evidence-backed account of how unreliable reference grades distort
+configuration conclusions, with a curation strategy that recovers a usable signal. Fourth, a released
+harness, prompt templates, and configuration matrices that make the protocol reproducible. PT-CS
+originates from a grading platform built by the first author; we declare this conflict of interest
+and the safeguards it requires in Section~\ref{sec:threats}.
+
+The paper is organised as follows. Section~\ref{sec:related} positions the study in the
+learning-analytics and LLM-grading literature. Section~\ref{sec:method} describes the design space,
+datasets, grading harness, and evaluation protocol. Section~\ref{sec:results} reports the results by
+research question. Section~\ref{sec:discussion} synthesises the configuration framework.
+Section~\ref{sec:threats} states the threats to validity, and Section~\ref{sec:conclusion} concludes.

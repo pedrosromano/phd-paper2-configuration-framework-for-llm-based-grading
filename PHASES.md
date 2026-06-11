@@ -558,6 +558,13 @@ reader never misattributes a full-PT-CS number to verified or vice-versa.
 **7.4** — Compile end to end (`latexmk`), fix any PATH/poisoned-state issues per §9, and produce the PDF.
 **Check the page count against the budget (CLAUDE.md §9.1: ≤14 pp, target ~13)**; if over, report which
 sections exceed their target rather than trimming blindly. Report what's still placeholder vs done.
+  **Figure-freshness gate (user, 2026-06-11 — run BEFORE declaring any PDF final):** run
+  `python -m experiments.figures` and confirm the 6 regenerated `.pgf` files are **byte-identical** to the
+  committed ones in `article/figures/`; for the preview `.pdf`s, ignore metadata timestamps but the content
+  must be identical. Any divergence = the committed figure is stale vs the engine → regenerate, commit, and
+  recompile the paper. Also confirm `main.tex` includes figures from `article/figures/` (the `.pgf`, composed
+  natively by LaTeX), never local copies or the preview PDFs. **Report this gate's result together with the
+  7.4 page count.**
 
 **7.4b** — **Readability pass (after compile, before declaring any section done).** Re-read every section
 against **§9.2** specifically: **(a)** grep the PDF for acronyms — each expanded at first use per its tier, none
