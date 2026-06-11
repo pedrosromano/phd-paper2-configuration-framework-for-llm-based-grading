@@ -53,10 +53,16 @@ datasets, a reference answer for the short-answer ones) and is never pooled acro
 criterion-decomposition contrast ran with reasoning off only, so the reasoning by decomposition
 interaction is unmeasured.
 
-\textbf{Reproducibility and data availability.} We release the grading harness, prompt templates,
-configuration matrices, and the ingest code for the public datasets, together with per-run logs of
-provider, model identifier, sampling parameters, and timestamps. PT-CS contains student data and
-cannot be released as-is; an anonymised, AI-comment-stripped subset carrying the stratum flags (so
-the verified curation and the full-versus-verified sensitivity are reproducible by third parties)
-will be released only if the institutional ethics process permits it. Until then, the PT-CS results
-are reproducible from the released code given equivalent institutional data.
+\textbf{Reproducibility and data availability.} We release the grading harness, the prompt templates,
+the configuration matrices, and the ingest code for the three public datasets, together with the
+per-run logs (provider, served model identifier, sampling parameters, timestamps). With this bundle the
+public-dataset results (Mohler, SemEval, RIAYN), which carry every cross-dataset and transfer
+comparison, reproduce end to end. PT-CS is not shared, in any form, including any anonymised subset,
+because it consists of real student answers whose secondary use is bound by institutional ethics and
+data-protection rules; we state this as a settled position, not as a release pending request. The
+PT-CS-verified curation is instead specified completely in the paper, so that the method, not the data,
+is open to scrutiny: the curation criterion is a final grade that differs from the sum of its
+per-criterion scores (Section~\ref{sec:datasets}), and the three strata are intervened 32.3\%,
+exact-sum 33.2\%, and no-criteria 34.5\% (Table~\ref{tab:strata}). A site holding equivalent
+institutional data can therefore reconstruct the stratification, and the full-versus-verified gold
+sensitivity, from this specification using the released code.
