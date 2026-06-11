@@ -40,12 +40,19 @@ whole study and the Results structure):
 - **RQ4.** How do **current-generation models** (incl. 2026 open-weight, untested as graders) compare, and what
   is the **cost–quality trade-off** (local vs paid frontier)?
 - **RQ5 (sub-study).** Does **conversation state** (clean vs shared history) affect consistency/fairness?
-- **RQ6 (transfer — ILLUSTRATED, not demonstrated).** Does the best configuration found on public datasets
-  appear to **transfer** to a real Portuguese deployment context (PT-CS)? **Reframed (2026-06-10):** PT-CS gold
-  is of limited/uneven reliability (§2.3), so PT-CS is an **illustrative case study**, not a transfer proof.
-  The observed **non-transfer** (the public-winner config is not the PT-CS winner) is reported with its **two
-  non-separable explanations** (real-context difference vs unreliable gold) — both pointing to the same
-  prescription: validate locally with a trusted gold.
+- **RQ6 (transfer — PARTIAL, demonstrated at reduced N).** Does the configuration guidance found on public
+  datasets **transfer** to a real Portuguese deployment context (PT-CS-verified, the curated intervened
+  stratum, §2.3/§11)? **Rewritten (2026-06-11; supersedes both the "illustrative" and the "ranking-inversion"
+  framings):** transfer is **partial and heterogeneous** — the public top open config (qwen3.5|on,
+  statistically tied with glm-5.1|on) is **also the verified short-answer winner**, but the **mid-ranking
+  shuffles** (gpt-5.1|off: last on public, strong on verified; deepseek on/off flips), the **per-dataset winner
+  varies even within the public set** (Mohler qwen|on, SemEval glm|off, RIAYN glm|on), and under non-validated
+  gold the measured **effects were qualitatively wrong** (the rubric-benefit null was a gold artifact). The
+  framework's existence argument rests on this **conditionality of effects + below-top unpredictability + the
+  gold lesson** — not on a wholesale ranking inversion (the earlier "public winner qwen|off → inversion" claim
+  **did not reproduce**; corrected 2026-06-11, see §11 and `tab_ranking_transfer`). Where public and PT-CS
+  readings diverge, the two explanations (real-context difference vs residual gold limits) remain
+  non-separable — both point to the same prescription: validate locally with a trusted gold.
 
 **The deliverable is a framework, not a leaderboard.** The headline output is a **compact, empirically-grounded
 decision guide** — a table / set of rules mapping task characteristics (domain, rubric availability, budget) to
@@ -101,10 +108,11 @@ These are not features; they gate submission. Keep them visible and track them a
    scores). **The intervention evidence is quantifiable** (Phase 2.1: % of responses where final `cotacao` ≠
    Σ`nota_parcial` = evidence of a human moving the AI sum); use it to **stratify** PT-CS into *intervened* vs
    *suspected-unreviewed* and report results on the reliable stratum (Phase 5). **This is a first-line threat**,
-   not a footnote — and it gives the **PT-CS non-transfer two non-separable explanations** (the real context
-   differs *vs* the gold is unreliable) that point to the **same** prescription: validate locally against a
-   gold you trust. **PT-CS is therefore an *illustrative case study with limited-reliability gold*, NOT a
-   transfer *demonstration*** (RQ6 reframed as illustrated, not demonstrated; see §11). The framework rests on
+   not a footnote — and wherever public and PT-CS readings **diverge**, it gives **two non-separable
+   explanations** (the real context differs *vs* the gold is unreliable) that point to the **same** prescription:
+   validate locally against a gold you trust. **With the verified stratum (§11), PT-CS supports a transfer
+   *demonstration at reduced, declared N*; the result is PARTIAL/heterogeneous transfer** (top config carries
+   over, the mid-ranking does not — see §1.2 RQ6, corrected 2026-06-11). The framework rests on
    the public datasets and does not depend on PT-CS gold; the conversation sub-study measures model behaviour
    and is gold-independent.
 4. **No circularity.** Data used to *evaluate* configurations in Article 2 must stay conceptually separate
@@ -516,15 +524,22 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   {off,on} × {none,with_guidance}) already has a like-for-like PT-CS counterpart — whatever wins on the public
   datasets, 5.5b can compare it on PT-CS. (Whole-exam/criterion/conversation are additionally PT-CS-only by
   design.)
-- ✅ **PT-CS gold reliability — STRATIFIED (Phase 5, 2026-06-10), RQ6 = illustrative not demonstrated** —
+- ✅ **PT-CS gold reliability — STRATIFIED (Phase 5, 2026-06-10), RQ6 = partial transfer at reduced N** —
   PT-CS gold is mixed-provenance, limited reliability (§2.3). Stratified by intervention evidence (`cotacao`
   vs Σ`nota_parcial`, re-queried READ-ONLY from the DB → `data/processed/_ptcs_strata.parquet`): of 1184
   responses, only **32.3% INTERVENED** (final ≠ sum, human moved it; mean adjustment 1.43), **33.2% exact-sum**
   (suspected unreviewed), **34.5% no-criteria** (unassessable). **Two-thirds lack evidence of human review.**
   **Re-ran the key contrasts on the INTERVENED stratum (analysis only): the central results HOLD →** collapse
   persists (Qwen frac0 0.49) but QWK rises 0.31→**0.47** (low full-PT-CS QWK was partly gold-quality);
-  reasoning ptcs-code dQWK **+0.17** (holds, 0.44→0.61); **ranking inversion holds** (public winner qwen|off →
-  intervened-PT-CS winner **gpt-5.1|on 0.897**). **KEY:** the rubric "non-transfer" was a **GOLD ARTIFACT** —
+  reasoning ptcs-code dQWK **+0.17** (holds, 0.44→0.61); **ranking transfer is PARTIAL** (corrected
+  2026-06-11 — the earlier "ranking inversion holds; public winner qwen|off → intervened-PT-CS winner
+  gpt-5.1|on 0.897" **did not reproduce in the 2026-06-11 audit**: under every basis tested — item-mean QWK
+  full-N, run-level QWK, MAE, anchor-paired-60 — **qwen|off ranks 7/8 on the public datasets** (mean QWK 0.59);
+  the public top is **qwen3.5|on ≈ glm-5.1|on (0.667)** and qwen3.5|on is **also the verified short-answer
+  winner (0.795)** → the **top transfers**; what does NOT transfer is the **mid-ranking** (gpt-5.1|off last
+  public / strong verified; deepseek on/off flips; verified-code winner = glm-5.1|off) and the per-dataset
+  winners vary even within the public set — generated table: `tab_ranking_transfer`, declared basis in its
+  caption; the anchor stays unranked corroboration). **KEY:** the rubric "non-transfer" was a **GOLD ARTIFACT** —
   full PT-CS dQWK +0.007 (ns) but INTERVENED **+0.149** (like RIAYN +0.124) → on items where a human actually
   aligned the grade to criteria, the rubric helps. So the earlier "rubric doesn't help on PT-CS" is RESOLVED
   (gold quality, not the rubric). **Consequences:** results held → **assertive** wording. **PROMOTION (user
@@ -534,10 +549,11 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   reduced, declared N** (not case study). **5.7 main tables report PT-CS-verified with per-config N; full-PT-CS
   appears once in a full-vs-verified SENSITIVITY that is itself a result** ("non-validated gold distorts: QWK
   0.31→0.47, and masks real effects: rubric +0.007→+0.149").
-  - **Transfer framing (locked):** stated via the **open models (N=84 OFF / 32 ON, declared)** — reasoning helps
-    them on verified short-answer (qwen 0.65→0.80, glm 0.69→0.77), ranking differs from public. **The GPT-5.1
-    anchor is N=11 → directional corroboration ONLY, never headline/abstract/highlight table**; show its CI
-    beside the QWK (0.897 on 11 items self-defends with a wide CI).
+  - **Transfer framing (updated 2026-06-11):** stated via the **open models (N=84 OFF / 32 ON, declared)** —
+    reasoning helps them on verified short-answer (qwen .652→.795, glm .692→.771); **ranking transfer is
+    partial** (the top carries over, the below-top shuffles — `tab_ranking_transfer`). **The GPT-5.1 anchor is
+    N=11 → directional corroboration ONLY, never headline/abstract/highlight table, never named "winner"**;
+    show its CI beside the QWK (0.897 on 11 items self-defends with a wide CI).
   - **Strata asymmetry (Discussion):** short-answer verified = **19% (84/437)** vs code **295** — short-answer
     transfer rests on a small fraction (say it). Curious inversion: **code**, the "narrow" domain (§6.4), has the
     **comfortable** verified N in transfer.
@@ -546,8 +562,8 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
     "validation guarantee". Declare reduced N in every transfer claim.
   - **Rubric (rewritten):** NOT a "second non-transfer" — the apparent null was a **gold artifact**; on the
     verified stratum the rubric helps (+0.149), consistent with RIAYN (+0.124) → **the rubric benefit transfers
-    when the gold is reliable.** Remaining non-transfer = the **model-ranking** one (thread 1); the **gold
-    lesson** = thread 2. Framework rests on the public datasets; conversation is gold-independent.
+    when the gold is reliable.** Remaining transfer caveat = the **below-top ranking instability** (thread 1);
+    the **gold lesson** = thread 2. Framework rests on the public datasets; conversation is gold-independent.
 - ⚠️ **PT-CS gold — GRADE INFLATION (second, distinct threat; document, don't exclude)** (2026-06-10) — beyond
   incomplete validation (resolved by stratification), the source course was a **lower-rigour requalification**
   with a probably **lenient grading standard** (1–2 marks where strict gives 0). **No mechanical exclusion**
@@ -684,6 +700,6 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ✅ **5.8 emergent observations (Phase 5 close, 2026-06-10)** — the gate (log unexpected patterns, promote
   only with sign-off, label exploratory/post-hoc) holds **one** item: **reasoning ON improves SemEval
   generalisation to NEW domains more than seen** (AUROC unseen_domain rises most with reasoning) — exploratory,
-  not pre-registered. **NOT emergent (these were pre-registered RQs → confirmatory):** the ranking
-  non-transfer (RQ6) and the rubric "non-transfer" (RQ2, now resolved as a PT-CS-gold artifact). The
-  `unseen_ans` ON split (N 27–30) is noise — not interpreted.
+  not pre-registered. **NOT emergent (these were pre-registered RQs → confirmatory):** the partial ranking
+  transfer (RQ6, corrected 2026-06-11) and the rubric "non-transfer" (RQ2, now resolved as a PT-CS-gold
+  artifact). The `unseen_ans` ON split (N 27–30) is noise — not interpreted.

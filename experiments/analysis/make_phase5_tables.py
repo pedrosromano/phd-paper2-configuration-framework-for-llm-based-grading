@@ -155,6 +155,70 @@ def main() -> int:
          "(N=84 OFF / 32 ON); the GPT-5.1 anchor (N=11) is directional corroboration only -- its CI self-defends.",
          "tab:transfer")
 
+    # --- T4d: RQ6 ranking comparison -- public vs PT-CS-verified, declared basis (added 2026-06-11;
+    #     replaces the unreproducible 'ranking inversion / public winner qwen|off' prose claim).
+    #     Uses a LOCAL rng for the small-N CIs so the shared RNG stream (other tables) is untouched. ---
+    base_all = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question")
+                  & (df.decomposition == "holistic")]
+
+    def _q(d):
+        q, s = _qwk_items(d)
+        return (q if not (isinstance(q, float) and np.isnan(q)) else np.nan), len(s)
+
+    def _ci_local(d, nb=800):
+        s = d[d.pred_norm.notna() & d.gold_norm.notna()].groupby("item_id").agg(p=("pred_norm", "mean"), g=("gold_norm", "mean"))
+        rng = np.random.default_rng(20260611)
+        idx = s.index.to_numpy()
+        boot = [cohen_kappa_score((s.loc[x].g * K).round().clip(0, K).astype(int),
+                                  (s.loc[x].p * K).round().clip(0, K).astype(int),
+                                  weights="quadratic", labels=list(range(K + 1)))
+                for x in (rng.choice(idx, len(idx), True) for _ in range(nb))]
+        lo, hi = np.percentile(boot, [2.5, 97.5])
+        return lo, hi
+
+    rk = []
+    for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]:
+        for r in ["off", "on"]:
+            g = base_all[(base_all.model == m) & (base_all.reasoning == r)]
+            per = {ds: _q(g[g.dataset == ds])[0] for ds in ["mohler", "semeval", "riayn"]}
+            pub = float(np.nanmean(list(per.values())))
+            cells = {}
+            for dom, key in [("short_answer", "sa"), ("code", "code")]:
+                v = g[(g.dataset == "ptcs") & (g.domain == dom) & g.item_id.isin(interv)]
+                q, nv = _q(v)
+                if q == q and nv < 100:                      # CI beside every small-N number
+                    lo, hi = _ci_local(v)
+                    cells[key] = (q, nv, f"{q:.3f} [{lo:.2f},{hi:.2f}]")
+                elif q == q:
+                    cells[key] = (q, nv, f"{q:.3f}")
+                else:
+                    cells[key] = (np.nan, nv, "--")
+            rk.append({"m": m, "r": r, "per": per, "pub": pub, "sa": cells["sa"], "code": cells["code"]})
+
+    def _rank(vals):
+        open_v = sorted([v for v in vals if v == v], reverse=True)
+        return {v: i + 1 for i, v in enumerate(open_v)}
+    pub_rank = _rank([x["pub"] for x in rk if x["m"] != "gpt-5.1"])
+    sa_rank = _rank([x["sa"][0] for x in rk if x["m"] != "gpt-5.1"])
+    code_rank = _rank([x["code"][0] for x in rk if x["m"] != "gpt-5.1"])
+    rkrows = []
+    for x in sorted(rk, key=lambda x: (x["m"] == "gpt-5.1", -x["pub"])):
+        anchor = x["m"] == "gpt-5.1"
+        rkrows.append({"Config": f"{x['m']}|{x['r']}",
+                       "Public QWK (rk)": f"{x['pub']:.3f}" + ("" if anchor else f" ({pub_rank[x['pub']]})"),
+                       "V-short QWK [CI] (N, rk)": x["sa"][2] + f" ({x['sa'][1]}" + ("" if anchor else f", {sa_rank[x['sa'][0]]}") + ")",
+                       "V-code QWK [CI] (N, rk)": x["code"][2] + f" ({x['code'][1]}" + ("" if anchor else f", {code_rank[x['code'][0]]}") + ")",
+                       "Note": "anchor -- corrob. only, unranked" if anchor else ""})
+    winners = {ds: max(((x["per"][ds], f"{x['m']}|{x['r']}") for x in rk if x["m"] != "gpt-5.1")) for ds in ["mohler", "semeval", "riayn"]}
+    wtxt = "; ".join(f"{ds}: {w[1]} ({w[0]:.3f})" for ds, w in winners.items())
+    _tex(pd.DataFrame(rkrows), "tab_ranking_transfer.tex",
+         "RQ6 ranking comparison, public vs PT-CS-verified. Basis: QWK (K=5) on item means, with-guidance, "
+         "question-by-question, holistic cells; public = unweighted mean over Mohler/SemEval/RIAYN at full N "
+         "(open models k=5; the GPT-5.1 anchor graded 60-item subsets -- reference only, unranked). Ranks over "
+         f"the open configs. Per-dataset public winners differ -- {wtxt}. The public top "
+         "(qwen3.5$|$on $\\approx$ glm-5.1$|$on) contains the verified short-answer winner: the top transfers; "
+         "the mid-ranking does not.", "tab:ranktransfer")
+
     # --- T4c: gold full-vs-verified SENSITIVITY (the 'unreliable gold distorts' result) ---
     def qcell(d):
         q, s = _qwk_items(d)
@@ -192,7 +256,7 @@ def main() -> int:
         {"Task / context": "Multi-question / session", "Recommended": "Clean, question-by-question",
          "Trade-off in the rule": "shared history $\\to$ stricter (p$<$.01); order adds variance"},
         {"Task / context": "Deploy in a new context", "Recommended": "Validate locally (governs the above)",
-         "Trade-off in the rule": "public ranking does not transfer (public winner $\\neq$ PT-CS winner)"},
+         "Trade-off in the rule": "transfer is partial: top config carried over, mid-ranking shuffled; unvalidated gold flipped effect readings"},
     ])
     _tex(fw, "tab_framework.tex",
          "The configuration decision guide (Phase 5.6): starting priors per axis, with the trade-off inside "

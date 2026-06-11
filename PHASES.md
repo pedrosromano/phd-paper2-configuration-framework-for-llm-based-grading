@@ -300,8 +300,9 @@ short-answer**, per model. The reasoning effect is **model-specific** (see 5.5c)
 that divergence is a headline angle, not a caveat.
 
 **5.5b** — **Transfer (RQ6)** — *analysis only, NO new runs.* Compare per-configuration performance + ranking
-between the public datasets and **PT-CS**: does the public-winner config **transfer** (generalisation, not
-"beating a score", §6.3)? Uses the paired PT-CS counterparts already in the matrix (4.1).
+between the public datasets and **PT-CS**: how much of the public ranking **transfers** — top vs below-top
+(generalisation, not "beating a score", §6.3)? Uses the paired PT-CS counterparts already in the matrix (4.1).
+*(Outcome 2026-06-11: partial transfer — `tab_ranking_transfer`, declared basis in its caption.)*
 
 **5.5c** — **The code 0-collapse as a DEDICATED result (feeds the framework).** **Observational
 characterisation, NOT a hypothesis test** — describe the distributions and the conditional pattern, with
@@ -427,16 +428,23 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
     grading **stricter** = bias (Wilcoxon **p<.01** both models: qwen Δ+0.040 p=.0009, glm Δ+0.027 p=.003);
     **order** natural-vs-inverse is **variance, not bias** (signed ns: **glm p=.52**, qwen p=.15). Report Qwen
     with the 0-collapse caveat; **GLM is the cleaner read**.
-  - **RQ6 (transfer).** Headline via the **open models on PT-CS-verified short-answer** (`tab_transfer_verified`,
-    **N=84 OFF / 32 ON**, declared): reasoning helps them (qwen .652→.795, glm .692→.771); the ranking **differs
-    from the public datasets** — this **existence of non-transfer** is the claim (it is **confirmatory**, a
-    pre-set RQ, not emergent). The **GPT-5.1 anchor is N=11 → corroboration only, never headline/abstract**;
+  - **RQ6 (transfer — PARTIAL, corrected 2026-06-11).** Headline via the **open models on PT-CS-verified
+    short-answer** (`tab_transfer_verified`, **N=84 OFF / 32 ON**, declared): reasoning helps them (qwen
+    .652→.795, glm .692→.771). The ranking comparison (`tab_ranking_transfer`; declared basis: item-mean QWK,
+    with-guidance/q-by-q/holistic): the **public top open config (qwen3.5|on ≈ glm-5.1|on, 0.667) is also the
+    verified short-answer winner** → **the top transfers**; **below the top the ranking shuffles** (gpt-5.1|off
+    last public / strong verified; deepseek on/off flips; verified-code winner glm-5.1|off) and **per-dataset
+    winners vary even within the public set** (Mohler qwen|on, SemEval glm|off, RIAYN glm|on). This **partial,
+    conditional transfer** is the claim (**confirmatory**, a pre-set RQ, not emergent). Do NOT write "the public
+    winner is not the PT-CS winner" — the earlier inversion wording **did not reproduce** (audit 2026-06-11,
+    §11). The **GPT-5.1 anchor is N=11 → corroboration only, never headline/abstract, never named winner**;
     show its CI beside the QWK (0.897 [0.64,0.97] self-defends).
   - **Gold sensitivity is itself a result** (`tab_gold_sensitivity`): unvalidated gold **understates** agreement
     (Qwen-OFF code QWK 0.308→0.468) and **masks** the rubric benefit (+0.008→+0.149).
 
-  **Discussion:** framework at the centre — **"validate locally" governs the per-axis priors** (the public
-  ranking does not transfer → the priors are starting points, not guarantees). **Two threads:** (1) **consistency
+  **Discussion:** framework at the centre — **"validate locally" governs the per-axis priors** (transfer is
+  partial: the top configuration carried over but the below-top ranking shuffled and effects are
+  model/gold-conditional → the priors are starting points, not guarantees). **Two threads:** (1) **consistency
   is sacrificed** for agreement under reasoning — and the inconsistency is **partly length×backend
   non-determinism**, *not* "the model reasons differently each time"; (2) **the gold lesson** — a validated
   reference is what made the rubric benefit visible. **Exploratory rule:** the **one** non-pre-registered
@@ -478,7 +486,8 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
 
 **7.2** — **Wire the auto-generated tables** from `article/tables/` (do not hand-edit), by real filename:
 `tab_rq1_reasoning.tex` (RQ1) · `tab_dimension_contrasts.tex` (RQ2/RQ3) · `tab_semeval_splits.tex` ·
-`tab_transfer_verified.tex` (RQ6) · `tab_gold_sensitivity.tex` · `tab_ptcs_strata.tex` · `tab_framework.tex`
+`tab_transfer_verified.tex` (RQ6) · `tab_ranking_transfer.tex` (RQ6 ranking comparison, public vs verified) ·
+`tab_gold_sensitivity.tex` · `tab_ptcs_strata.tex` · `tab_framework.tex`
 (the decision guide, 5.6) · `published_baselines.tex` (Phase **1.5** literature context — *different-protocol*,
 not the success criterion, label it so). **Low-N cells already carry bootstrap 95 % CIs** (anchor N=11; ON
 N=32) — keep the **CI beside every small-N number**.
