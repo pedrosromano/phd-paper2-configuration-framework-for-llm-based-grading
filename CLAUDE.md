@@ -446,6 +446,11 @@ a good TLT paper — technical, precise, and **readable at normal speed** by a r
   (0.44 → 0.61)" — not a bare "+0.170 (N=67, all-intervened)" mid-sentence; the bases live in **table notes**).
 - **Paragraph openers carry the point:** a reader who reads only the first sentence of every paragraph should
   follow the argument of the section.
+- **Punctuation:** **avoid em dashes and en dashes as prose punctuation** (the long dash used for asides or
+  emphasis). Use commas, colons, parentheses, or separate sentences instead. This applies to **all paper prose,
+  including the abstract, captions, and table notes**. Hyphens in compound words (state-of-the-art,
+  question-by-question) and minus signs or ranges in math and tables (dQWK of -0.043, pages 4-7) are fine and
+  not covered by this rule.
 - **Test:** before any section is declared done, re-read it asking **"would a tired reviewer follow this on
   first pass?"** — if a sentence requires re-reading, rewrite it. **Density is not rigor**; the rigor lives in
   the tables, the engine, and the threats.

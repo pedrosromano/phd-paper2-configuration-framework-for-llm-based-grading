@@ -563,7 +563,9 @@ sections exceed their target rather than trimming blindly. Report what's still p
 against **§9.2** specifically: **(a)** grep the PDF for acronyms — each expanded at first use per its tier, none
 invented; **(b)** flag any sentence over ~40 words or with 3+ subordinate clauses for rewrite; **(c)** check
 paragraph openers carry the argument (read only first sentences — does the section still make sense?);
-**(d)** confirm every Tier-C term had its one-sentence plain introduction. **Report what was rewritten.** This
+**(d)** confirm every Tier-C term had its one-sentence plain introduction; **(e)** grep the `.tex` sources for
+em and en dashes used as prose punctuation and rewrite those sentences (numeric ranges and hyphenated compounds
+stay). **Report what was rewritten.** This
 pass is **not optional polish** — the paper is reviewed by tired humans, and a claim they cannot parse is a
 claim they do not credit.
 
