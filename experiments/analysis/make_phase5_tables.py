@@ -258,7 +258,7 @@ def main() -> int:
         return f"{md:+.3f} [{lo:+.2f},{hi:+.2f}]"
     sens = pd.DataFrame([
         {"Metric": "Qwen OFF code QWK", "Full PT-CS": qcell(qcode)[0], "PT-CS-verified": qcell(qcode[qcode.item_id.isin(interv)])[0]},
-        {"Metric": "rubric dQWK (none$\\to$guid)", "Full PT-CS": dq(rub.item_id.notna()), "PT-CS-verified": dq(rub.item_id.isin(interv))},
+        {"Metric": "rubric dQWK (Qwen OFF, none$\\to$guid)", "Full PT-CS": dq(rub.item_id.notna()), "PT-CS-verified": dq(rub.item_id.isin(interv))},
         {"Metric": "model$-$gold deviation (OFF)",
          "Full PT-CS": f"{phase5.signed_deviation(qcode):+.3f}",
          "PT-CS-verified": f"{phase5.signed_deviation(qcode[qcode.item_id.isin(interv)]):+.3f}"},
@@ -271,11 +271,11 @@ def main() -> int:
     # --- T5: framework decision guide (the deliverable) ---
     fw = pd.DataFrame([
         {"Task / context": "Short-answer + reference answer", "Recommended": "OFF, discriminating model",
-         "Trade-off in the rule": "reasoning gain not significant; OFF 30--900$\\times$ cheaper"},
+         "Trade-off in the rule": "reasoning gain not significant; OFF 10--925$\\times$ cheaper (model-dependent)"},
         {"Task / context": "Code, model that DISCRIMINATES (GLM/DeepSeek/GPT)", "Recommended": "Reasoning OFF",
-         "Trade-off in the rule": "ON not significant + 100--190$\\times$ tokens $\\to$ keep OFF"},
+         "Trade-off in the rule": "ON not significant + 116--192$\\times$ tokens $\\to$ keep OFF"},
         {"Task / context": "Code, model that COLLAPSES (Qwen)", "Recommended": "ON, or switch model",
-         "Trade-off in the rule": "recovers QWK on tractable items at $\\sim$800$\\times$ tokens + 2--3$\\times$ worse SDk; prefer switching"},
+         "Trade-off in the rule": "recovers QWK on tractable items at $\\sim$800$\\times$ tokens + 2.5--5$\\times$ worse SDk; prefer switching"},
         {"Task / context": "Consistency/fairness-critical", "Recommended": "Reasoning OFF",
          "Trade-off in the rule": "ON less reproducible (partly length$\\times$backend)"},
         {"Task / context": "Multi-question / session", "Recommended": "Clean, question-by-question",

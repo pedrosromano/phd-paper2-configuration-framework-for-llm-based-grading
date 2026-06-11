@@ -6,7 +6,7 @@ PYTHON := .venv/bin/python
 PIP    := .venv/bin/pip
 
 .DEFAULT_GOAL := help
-.PHONY: help install verify test cost ingest run smoke analyse figures paper paper-clean clean
+.PHONY: help install verify test cost ingest run smoke analyse analyse-pipeline figures paper paper-clean clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -35,10 +35,14 @@ run: ## Phase 4 — run a config-matrix arm (DeepInfra roster + GPT-5.1 anchor; 
 smoke: ## Phase 3.7 — end-to-end harness smoke test
 	$(PYTHON) -m experiments.run.smoke $(ARGS)
 
-analyse: ## Phase 5 — metrics, consistency, stats -> article/tables
+analyse: ## Phase 5 — §5.0 aggregate + regenerate the committed article/tables/*.tex
+	$(PYTHON) -m experiments.analysis.phase5
+	$(PYTHON) -m experiments.analysis.make_phase5_tables
+
+analyse-pipeline: ## Phase 5 (aux) — coverage matrix + exploratory pipeline printout
 	$(PYTHON) -m experiments.analysis
 
-figures: ## Phase 6 — generate figures -> article/figures
+figures: ## Phase 6 — generate figures -> article/figures (.pgf needs latex on PATH, §9)
 	$(PYTHON) -m experiments.figures
 
 paper: ## Phase 7 — compile the article (latexmk + IEEEtran)

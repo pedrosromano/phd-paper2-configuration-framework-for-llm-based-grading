@@ -178,7 +178,7 @@ experiments/run → data/processed/runs → experiments/analysis → experiments
     cost-floor point). Not a gate on eligibility.
   - **OpenAI** — the closed paid anchor (GPT-5.1) only.
 - **Budgets (two separate ceilings, cost guard §8):** **OpenAI anchor €150** (hard) + a **DeepInfra ceiling**
-  (TODO §11: user to set). Estimate every arm's € before running.
+  (set: **€150**, §11 2026-06-08). Estimate every arm's € before running.
 - **Python:** 3.11+. Deps: `pandas`, `pyarrow`, `numpy`, `scipy`, `scikit-learn`, `statsmodels`,
   `matplotlib`, `pyyaml`, `tenacity` (retries), `tiktoken`/provider SDKs, `mysql-connector-python`/`pymysql`,
   `beautifulsoup4`/`lxml` (HTML clean + SemEval XML). Pin in `pyproject.toml`.
@@ -196,8 +196,8 @@ public code datasets PT-CS is one of the most complete; short-answer has strong 
 
 | Dataset | Domain | Lang | Size (approx) | Gold | Notes / role |
 |---|---|---|---|---|---|
-| **PT-CS** (GradeGenie export) | code (Java) + theory | PT | ~738 code / ~437 theory | final per-question grade (`cotacao`), normalised by `pergunta.cotacao` | rubric JSON; **no reference solution**; **two-teacher consensus**; AI-seeded then human-validated. **Primary code; confirmation/transfer** |
-| **Rubric Is All You Need** (OOP+DSA) | code (Java + DSA) | EN | ~230 | two graders collaboratively (consensus) | public (GitHub); question-specific rubrics. **Public code comparator (external validity)** |
+| **PT-CS** (GradeGenie export) | code (Java) + theory | PT | ~738 code / ~437 theory | final per-question grade (`cotacao`), normalised by `pergunta.cotacao` | rubric JSON; **no reference solution**; gold is **mixed-provenance, limited/uneven reliability — see §2.3** (where intervened: consensus correction of AI-seeded suggestions); stratified → **PT-CS-verified**. **Primary code; transfer (verified stratum)** |
+| **Rubric Is All You Need** (OOP+DSA) | code (Java + DSA) | EN | 149 ingested (~230 in source) | two graders collaboratively (consensus) | public (GitHub); question-specific rubrics. **Public code comparator (external validity)** |
 | **Mohler** | short-answer (CS) | EN | ~2,273 ans / 80 q | mean of 2 graders, 0–5 | public; question + reference answer. **Primary short-answer** |
 | **SemEval-2013 Task 7** (SciEntsBank + Beetle) | short-answer (science) | EN | ~13k facets | 2/3/5-way labels | public; reference; **unseen-answers / unseen-questions** splits. **Development** |
 | **Menagerie** (KCL) — *optional* | code (Java CS1) | EN | ~272 | per-dimension letter grades | public (GitHub+OSF, CC BY); ⚠ grades are study **re-grades, not real awarded grades**. **Optional robustness only** |
@@ -285,7 +285,7 @@ rationale: `experiments/model_roster.md`. This supersedes the inherited/stale ro
 - **Error:** MAE, RMSE on normalised 0–1 score.
 - **Classification (SemEval labels):** accuracy, macro-F1 (2/3/5-way).
 - **Consistency:** SD/variance across k, ICC. (Needs no ground truth — a clean axis regardless of the
-  reference; note PT-CS reference is now a two-teacher consensus, more reliable than a single rater.)
+  reference; PT-CS gold reliability is limited/uneven — see §2.3 — but consistency does not depend on it.)
 - **Operational:** tokens; **cost — € for paid models, wall-clock/compute for local** (define per model class,
   don't conflate); latency; throughput. The headline reasoning premium must state **which** cost metric — and
   it is **measured on `completion_tokens`** (Phase 4 found it **far larger than the old ≈5–10× guess**: ON
@@ -316,7 +316,7 @@ validation**. Two distinct uses of "baseline" — keep them separate:
 ### 6.4 Claims discipline, threats & reproducibility (Q1 expectations)
 - **Scope the guidance claim.** We test several model families, not all — say guidance holds *across the models
   tested* (reasoning isolated within-family), not universally.
-- **Code-domain evidence is narrower than short-answer.** Code = PT-CS + RIAYN (~230), both Java/OOP/DSA;
+- **Code-domain evidence is narrower than short-answer.** Code = PT-CS + RIAYN (149 ingested), both Java/OOP/DSA;
   short-answer = Mohler + SemEval (larger, more varied). State code-specific conclusions more tentatively, and
   flag this as a threat to validity.
 - **Backend-conditional reproducibility (threat).** Results are conditional on the **DeepInfra-served** versions
@@ -353,7 +353,8 @@ unchanged in spirit — keep the matrix affordable — but the lever is **token 
 
 - **Full factorial on cheap axes** (cheap models e.g. DeepSeek-V4-Flash $0.14/$0.28; short outputs) at **k=5**.
 - **Reduce the expensive combinations**: the reasoning-ON arm (long traces → many output tokens, the dominant
-  cost) is **sampled**, not fully crossed; reasoning × criterion-by-criterion is sampled; the paid anchor
+  cost) is **sampled**, not fully crossed; reasoning × criterion-by-criterion was planned as sampled but
+  **ultimately never run** (recorded §11, 2026-06-11); the paid anchor
   (GPT-5.1) runs a **reduced** set at **k=3**.
 - Use **OFAT from a baseline** for expensive interactions, rather than the full cartesian product.
 - Sample **N per condition** (stratified) rather than all items for the costly cells. Final N is a §11 decision.
@@ -585,7 +586,8 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   everywhere"**: short-answer is *lenient* (SemEval **+0.05**, PT-CS-short-verified **+0.10**), code is stricter
   (RIAYN −0.19, Mohler −0.15). The one suggestive signal — PT-CS-verified code being the strictest (−0.27) — is
   **the 0-collapse, not inflation**: its extra-strictness vs comparable RIAYN code **shrinks as the collapse goes
-  away** (Qwen −0.077 @frac0≈.50 → DeepSeek −0.039 → GLM −0.017 @frac0≈.17). Robust sub-claim retained: **unvalidated
+  away** (Qwen −0.077 @frac0≈.49 → DeepSeek −0.039 @frac0≈.13 → GLM −0.018 @frac0≈.13; digits re-verified
+  2026-06-11). Robust sub-claim retained: **unvalidated
   (full) gold understates the deviation magnitude** (full PT-CS code −0.19 → verified −0.27; verified further from 0
   in both domains), reinforcing the validation threat. _(Correction 2026-06-11: the earlier numbers here
   (−0.154/−0.149/−0.116; full −0.048/verified −0.104) mixed two unrecorded bases — qwen-only vs all-models-pooled —
@@ -598,6 +600,12 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   results are conditional on the DeepInfra/OpenAI served versions + sampling params (3.7: same-name models
   differ across backends). Per-run repro fields already logged (`runs/`); the *guidance* transfers, not the
   absolute scores.
+- ✅ **Reasoning×criterion cells — PLANNED, NEVER RUN (recorded by the 2026-06-11 audit)** — §7 and PHASES 4.1
+  promised "sampled reasoning × criterion-by-criterion" cells; the run data contains **only criterion ×
+  qwen3.5|off (737 items)** — no reasoning-ON criterion cell exists, and **no decision to drop it was recorded
+  at the time**. Recorded now, honestly: scope was reduced (deliberately or by omission — no contemporaneous
+  record), the decomposition claim is therefore **reasoning-OFF only**, and reasoning×criterion is **future
+  work**. Do not imply the interaction was measured.
 - ⬜ **Interactions to probe** — which 2-way interactions are worth the cost vs main-effects-only.
 - ⬜ **Fine-tuning arm** — include or drop? If included, which model and QLoRA-local vs managed fine-tune.
 - ✅ **QWK binning** (Phase 5, 2026-06-10) — bin the **normalised** 0–1 score into **K = 5** ordinal levels
@@ -613,21 +621,25 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   ON **reduces** k-consistency (even at temp=0, where 10–43% of items still vary — backend-conditional). So
   **RQ1 has two dimensions that can diverge: agreement vs consistency** — analysed as a headline (5.3/5.5a),
   not a footnote. **CAUSAL CAVEAT (verified 5.3, 2026-06-10):** within-item SD correlates with output length
-  (Spearman ~0.6 median, all models/datasets) → a substantial part of the "reasoning inconsistency" is
+  (Spearman median ≈0.46 over (dataset,model) cells on the with-guidance/qbq/holistic arm, range 0.04–0.78 —
+  positive but heterogeneous; basis recorded 2026-06-11, the earlier "~0.6, all models/datasets" had an
+  unrecorded basis and did not reproduce) → a substantial part of the "reasoning inconsistency" is
   **length × backend non-determinism** (more tokens at temp=0 = more chance to diverge), **not** an intrinsic
   property of reasoning. The result stands (inconsistency is real for the user) but the **explanation must say
   so** — ties to §6.4 (backend-conditional). Do NOT frame it as "the model reasons differently each time".
 - ✅ **RQ1 agreement gain — censoring check (verified 5.2, 2026-06-10)** — the Qwen-ON QWK gain is NOT a
-  truncation-censoring artifact: it **survives strict pairing on items the ON never truncated** (e.g. PT-CS
-  code +0.136 loose → +0.110 clean-only; RIAYN/SemEval even grow). **Two caveats the framework must encode:**
-  (a) PT-CS short-answer lost ~40% of the naïve gain to censoring (+0.180→+0.103); (b) the truncated items
+  truncation-censoring artifact: it **survives strict pairing on items the ON never truncated** (PT-CS code
+  +0.162 loose → +0.138 clean-only, point estimates — the tab_rq1 boot median is +0.136; RIAYN/SemEval even
+  grow; *digits corrected 2026-06-11 — the earlier +0.136/+0.110 did not reproduce*). **Two caveats the
+  framework must encode:** (a) PT-CS short-answer lost ~45% of the naïve gain to censoring (+0.183→+0.101,
+  recomputed 2026-06-11); (b) the truncated items
   ARE genuinely harder (OFF MAE 2–3× higher on them), so the reasoning benefit is established **only on the
   tractable items** — on the hardest (reasoning overflows 32768) we have no clean ON score and **cannot claim
   the benefit extends to them**. Scope the claim accordingly.
 - ✅ **Phase-5 pairing subsets** (Phase 5 review, 2026-06-10) — every expensive contrast pairs on its sampled
   subset or it's biased: **reasoning 175**, **scope 252** (whole-exam questions, not all 737), **anchor 60**.
   State the N in each contrast. (Full rationale + the other Phase-4-review corrections — call_group cost
-  dedupe 4.5×, context = two interventions, code 0-collapse model-specific, non-random truncation exclusion
+  dedupe 4.2×, context = two interventions, code 0-collapse model-specific, non-random truncation exclusion
   threat — are in the revised Phase 5 in PHASES.md.)
 - 🔧 **Score clamping to [0, max]** (Phase 4, 2026-06-09) — Phase 5 must **clamp predicted scores to
   [0, gold_scale_max]** before metrics. Discovered by the integrity audit: 18 PT-CS criterion items
@@ -640,7 +652,8 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   submissions, all data, not just the validation sample) **42% of scores are exactly 0**, mean 0.82; and the
   q-by-q baseline gives the **same 0s on the same items** (so it's the model, scope-independent, and the raw
   shows explicit `"score":0` with `parse_ok=true` — real judgments, not coercions). This is **discrimination
-  collapse at the lower end**, not mere severity — consistent with PT-CS having the **lowest QWK (0.47)** of
+  collapse at the lower end**, not mere severity — consistent with PT-CS having the **lowest QWK of the datasets (0.31 full / 0.47 verified; K=5 item-mean,
+  basis corrected 2026-06-11)** of
   the datasets. **Three Phase-5 watchpoints:** **(a)** for **RQ1 on code**, do NOT conclude "reasoning helps"
   from a level shift alone — check whether reasoning changes **discrimination at the lower end** (e.g. QWK /
   spread among the 0-clustered items), not just the mean; **(b)** read any "**better than baseline on code**"
@@ -664,7 +677,8 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   **Run on TWO models** (user 2026-06-09): qwen3.5 (RQ1 continuity) **and** glm-5.1 — because Qwen's code
   0-collapse can MASK the order effect (a 0-early/0-late answer can't reveal position). Separate store
   `conversation.jsonl` (keyed incl. order_id so natural/inverse don't collide). **Result:** order effect real
-  and **stronger in GLM** (mean|nat-inv|=0.33, 51% of questions change with position) than Qwen (0.26, 36%) —
+  and **stronger in GLM** (mean|nat−inv| = 0.33 **raw-score points**; **51% of (item,run) pairs** change grade
+  with position) than Qwen (0.26, 36%; bases declared 2026-06-11: raw scale, run-level pairs) —
   the collapse partially masks it in Qwen, vindicating the two-model design. Shared history also lowers the
   mean slightly (clean>shared) — anchoring signal for Phase 5. **Phase-5 interpretation:** report Qwen with
   the 0-collapse caveat; GLM is the cleaner read of whether position/anchoring matters.
@@ -701,7 +715,7 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   (Phase 0.4):** persistent ledger `data/processed/_spend.json` via `experiments/harness/cost_guard.py`
   (pre-flight estimator refuses any arm that would breach the €150 ceiling; `record()` logs real token cost
   per call). **GPT-5.1 anchor smoke test PASSED** (2026-06-07): replied "pong", 14+10 tok, €0.000108 charged
-  (reasoning_effort=none accepted). **Spent so far: €0.0001** of €150. **DeepSeek**: key added and
+  (reasoning_effort=none accepted). **Spend updated 2026-06-11 (ledger `_spend.json`): €55.60 total** — runs.jsonl deduped €35.97 (OpenAI/gpt-5.1 **€10.24** of €150; DeepInfra open roster **€25.73** of €150); the ledger-vs-runs difference is the archived maxtok4096 reasoning arm + smoke/regrades. Actual ≈2–3× the €16.7 matrix estimate, far under both ceilings. **DeepSeek**: key added and
   authenticates, but the account returned HTTP 402 *Insufficient Balance* — needs top-up before any DeepSeek
   arm can run (harness handled it cleanly, no charge recorded). Keys via env vars / gitignored `.env`
   (loaded by `experiments/harness/env.py`), never committed.

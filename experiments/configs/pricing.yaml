@@ -110,7 +110,7 @@ models:
     reasoning_values: { "off": false, "on": true }
     note: VERIFY id/price/variant.
   glm-5.1:                         # RQ1 toggle + strongest open coder
-    model_id: zai-org/GLM-5.1          # TODO confirm exact id
+    model_id: zai-org/GLM-5.1          # confirmed live at 3.4 (2026-06-08, §11)
     input_per_1m_usd: 0.40
     output_per_1m_usd: 0.60
     provider: deepinfra

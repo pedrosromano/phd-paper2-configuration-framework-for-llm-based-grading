@@ -233,7 +233,7 @@ fine-tune against a DeepInfra base — backends aren't comparable).
 
 > **Phase-4 full-data review gates this analysis (2026-06-10).** The §5.0 conventions and the
 > **pairing subsets** below are NOT optional — skipping them corrupts central results (three
-> contrasts come out biased; SemEval has no metric path as-was; whole-exam cost overcounts 4.5×).
+> contrasts come out biased; SemEval has no metric path as-was; whole-exam cost overcounts 4.2×).
 > Apply §5.0 everywhere before any metric.
 
 **5.0** — **Analysis conventions (apply before any metric; record concretes in §11).**
@@ -256,7 +256,8 @@ fine-tune against a DeepInfra base — backends aren't comparable).
   and the result doesn't hinge on the 0.5 cut (adds no circularity). (3/5-way labels exist but are unused —
   the model was not asked for them.)
 - **Whole-exam cost:** the N question-rows of a submission share ONE call (cost repeats on each row);
-  **dedupe by `call_group`** for any token/€ aggregate — **4.5× overcount** otherwise (confirmed).
+  **dedupe by `call_group`** for any token/€ aggregate — **4.2× overcount** otherwise (1260 rows → 300 calls;
+  recomputed 2026-06-11).
 - **Pairing subsets (MANDATORY — state the N in every contrast or it is biased):**
   - **Reasoning (RQ1):** ON is sampled to **175 items**; pair OFF↔ON on those **175**, never OFF-full-N.
   - **Scope (RQ3):** whole-exam covers **252 questions** (60 PT-CS submissions); restrict the q-by-q
@@ -307,8 +308,8 @@ between the public datasets and **PT-CS**: how much of the public ranking **tran
 **5.5c** — **The code 0-collapse as a DEDICATED result (feeds the framework).** **Observational
 characterisation, NOT a hypothesis test** — describe the distributions and the conditional pattern, with
 effect sizes/CIs, framed as what the data show. On PT-CS code the **baseline (Qwen3.5 OFF) collapses ~42% of
-grades to 0** — *discrimination* collapse, tied to the lowest QWK (0.47). **Reasoning ON appears to correct it
-for Qwen** (paired 175: frac0 0.53→0.28, meanN 0.26→0.43) **but not for GLM / DeepSeek** (flat/worse) →
+grades to 0** — *discrimination* collapse, tied to the lowest QWK of the datasets (0.31 full / 0.47 verified).
+**Reasoning ON appears to correct it for Qwen** (paired 175: frac0 0.53→0.27, meanN 0.26→0.43) **but not for GLM / DeepSeek** (flat/worse) →
 **model-specific**: when a model collapses, reasoning is the lever; when it already discriminates, it isn't.
 Characterise the **distributional shapes**: **SemEval bimodal / 0-heavy across all models; Mohler top-heavy**
 (reference-answer matching). This characterisation, and the agreement-vs-consistency trade-off (5.5a), are
@@ -338,7 +339,8 @@ the confirmatory results** (which answer the pre-set RQs). This is the analysis-
 figures.
 
 **Threats to carry to Phase 7 (§6.4):** **(a)** Qwen-ON agreement is computed on a **non-random subset** — 337
-longest-reasoning items truncated at 32768 and excluded (all Qwen; worst on SemEval 145 / Mohler 111) → report
+run-rows (**222 distinct items**) truncated at 32768 and excluded (all Qwen-ON; items: SemEval 91, Mohler 65,
+PT-CS 49, RIAYN 17 — units corrected 2026-06-11, the old "145/111" were row counts) → report
 π + the exclusion, since the hardest cases drop out; **(b)** consistency at temp=0 is **backend-conditional,
 not determinism**; **(c)** the **context effect is two interventions** (rubric vs reference); **(d)** the
 **anchor is small-N (60)** — a reference point, not an inference target; **(e)** **code evidence is narrower**
@@ -475,7 +477,7 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
     **mixed/weak** — short-answer is *lenient* (SemEval +0.05, PT-CS-short-verified +0.10, opposite to
     inflation), code is stricter, and the one suggestive signal — PT-CS-verified code being the strictest — is
     **the 0-collapse, not inflation**: its extra-strictness vs comparable RIAYN code **shrinks with the collapse**
-    (Qwen −0.077 at frac0≈.50 → DeepSeek −0.039 → GLM −0.017 at frac0≈.17). **Report as not supporting inflation;
+    (Qwen −0.077 at frac0≈.49 → DeepSeek −0.039 at frac0≈.13 → GLM −0.018 at frac0≈.13). **Report as not supporting inflation;
     document, do not manufacture.** Robust sub-claim: **unvalidated (full) gold understates the deviation
     magnitude** (verified is further from 0 in both domains).
   - **(B) Measurement / reproducibility.** **Backend-conditional** — numbers are conditional on the
@@ -483,7 +485,8 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
     **temp=0 ≠ determinism** (10–43 % of items still vary; inconsistency is backend non-determinism, partly
     length-driven). **Reasoning cost non-comparable across backends** (DeepInfra bundles reasoning into
     `completion_tokens`; only GPT-5.1 itemises `reasoning_tokens`). **Non-random truncation exclusion** — 337
-    longest-reasoning Qwen-ON items truncated at 32768 and excluded (worst SemEval 145 / Mohler 111); the hardest
+    longest-reasoning Qwen-ON **run-rows (222 distinct items)** truncated at 32768 and excluded (items:
+    SemEval 91, Mohler 65, PT-CS 49, RIAYN 17); the hardest
     cases drop out → report π and the exclusion, scope the ON benefit to tractable items.
   - **(C) Scope of the claim.** **Anchor small-N** — GPT-5.1 is a reference point, not an inference target (N=60
     in the main contrasts, **N=11** on verified transfer); corroboration only. **Code evidence narrower** (PT-CS +
@@ -500,10 +503,10 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
 (the decision guide, 5.6) · `published_baselines.tex` (Phase **1.5** literature context — *different-protocol*,
 not the success criterion, label it so). **Low-N cells already carry bootstrap 95 % CIs** (anchor N=11; ON
 N=32) — keep the **CI beside every small-N number**.
-  > **One regeneration to do before shipping** (§8 *everything regenerable*): the `tab_gold_sensitivity`
-  > **model−gold deviation row is currently a hardcoded string** (≈ all-models-pooled, provenance unrecorded)
-  > and is on a *different basis* than the Threats text (baseline cell). **Regenerate it from the engine on the
-  > declared baseline basis** and make the two consistent — do not ship the hardcode.
+  > **RESOLVED (f2ec276 + audit 2026-06-11): no hardcode remains.** The `tab_gold_sensitivity` deviation row
+  > is computed by `phase5.signed_deviation` on the declared baseline cell (qwen|off|with_guidance|qbq|holistic
+  > → −0.192/−0.269) and reproduces byte-identically on regeneration; the builder was swept for other hardcoded
+  > metric strings (none). Nothing to regenerate here.
 
 **7.3** — Wire the **figures** from `article/figures/`: `fig1_rq1_twodim` · `fig2_cost_vs_agreement` ·
 `fig3_per_dataset_config` · `fig4_consistency` · `fig5_conversation` · `fig6_gold_sensitivity`. **Stratum rule
