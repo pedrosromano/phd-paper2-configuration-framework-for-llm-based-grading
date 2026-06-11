@@ -417,16 +417,25 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
     N=175 sampled, **Qwen clean-only 84–159** after truncation exclusion, anchor 60): reasoning ON helps
     **agreement** only **model/dataset-specifically** (sig for Qwen on 4 of 5 cells — PT-CS-short is
     **borderline ns**, +0.104 [−0.01,+0.20], say so; GLM and GPT on PT-CS-short, GPT also RIAYN; **not**
-    Mohler/SemEval for the discriminating models), at a **10–925× token premium (model-dependent: ~10–35×
-    GPT-5.1, ~600–925× Qwen)**, and **costs consistency** (within-item SDk rises off→on in nearly every cell).
+    Mohler/SemEval for the discriminating models), at a **10–925× token premium, and crucially the premium is
+    itself domain-conditional even within one model** (GPT-5.1: **~10–35× on short-answer vs ~136–170× on
+    code**; Qwen ~600–925×) — quote the premium per domain, never a single 10–170× span that hides the
+    conditionality the paper demonstrates, and **costs consistency** (within-item SDk rises off→on in nearly every cell).
     **Scope the claim:** established on tractable items only — the hardest items (reasoning overflows 32768)
     have no clean ON score. Do NOT write "significant across all datasets" anywhere (abstract/intro included)
     — qwen|PT-CS-short is borderline ns; enumerate the cells instead.
-  - **Code 0-collapse (mechanism ≠ prescription).** On PT-CS code, **Qwen-OFF collapses ~42–50 % of scores to
-    0** (discrimination failure, scope-independent, genuine `score:0`). Reasoning **recovers** QWK *for Qwen*
-    here (dQWK **+0.136** full; V column +0.113 @61, same direction) — a model-specific repair of a broken
-    baseline, **not** "reasoning helps code"; GLM/DeepSeek/GPT don't need it (dQWK ns). Prescription: **prefer
-    a discriminating model** over buying reasoning.
+  - **Code 0-collapse (mechanism ≠ prescription; framework keyed by BEHAVIOUR, not model).** On PT-CS code,
+    **Qwen-OFF collapses ~42–50 % of scores to 0** (discrimination failure, scope-independent, genuine
+    `score:0`). Reasoning **recovers** QWK *here* (dQWK **+0.136** full; V column +0.113 @61, same direction) —
+    a repair of a **collapsed** baseline, **not** "reasoning helps code". **But do NOT generalise to "reasoning
+    doesn't help models that discriminate"** — the data fork that: *off* the collapse the reasoning gain is
+    **inconsistent across cells and not predictable a priori** — ns for GLM/DeepSeek on code and GPT on PT-CS
+    code, yet **significant for GPT on RIAYN (+0.192 [+0.02,+0.37])** and for **GLM/GPT on PT-CS-short** (+0.220 /
+    +0.208). So the `tab_framework` code rows are keyed on **baseline behaviour** (collapses-at-0 → reasoning is
+    the lever, or switch model; does-not-collapse → **default OFF** for cost (116–192×) + consistency, **ON only
+    where local validation justifies it**). This below-collapse unpredictability **reinforces the mother rule
+    (validate locally)** — keep the framework row and this RQ1 cell enumeration mutually consistent (both list
+    GPT|RIAYN and GLM/GPT|PT-CS-short as the sig exceptions).
   - **RQ2 (context = grounding; the context arm ran on Qwen3.5 ONLY — scope every RQ2 claim to it).**
     With-guidance helps where the gold is sound: Mohler **+0.162**, SemEval **+0.238**, RIAYN **+0.123** (all
     sig). On **full** PT-CS code the rubric looks null (**+0.005, ns**) — but that is a **gold artifact**: on
@@ -518,10 +527,15 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
 (the decision guide, 5.6) · `published_baselines.tex` (Phase **1.5** literature context — *different-protocol*,
 not the success criterion, label it so). **Low-N cells already carry bootstrap 95 % CIs** (anchor N=11; ON
 N=32) — keep the **CI beside every small-N number**.
-  > **RESOLVED (f2ec276 + audit 2026-06-11): no hardcode remains.** The `tab_gold_sensitivity` deviation row
-  > is computed by `phase5.signed_deviation` on the declared baseline cell (qwen|off|with_guidance|qbq|holistic
-  > → −0.192/−0.269) and reproduces byte-identically on regeneration; the builder was swept for other hardcoded
-  > metric strings (none). Nothing to regenerate here.
+  > **RESOLVED (f2ec276 + audit 2026-06-11, refined post-audit): metric hardcodes survive ONLY in the
+  > `tab_framework` narrative, and are guarded by a test.** The `tab_gold_sensitivity` deviation row is computed
+  > by `phase5.signed_deviation` on the declared baseline cell (qwen|off|with_guidance|qbq|holistic →
+  > −0.192/−0.269) and reproduces byte-identically. The **decision-guide narrative** (`tab_framework`) is the one
+  > place that quotes summary numbers inline: the **simple** literals (decomp −0.043/−0.022, the Qwen-code
+  > premium ~800×, the Qwen-code dQWK +0.136/+0.113) are now **derived from the engine** at build time; the
+  > **composite ranges** (overall 10–925×, discriminating-code 116–192×, Qwen-SDk 2.5–5×) stay inline but are
+  > **recomputed and asserted by `_assert_framework_ranges` in `make analyse`** — the build **fails loudly** if a
+  > literal drifts from the data. So: no silent hardcode; the framework prose is engine-checked, not memorised.
 
 **7.3** — Wire the **figures** from `article/figures/`: `fig1_rq1_twodim` · `fig2_cost_vs_agreement` ·
 `fig3_per_dataset_config` · `fig4_consistency` · `fig5_conversation` · `fig6_gold_sensitivity`. **Stratum rule

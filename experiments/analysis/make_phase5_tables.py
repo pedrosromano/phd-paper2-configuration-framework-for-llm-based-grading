@@ -59,6 +59,29 @@ def _tex(df, path, caption, label):
     print(f"  wrote {path} ({len(df)} rows)")
 
 
+def _assert_framework_ranges(prem_by, sdk_by, r_overall, r_discrim_code, r_qwen_sdk):
+    """🟡-3 (§11 2026-06-11): the tab_framework composite ranges are kept as inline literals, but
+    this test recomputes each from the engine-captured premiums/SDk and FAILS LOUDLY if a literal
+    has drifted from the data. Runs as part of `make analyse` (make_phase5_tables.main)."""
+    def fmt(lo, hi):                       # render an integer range the way the table does
+        return f"{int(round(lo))}--{int(round(hi))}"
+    discrim = [prem_by[k] for k in prem_by if k[1] == "code" and k[2] != "qwen3.5"]   # GLM/DeepSeek/GPT on code
+    overall = list(prem_by.values())
+    qsdk = [on / off for (ds, dom, m), (off, on) in sdk_by.items()
+            if dom == "code" and m == "qwen3.5" and off]                              # Qwen-code SDk on/off
+    half = lambda x: round(x * 2) / 2                                                 # round to nearest 0.5
+    checks = {
+        "overall premium": (r_overall, fmt(min(overall), max(overall))),
+        "discriminating-code premium": (r_discrim_code, fmt(min(discrim), max(discrim))),
+        "Qwen-code SDk ratio": (r_qwen_sdk, f"{half(min(qsdk)):g}--{half(max(qsdk)):g}"),
+    }
+    bad = {k: v for k, v in checks.items() if v[0] != v[1]}
+    if bad:
+        raise AssertionError(f"tab_framework composite literals drifted from the engine: "
+                             + "; ".join(f"{k}: literal '{lit}' but engine '{got}'" for k, (lit, got) in bad.items()))
+    print(f"  framework range test OK: {', '.join(f'{k}={v[1]}' for k, v in checks.items())}")
+
+
 def main() -> int:
     TABLES.mkdir(parents=True, exist_ok=True)
     df = phase5.load_main()
@@ -72,6 +95,7 @@ def main() -> int:
     rp = phase5.reasoning_paired(df)
     base = rp[(rp.context_level == "with_guidance") & (rp.scope == "question_by_question") & (rp.decomposition == "holistic")]
     rows = []
+    prem_by, sdk_by, dqwk_by = {}, {}, {}     # captured for the framework table + its range test (§11 2026-06-11)
     for (ds, dom, m), g in base.groupby(["dataset", "domain", "model"]):
         o, n = g[g.reasoning == "off"], g[g.reasoning == "on"]
         if o.empty or n.empty:
@@ -81,18 +105,22 @@ def main() -> int:
         _, sA = _qwk_items(o[o.item_id.isin(clean)]); _, sB = _qwk_items(n[n.item_id.isin(clean)])
         lo, md, hi = _boot_ci(sA, sB)
         prem = pd.to_numeric(n.completion_tokens, errors="coerce").mean() / max(pd.to_numeric(o.completion_tokens, errors="coerce").mean(), 1)
+        sdk_off = o.groupby("item_id").pred_norm.std().mean(); sdk_on = n.groupby("item_id").pred_norm.std().mean()
+        prem_by[(ds, dom, m)] = prem; sdk_by[(ds, dom, m)] = (sdk_off, sdk_on)
+        dqwk_by[(ds, dom, m)] = (md, lo, hi)
         ver_cell = "--"
         if ds == "ptcs":
             cleanv = clean & interv
             _, sAv = _qwk_items(o[o.item_id.isin(cleanv)]); _, sBv = _qwk_items(n[n.item_id.isin(cleanv)])
             lov, mdv, hiv = _boot_ci(sAv, sBv)
+            dqwk_by[(ds, dom, m, "V")] = (mdv, len(cleanv))
             ver_cell = f"{mdv:+.3f} [{lov:+.2f},{hiv:+.2f}] ({len(cleanv)})" if mdv == mdv else f"-- (N={len(cleanv)}<8)"
         rows.append({"Dataset": ds, "Dom": dom[:4], "Model": m, "N": len(clean),
                      "dQWK": f"{md:+.3f}", "95\\% CI": f"[{lo:+.2f},{hi:+.2f}]",
                      "Sig": "yes" if (lo > 0 or hi < 0) else "no",
                      "dQWK-V [CI] (N$_V$)": ver_cell,
                      "Tok$\\times$": f"{prem:.0f}",
-                     "SDk off$\\to$on": f"{o.groupby('item_id').pred_norm.std().mean():.3f}$\\to${n.groupby('item_id').pred_norm.std().mean():.3f}"})
+                     "SDk off$\\to$on": f"{sdk_off:.3f}$\\to${sdk_on:.3f}"})
     _tex(pd.DataFrame(rows), "tab_rq1_reasoning.tex",
          "RQ1: reasoning OFF$\\to$ON on the paired, clean (non-truncated) items -- agreement gain (dQWK, K=5), "
          "token cost premium, and within-item SD (consistency). PT-CS rows: full-N primary; the V column repeats "
@@ -129,8 +157,11 @@ def main() -> int:
                               df[df.scope == "whole_exam"], "scope ptcs:code qbq$\\to$whole-exam",
                               verified=interv))
     dd = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.scope == "question_by_question")]
-    drows.append(contrast_row(dd[dd.decomposition == "holistic"], dd[dd.decomposition == "criterion"],
-                              "decomp ptcs:code holistic$\\to$criterion", verified=interv))
+    decomp_row = contrast_row(dd[dd.decomposition == "holistic"], dd[dd.decomposition == "criterion"],
+                              "decomp ptcs:code holistic$\\to$criterion", verified=interv)
+    drows.append(decomp_row)
+    # derive the two decomp dQWK literals the framework row quotes (full / verified), from the engine
+    decomp_full = float(decomp_row["dQWK"]); decomp_ver = float(decomp_row["dQWK-V [CI] (N$_V$)"].split()[0])
     _tex(pd.DataFrame([r for r in drows if r]), "tab_dimension_contrasts.tex",
          "RQ2/RQ3: context (per dataset; grounding type differs; the context arm ran on Qwen3.5 only), scope, "
          "and decomposition contrasts (dQWK, K=5, bootstrap CI). Qwen3.5, reasoning off. PT-CS rows: full-N "
@@ -268,26 +299,40 @@ def main() -> int:
          "real effects (the rubric benefit), and artificially shrinks the model$-$gold deviation. This is itself a result.",
          "tab:goldsens")
 
-    # --- T5: framework decision guide (the deliverable) ---
+    # --- T5: framework decision guide (the deliverable). §11 2026-06-11 (🟡-2 ratified):
+    #     the code rows are RE-ANCHORED ON BEHAVIOUR, not model identity. Collapse-at-0 is the
+    #     explained case (reasoning is the lever). OFF the collapse the reasoning gain is
+    #     INCONSISTENT across cells (ns for GLM/DeepSeek on code; SIG for GPT on RIAYN +0.192 and
+    #     for GLM/GPT on PT-CS-short) and not predictable a priori -> default OFF for cost+
+    #     consistency, ON only where local validation justifies it; that unpredictability is itself
+    #     why the mother rule is "validate locally". Simple literals are DERIVED from the engine
+    #     (decomp_full/_ver, the Qwen-code premium, the Qwen-code dQWK); composite ranges stay
+    #     literal but are guarded by _assert_framework_ranges below (🟡-3). ---
+    qwen_code_prem = int(round(np.mean([prem_by[("ptcs", "code", "qwen3.5")],
+                                        prem_by[("riayn", "code", "qwen3.5")]]) / 50.0) * 50)
+    qc_full = dqwk_by[("ptcs", "code", "qwen3.5")][0]; qc_v, qc_vn = dqwk_by[("ptcs", "code", "qwen3.5", "V")]
+    R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "10--925", "116--192", "2.5--5"   # composite; verified by the test
     fw = pd.DataFrame([
         {"Task / context": "Short-answer + reference answer", "Recommended": "OFF, discriminating model",
-         "Trade-off in the rule": "reasoning gain not significant; OFF 10--925$\\times$ cheaper (model-dependent)"},
-        {"Task / context": "Code, model that DISCRIMINATES (GLM/DeepSeek/GPT)", "Recommended": "Reasoning OFF",
-         "Trade-off in the rule": "ON not significant + 116--192$\\times$ tokens $\\to$ keep OFF"},
-        {"Task / context": "Code, model that COLLAPSES (Qwen)", "Recommended": "ON, or switch model",
-         "Trade-off in the rule": "recovers QWK on tractable items at $\\sim$800$\\times$ tokens + 2.5--5$\\times$ worse SDk; prefer switching"},
+         "Trade-off in the rule": f"reasoning gain not significant; OFF {R_OVERALL}$\\times$ cheaper (model-dependent)"},
+        {"Task / context": "Code, model that COLLAPSES at 0 (e.g.\\ Qwen here)", "Recommended": "Reasoning ON (the lever), or switch model",
+         "Trade-off in the rule": f"collapse is the explained case: ON recovers QWK on tractable items (Qwen dQWK ${qc_full:+.3f}$ full / ${qc_v:+.3f}$ V@{qc_vn}) at $\\sim${qwen_code_prem}$\\times$ tokens + {R_QWEN_SDK}$\\times$ worse SDk; prefer switching to a discriminating model"},
+        {"Task / context": "Code, model that does NOT collapse", "Recommended": "Default OFF; ON only if local validation justifies it",
+         "Trade-off in the rule": f"off the collapse the reasoning gain is inconsistent and not predictable a priori (ns for GLM/DeepSeek-code; sig for GPT$|$RIAYN $+0.192$ and GLM/GPT$|$PT-CS-short) $\\to$ OFF by default for cost ({R_DISCRIM_CODE}$\\times$ tokens) + consistency; the unpredictability is itself why you validate locally"},
         {"Task / context": "Consistency/fairness-critical", "Recommended": "Reasoning OFF",
          "Trade-off in the rule": "ON less reproducible (partly length$\\times$backend, partly reasoning-intrinsic)"},
         {"Task / context": "Rubric with per-criterion structure", "Recommended": "Holistic scoring",
-         "Trade-off in the rule": "criterion-by-criterion mildly hurts agreement with the final grade -- small and gold-sensitive ($-0.043$ sig full / $-0.022$ ns verified); consistent with our original distrust of per-criterion scores, which motivated scoring against the final grade"},
+         "Trade-off in the rule": f"criterion-by-criterion mildly hurts agreement with the final grade -- small and gold-sensitive (${decomp_full:+.3f}$ sig full / ${decomp_ver:+.3f}$ ns verified); consistent with our original distrust of per-criterion scores, which motivated scoring against the final grade"},
         {"Task / context": "Multi-question / session", "Recommended": "Clean, question-by-question",
          "Trade-off in the rule": "shared history $\\to$ stricter (p$<$.01); order adds variance"},
         {"Task / context": "Deploy in a new context", "Recommended": "Validate locally (governs the above)",
          "Trade-off in the rule": "transfer is partial: top config carried over, mid-ranking shuffled; unvalidated gold flipped effect readings"},
     ])
+    _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
     _tex(fw, "tab_framework.tex",
          "The configuration decision guide (Phase 5.6): starting priors per axis, with the trade-off inside "
-         "each rule; ``validate locally'' governs the per-axis priors.", "tab:framework")
+         "each rule; ``validate locally'' governs the per-axis priors. Code rows keyed by baseline behaviour "
+         "(collapse vs not), not model identity.", "tab:framework")
     print("done.")
     return 0
 

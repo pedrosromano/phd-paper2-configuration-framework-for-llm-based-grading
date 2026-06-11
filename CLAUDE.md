@@ -532,7 +532,9 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   (suspected unreviewed), **34.5% no-criteria** (unassessable). **Two-thirds lack evidence of human review.**
   **Re-ran the key contrasts on the INTERVENED stratum (analysis only): the central results HOLD →** collapse
   persists (Qwen frac0 0.49) but QWK rises 0.31→**0.47** (low full-PT-CS QWK was partly gold-quality);
-  reasoning ptcs-code dQWK **+0.17** (holds, 0.44→0.61); **ranking transfer is PARTIAL** (corrected
+  reasoning ptcs-code dQWK **+0.17** (all-intervened basis, N=67: 0.44→0.61; NB the committed `tab_rq1_reasoning`
+  V column and Phase 7 use the **clean-only** intervened basis, N=61 → **+0.113**, same direction — both
+  reproduce, different denominators); **ranking transfer is PARTIAL** (corrected
   2026-06-11 — the earlier "ranking inversion holds; public winner qwen|off → intervened-PT-CS winner
   gpt-5.1|on 0.897" **did not reproduce in the 2026-06-11 audit**: under every basis tested — item-mean QWK
   full-N, run-level QWK, MAE, anchor-paired-60 — **qwen|off ranks 7/8 on the public datasets** (mean QWK 0.59);
