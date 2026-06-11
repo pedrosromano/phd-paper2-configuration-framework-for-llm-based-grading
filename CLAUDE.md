@@ -710,6 +710,9 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ✅ **5.8 emergent observations (Phase 5 close, 2026-06-10)** — the gate (log unexpected patterns, promote
   only with sign-off, label exploratory/post-hoc) holds **one** item: **reasoning ON improves SemEval
   generalisation to NEW domains more than seen** (AUROC unseen_domain rises most with reasoning) — exploratory,
-  not pre-registered. **NOT emergent (these were pre-registered RQs → confirmatory):** the partial ranking
-  transfer (RQ6, corrected 2026-06-11) and the rubric "non-transfer" (RQ2, now resolved as a PT-CS-gold
-  artifact). The `unseen_ans` ON split (N 27–30) is noise — not interpreted.
+  not pre-registered. **Verified 2026-06-11 under the corrected with-guidance-only filter** (the original
+  semeval_splits pooled Qwen's no-guidance rows — fixed): the pattern HOLDS across all 4 models — unseen_domain
+  AUROC rises off→on (+0.013…+0.039) while seen/unseen_q fall for the open models. **NOT emergent (these were
+  pre-registered RQs → confirmatory):** the partial ranking transfer (RQ6, corrected 2026-06-11) and the rubric
+  "non-transfer" (RQ2, now resolved as a PT-CS-gold artifact). The `unseen_ans` ON split (N 27–30) is noise —
+  not interpreted.

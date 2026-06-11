@@ -140,7 +140,8 @@ def main() -> int:
     ss = phase5.semeval_splits(df)
     ss = ss[ss.reasoning == "off"].drop(columns=["reasoning"]).rename(columns={"macroF1": "macroF1"})
     _tex(ss.round(3), "tab_semeval_splits.tex",
-         "SemEval per split (fixed-0.5 accuracy + macro-F1; threshold-free AUROC/Spearman). Reasoning off.", "tab:semeval")
+         "SemEval per split (fixed-0.5 accuracy + macro-F1; threshold-free AUROC/Spearman). Reasoning off, "
+         "with-guidance cell only (all models like-for-like); n = run-rows (k repetitions pooled).", "tab:semeval")
 
     # --- T4: PT-CS reliability strata ---
     st = pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")

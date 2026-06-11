@@ -211,10 +211,13 @@ def reasoning_contrast(df: pd.DataFrame) -> pd.DataFrame:
 
 def semeval_splits(df: pd.DataFrame) -> pd.DataFrame:
     """5.2 SemEval: fixed-0.5 threshold -> accuracy + macro-F1 per split (separately), plus
-    threshold-free AUROC / MAE / Spearman of the continuous score vs the 0/1 gold."""
+    threshold-free AUROC / MAE / Spearman of the continuous score vs the 0/1 gold.
+    with_guidance ONLY (fixed 2026-06-11 audit): the context arm ran no-guidance on Qwen alone,
+    so pooling context levels mixed 8000 qwen rows against 4000 guidance-only rows for the other
+    models -- a confounded model comparison (qwen looked ~0.05 acc worse than its guidance cell)."""
     from scipy import stats
     from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
-    se = df[(df.dataset == "semeval") & df.pred_norm.notna()].copy()
+    se = df[(df.dataset == "semeval") & (df.context_level == "with_guidance") & df.pred_norm.notna()].copy()
     se["goldbin"] = (pd.to_numeric(se.gold_score, errors="coerce") >= 0.5).astype(int)
     se["predbin"] = (se.pred_norm >= 0.5).astype(int)        # fixed 0.5, pre-registered
     rows = []
