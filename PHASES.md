@@ -380,7 +380,8 @@ sub-study result (clean vs shared history, with order effects).
 
 **7.0** — **Re-hydrate from the artifacts (do this FIRST, then WAIT).** Phase 7 runs in a new session with no
 prior context; its first job is to rebuild state from files, exactly as a careful reviewer would. **Read:**
-CLAUDE.md **§2.3** (ground-truth honesty) and **§11** (living uncertainties); the **tables** in
+CLAUDE.md **§2.3** (ground-truth honesty), **§9.2** (writing register — binding for all prose this session) and
+**§11** (living uncertainties); the **tables** in
 `article/tables/`; the **figures** in `article/figures/`; the **"Threats to carry to Phase 7"** block in
 Phase 5 above; and the engine (`experiments/analysis/phase5.py`, `make_phase5_tables.py`). Then **print a
 ~10-line state summary** — what each RQ concluded (with the table it came from), the PT-CS-verified stance,
@@ -406,6 +407,14 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
     to 0–1 (**never pool raw scales** — Mohler 5, SemEval 1, PT-CS 1–12); QWK on **K=5** ordinal bins
     (sensitivity over K∈{4,5,6}); **paired subsets** per expensive contrast; whole-exam cost **deduped by
     call_group**.
+  - **QWK calibration sentence (MANDATORY at first use — §9.2 Tier B).** QWK is the currency of the whole paper
+    (the headline, the framework, the gold sensitivity, and transfer are all expressed in it), so expanding the
+    acronym is not enough — calibrate how to read it in one light clause. Introduce it with this sentence (adapt
+    wording, keep content): *"We report Quadratic Weighted Kappa (QWK), the standard agreement measure for
+    ordinal scoring, which penalises large disagreements between grader and reference more heavily than small
+    ones; it ranges from 0 (chance-level agreement) to 1 (perfect agreement), and we bin normalised scores into
+    K=5 levels (§11) before computing it."* The **K-binning mention is mandatory** — PT-CS scales are
+    heterogeneous and a reviewer will ask how a continuous score became ordinal.
   - **SemEval (in Method):** continuous 0–1 score → label by a **fixed 0.5 threshold** (not data-tuned, would
     be circular); report accuracy + macro-F1 **per split** (seen / unseen_ans / unseen_domain / unseen_q) plus
     threshold-free **AUROC / Spearman** (`tab_semeval_splits`).
@@ -547,6 +556,14 @@ reader never misattributes a full-PT-CS number to verified or vice-versa.
 **7.4** — Compile end to end (`latexmk`), fix any PATH/poisoned-state issues per §9, and produce the PDF.
 **Check the page count against the budget (CLAUDE.md §9.1: ≤14 pp, target ~13)**; if over, report which
 sections exceed their target rather than trimming blindly. Report what's still placeholder vs done.
+
+**7.4b** — **Readability pass (after compile, before declaring any section done).** Re-read every section
+against **§9.2** specifically: **(a)** grep the PDF for acronyms — each expanded at first use per its tier, none
+invented; **(b)** flag any sentence over ~40 words or with 3+ subordinate clauses for rewrite; **(c)** check
+paragraph openers carry the argument (read only first sentences — does the section still make sense?);
+**(d)** confirm every Tier-C term had its one-sentence plain introduction. **Report what was rewritten.** This
+pass is **not optional polish** — the paper is reviewed by tired humans, and a claim they cannot parse is a
+claim they do not credit.
 
 **7.5** — **Reproducibility / data-availability**: write the statement and prepare the release bundle (harness
 code, prompt templates, config matrices, public-dataset ingest). Include the **anonymised, AI-comment-stripped

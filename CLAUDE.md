@@ -422,6 +422,34 @@ If any section exceeds its target, flag it rather than silently overrunning; tri
 supplementary material. The Phase 1 state-of-the-art draft must respect the ~2-page cap even though it is
 written before the results exist — do not produce 4 pages of review that later crowd out Results.
 
+### 9.2 Writing register (binding for all paper prose)
+The paper is written for **human reviewers and readers, not for maximum information density**. Target register:
+a good TLT paper — technical, precise, and **readable at normal speed** by a researcher in an adjacent area
+(learning analytics, EDM) who does not work on LLM-grading specifically.
+
+**Rules:**
+- **Acronyms & technical terms — three tiers of explanatory load:**
+  - **Tier A** (universally known to the venue — LLM, API, CI): expand at first use; no explanation needed.
+  - **Tier B** (field-standard but interpretation-dependent — QWK, ICC, MAE, AUROC, macro-F1): expand at first
+    use **plus one light clause** saying what it measures and how to read it. One clause, not a paragraph — the
+    reader knows the family, we are calibrating the instrument.
+  - **Tier C** (project-specific or uncommon — the 0-collapse, the verified stratum, π extractable-rate,
+    "tractable items"): **one full plain-language sentence** defining it at first appearance, before it is ever
+    used as shorthand.
+  - **Never invent acronyms for project-internal concepts** (no "PVR" for PT-CS-verified — write it out;
+    "PT-CS-verified" after introducing it once is fine). When in doubt about the tier, **go one tier heavier** —
+    the cost is a clause; the cost of the alternative is a reviewer who cannot read the results.
+- **Sentence load:** one idea per sentence as the default. If a sentence needs three qualifications, the
+  qualifications likely belong in the **threats/limitations** section, not inline — state the claim cleanly and
+  point to where it is scoped.
+- **Numbers in prose:** a number appears **with its meaning**, not alone ("agreement rose by 0.17 QWK
+  (0.44 → 0.61)" — not a bare "+0.170 (N=67, all-intervened)" mid-sentence; the bases live in **table notes**).
+- **Paragraph openers carry the point:** a reader who reads only the first sentence of every paragraph should
+  follow the argument of the section.
+- **Test:** before any section is declared done, re-read it asking **"would a tired reviewer follow this on
+  first pass?"** — if a sentence requires re-reading, rewrite it. **Density is not rigor**; the rigor lives in
+  the tables, the engine, and the threats.
+
 ---
 
 ## 10. Phase roadmap
