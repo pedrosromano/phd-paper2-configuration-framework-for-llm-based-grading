@@ -368,22 +368,129 @@ sub-study result (clean vs shared history, with order effects).
 
 ## Phase 7 — LaTeX integration
 
-**7.1** — Assemble `/article` with IEEEtran using the Article 1 toolchain (CLAUDE.md §9). The Related Work /
-state-of-the-art draft already exists from **Phase 1.4** — pull it in and update it with the experimental
-findings; do **not** rewrite it from scratch. State the **RQs (§1.2)** in the Intro and structure Results
-around them; make the **synthesised framework (5.6) the centre of the Discussion**. Confirm framing for **TLT
-(primary)** and the **ToE** re-framing note (**if ToE, write a structured abstract** — prescribed sections).
-Stub the remaining sections (Intro, Design space, Datasets, Method, Results, Discussion incl. **external
-validity via public datasets** and **transfer (RQ6, from 5.5b)**, Threats incl. **COI**, **ground-truth
-honesty** — two-teacher consensus, AI-seeded then human-validated, no measured human ceiling — **narrower
-code-domain evidence**, **backend-conditional reproducibility** (§6.4), and the **model-set scope** of the
-guidance — Conclusion). **Method must report the backend** (provider, served `model_id`, sampling params,
-run dates — all in `data/processed/runs/`).
+> **For a fresh session:** Phases 4–6 are done. Every number below is sourced from `article/tables/*.tex` or
+> the Phase-5 engine — **not** memory. CLAUDE.md §11/§2.3 prose may lag the artifacts; **when they conflict,
+> the tables/code win** (this was true when Phase 7 was written: the §11 *grade-inflation* numbers did not
+> reproduce — see 7.1 Threats). Confirm each figure before you cite it.
 
-**7.2** — Wire in the auto-generated **tables** from `article/tables` (incl. the Phase 1.3 published-baseline
-table as external context, and the framework decision guide from 5.6).
+**7.0** — **Re-hydrate from the artifacts (do this FIRST, then WAIT).** Phase 7 runs in a new session with no
+prior context; its first job is to rebuild state from files, exactly as a careful reviewer would. **Read:**
+CLAUDE.md **§2.3** (ground-truth honesty) and **§11** (living uncertainties); the **tables** in
+`article/tables/`; the **figures** in `article/figures/`; the **"Threats to carry to Phase 7"** block in
+Phase 5 above; and the engine (`experiments/analysis/phase5.py`, `make_phase5_tables.py`). Then **print a
+~10-line state summary** — what each RQ concluded (with the table it came from), the PT-CS-verified stance,
+and the open threats — and **wait for my confirmation before assembling**. Trust no single number from memory
+or from my messages; cite the table/figure.
 
-**7.3** — Wire in the **figures** from `article/figures`.
+**7.1** — **Assemble `/article`** (IEEEtran, Article-1 toolchain, CLAUDE.md §9). The Related Work draft already
+exists from **Phase 1.6** — pull it in and fold in the experimental findings; do **not** rewrite from scratch.
+State the **RQs (§1.2)** in the Intro; structure Results around them; make the **framework (5.6) the centre of
+the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE: structured abstract**).
+
+  **Datasets / Method must encode:**
+  - **PT-CS stratification = curation, not exclusion.** Criterion `cotacao ≠ Σnota_parcial` (intervention
+    evidence). Strata of 1184 responses (`tab_ptcs_strata`): **intervened 382 / 32.3 %** · exact-sum 393 /
+    33.2 % · no-criteria 409 / 34.5 %. **PT-CS-verified = the intervened stratum** is the primary transfer set;
+    **full PT-CS appears only in the gold sensitivity** (Results). Promotion decision + date from §11 (2026-06-10).
+  - **§5.0 conventions:** clamp to [0, max] (penalty criteria can drive a sum negative, e.g. −0.5→0); normalise
+    to 0–1 (**never pool raw scales** — Mohler 5, SemEval 1, PT-CS 1–12); QWK on **K=5** ordinal bins
+    (sensitivity over K∈{4,5,6}); **paired subsets** per expensive contrast; whole-exam cost **deduped by
+    call_group**.
+  - **SemEval (in Method):** continuous 0–1 score → label by a **fixed 0.5 threshold** (not data-tuned, would
+    be circular); report accuracy + macro-F1 **per split** (seen / unseen_ans / unseen_domain / unseen_q) plus
+    threshold-free **AUROC / Spearman** (`tab_semeval_splits`).
+  - **Backend reporting (keep):** provider, served `model_id`, sampling params, run dates — all in
+    `data/processed/runs/`.
+
+  **Results — by RQ, numbers from the tables (verify, don't recall):**
+  - **RQ1 (headline, two-dimensional).** On the **paired clean (non-truncated) items** (`tab_rq1_reasoning`;
+    N=175 sampled, **Qwen clean-only 84–159** after truncation exclusion, anchor 60): reasoning ON helps
+    **agreement** only **model/dataset-specifically** (sig for Qwen broadly; GLM/GPT on PT-CS-short + RIAYN;
+    **not** Mohler/SemEval for the discriminating models), at a **30–900× token premium**, and **costs
+    consistency** (within-item SDk rises off→on in nearly every cell). **Scope the claim:** established on
+    tractable items only — the hardest items (reasoning overflows 32768) have no clean ON score.
+  - **Code 0-collapse (mechanism ≠ prescription).** On PT-CS code, **Qwen-OFF collapses ~42–50 % of scores to
+    0** (discrimination failure, scope-independent, genuine `score:0`). Reasoning **recovers** QWK *for Qwen*
+    here (dQWK **+0.137**) — a model-specific repair of a broken baseline, **not** "reasoning helps code";
+    GLM/DeepSeek/GPT don't need it (dQWK ns). Prescription: **prefer a discriminating model** over buying
+    reasoning.
+  - **RQ2 (context = grounding).** With-guidance helps where the gold is sound: Mohler **+0.161**, SemEval
+    **+0.238**, RIAYN **+0.123** (all sig). On **full** PT-CS code the rubric looks null (**+0.007/+0.008,
+    ns**) — but that is a **gold artifact**: on **PT-CS-verified** it is **+0.149** (`tab_gold_sensitivity`), in
+    line with RIAYN. Report the **full-vs-verified pair** as the result, not the null.
+  - **RQ3 (scope, decomposition)** (`tab_dimension_contrasts`). Scope qbq→whole-exam **dQWK −0.033, CI
+    [−0.10,+0.03], ns (N=252)** — write as **"not significant ≠ equivalent"**: **no TOST was run**; the CI is an
+    ordinary bootstrap CI, not an equivalence bound — do **not** claim equivalence. Decomposition
+    holistic→criterion **−0.043 [−0.08,−0.00], sig (N=737)** — criterion-by-criterion **mildly hurts**
+    agreement-with-final-grade (per §6, scored against the final grade, not the per-criterion human scores).
+  - **RQ5 (conversation)** (reproduces from `conversation.jsonl`). Two effects: **state** clean→shared makes
+    grading **stricter** = bias (Wilcoxon **p<.01** both models: qwen Δ+0.040 p=.0009, glm Δ+0.027 p=.003);
+    **order** natural-vs-inverse is **variance, not bias** (signed ns: **glm p=.52**, qwen p=.15). Report Qwen
+    with the 0-collapse caveat; **GLM is the cleaner read**.
+  - **RQ6 (transfer).** Headline via the **open models on PT-CS-verified short-answer** (`tab_transfer_verified`,
+    **N=84 OFF / 32 ON**, declared): reasoning helps them (qwen .652→.795, glm .692→.771); the ranking **differs
+    from the public datasets** — this **existence of non-transfer** is the claim (it is **confirmatory**, a
+    pre-set RQ, not emergent). The **GPT-5.1 anchor is N=11 → corroboration only, never headline/abstract**;
+    show its CI beside the QWK (0.897 [0.64,0.97] self-defends).
+  - **Gold sensitivity is itself a result** (`tab_gold_sensitivity`): unvalidated gold **understates** agreement
+    (Qwen-OFF code QWK 0.308→0.468) and **masks** the rubric benefit (+0.008→+0.149).
+
+  **Discussion:** framework at the centre — **"validate locally" governs the per-axis priors** (the public
+  ranking does not transfer → the priors are starting points, not guarantees). **Two threads:** (1) **consistency
+  is sacrificed** for agreement under reasoning — and the inconsistency is **partly length×backend
+  non-determinism**, *not* "the model reasons differently each time"; (2) **the gold lesson** — a validated
+  reference is what made the rubric benefit visible. **Exploratory rule:** the **one** non-pre-registered
+  observation — reasoning ON improves SemEval **unseen_domain** generalisation most (5.8) — enters **labelled
+  post-hoc**, kept apart from the confirmatory RQ results.
+
+  **Threats — REWRITE the stale list.** Delete the current "two-teacher consensus, human-validated" wording — it
+  is the §2.3 **over-claim**. Group for the <1 pp budget:
+  - **(A) Gold / data.** **COI** (author built GradeGenie = source of PT-CS + target of Article 3) — keep the
+    statement. **PT-CS gold reliability:** mixed-provenance, limited/uneven (lower-rigour requalification course;
+    not all teacher-reviewed; some possibly unreviewed AI output; possible bugs; some finals adjusted
+    incoherently with per-criterion scores) → mitigated by **stratification: PT-CS-verified primary, full only in
+    the sensitivity**. **Criterion limit:** `cotacao ≠ Σnota_parcial` detects **intervention, not correctness** —
+    a conservative proxy ("intervention evidence" ≠ "validation guarantee"); declare the reduced N in every
+    transfer claim. Where intervened = **consensus correction of AI-seeded suggestions**; elsewhere may be
+    unreviewed AI. **No inter-rater κ / human ceiling** is recoverable (no per-teacher scores). **Grade inflation
+    (distinct second threat** — about the *standard*, not *who validated*; the verified stratum does **not**
+    resolve it): the reproducible per-dataset signed model−gold deviation (baseline cell, item-level) is
+    **mixed/weak** — short-answer is *lenient* (SemEval +0.05, PT-CS-short-verified +0.10, opposite to
+    inflation), code is stricter, and the one suggestive signal — PT-CS-verified code being the strictest — is
+    **the 0-collapse, not inflation**: its extra-strictness vs comparable RIAYN code **shrinks with the collapse**
+    (Qwen −0.077 at frac0≈.50 → DeepSeek −0.039 → GLM −0.017 at frac0≈.17). **Report as not supporting inflation;
+    document, do not manufacture.** Robust sub-claim: **unvalidated (full) gold understates the deviation
+    magnitude** (verified is further from 0 in both domains).
+  - **(B) Measurement / reproducibility.** **Backend-conditional** — numbers are conditional on the
+    DeepInfra/OpenAI served versions + sampling; the **guidance transfers, the absolute scores do not**.
+    **temp=0 ≠ determinism** (10–43 % of items still vary; inconsistency is backend non-determinism, partly
+    length-driven). **Reasoning cost non-comparable across backends** (DeepInfra bundles reasoning into
+    `completion_tokens`; only GPT-5.1 itemises `reasoning_tokens`). **Non-random truncation exclusion** — 337
+    longest-reasoning Qwen-ON items truncated at 32768 and excluded (worst SemEval 145 / Mohler 111); the hardest
+    cases drop out → report π and the exclusion, scope the ON benefit to tractable items.
+  - **(C) Scope of the claim.** **Anchor small-N** — GPT-5.1 is a reference point, not an inference target (N=60
+    in the main contrasts, **N=11** on verified transfer); corroboration only. **Code evidence narrower** (PT-CS +
+    RIAYN, Java/OOP) → state code conclusions tentatively. **Model-set scope** — guidance holds *across the
+    families tested* (reasoning isolated within-family), not universally. **Context = two interventions** (rubric
+    for PT-CS/RIAYN vs reference answer for Mohler/SemEval — not a single manipulation).
+
+  **Method must report the backend** (provider, served `model_id`, sampling params, run dates — `data/processed/runs/`).
+
+**7.2** — **Wire the auto-generated tables** from `article/tables/` (do not hand-edit), by real filename:
+`tab_rq1_reasoning.tex` (RQ1) · `tab_dimension_contrasts.tex` (RQ2/RQ3) · `tab_semeval_splits.tex` ·
+`tab_transfer_verified.tex` (RQ6) · `tab_gold_sensitivity.tex` · `tab_ptcs_strata.tex` · `tab_framework.tex`
+(the decision guide, 5.6) · `published_baselines.tex` (Phase **1.5** literature context — *different-protocol*,
+not the success criterion, label it so). **Low-N cells already carry bootstrap 95 % CIs** (anchor N=11; ON
+N=32) — keep the **CI beside every small-N number**.
+  > **One regeneration to do before shipping** (§8 *everything regenerable*): the `tab_gold_sensitivity`
+  > **model−gold deviation row is currently a hardcoded string** (≈ all-models-pooled, provenance unrecorded)
+  > and is on a *different basis* than the Threats text (baseline cell). **Regenerate it from the engine on the
+  > declared baseline basis** and make the two consistent — do not ship the hardcode.
+
+**7.3** — Wire the **figures** from `article/figures/`: `fig1_rq1_twodim` · `fig2_cost_vs_agreement` ·
+`fig3_per_dataset_config` · `fig4_consistency` · `fig5_conversation` · `fig6_gold_sensitivity`. **PT-CS is the
+*verified* stratum in every figure**, consistent with the tables (state this in the captions/Method so a
+reader never reads a full-PT-CS number off a figure).
 
 **7.4** — Compile end to end (`latexmk`), fix any PATH/poisoned-state issues per §9, and produce the PDF.
 **Check the page count against the budget (CLAUDE.md §9.1: ≤14 pp, target ~13)**; if over, report which
@@ -392,6 +499,8 @@ sections exceed their target rather than trimming blindly. Report what's still p
 **7.5** — **Reproducibility / data-availability**: write the statement and prepare the release bundle (harness
 code, prompt templates, config matrices, public-dataset ingest). Include the **anonymised, AI-comment-stripped
 PT-CS subset only if ethics permits** (CLAUDE.md §2 gate). State clearly what is and isn't shared and why.
+**If the PT-CS subset is released, carry the stratum flags** (intervened / exact-sum / no-criteria) so the
+PT-CS-verified curation — and the full-vs-verified sensitivity — is reproducible by a third party.
 
 **7.6** — **Verificação bibliográfica final (fecho do paper).** Agora que o `references.bib` está completo
 (Related Work + métodos + datasets + discussão), repete a auditoria do 1.6b sobre o artigo **inteiro**:

@@ -989,7 +989,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=4.480530in,y=2.008074in,,base]{\color{textcolor}{\sffamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}RQ5 order: variance, not bias (p=.52)}}%
+\pgftext[x=4.480530in,y=2.008074in,,base]{\color{textcolor}{\sffamily\fontsize{8.000000}{9.600000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}RQ5 order: variance, not bias (p$=$0.52)}}%
 \end{pgfscope}%
 \end{pgfpicture}%
 \makeatother%

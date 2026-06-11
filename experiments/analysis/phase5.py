@@ -153,6 +153,40 @@ def _consistency(d: pd.DataFrame) -> float:
     return round(float(sd.dropna().mean()), 4) if sd.notna().any() else np.nan
 
 
+def signed_deviation(d: pd.DataFrame) -> float:
+    """Item-level signed model−gold bias: mean over items of (mean_k pred_norm − gold_norm).
+    Negative = model STRICTER than gold. The grade-inflation proxy (§11) and the gold-sensitivity
+    table both use this; the basis is whatever cell `d` already is — declare it at the call site
+    (the inflation/sensitivity uses the baseline cell qwen|off|with_guidance|qbq|holistic)."""
+    s = d[d["pred_norm"].notna() & d["gold_norm"].notna()]
+    if s.empty:
+        return np.nan
+    g = s.groupby("item_id").agg(p=("pred_norm", "mean"), gold=("gold_norm", "first"))
+    return round(float((g.p - g.gold).mean()), 3)
+
+
+def conversation_stats(cv: pd.DataFrame) -> dict:
+    """RQ5 conversation effects per model, paired Wilcoxon (replaces the old hand-typed p-values).
+    state = clean vs shared (item-mean grade → bias); order = natural vs inverse within shared
+    (signed → bias test; the spread |nat−inv| is the variance read)."""
+    from scipy import stats
+    s = cv[cv["pred_norm"].notna()]
+    out = {}
+    for m in sorted(s.model.unique()):
+        d = s[s.model == m]; rec = {}
+        pv = d.pivot_table(index="item_id", columns="conversation_state", values="pred_norm", aggfunc="mean").dropna()
+        if {"clean", "shared"}.issubset(pv.columns) and len(pv) >= 8:
+            rec["state_delta"] = round(float(pv["clean"].mean() - pv["shared"].mean()), 3)
+            rec["state_p"] = round(float(stats.wilcoxon(pv["clean"], pv["shared"]).pvalue), 4)
+        sh = d[d.conversation_state == "shared"]
+        po = sh.pivot_table(index=["item_id", "run_index"], columns="order_id", values="pred_norm", aggfunc="first").dropna()
+        if {"natural", "inverse"}.issubset(po.columns) and len(po) >= 8:
+            rec["order_abs"] = round(float((po["natural"] - po["inverse"]).abs().mean()), 3)
+            rec["order_p"] = round(float(stats.wilcoxon(po["natural"], po["inverse"]).pvalue), 4)
+        out[m] = rec
+    return out
+
+
 def reasoning_contrast(df: pd.DataFrame) -> pd.DataFrame:
     """RQ1 headline (5.2+5.3+5.5a): OFF vs ON on the PAIRED 175 subset, per (dataset,domain,
     model) -- agreement (QWK) AND consistency (within-item SD), so the two axes can diverge."""

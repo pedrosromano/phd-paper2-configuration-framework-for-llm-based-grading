@@ -53,8 +53,11 @@ def _save(fig, name):
     fig.savefig(OUT / f"{name}.pdf")
     try:
         fig.savefig(OUT / f"{name}.pgf")
-    except (RuntimeError, FileNotFoundError):
-        pass
+    except (RuntimeError, FileNotFoundError) as e:
+        # pgf needs latex on PATH (CLAUDE.md §9: /Library/TeX/texbin). Warn LOUDLY rather than
+        # silently leaving a stale .pgf — that trap shipped stale pgf once already.
+        print(f"  !! {name}.pgf NOT written ({type(e).__name__}: {e}). "
+              f"Run with latex on PATH:  eval \"$(/usr/libexec/path_helper)\"", flush=True)
     plt.close(fig)
     print(f"  {name}.pdf")
 
@@ -155,6 +158,7 @@ def fig4(df):
 def fig5(df):
     """6.6 -- conversation: order (shared nat vs inv) and state (clean vs shared) per model; + scope."""
     cv = phase5.load_conversation()
+    cs = phase5.conversation_stats(cv)                     # computed p-values (no hand-typed strings)
     fig, (axA, axB) = plt.subplots(1, 2, figsize=(COL * 1.7, COL * 0.66))
     # A: state effect (clean vs shared mean) + order spread, per model
     mods = sorted(cv.model.unique()); x = np.arange(len(mods)); w = 0.36
@@ -162,7 +166,9 @@ def fig5(df):
         means = [cv[(cv.model == m) & (cv.conversation_state == st)].pred_norm.mean() for m in mods]
         axA.bar(x + (j - 0.5) * w, means, w, label=st, color="#888" if st == "clean" else "#8e44ad", edgecolor="k", lw=0.3, alpha=0.85)
     axA.set_xticks(x); axA.set_xticklabels([m.split("-")[0] for m in mods]); axA.set_ylabel("mean normalised grade")
-    axA.set_title("RQ5 state: shared $\\to$ stricter (p$<$.01)"); axA.legend(framealpha=0.9)
+    _sp = [v["state_p"] for v in cs.values() if "state_p" in v]
+    _slbl = "p$<$.01" if _sp and max(_sp) < 0.01 else f"p$=${max(_sp):.2f}"
+    axA.set_title(f"RQ5 state: shared $\\to$ stricter ({_slbl})"); axA.legend(framealpha=0.9)
     # B: order effect = mean|nat-inv| per model (variance, not bias)
     for i, m in enumerate(mods):
         sh = cv[(cv.model == m) & (cv.conversation_state == "shared")]
@@ -170,7 +176,9 @@ def fig5(df):
         dif = (piv["natural"] - piv["inverse"]).abs()
         axB.bar(i, dif.mean(), 0.5, color=MCOL.get(m, "#555"), edgecolor="k", lw=0.3, alpha=0.85)
     axB.set_xticks(range(len(mods))); axB.set_xticklabels([m.split("-")[0] for m in mods])
-    axB.set_ylabel("mean |natural $-$ inverse|"); axB.set_title("RQ5 order: variance, not bias (p=.52)")
+    _glm = [m for m in mods if m.startswith("glm")]          # GLM = the cleaner read (§11); cite its order p
+    _op = cs[_glm[0]]["order_p"] if _glm and "order_p" in cs[_glm[0]] else max((v.get("order_p", 1.0) for v in cs.values()), default=1.0)
+    axB.set_ylabel("mean |natural $-$ inverse|"); axB.set_title(f"RQ5 order: variance, not bias (p$=${_op:.2f})")
     fig.tight_layout()
     _save(fig, "fig5_conversation")
 

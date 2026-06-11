@@ -91,7 +91,9 @@ These are not features; they gate submission. Keep them visible and track them a
 3. **Ground-truth honesty — PT-CS gold has LIMITED, HETEROGENEOUS reliability (revised 2026-06-10, do NOT
    over-claim).** The earlier "two-teacher consensus, human-validated" premise is **OVERSTATED** for much of
    PT-CS. Reality (author, 2026-06-10): PT-CS comes from a **lower-rigour requalification course** (grades
-   possibly inflated) and from **early platform tests** — **not all grades were teacher-reviewed**; some may be
+   possibly inflated — flagged as a threat, **not** a finding: the quantitative proxy is weak/unconfirmed and the
+   one suggestive code signal is explained by the 0-collapse, see §11) and from **early platform tests** — **not
+   all grades were teacher-reviewed**; some may be
    **AI-generated without review**; there may be **bugs**, and some **final grades were adjusted incoherently
    with the per-criterion scores**. So: describe the gold as **mixed-provenance, of limited and uneven
    reliability** — *where* teachers intervened it is a consensus correction of AI-seeded suggestions; elsewhere
@@ -551,11 +553,18 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   with a probably **lenient grading standard** (1–2 marks where strict gives 0). **No mechanical exclusion**
   (not detectable by any field) → **first-line threat alongside validation**, with the distinction:
   stratification resolves *"who validated"*; inflation is *"with what standard"*, and the verified stratum does
-  **not** resolve it. **Quantified proxy (5b): WEAK/ambiguous** — model−gold deviation on PT-CS-verified code
-  (−0.154) ≈ Mohler (−0.149), only slightly > RIAYN (−0.116); models are stricter than humans *everywhere*, no
-  PT-CS-specific over-strictness → **report as not strongly supporting inflation** (don't manufacture). (Sharper
-  finding: the unreliable gold *masked* the deviation — full PT-CS −0.048 vs verified −0.104 — reinforcing the
-  validation threat.) **5.5c competing explanation:** part of the Qwen-0 vs gold-1/2 gap may be **model severity
+  **not** resolve it. **Quantified proxy (5b): WEAK — report as NOT supporting inflation; do not manufacture.**
+  The reproducible per-dataset signed model−gold deviation (baseline cell **qwen|off|with_guidance|qbq|holistic**,
+  item-level; regenerate via `experiments/analysis/phase5.py::signed_deviation`) shows the model is **NOT "stricter
+  everywhere"**: short-answer is *lenient* (SemEval **+0.05**, PT-CS-short-verified **+0.10**), code is stricter
+  (RIAYN −0.19, Mohler −0.15). The one suggestive signal — PT-CS-verified code being the strictest (−0.27) — is
+  **the 0-collapse, not inflation**: its extra-strictness vs comparable RIAYN code **shrinks as the collapse goes
+  away** (Qwen −0.077 @frac0≈.50 → DeepSeek −0.039 → GLM −0.017 @frac0≈.17). Robust sub-claim retained: **unvalidated
+  (full) gold understates the deviation magnitude** (full PT-CS code −0.19 → verified −0.27; verified further from 0
+  in both domains), reinforcing the validation threat. _(Correction 2026-06-11: the earlier numbers here
+  (−0.154/−0.149/−0.116; full −0.048/verified −0.104) mixed two unrecorded bases — qwen-only vs all-models-pooled —
+  and did not reproduce; replaced with the reproducible baseline-cell computation. Qualitative verdict unchanged and
+  now de-confounded.)_ **5.5c competing explanation:** part of the Qwen-0 vs gold-1/2 gap may be **model severity
   × gold leniency**, not only discrimination failure — **comparative** readings (same gold) hold; **absolute**
   ones are qualified; use the **leniency** metric (§6.2) as the lens. **Article 3 lesson — two floors:**
   traceable validation **and** a calibrated rigour standard.

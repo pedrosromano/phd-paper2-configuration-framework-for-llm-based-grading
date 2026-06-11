@@ -170,7 +170,9 @@ def main() -> int:
     sens = pd.DataFrame([
         {"Metric": "Qwen OFF code QWK", "Full PT-CS": qcell(qcode)[0], "PT-CS-verified": qcell(qcode[qcode.item_id.isin(interv)])[0]},
         {"Metric": "rubric dQWK (none$\\to$guid)", "Full PT-CS": dq(rub.item_id.notna()), "PT-CS-verified": dq(rub.item_id.isin(interv))},
-        {"Metric": "model$-$gold deviation (OFF)", "Full PT-CS": "-0.048", "PT-CS-verified": "-0.104"},
+        {"Metric": "model$-$gold deviation (OFF)",
+         "Full PT-CS": f"{phase5.signed_deviation(qcode):+.3f}",
+         "PT-CS-verified": f"{phase5.signed_deviation(qcode[qcode.item_id.isin(interv)]):+.3f}"},
     ])
     _tex(sens, "tab_gold_sensitivity.tex",
          "Sensitivity: full PT-CS vs PT-CS-verified. Non-validated gold distorts the evaluation (QWK) and masks "
