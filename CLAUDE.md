@@ -553,7 +553,7 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   2026-06-11):** **(i) paired intra-PT-CS contrasts** (reasoning, scope, decomposition, context-on-PT-CS)
   report **full-N as primary + a PT-CS-verified column as robustness**. **Read the V column honestly, per
   cell** (generated 2026-06-11): where verified N is large it can CONFIRM AND AMPLIFY (context +0.005→+0.146
-  sig, N=295; scope −0.033→−0.060, N=77) but also WEAKEN (decomp −0.043 sig → −0.022 ns, N=295 — say so);
+  sig, N=295; scope −0.033→−0.060, N=77) but also WEAKEN (decomp −0.043 sig → −0.022 ns, N=295 — say so; softening user-ratified 2026-06-11, framework row added linking it to the original distrust of per-criterion scores);
   on the reasoning rows verified N=25–67 → wide/unstable cells (e.g. ptcs-short glm +0.220 full vs −0.022
   V@32) — read those as CI-width caveats, NOT effect re-estimates. **(ii) absolute levels, cross-dataset
   comparisons and transfer: verified only**; **(iii) figures stay verified-only** with captions stating the
@@ -620,7 +620,7 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ✅ **Consistency = first-line RQ1 result** (Phase 5 review, 2026-06-10) — the Phase-4 data shows reasoning
   ON **reduces** k-consistency (even at temp=0, where 10–43% of items still vary — backend-conditional). So
   **RQ1 has two dimensions that can diverge: agreement vs consistency** — analysed as a headline (5.3/5.5a),
-  not a footnote. **CAUSAL CAVEAT (rewritten 2026-06-11, upgrades the 2026-06-10 reading):** within-item SD
+  not a footnote. **CAUSAL CAVEAT (rewritten 2026-06-11, upgrades the 2026-06-10 reading; user-ratified 2026-06-11):** within-item SD
   correlates with output length only **moderately and heterogeneously per cell** — Spearman **median 0.46,
   range 0.11–0.78**, weak on Mohler (0.11–0.28 across models); declared basis + regeneration:
   `phase5.sd_length_spearman` (per (dataset,model), with-guidance/qbq/holistic cells, OFF+ON pooled, item

@@ -420,7 +420,8 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
     Mohler/SemEval for the discriminating models), at a **10–925× token premium (model-dependent: ~10–35×
     GPT-5.1, ~600–925× Qwen)**, and **costs consistency** (within-item SDk rises off→on in nearly every cell).
     **Scope the claim:** established on tractable items only — the hardest items (reasoning overflows 32768)
-    have no clean ON score.
+    have no clean ON score. Do NOT write "significant across all datasets" anywhere (abstract/intro included)
+    — qwen|PT-CS-short is borderline ns; enumerate the cells instead.
   - **Code 0-collapse (mechanism ≠ prescription).** On PT-CS code, **Qwen-OFF collapses ~42–50 % of scores to
     0** (discrimination failure, scope-independent, genuine `score:0`). Reasoning **recovers** QWK *for Qwen*
     here (dQWK **+0.136** full; V column +0.113 @61, same direction) — a model-specific repair of a broken

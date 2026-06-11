@@ -278,6 +278,8 @@ def main() -> int:
          "Trade-off in the rule": "recovers QWK on tractable items at $\\sim$800$\\times$ tokens + 2.5--5$\\times$ worse SDk; prefer switching"},
         {"Task / context": "Consistency/fairness-critical", "Recommended": "Reasoning OFF",
          "Trade-off in the rule": "ON less reproducible (partly length$\\times$backend, partly reasoning-intrinsic)"},
+        {"Task / context": "Rubric with per-criterion structure", "Recommended": "Holistic scoring",
+         "Trade-off in the rule": "criterion-by-criterion mildly hurts agreement with the final grade -- small and gold-sensitive ($-0.043$ sig full / $-0.022$ ns verified); consistent with our original distrust of per-criterion scores, which motivated scoring against the final grade"},
         {"Task / context": "Multi-question / session", "Recommended": "Clean, question-by-question",
          "Trade-off in the rule": "shared history $\\to$ stricter (p$<$.01); order adds variance"},
         {"Task / context": "Deploy in a new context", "Recommended": "Validate locally (governs the above)",
