@@ -540,15 +540,24 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   public / strong verified; deepseek on/off flips; verified-code winner = glm-5.1|off) and the per-dataset
   winners vary even within the public set — generated table: `tab_ranking_transfer`, declared basis in its
   caption; the anchor stays unranked corroboration). **KEY:** the rubric "non-transfer" was a **GOLD ARTIFACT** —
-  full PT-CS dQWK +0.007 (ns) but INTERVENED **+0.149** (like RIAYN +0.124) → on items where a human actually
+  full PT-CS dQWK +0.005 (ns) but INTERVENED **+0.146** (like RIAYN +0.123; digits re-baselined 2026-06-11,
+  seed-per-call bootstrap) → on items where a human actually
   aligned the grade to criteria, the rubric helps. So the earlier "rubric doesn't help on PT-CS" is RESOLVED
   (gold quality, not the rubric). **Consequences:** results held → **assertive** wording. **PROMOTION (user
   2026-06-10):** the intervened stratum is promoted to a **transfer dataset of full right — "PT-CS-verified"**
   (curated by the auditable criterion `cotacao ≠ Σnota_parcial`); the rest is **excluded by declared criterion**
   (answers "if you don't trust the gold, why use it?" → we didn't, we curated). RQ6 = **demonstration at
-  reduced, declared N** (not case study). **5.7 main tables report PT-CS-verified with per-config N; full-PT-CS
-  appears once in a full-vs-verified SENSITIVITY that is itself a result** ("non-validated gold distorts: QWK
-  0.31→0.47, and masks real effects: rubric +0.007→+0.149").
+  reduced, declared N** (not case study). **HYBRID PT-CS REPORTING RULE (2026-06-11; supersedes the earlier
+  blanket "main tables report PT-CS-verified" — which the 5.7 tables never actually implemented, audit
+  2026-06-11):** **(i) paired intra-PT-CS contrasts** (reasoning, scope, decomposition, context-on-PT-CS)
+  report **full-N as primary + a PT-CS-verified column as robustness**. **Read the V column honestly, per
+  cell** (generated 2026-06-11): where verified N is large it can CONFIRM AND AMPLIFY (context +0.005→+0.146
+  sig, N=295; scope −0.033→−0.060, N=77) but also WEAKEN (decomp −0.043 sig → −0.022 ns, N=295 — say so);
+  on the reasoning rows verified N=25–67 → wide/unstable cells (e.g. ptcs-short glm +0.220 full vs −0.022
+  V@32) — read those as CI-width caveats, NOT effect re-estimates. **(ii) absolute levels, cross-dataset
+  comparisons and transfer: verified only**; **(iii) figures stay verified-only** with captions stating the
+  stratum; the full-vs-verified **SENSITIVITY remains itself a result** ("non-validated gold distorts: QWK
+  0.31→0.47, and masks real effects: rubric +0.005→+0.146"). State the stratum + N in every caption.
   - **Transfer framing (updated 2026-06-11):** stated via the **open models (N=84 OFF / 32 ON, declared)** —
     reasoning helps them on verified short-answer (qwen .652→.795, glm .692→.771); **ranking transfer is
     partial** (the top carries over, the below-top shuffles — `tab_ranking_transfer`). **The GPT-5.1 anchor is
@@ -561,7 +570,8 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
     teacher who reviewed and agreed (→ filed "no evidence"); a **conservative proxy**, "intervention evidence" ≠
     "validation guarantee". Declare reduced N in every transfer claim.
   - **Rubric (rewritten):** NOT a "second non-transfer" — the apparent null was a **gold artifact**; on the
-    verified stratum the rubric helps (+0.149), consistent with RIAYN (+0.124) → **the rubric benefit transfers
+    verified stratum the rubric helps (+0.146; Qwen3.5 — the context arm ran on Qwen3.5 only), consistent with
+    RIAYN (+0.123) → **the rubric benefit transfers
     when the gold is reliable.** Remaining transfer caveat = the **below-top ranking instability** (thread 1);
     the **gold lesson** = thread 2. Framework rests on the public datasets; conversation is gold-independent.
 - ⚠️ **PT-CS gold — GRADE INFLATION (second, distinct threat; document, don't exclude)** (2026-06-10) — beyond

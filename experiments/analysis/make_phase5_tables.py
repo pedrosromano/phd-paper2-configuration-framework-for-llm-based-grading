@@ -15,8 +15,10 @@ from sklearn.metrics import cohen_kappa_score
 from experiments.analysis import phase5
 
 K = 5
-RNG = np.random.default_rng(20260610)
+SEED = 20260610          # every bootstrap call gets a FRESH generator with this seed (2026-06-11):
 TABLES = phase5.REPO_ROOT / "article" / "tables"
+# call-order independence -- inserting a new table/contrast no longer shifts the CI digits of
+# the others (the old module-level rolling RNG made every CI depend on its position in main()).
 
 
 def _qwk_items(d):
@@ -33,13 +35,14 @@ def _boot_ci(sA, sB, nb=800):
     items = sorted(set(sA.index) & set(sB.index))
     if len(items) < 8:
         return (np.nan, np.nan, np.nan)
+    rng = np.random.default_rng(SEED)
     a = sA.loc[items]; b = sB.loc[items]
     pa, ga, pb = a.p.to_numpy(), a.g.to_numpy(), b.p.to_numpy()
     def q(p, g):
         return cohen_kappa_score((g * K).round().clip(0, K).astype(int),
                                  (p * K).round().clip(0, K).astype(int),
                                  weights="quadratic", labels=list(range(K + 1)))
-    ds = [q(pb[i], ga[i]) - q(pa[i], ga[i]) for i in (RNG.integers(0, len(items), len(items)) for _ in range(nb))]
+    ds = [q(pb[i], ga[i]) - q(pa[i], ga[i]) for i in (rng.integers(0, len(items), len(items)) for _ in range(nb))]
     return tuple(np.percentile(ds, [2.5, 50, 97.5]))
 
 
@@ -59,9 +62,13 @@ def _tex(df, path, caption, label):
 def main() -> int:
     TABLES.mkdir(parents=True, exist_ok=True)
     df = phase5.load_main()
+    interv = set(pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
+                 .query("stratum=='intervened'").item_id)
     print("Phase 5.7 tables ->", TABLES)
 
-    # --- T1: RQ1 reasoning contrast (clean-only dQWK + CI, cost premium, consistency) ---
+    # --- T1: RQ1 reasoning contrast (clean-only dQWK + CI, cost premium, consistency).
+    #     Hybrid PT-CS rule (§11 2026-06-11): PT-CS contrasts are full-N primary + a verified
+    #     (intervened-stratum) robustness column; '--' for the public datasets. ---
     rp = phase5.reasoning_paired(df)
     base = rp[(rp.context_level == "with_guidance") & (rp.scope == "question_by_question") & (rp.decomposition == "holistic")]
     rows = []
@@ -74,24 +81,39 @@ def main() -> int:
         _, sA = _qwk_items(o[o.item_id.isin(clean)]); _, sB = _qwk_items(n[n.item_id.isin(clean)])
         lo, md, hi = _boot_ci(sA, sB)
         prem = pd.to_numeric(n.completion_tokens, errors="coerce").mean() / max(pd.to_numeric(o.completion_tokens, errors="coerce").mean(), 1)
+        ver_cell = "--"
+        if ds == "ptcs":
+            cleanv = clean & interv
+            _, sAv = _qwk_items(o[o.item_id.isin(cleanv)]); _, sBv = _qwk_items(n[n.item_id.isin(cleanv)])
+            lov, mdv, hiv = _boot_ci(sAv, sBv)
+            ver_cell = f"{mdv:+.3f} [{lov:+.2f},{hiv:+.2f}] ({len(cleanv)})" if mdv == mdv else f"-- (N={len(cleanv)}<8)"
         rows.append({"Dataset": ds, "Dom": dom[:4], "Model": m, "N": len(clean),
                      "dQWK": f"{md:+.3f}", "95\\% CI": f"[{lo:+.2f},{hi:+.2f}]",
                      "Sig": "yes" if (lo > 0 or hi < 0) else "no",
-                     "Tok$\\times$": f"{prem:.0f}", "SDk off$\\to$on": f"{phase5._d(0,0) or ''}"})
-        rows[-1]["SDk off$\\to$on"] = f"{o.groupby('item_id').pred_norm.std().mean():.3f}$\\to${n.groupby('item_id').pred_norm.std().mean():.3f}"
+                     "dQWK-V [CI] (N$_V$)": ver_cell,
+                     "Tok$\\times$": f"{prem:.0f}",
+                     "SDk off$\\to$on": f"{o.groupby('item_id').pred_norm.std().mean():.3f}$\\to${n.groupby('item_id').pred_norm.std().mean():.3f}"})
     _tex(pd.DataFrame(rows), "tab_rq1_reasoning.tex",
          "RQ1: reasoning OFF$\\to$ON on the paired, clean (non-truncated) items -- agreement gain (dQWK, K=5), "
-         "token cost premium, and within-item SD (consistency).", "tab:rq1")
+         "token cost premium, and within-item SD (consistency). PT-CS rows: full-N primary; the V column repeats "
+         "the contrast on the PT-CS-verified (intervened) stratum as robustness (hybrid rule, 2026-06-11).", "tab:rq1")
 
-    # --- T2: dimension contrasts (context per dataset, scope, decomposition) ---
-    def contrast_row(A, B, label, nb=800):
+    # --- T2: dimension contrasts (context per dataset, scope, decomposition).
+    #     Hybrid PT-CS rule (§11 2026-06-11): PT-CS contrasts get a verified robustness column. ---
+    def contrast_row(A, B, label, nb=800, verified=None):
         _, sA = _qwk_items(A); _, sB = _qwk_items(B)
         if isinstance(sA, float) or isinstance(sB, float):
             return None
         lo, md, hi = _boot_ci(sA, sB, nb)
         n = len(set(sA.index) & set(sB.index))
+        ver_cell = "--"
+        if verified is not None:
+            _, sAv = _qwk_items(A[A.item_id.isin(verified)]); _, sBv = _qwk_items(B[B.item_id.isin(verified)])
+            lov, mdv, hiv = _boot_ci(sAv, sBv, nb)
+            nv = len(set(sAv.index) & set(sBv.index))
+            ver_cell = f"{mdv:+.3f} [{lov:+.2f},{hiv:+.2f}] ({nv})" if mdv == mdv else f"-- (N={nv}<8)"
         return {"Contrast": label, "N": n, "dQWK": f"{md:+.3f}", "95\\% CI": f"[{lo:+.2f},{hi:+.2f}]",
-                "Sig": "yes" if (lo > 0 or hi < 0) else "no"}
+                "Sig": "yes" if (lo > 0 or hi < 0) else "no", "dQWK-V [CI] (N$_V$)": ver_cell}
     q = df[(df.model == "qwen3.5") & (df.reasoning == "off")]   # decomposition kept (needed below)
     we = set(df[df.scope == "whole_exam"].item_id)
     drows = []
@@ -99,17 +121,20 @@ def main() -> int:
                         ("riayn", "code", "rubric"), ("ptcs", "code", "rubric")]:
         c = q[(q.dataset == ds) & (q.domain == dom) & (q.scope == "question_by_question") & (q.decomposition == "holistic")]
         r = contrast_row(c[c.context_level == "none"], c[c.context_level == "with_guidance"],
-                         f"context[{gt}] {ds}:{dom[:4]} none$\\to$guid")
+                         f"context[{gt}] {ds}:{dom[:4]} none$\\to$guid",
+                         verified=interv if ds == "ptcs" else None)
         if r: drows.append(r)
     sc = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.decomposition == "holistic")]
     drows.append(contrast_row(sc[(sc.scope == "question_by_question") & sc.item_id.isin(we)],
-                              df[df.scope == "whole_exam"], "scope ptcs:code qbq$\\to$whole-exam"))
+                              df[df.scope == "whole_exam"], "scope ptcs:code qbq$\\to$whole-exam",
+                              verified=interv))
     dd = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.scope == "question_by_question")]
     drows.append(contrast_row(dd[dd.decomposition == "holistic"], dd[dd.decomposition == "criterion"],
-                              "decomp ptcs:code holistic$\\to$criterion"))
+                              "decomp ptcs:code holistic$\\to$criterion", verified=interv))
     _tex(pd.DataFrame([r for r in drows if r]), "tab_dimension_contrasts.tex",
-         "RQ2/RQ3: context (per dataset; grounding type differs), scope, and decomposition contrasts "
-         "(dQWK, K=5, bootstrap CI). Qwen3.5, reasoning off.", "tab:dims")
+         "RQ2/RQ3: context (per dataset; grounding type differs; the context arm ran on Qwen3.5 only), scope, "
+         "and decomposition contrasts (dQWK, K=5, bootstrap CI). Qwen3.5, reasoning off. PT-CS rows: full-N "
+         "primary; the V column repeats the contrast on PT-CS-verified (hybrid rule, 2026-06-11).", "tab:dims")
 
     # --- T3: SemEval per split ---
     ss = phase5.semeval_splits(df)
@@ -131,8 +156,6 @@ def main() -> int:
          "Only the intervened stratum has evidence of human review.", "tab:strata")
 
     # --- T4b: TRANSFER on PT-CS-verified short-answer (open models headline; anchor N=11 corroboration) ---
-    interv = set(pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
-                 .query("stratum=='intervened'").item_id)
     sa = df[(df.domain == "short_answer") & (df.dataset == "ptcs") & (df.context_level == "with_guidance")
             & (df.scope == "question_by_question") & (df.decomposition == "holistic") & df.item_id.isin(interv)]
     trows = []
@@ -142,8 +165,9 @@ def main() -> int:
             n = len(g.item_id.unique()); trows.append({"Config": f"{m}|{r}", "QWK": "--", "N": n, "95\\% CI": "(N<8)", "Note": "anchor" if m == "gpt-5.1" else ""})
             continue
         idx = s.index.to_numpy()
+        rng = np.random.default_rng(20260611)        # same draw scheme as tab_ranking_transfer's _ci_local
         boot = [cohen_kappa_score((s.loc[x].g * K).round().clip(0, K).astype(int), (s.loc[x].p * K).round().clip(0, K).astype(int),
-                weights="quadratic", labels=list(range(K + 1))) for x in (RNG.choice(idx, len(idx), True) for _ in range(800))]
+                weights="quadratic", labels=list(range(K + 1))) for x in (rng.choice(idx, len(idx), True) for _ in range(800))]
         lo, hi = np.percentile(boot, [2.5, 97.5])
         trows.append({"Config": f"{m}|{r}", "QWK": f"{q:.3f}", "N": len(s), "95\\% CI": f"[{lo:.2f},{hi:.2f}]",
                       "Note": "anchor (N=11, corrob. only)" if m == "gpt-5.1" else ""})

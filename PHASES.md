@@ -391,8 +391,13 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
   **Datasets / Method must encode:**
   - **PT-CS stratification = curation, not exclusion.** Criterion `cotacao ≠ Σnota_parcial` (intervention
     evidence). Strata of 1184 responses (`tab_ptcs_strata`): **intervened 382 / 32.3 %** · exact-sum 393 /
-    33.2 % · no-criteria 409 / 34.5 %. **PT-CS-verified = the intervened stratum** is the primary transfer set;
-    **full PT-CS appears only in the gold sensitivity** (Results). Promotion decision + date from §11 (2026-06-10).
+    33.2 % · no-criteria 409 / 34.5 %. **PT-CS-verified = the intervened stratum** is the primary transfer set.
+    **Hybrid reporting rule (§11, 2026-06-11) — state it ONCE in Method:** paired intra-PT-CS contrasts
+    (reasoning/scope/decomposition/context) = **full-N primary + verified column as robustness** — read the
+    V column per cell (it can amplify: context +0.005→+0.146 sig; or weaken: decomp −0.043 sig → −0.022 ns;
+    reasoning-row V cells are N=25–67 and wide — CI-width caveats, not re-estimates); **absolute levels,
+    cross-dataset and transfer = verified only**; the full-vs-verified gold sensitivity stays a result.
+    Promotion decision + date from §11 (2026-06-10).
   - **§5.0 conventions:** clamp to [0, max] (penalty criteria can drive a sum negative, e.g. −0.5→0); normalise
     to 0–1 (**never pool raw scales** — Mohler 5, SemEval 1, PT-CS 1–12); QWK on **K=5** ordinal bins
     (sensitivity over K∈{4,5,6}); **paired subsets** per expensive contrast; whole-exam cost **deduped by
@@ -406,24 +411,28 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
   **Results — by RQ, numbers from the tables (verify, don't recall):**
   - **RQ1 (headline, two-dimensional).** On the **paired clean (non-truncated) items** (`tab_rq1_reasoning`;
     N=175 sampled, **Qwen clean-only 84–159** after truncation exclusion, anchor 60): reasoning ON helps
-    **agreement** only **model/dataset-specifically** (sig for Qwen broadly; GLM/GPT on PT-CS-short + RIAYN;
-    **not** Mohler/SemEval for the discriminating models), at a **30–900× token premium**, and **costs
-    consistency** (within-item SDk rises off→on in nearly every cell). **Scope the claim:** established on
-    tractable items only — the hardest items (reasoning overflows 32768) have no clean ON score.
+    **agreement** only **model/dataset-specifically** (sig for Qwen on 4 of 5 cells — PT-CS-short is
+    **borderline ns**, +0.104 [−0.01,+0.20], say so; GLM and GPT on PT-CS-short, GPT also RIAYN; **not**
+    Mohler/SemEval for the discriminating models), at a **10–925× token premium (model-dependent: ~10–35×
+    GPT-5.1, ~600–925× Qwen)**, and **costs consistency** (within-item SDk rises off→on in nearly every cell).
+    **Scope the claim:** established on tractable items only — the hardest items (reasoning overflows 32768)
+    have no clean ON score.
   - **Code 0-collapse (mechanism ≠ prescription).** On PT-CS code, **Qwen-OFF collapses ~42–50 % of scores to
     0** (discrimination failure, scope-independent, genuine `score:0`). Reasoning **recovers** QWK *for Qwen*
-    here (dQWK **+0.137**) — a model-specific repair of a broken baseline, **not** "reasoning helps code";
-    GLM/DeepSeek/GPT don't need it (dQWK ns). Prescription: **prefer a discriminating model** over buying
-    reasoning.
-  - **RQ2 (context = grounding).** With-guidance helps where the gold is sound: Mohler **+0.161**, SemEval
-    **+0.238**, RIAYN **+0.123** (all sig). On **full** PT-CS code the rubric looks null (**+0.007/+0.008,
-    ns**) — but that is a **gold artifact**: on **PT-CS-verified** it is **+0.149** (`tab_gold_sensitivity`), in
-    line with RIAYN. Report the **full-vs-verified pair** as the result, not the null.
+    here (dQWK **+0.136** full; V column +0.113 @61, same direction) — a model-specific repair of a broken
+    baseline, **not** "reasoning helps code"; GLM/DeepSeek/GPT don't need it (dQWK ns). Prescription: **prefer
+    a discriminating model** over buying reasoning.
+  - **RQ2 (context = grounding; the context arm ran on Qwen3.5 ONLY — scope every RQ2 claim to it).**
+    With-guidance helps where the gold is sound: Mohler **+0.162**, SemEval **+0.238**, RIAYN **+0.123** (all
+    sig). On **full** PT-CS code the rubric looks null (**+0.005, ns**) — but that is a **gold artifact**: on
+    **PT-CS-verified** it is **+0.146** (`tab_gold_sensitivity` = the V column of `tab_dimension_contrasts`),
+    in line with RIAYN. Report the **full-vs-verified pair** as the result, not the null.
   - **RQ3 (scope, decomposition)** (`tab_dimension_contrasts`). Scope qbq→whole-exam **dQWK −0.033, CI
-    [−0.10,+0.03], ns (N=252)** — write as **"not significant ≠ equivalent"**: **no TOST was run**; the CI is an
-    ordinary bootstrap CI, not an equivalence bound — do **not** claim equivalence. Decomposition
-    holistic→criterion **−0.043 [−0.08,−0.00], sig (N=737)** — criterion-by-criterion **mildly hurts**
-    agreement-with-final-grade (per §6, scored against the final grade, not the per-criterion human scores).
+    [−0.10,+0.03], ns (N=252; V −0.060 @77, also ns)** — write as **"not significant ≠ equivalent"**: **no TOST
+    was run**; the CI is an ordinary bootstrap CI, not an equivalence bound — do **not** claim equivalence.
+    Decomposition holistic→criterion **−0.043 [−0.08,−0.01], sig (N=737)** — but the **verified column weakens
+    it (−0.022 [−0.07,+0.02], ns @295)**: state the effect as **small and gold-sensitive**, not as a robust
+    harm (per §6, scored against the final grade, not the per-criterion human scores).
   - **RQ5 (conversation)** (reproduces from `conversation.jsonl`). Two effects: **state** clean→shared makes
     grading **stricter** = bias (Wilcoxon **p<.01** both models: qwen Δ+0.040 p=.0009, glm Δ+0.027 p=.003);
     **order** natural-vs-inverse is **variance, not bias** (signed ns: **glm p=.52**, qwen p=.15). Report Qwen
@@ -438,9 +447,9 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
     conditional transfer** is the claim (**confirmatory**, a pre-set RQ, not emergent). Do NOT write "the public
     winner is not the PT-CS winner" — the earlier inversion wording **did not reproduce** (audit 2026-06-11,
     §11). The **GPT-5.1 anchor is N=11 → corroboration only, never headline/abstract, never named winner**;
-    show its CI beside the QWK (0.897 [0.64,0.97] self-defends).
+    show its CI beside the QWK (0.897 [0.62,0.98] self-defends).
   - **Gold sensitivity is itself a result** (`tab_gold_sensitivity`): unvalidated gold **understates** agreement
-    (Qwen-OFF code QWK 0.308→0.468) and **masks** the rubric benefit (+0.008→+0.149).
+    (Qwen-OFF code QWK 0.308→0.468) and **masks** the rubric benefit (+0.005→+0.146).
 
   **Discussion:** framework at the centre — **"validate locally" governs the per-axis priors** (transfer is
   partial: the top configuration carried over but the below-top ranking shuffled and effects are
@@ -497,9 +506,11 @@ N=32) — keep the **CI beside every small-N number**.
   > declared baseline basis** and make the two consistent — do not ship the hardcode.
 
 **7.3** — Wire the **figures** from `article/figures/`: `fig1_rq1_twodim` · `fig2_cost_vs_agreement` ·
-`fig3_per_dataset_config` · `fig4_consistency` · `fig5_conversation` · `fig6_gold_sensitivity`. **PT-CS is the
-*verified* stratum in every figure**, consistent with the tables (state this in the captions/Method so a
-reader never reads a full-PT-CS number off a figure).
+`fig3_per_dataset_config` · `fig4_consistency` · `fig5_conversation` · `fig6_gold_sensitivity`. **Stratum rule
+(hybrid, §11 2026-06-11): figures show PT-CS as the *verified* stratum only; the TABLES report intra-PT-CS
+paired contrasts on full-N with a verified robustness column** — so a figure and a table can legitimately show
+slightly different PT-CS contrast values (verified vs full basis). **State the basis in every caption** so a
+reader never misattributes a full-PT-CS number to verified or vice-versa.
 
 **7.4** — Compile end to end (`latexmk`), fix any PATH/poisoned-state issues per §9, and produce the PDF.
 **Check the page count against the budget (CLAUDE.md §9.1: ≤14 pp, target ~13)**; if over, report which
