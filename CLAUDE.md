@@ -620,12 +620,15 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ✅ **Consistency = first-line RQ1 result** (Phase 5 review, 2026-06-10) — the Phase-4 data shows reasoning
   ON **reduces** k-consistency (even at temp=0, where 10–43% of items still vary — backend-conditional). So
   **RQ1 has two dimensions that can diverge: agreement vs consistency** — analysed as a headline (5.3/5.5a),
-  not a footnote. **CAUSAL CAVEAT (verified 5.3, 2026-06-10):** within-item SD correlates with output length
-  (Spearman median ≈0.46 over (dataset,model) cells on the with-guidance/qbq/holistic arm, range 0.04–0.78 —
-  positive but heterogeneous; basis recorded 2026-06-11, the earlier "~0.6, all models/datasets" had an
-  unrecorded basis and did not reproduce) → a substantial part of the "reasoning inconsistency" is
-  **length × backend non-determinism** (more tokens at temp=0 = more chance to diverge), **not** an intrinsic
-  property of reasoning. The result stands (inconsistency is real for the user) but the **explanation must say
+  not a footnote. **CAUSAL CAVEAT (rewritten 2026-06-11, upgrades the 2026-06-10 reading):** within-item SD
+  correlates with output length only **moderately and heterogeneously per cell** — Spearman **median 0.46,
+  range 0.11–0.78**, weak on Mohler (0.11–0.28 across models); declared basis + regeneration:
+  `phase5.sd_length_spearman` (per (dataset,model), with-guidance/qbq/holistic cells, OFF+ON pooled, item
+  level; the earlier "~0.6, all models/datasets" had an unrecorded basis and did not reproduce). **Therefore
+  the consistency loss under reasoning is NOT reducible to the mechanical length effect:** part is
+  **length × backend non-determinism** (more tokens at temp=0 = more chance to diverge), and the **residual
+  behaves like a property of reasoning itself**. Present BOTH components; claim neither pure story. The result
+  stands (inconsistency is real for the user) but the **explanation must say
   so** — ties to §6.4 (backend-conditional). Do NOT frame it as "the model reasons differently each time".
 - ✅ **RQ1 agreement gain — censoring check (verified 5.2, 2026-06-10)** — the Qwen-ON QWK gain is NOT a
   truncation-censoring artifact: it **survives strict pairing on items the ON never truncated** (PT-CS code
@@ -715,7 +718,7 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   (Phase 0.4):** persistent ledger `data/processed/_spend.json` via `experiments/harness/cost_guard.py`
   (pre-flight estimator refuses any arm that would breach the €150 ceiling; `record()` logs real token cost
   per call). **GPT-5.1 anchor smoke test PASSED** (2026-06-07): replied "pong", 14+10 tok, €0.000108 charged
-  (reasoning_effort=none accepted). **Spend updated 2026-06-11 (ledger `_spend.json`): €55.60 total** — runs.jsonl deduped €35.97 (OpenAI/gpt-5.1 **€10.24** of €150; DeepInfra open roster **€25.73** of €150); the ledger-vs-runs difference is the archived maxtok4096 reasoning arm + smoke/regrades. Actual ≈2–3× the €16.7 matrix estimate, far under both ceilings. **DeepSeek**: key added and
+  (reasoning_effort=none accepted). **Spend updated 2026-06-11 (ledger `_spend.json`): €55.60 total** — runs.jsonl deduped €35.97 (OpenAI/gpt-5.1 **€10.24** of €150; DeepInfra open roster **€25.73** of €150); the ledger-vs-runs difference is the archived maxtok4096 reasoning arm + smoke/regrades. **€ STAMP: every euro in the paper's cost section regenerates from `phase5.cost_summary()`** (printed by `make analyse`; verified 2026-06-11 — ledger/per-provider figures above match its output; the framework table carries token ratios only, no €). **Operational finding for the paper (7.1):** the a-priori estimate (€16.7) **underestimated the real matrix cost ≈2.2×** (OpenAI 1.9×: €5.45→€10.24; DeepInfra 2.3×: €11.25→€25.73) because **real reasoning completion tokens exceeded the assumed output lengths** — the first ON arm even had to be re-run at an 8× higher token ceiling (4096→32768). Report it as a budgeting datum for practitioners, not just our estimation error. Far under both ceilings. **DeepSeek**: key added and
   authenticates, but the account returned HTTP 402 *Insufficient Balance* — needs top-up before any DeepSeek
   arm can run (harness handled it cleanly, no charge recorded). Keys via env vars / gitignored `.env`
   (loaded by `experiments/harness/env.py`), never committed.

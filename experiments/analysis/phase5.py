@@ -236,6 +236,50 @@ def semeval_splits(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def sd_length_spearman(df: pd.DataFrame) -> pd.DataFrame:
+    """The DECLARED BASIS for the SD×length correlation quoted in §11/Threats (audit 2026-06-11).
+    Basis: per (dataset, model), on the with_guidance | question_by_question | holistic cells,
+    OFF+ON pooled; item level — Spearman between the within-item SD of pred_norm across the k
+    repetitions and the item's mean completion_tokens; cells with <30 items skipped.
+    Result (2026-06-11): median ≈0.46, range ≈0.11–0.78 — MODERATE and HETEROGENEOUS per cell
+    (weak on Mohler: 0.11–0.28 across models). Consequence for the claim: the reasoning
+    consistency loss is PARTLY length×backend non-determinism but NOT reducible to it — the
+    residual behaves like a property of reasoning itself. (The earlier '~0.6 median, all
+    models/datasets' had an unrecorded basis and did not reproduce.)"""
+    from scipy import stats
+    base = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question")
+              & (df.decomposition == "holistic") & df.pred_norm.notna()]
+    rows = []
+    for (ds, m), g in base.groupby(["dataset", "model"]):
+        it = g.assign(ct=pd.to_numeric(g.completion_tokens, errors="coerce")) \
+              .groupby("item_id").agg(sd=("pred_norm", "std"), ln=("ct", "mean")).dropna()
+        if len(it) >= 30:
+            rows.append({"dataset": ds, "model": m, "n_items": len(it),
+                         "spearman": round(float(stats.spearmanr(it.sd, it.ln).statistic), 2)})
+    return pd.DataFrame(rows)
+
+
+def cost_summary(df: pd.DataFrame | None = None) -> dict:
+    """The 5.4 € STAMP (audit 2026-06-11): every euro figure in the paper's cost section must
+    regenerate from here, never from memory/prose. Two declared bases: (a) ledger_total_eur =
+    data/processed/_spend.json (all paid calls ever: smoke, regrades, AND the superseded
+    maxtok4096 reasoning arm that had to be re-run at 32768); (b) runs_deduped_eur = the final
+    analysis matrix only (runs.jsonl, whole-exam deduped by call_group), split OpenAI (gpt-5.1)
+    vs DeepInfra (open roster). A-priori estimate was €16.7 (§11 4.1) → real matrix ≈2.2×
+    (OpenAI 1.9×, DeepInfra 2.3×): real reasoning completion tokens exceeded the assumed output
+    lengths — report as an operational budgeting finding, not just an estimation error."""
+    led = json.loads((REPO_ROOT / "data" / "processed" / "_spend.json").read_text())
+    d = dedupe_call_groups(load_main() if df is None else df)
+    ce = pd.to_numeric(d.cost_eur, errors="coerce")
+    per_model = d.assign(ce=ce).groupby("model").ce.sum().round(2).to_dict()
+    openai = round(per_model.get("gpt-5.1", 0.0), 2)
+    return {"ledger_total_eur": round(led["total_spent_eur"], 2),
+            "runs_deduped_eur": round(float(ce.sum()), 2),
+            "openai_eur": openai,
+            "deepinfra_eur": round(float(ce.sum()) - openai, 2),
+            "per_model_eur": per_model}
+
+
 def _d(a, b):
     return round(a - b, 3) if (a == a and b == b) else np.nan
 
@@ -264,6 +308,14 @@ def main() -> int:
     agg.to_parquet(REPO_ROOT / "data" / "processed" / "_phase5_aggregate.parquet")
     print(f"\n{len(agg)} cells. π<0.97 cells: {int((agg.pi<0.97).sum())} "
           f"(all Qwen-ON truncation). Saved _phase5_aggregate.parquet.")
+
+    print("\n=== SD×length (declared basis -- see sd_length_spearman docstring) ===")
+    sl = sd_length_spearman(df)
+    print(sl.to_string(index=False))
+    print(f"  median {sl.spearman.median():.2f}  range {sl.spearman.min():.2f}-{sl.spearman.max():.2f}")
+
+    print("\n=== 5.4 cost stamp (declared bases -- see cost_summary docstring) ===")
+    print(json.dumps(cost_summary(df), indent=1))
     return 0
 
 

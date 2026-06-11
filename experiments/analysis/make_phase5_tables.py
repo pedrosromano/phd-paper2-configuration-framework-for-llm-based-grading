@@ -277,7 +277,7 @@ def main() -> int:
         {"Task / context": "Code, model that COLLAPSES (Qwen)", "Recommended": "ON, or switch model",
          "Trade-off in the rule": "recovers QWK on tractable items at $\\sim$800$\\times$ tokens + 2.5--5$\\times$ worse SDk; prefer switching"},
         {"Task / context": "Consistency/fairness-critical", "Recommended": "Reasoning OFF",
-         "Trade-off in the rule": "ON less reproducible (partly length$\\times$backend)"},
+         "Trade-off in the rule": "ON less reproducible (partly length$\\times$backend, partly reasoning-intrinsic)"},
         {"Task / context": "Multi-question / session", "Recommended": "Clean, question-by-question",
          "Trade-off in the rule": "shared history $\\to$ stricter (p$<$.01); order adds variance"},
         {"Task / context": "Deploy in a new context", "Recommended": "Validate locally (governs the above)",

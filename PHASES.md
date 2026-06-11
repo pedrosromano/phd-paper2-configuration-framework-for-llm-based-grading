@@ -289,7 +289,9 @@ backend-conditional, §6.4).
 **5.4** — **Cost analysis**: tokens/latency/€ per configuration, **deduped by `call_group`** (whole-exam).
 Reasoning premium on **total `completion_tokens`** (DeepInfra bundles reasoning) — **not** comparable to
 GPT-5.1's itemised `reasoning_tokens` (anchor only; §6.4). Cost-vs-agreement trade-off **on the paired
-subsets** (reasoning 175 / anchor 60).
+subsets** (reasoning 175 / anchor 60). **€ stamp (2026-06-11): every euro figure in the paper regenerates
+from `phase5.cost_summary()`** (two declared bases: full ledger vs final-matrix deduped; printed by
+`make analyse`) — same discipline as the token ratios, never € from prose/memory.
 
 **5.5** — **Statistical tests** on the **paired subsets** (175 / 252 / 60 — state N): paired tests for
 reasoning on/off; mixed-effects (or ANOVA) across the factorial; multiple-comparison correction. **Effect
@@ -452,12 +454,23 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
     show its CI beside the QWK (0.897 [0.62,0.98] self-defends).
   - **Gold sensitivity is itself a result** (`tab_gold_sensitivity`): unvalidated gold **understates** agreement
     (Qwen-OFF code QWK 0.308→0.468) and **masks** the rubric benefit (+0.005→+0.146).
+  - **Cost (5.4) — every € from `phase5.cost_summary()`, never from memory.** Final matrix (runs.jsonl,
+    call_group-deduped): **€35.97** — OpenAI/gpt-5.1 €10.24, DeepInfra open roster €25.73 (ledger €55.60
+    incl. smoke + the superseded maxtok4096 ON arm). **Include the honest operational observation:** the
+    a-priori estimate (€16.7) **underestimated real cost ≈2.2×** (OpenAI 1.9×, DeepInfra 2.3×) because real
+    reasoning completion tokens exceeded the assumed output lengths — the first ON arm had to be re-run at an
+    8× higher ceiling (4096→32768). Frame it as a **budgeting datum for practitioners** (reasoning arms cost
+    2–3× naive estimates), beside the token premium — useful finding, not just our error.
 
   **Discussion:** framework at the centre — **"validate locally" governs the per-axis priors** (transfer is
   partial: the top configuration carried over but the below-top ranking shuffled and effects are
   model/gold-conditional → the priors are starting points, not guarantees). **Two threads:** (1) **consistency
-  is sacrificed** for agreement under reasoning — and the inconsistency is **partly length×backend
-  non-determinism**, *not* "the model reasons differently each time"; (2) **the gold lesson** — a validated
+  is sacrificed** for agreement under reasoning — and the SD×length correlation is only **moderate and
+  heterogeneous per cell** (Spearman median 0.46, range 0.11–0.78, weak on Mohler 0.11–0.28; basis +
+  regeneration: `phase5.sd_length_spearman`), so the loss is **partly mechanical (length×backend
+  non-determinism) but NOT reducible to it — the residual behaves like a property of reasoning itself**.
+  Present both components; claim neither the pure-mechanical nor the pure-intrinsic story; (2) **the gold
+  lesson** — a validated
   reference is what made the rubric benefit visible. **Exploratory rule:** the **one** non-pre-registered
   observation — reasoning ON improves SemEval **unseen_domain** generalisation most (5.8) — enters **labelled
   post-hoc**, kept apart from the confirmatory RQ results.
@@ -482,8 +495,9 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
     magnitude** (verified is further from 0 in both domains).
   - **(B) Measurement / reproducibility.** **Backend-conditional** — numbers are conditional on the
     DeepInfra/OpenAI served versions + sampling; the **guidance transfers, the absolute scores do not**.
-    **temp=0 ≠ determinism** (10–43 % of items still vary; inconsistency is backend non-determinism, partly
-    length-driven). **Reasoning cost non-comparable across backends** (DeepInfra bundles reasoning into
+    **temp=0 ≠ determinism** (10–43 % of items still vary; the inconsistency is partly length×backend —
+    SD×length Spearman median 0.46, heterogeneous, `phase5.sd_length_spearman` — and partly residual to
+    reasoning itself; do not present it as purely mechanical). **Reasoning cost non-comparable across backends** (DeepInfra bundles reasoning into
     `completion_tokens`; only GPT-5.1 itemises `reasoning_tokens`). **Non-random truncation exclusion** — 337
     longest-reasoning Qwen-ON **run-rows (222 distinct items)** truncated at 32768 and excluded (items:
     SemEval 91, Mohler 65, PT-CS 49, RIAYN 17); the hardest
