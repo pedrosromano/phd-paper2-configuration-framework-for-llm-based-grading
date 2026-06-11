@@ -1,0 +1,65 @@
+%% sections/discussion.tex -- Phase 7.1. Register: CLAUDE.md S9.2. The framework (tab_framework)
+%% is the centre; "validate locally" governs the per-axis priors. Two threads: (1) consistency
+%% sacrificed (SD x length only moderate/heterogeneous -- neither pure-mechanical nor pure-intrinsic),
+%% (2) the gold lesson. The SemEval unseen_domain observation enters LABELLED post-hoc, separate
+%% from the confirmatory RQ results.
+
+\section{Discussion: The Configuration Framework}
+\label{sec:discussion}
+
+\input{tables/tab_framework}
+
+The study's deliverable is the decision guide in Table~\ref{tab:framework}, and its rows should be
+read as priors, not guarantees. Each row maps a task characteristic to a recommended starting
+configuration and states the trade-off inside the rule, with the supporting evidence in
+Section~\ref{sec:results}. The bottom row governs the others. Transfer was partial (the top public
+configuration carried over, the mid-ranking reshuffled), effects were model-conditional (the
+reasoning gain) and gold-conditional (the rubric benefit), and the gains below the top were not
+predictable a priori. A deployment should therefore adopt the row that matches its task as a starting
+point and validate it locally, against a reference it trusts, before relying on it.
+
+The code rows are keyed on observable model behaviour rather than model identity, and that choice is
+itself a finding. Whether reasoning helps a code grader depended not on the model's name but on
+whether its baseline collapsed to zero. The collapse is the one case the data explain (reasoning is
+the lever, or switch model); off the collapse, the gains were scattered across cells with no
+pattern a practitioner could anticipate. Identity-keyed advice would also age with every model
+release; behaviour-keyed advice survives it, because the diagnostic (run the cheap baseline, look at
+the grade distribution) is a one-afternoon local check. This is the framework's answer to the
+fast-moving model landscape, and it is why the unpredictability below the collapse reinforces, rather
+than weakens, the governing rule.
+
+The first cross-cutting thread is that reasoning sacrifices consistency, and the loss is not fully
+explained by mechanics. A natural deflation would be that longer outputs simply give a
+non-deterministic backend more tokens to diverge on, making the inconsistency a length artefact. The
+data support that only partially: the correlation between an item's grade variability and its output
+length is moderate and heterogeneous across cells (Spearman median 0.46, range 0.11 to 0.78, weakest
+on Mohler at 0.11 to 0.28; basis and regeneration: \texttt{phase5.sd\_length\_spearman}). Part of the
+consistency loss is therefore mechanical, length interacting with backend non-determinism, and part
+behaves like a property of reasoning itself; we claim neither pure story. For the grader's user the
+distinction matters less than the fact: the same answer, graded twice under identical settings,
+disagrees with itself more when the model reasons, which is why the consistency-critical row of
+Table~\ref{tab:framework} recommends reasoning off.
+
+The second thread is the gold lesson. The most consequential error in this study would have been one
+we nearly published: concluding that rubrics do not help code grading, when the null was an artefact
+of an unvalidated reference (Section~\ref{sec:gold}). The curation that prevented it cost nothing but
+honesty: a mechanical, auditable criterion (does the final grade differ from the criterion sum?)
+separated grades with evidence of human review from the rest. Institutions evaluating LLM graders on
+their own historical grades should assume that reference quality is a first-order variable, audit it
+before measuring anything, and prefer a smaller trusted reference over a larger doubtful one. For the
+assessment platform this study feeds, the design consequence is two floors: grade provenance must be
+traceable (who validated this grade?), and the grading standard itself must be calibrated, because
+validation evidence and rigour are different properties.
+
+One observation enters as exploratory, post hoc, and outside the pre-registered questions. With
+reasoning on, SemEval discrimination improved most on the unseen-domain split (AUROC $+0.013$ to
+$+0.039$ across all four models) while the seen and unseen-questions splits fell for the open
+models. If it replicates, it suggests reasoning helps most where surface familiarity helps least,
+which would refine the short-answer row of the framework; we flag it for confirmatory follow-up and
+build nothing on it here.
+
+For practice, the framework reduces to three habits. Start from the row that matches the task, not
+from the newest model. Measure consistency and cost alongside agreement, because two of the three
+are routinely omitted and both moved against reasoning here. And before deployment, re-run the cheap
+baseline locally: the one-afternoon check (grade distribution, agreement on a trusted sample,
+repetition variance) is what converts these priors into a defensible configuration choice.

@@ -8,6 +8,15 @@
 \usepackage[table]{xcolor}
 \usepackage{array,amsmath,amssymb}
 \usepackage{url}
+\usepackage{pgf}        % figures are matplotlib .pgf, composed natively (Phase 7.3)
+\def\mathdefault#1{#1}  % matplotlib pgf math tick labels (e.g. 10^2) without mpl's preamble
+\usepackage{eurosym}    % \euro in Method/Results cost reporting
+% Float tuning (7.4): 16 floats over ~9 text pages; defaults defer the big table* queue past
+% the references. Allow fuller float pages/tops so tables interleave with their sections.
+\setcounter{topnumber}{4}\setcounter{dbltopnumber}{3}\setcounter{totalnumber}{8}
+\renewcommand{\topfraction}{0.95}\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.75}\renewcommand{\dblfloatpagefraction}{0.75}
 
 \begin{document}
 \title{A Configuration Framework for LLM-Based Grading in Computer Science}
@@ -47,18 +56,15 @@ Automated grading, large language models, learning analytics, computer science e
 short-answer grading, code assessment, configuration framework.
 \end{IEEEkeywords}
 
-% --- Sections (assembly in progress, Phase 7.1) ---
+% --- Sections (Phase 7.1) ---
 \input{sections/introduction}
 \input{related/sota_draft}            % Related Work -- drafted in Phase 1.6
-% \input{sections/design_space}
-% \input{sections/method}
-% \input{sections/results}
-% \input{sections/discussion}
-% \input{sections/threats}
-% \input{sections/conclusion}
-
-% --- Auto-generated tables (Phase 5 / 1.5) ---
-\input{tables/published_baselines}    % Phase 1.5 context table (-> appendix in Phase 7)
+\input{tables/published_baselines}    % Phase 1.5 context table (referenced from Related Work)
+\input{sections/method}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/threats}
+\input{sections/conclusion}
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}

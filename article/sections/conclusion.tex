@@ -1,0 +1,23 @@
+%% sections/conclusion.tex -- Phase 7.1. Register: CLAUDE.md S9.2.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We mapped the configuration space of LLM-based grading for computer science under one controlled
+protocol and condensed it into a decision guide. Three results carry the weight. Reasoning is a
+conditional trade, not an upgrade: it bought agreement in a minority of model-dataset cells, always
+at a large, domain-conditional token premium and almost always at a consistency cost. Its one
+reliably explained success was repairing a grader whose baseline had collapsed to zero on code.
+Evaluation guidance is the cheapest reliable lever, with the caveat that an unvalidated reference can
+hide its benefit entirely. And transfer to a real deployment was partial, with only the top of the
+public ranking carrying over. Together these justify the framework's governing rule: configuration
+priors are starting points, and the deciding measurement is local, against a reference the
+institution trusts.
+
+Future work follows the declared gaps. The reasoning by decomposition interaction was not measured;
+few-shot example guidance was deliberately excluded and is now justified by the strong guidance
+effect, provided it brings its own example-selection protocol; a fine-tuning arm remains open; and
+the post-hoc unseen-domain observation awaits confirmatory replication. The framework itself now
+feeds the redesign of the assessment platform that motivated it, where its two operational lessons
+(traceable grade provenance and a calibrated grading standard) become design requirements rather
+than threats.

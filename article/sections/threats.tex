@@ -1,0 +1,62 @@
+%% sections/threats.tex -- Phase 7.1. Register: CLAUDE.md S9.2. REWRITTEN per PHASES 7.1: the old
+%% "two-teacher consensus, human-validated" wording is the S2.3 over-claim and must not reappear.
+%% Groups: (A) gold/data (COI, reliability, criterion limit, inflation-as-documented-not-supported),
+%% (B) measurement/reproducibility, (C) scope of the claims. Inflation proxy numbers regenerate via
+%% phase5.signed_deviation on the declared baseline cell.
+
+\section{Threats to Validity}
+\label{sec:threats}
+
+\textbf{Gold and data.} The first author built and owns the platform that produced PT-CS and will
+build its successor; this conflict of interest is declared here, and the safeguards below exist
+because of it. PT-CS grades are of mixed provenance and limited, uneven reliability: the source
+course was a lower-rigour requalification course, not all grades were teacher-reviewed, some may be
+unreviewed AI suggestions, and some final grades were adjusted incoherently with their per-criterion
+scores. We mitigate by stratification (Section~\ref{sec:datasets}): PT-CS-verified is primary for
+transfer and absolute levels, the full set appears only in paired contrasts and in the sensitivity
+analysis. The curation criterion has a declared limit: a final grade differing from the criterion sum
+proves intervention, not correctness, and an exact-sum grade may still have been reviewed; the
+stratum is therefore a conservative proxy, and every transfer claim states its reduced N. Where
+teachers intervened, the grade is a consensus correction of an AI-seeded suggestion; no per-teacher
+scores exist, so no inter-rater agreement or human ceiling is recoverable. A second, distinct
+concern is grade inflation: a lenient course standard would bias the gold even where review is
+proven, and the verified stratum does not resolve it. The measurable proxy does not support it: the
+signed model-minus-gold deviation in the baseline cell is mixed, lenient on short answers (SemEval
+$+0.05$, verified PT-CS theory $+0.10$) and strict on code (RIAYN $-0.19$, Mohler $-0.15$). The
+one suggestive signal, verified PT-CS code being strictest ($-0.27$), tracks the zero-collapse, not
+the course: the extra strictness relative to RIAYN shrinks as the collapse disappears across models
+($-0.077$ Qwen at 49\% zeros; $-0.039$ DeepSeek and $-0.018$ GLM at 13\%). We document the threat
+without manufacturing evidence for it; the robust sub-claim is that the unvalidated gold understates
+the deviation magnitude (Table~\ref{tab:goldsens}).
+
+\textbf{Measurement and reproducibility.} All numbers are conditional on the served backends:
+provider, served model identifier, sampling parameters, and run dates are logged per run, and the
+same model name on another provider can behave differently. The transferable claim is the
+configuration guidance, not the absolute scores. Temperature 0 is not determinism: 10 to 43\% of
+items still vary across repetitions depending on the cell, and the reasoning-related part of that
+variability is only partly explained by output length (Section~\ref{sec:discussion}); we do not
+present it as purely mechanical. Reasoning cost is not comparable across backends, because DeepInfra
+folds reasoning tokens into completion tokens while GPT-5.1 itemises them; premiums are therefore
+within-backend ratios. The truncation exclusion is non-random: the 337 excluded run rows (222 items)
+are the longest-reasoning Qwen-on cases, so the hardest items drop out and the reasoning benefit is
+established on tractable items only. Finally, the bootstrap intervals are reported without
+multiple-comparison correction, which is why we enumerate significant cells rather than make
+family-wise claims.
+
+\textbf{Scope of the claims.} GPT-5.1 is a reference point, not an inference target: it graded
+60-item subsets in the main contrasts and 11 verified short-answer items in transfer, so it
+corroborates and is never ranked. Code evidence is narrower than short-answer evidence (two
+Java-centric datasets), so code conclusions are stated more tentatively throughout. The guidance
+holds across the model families tested, with reasoning isolated within family; it is not a universal
+claim about LLMs. The guidance contrast bundles two related interventions (a rubric for the code
+datasets, a reference answer for the short-answer ones) and is never pooled across them. The
+criterion-decomposition contrast ran with reasoning off only, so the reasoning by decomposition
+interaction is unmeasured.
+
+\textbf{Reproducibility and data availability.} We release the grading harness, prompt templates,
+configuration matrices, and the ingest code for the public datasets, together with per-run logs of
+provider, model identifier, sampling parameters, and timestamps. PT-CS contains student data and
+cannot be released as-is; an anonymised, AI-comment-stripped subset carrying the stratum flags (so
+the verified curation and the full-versus-verified sensitivity are reproducible by third parties)
+will be released only if the institutional ethics process permits it. Until then, the PT-CS results
+are reproducible from the released code given equivalent institutional data.

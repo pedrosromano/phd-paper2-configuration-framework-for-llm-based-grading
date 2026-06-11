@@ -98,7 +98,8 @@ def fig1(rc):
     ax.set_ylabel("consistency WORSE $\\to$\n$\\Delta$ within-item SD")
     ax.set_title("RQ1: reasoning trades consistency for agreement")
     h1 = [plt.Line2D([], [], marker=m, color="grey", ls="", mec="k", mew=0.3, label=k) for k, m in MARK.items()]
-    h2 = [plt.Line2D([], [], marker="o", color=c, ls="", mec="k", mew=0.3, label=d) for d, c in COLOR.items()]
+    # label: "short_answer" -> "short answer" (a raw _ breaks LaTeX text mode in the .pgf; 7.4 fix)
+    h2 = [plt.Line2D([], [], marker="o", color=c, ls="", mec="k", mew=0.3, label=d.replace("_", " ")) for d, c in COLOR.items()]
     ax.legend(handles=h1 + h2, loc="lower right", ncol=2, framealpha=0.9)
     _save(fig, "fig1_rq1_twodim")
 
