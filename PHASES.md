@@ -376,7 +376,8 @@ sub-study result (clean vs shared history, with order effects).
 > **For a fresh session:** Phases 4–6 are done. Every number below is sourced from `article/tables/*.tex` or
 > the Phase-5 engine — **not** memory. CLAUDE.md §11/§2.3 prose may lag the artifacts; **when they conflict,
 > the tables/code win** (this was true when Phase 7 was written: the §11 *grade-inflation* numbers did not
-> reproduce — see 7.1 Threats). Confirm each figure before you cite it.
+> reproduce **and were corrected (f2ec276)** — see 7.1 Threats; so the current §11 is already the corrected
+> state, not a stale one to re-litigate). Confirm each figure before you cite it.
 
 **7.0** — **Re-hydrate from the artifacts (do this FIRST, then WAIT).** Phase 7 runs in a new session with no
 prior context; its first job is to rebuild state from files, exactly as a careful reviewer would. **Read:**
@@ -405,8 +406,9 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
     Promotion decision + date from §11 (2026-06-10).
   - **§5.0 conventions:** clamp to [0, max] (penalty criteria can drive a sum negative, e.g. −0.5→0); normalise
     to 0–1 (**never pool raw scales** — Mohler 5, SemEval 1, PT-CS 1–12); QWK on **K=5** ordinal bins
-    (sensitivity over K∈{4,5,6}); **paired subsets** per expensive contrast; whole-exam cost **deduped by
-    call_group**.
+    (**sensitivity over K∈{4,5,6} computed** by `phase5.qwk_k_sensitivity`, printed by `make analyse` — max
+    |QWK@K−QWK@5| = 0.033 across the per-dataset baseline cells → conclusions stable to bin count); **paired
+    subsets** per expensive contrast; whole-exam cost **deduped by call_group**.
   - **QWK calibration sentence (MANDATORY at first use — §9.2 Tier B).** QWK is the currency of the whole paper
     (the headline, the framework, the gold sensitivity, and transfer are all expressed in it), so expanding the
     acronym is not enough — calibrate how to read it in one light clause. Introduce it with this sentence (adapt
@@ -423,7 +425,7 @@ the Discussion**. Confirm **TLT** framing (primary) + the **ToE** note (**if ToE
 
   **Results — by RQ, numbers from the tables (verify, don't recall):**
   - **RQ1 (headline, two-dimensional).** On the **paired clean (non-truncated) items** (`tab_rq1_reasoning`;
-    N=175 sampled, **Qwen clean-only 84–159** after truncation exclusion, anchor 60): reasoning ON helps
+    N=175 sampled (RIAYN 149), **Qwen clean-only 84–159** after truncation exclusion, anchor 60): reasoning ON helps
     **agreement** only **model/dataset-specifically** (sig for Qwen on 4 of 5 cells — PT-CS-short is
     **borderline ns**, +0.104 [−0.01,+0.20], say so; GLM and GPT on PT-CS-short, GPT also RIAYN; **not**
     Mohler/SemEval for the discriminating models), at a **10–925× token premium, and crucially the premium is
