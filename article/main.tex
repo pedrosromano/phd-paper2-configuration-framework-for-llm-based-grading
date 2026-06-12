@@ -11,19 +11,48 @@
 \usepackage{pgf}        % figures are matplotlib .pgf, composed natively (Phase 7.3)
 \def\mathdefault#1{#1}  % matplotlib pgf math tick labels (e.g. 10^2) without mpl's preamble
 \usepackage{eurosym}    % \euro in Method/Results cost reporting
+\usepackage{tikz}       % ORCID logo is a tikz \pic (pgf alone lacks tikzpicture/\usetikzlibrary)
 % Float tuning (7.4): 16 floats over ~9 text pages; defaults defer the big table* queue past
 % the references. Allow fuller float pages/tops so tables interleave with their sections.
 \setcounter{topnumber}{4}\setcounter{dbltopnumber}{3}\setcounter{totalnumber}{8}
 \renewcommand{\topfraction}{0.95}\renewcommand{\dbltopfraction}{0.95}
 \renewcommand{\textfraction}{0.05}
 \renewcommand{\floatpagefraction}{0.75}\renewcommand{\dblfloatpagefraction}{0.75}
+% hyperref makes \href (ORCID links), \cite, \ref, \url clickable. NOTE (2026-06-12): it was
+% NOT previously loaded -- only the `url` package (\url) was; \orcidicon needs \href, so hyperref
+% is required here. [hidelinks] keeps the current look (no coloured link boxes). Loaded last per
+% hyperref convention.
+\usepackage[hidelinks]{hyperref}
+
+% --- ORCID icon (coauthor request) ---
+% scalerel.sty (used by the original \scalerel*{}{|}) is absent from this BasicTeX install and
+% tlmgr needs admin; \orcidicon below scales the logo with \resizebox (graphicx, loaded by tikz)
+% to 1em, the visual equivalent of scaling it to the height of a `|'.
+\usetikzlibrary{svg.path}
+\definecolor{orcidlogocol}{HTML}{A6CE39}
+\tikzset{
+  orcidlogo/.pic={
+    \fill[orcidlogocol] svg{M256,128c0,70.7-57.3,128-128,128C57.3,256,0,198.7,0,128C0,57.3,57.3,0,128,0C198.7,0,256,57.3,256,128z};
+    \fill[white] svg{M86.3,186.2H70.9V79.1h15.4v48.4V186.2z}
+                 svg{M108.9,79.1h41.6c39.6,0,57,28.3,57,53.6c0,27.5-21.5,53.6-56.8,53.6h-41.8V79.1z M124.3,172.4h24.5c34.9,0,42.9-26.5,42.9-39.7c0-21.5-13.7-39.7-43.7-39.7h-23.7V172.4z}
+                 svg{M88.7,56.8c0,5.5-4.5,10.1-10.1,10.1c-5.6,0-10.1-4.6-10.1-10.1c0-5.6,4.5-10.1,10.1-10.1C84.2,46.7,88.7,51.3,88.7,56.8z};
+  }
+}
+\newcommand\orcidicon[1]{\href{https://orcid.org/#1}{\mbox{\resizebox{!}{1em}{%
+\begin{tikzpicture}[yscale=-1,transform shape]
+\pic{orcidlogo};
+\end{tikzpicture}
+}}}}
 
 \begin{document}
 \title{A Configuration Framework for LLM-Based Grading in Computer Science}
 
-\author{Pedro~S.~Romano$^{\dagger}$, Daniel~F.~S.~Fernandes$^{*}$, and Pedro~J.~A.~Sebastião$^{*}$\\
-\small $^{*}$Instituto de Telecomunicações, Lisbon 1049-001, Portugal\\
-\small $^{\dagger}$Iscte -- Instituto Universitário de Lisboa, Lisbon 1649-026, Portugal}
+\author{Pedro~S.~Romano$^{1}$~\orcidicon{0009-0002-2566-851X},
+Daniel~F.~S.~Fernandes$^{1,2}$~\orcidicon{0000-0002-1356-9349}, and
+Pedro~J.~A.~Sebastião$^{1,2}$~\orcidicon{0000-0001-7729-4033}\\
+\small $^{1}$Iscte -- Instituto Universitário de Lisboa, Lisbon 1649-026, Portugal\\
+\small $^{2}$Instituto de Telecomunicações, Lisbon 1049-001, Portugal
+\thanks{Corresponding author: Pedro S. Romano (e-mail: Pedro\_Romano@iscte-iul.pt).}}
 
 \markboth{IEEE Transactions on Learning Technologies, Vol. XX, No. X, Month Year}%
          {Romano \MakeLowercase{\textit{et al.}}: A Configuration Framework for LLM-Based Grading in Computer Science}
