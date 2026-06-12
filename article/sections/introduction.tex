@@ -68,7 +68,8 @@ repaired it; where the model already discriminated, the gain was unpredictable. 
 helped wherever the human reference was trustworthy. That qualifier became a finding in itself: on
 the deployment dataset, an unvalidated human reference masked a real rubric benefit, which only
 became visible on the stratum of grades with evidence of teacher review. Transfer of the public-dataset results to the deployment
-context was partial: the top configuration carried over, but the ranking below it reshuffled. Together
+context was at best partial: the top configuration was not refuted, but the verified samples below it
+were too small to tell the ranking apart from sampling noise. Together
 these results yield the central design rule of the framework: configuration priors are starting
 points, and a deployment must validate them locally against a reference it trusts.
 

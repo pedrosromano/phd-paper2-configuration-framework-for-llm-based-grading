@@ -18,7 +18,12 @@ analysis. The curation criterion has a declared limit: a final grade differing f
 proves intervention, not correctness, and an exact-sum grade may still have been reviewed; the
 stratum is therefore a conservative proxy, and every transfer claim states its reduced N. Where
 teachers intervened, the grade is a consensus correction of an AI-seeded suggestion; no per-teacher
-scores exist, so no inter-rater agreement or human ceiling is recoverable. A second, distinct
+scores exist, so no inter-rater agreement or human ceiling is recoverable. A structural caveat follows
+from that seeding: an intervened grade is a teacher's correction of an AI suggestion, so it may be
+anchored toward that suggestion, and if the seeding model behaved like one of the graders we test, the
+agreement we measure on PT-CS could be inflated by construction. The export does not record which model
+produced the suggestions, so we cannot quantify this; we flag it as a limitation of platform-derived
+gold and note that the public-dataset results, which carry the framework, are free of it. A second, distinct
 concern is grade inflation: a lenient course standard would bias the gold even where review is
 proven, and the verified stratum does not resolve it. The measurable proxy does not support it: the
 signed model-minus-gold deviation in the baseline cell is mixed, lenient on short answers (SemEval

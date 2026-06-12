@@ -12,10 +12,10 @@
 The study's deliverable is the decision guide in Table~\ref{tab:framework}, and its rows should be
 read as priors, not guarantees. Each row maps a task characteristic to a recommended starting
 configuration and states the trade-off inside the rule, with the supporting evidence in
-Section~\ref{sec:results}. The bottom row governs the others. Transfer was partial (the top public
-configuration carried over, the mid-ranking reshuffled), effects were model-conditional (the
-reasoning gain) and gold-conditional (the rubric benefit), and the gains below the top were not
-predictable a priori. A deployment should therefore adopt the row that matches its task as a starting
+Section~\ref{sec:results}. The bottom row governs the others. Transfer was at best partial (the top public
+configuration was not refuted, but the verified samples below it could not separate the ranking from
+noise), effects were model-conditional (the reasoning gain) and gold-conditional (the rubric benefit),
+and the gains below the top were not predictable a priori. A deployment should therefore adopt the row that matches its task as a starting
 point and validate it locally, against a reference it trusts, before relying on it.
 
 The code rows are keyed on observable model behaviour rather than model identity, and that choice is

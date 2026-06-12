@@ -281,9 +281,11 @@ def main() -> int:
          "question-by-question, holistic cells; public = unweighted mean over Mohler/SemEval/RIAYN at full N "
          "(open models k=5; the GPT-5.1 anchor graded 60-item subsets, reference only, unranked). Ranks over "
          f"the open configs. Per-dataset public winners differ ({wtxt}). The public top "
-         "(qwen3.5$|$on $\\approx$ glm-5.1$|$on) contains the verified short-answer winner: the top transfers; "
-         "the mid-ranking does not. Bootstrap 95\\% CIs accompany the small-N cells (N$<$100); the N=295 "
-         "verified-code cells omit them, their intervals being correspondingly narrow.", "tab:ranktransfer", star=True)
+         "(qwen3.5$|$on $\\approx$ glm-5.1$|$on) is also the numerically top verified short-answer config, "
+         "consistent with transfer at the top; but the verified intervals overlap throughout, so the "
+         "below-top ordering is statistically indeterminate. Bootstrap 95\\% CIs accompany the small-N cells "
+         "(N$<$100); the N=295 verified-code cells omit them, their intervals being correspondingly narrow.",
+         "tab:ranktransfer", star=True)
 
     # --- T4c: gold full-vs-verified SENSITIVITY (the 'unreliable gold distorts' result) ---
     def qcell(d):
@@ -336,13 +338,15 @@ def main() -> int:
         {"Task / context": "Multi-question / session", "Recommended": "Clean, question-by-question",
          "Trade-off in the rule": "shared history $\\to$ stricter (p$<$.01, 20-submission sub-study); order adds variance"},
         {"Task / context": "Deploy in a new context", "Recommended": "Validate locally (governs the above)",
-         "Trade-off in the rule": "transfer is partial: top config carried over, mid-ranking shuffled; unvalidated gold flipped effect readings"},
+         "Trade-off in the rule": "transfer is at best partial: the top public config was not refuted on the verified stratum, but below it the verified intervals overlap (ranking indeterminate at this N); unvalidated gold flipped effect readings"},
     ])
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
     _tex(fw, "tab_framework.tex",
          "The configuration decision guide: starting priors per axis, with the trade-off inside "
          "each rule; ``validate locally'' governs the per-axis priors. Code rows keyed by baseline behaviour "
-         "(collapse vs not), not model identity.", "tab:framework",
+         "(collapse vs not), not model identity. The collapse-at-0 case was observed in a single model on a "
+         "single serving backend, so that row is illustrative rather than an established phenomenon, and the "
+         "evaluation-guidance contrast was measured on one model (Qwen3.5); both are priors to confirm locally.", "tab:framework",
          star=True, colspec="p{3.0cm}p{3.4cm}p{10.0cm}")
     print("done.")
     return 0

@@ -51,7 +51,10 @@ RIAYN ($+0.250$), and PT-CS code ($+0.136$, with the verified column agreeing at
 items). Its PT-CS short-answer gain ($+0.104$, CI $[-0.01,+0.20]$) is borderline and not
 significant. The other significant cells are GLM-5.1 and GPT-5.1 on PT-CS short answers ($+0.220$
 and $+0.208$) and GPT-5.1 on RIAYN ($+0.192$). Everywhere else, including every Mohler and SemEval
-cell of the three discriminating models, the contrast is not significant. The verified column on the
+cell of the three discriminating models, the contrast is not significant. As with scope
+(Section~\ref{sec:rq3}), a non-significant cell means no gain was detected at N=175, not that reasoning
+is equivalent to no reasoning: we ran no equivalence test, and several of these intervals are wide
+enough to contain practically relevant gains. The verified column on the
 reasoning rows rests on 25 to 67 items, so its wide intervals are precision caveats rather than new
 estimates (Section~\ref{sec:datasets}).
 
@@ -84,7 +87,9 @@ not as evidence that reasoning helps code grading in general. Off the collapse, 
 are inconsistent: not significant for GLM or DeepSeek on either code dataset, nor for GPT-5.1 on
 PT-CS code, yet significant for GPT-5.1 on RIAYN. That below-collapse unpredictability is a finding
 in its own right, and the framework (Section~\ref{sec:discussion}) keys its code guidance on
-baseline behaviour rather than on model identity because of it.
+baseline behaviour rather than on model identity because of it. We saw the collapse in only one model
+on one serving backend, so we treat it as an illustrative case rather than an established phenomenon;
+showing that it generalises would need another model family or backend.
 
 \subsection{RQ2: Evaluation Guidance}
 \label{sec:rq2}
@@ -171,8 +176,9 @@ however, produces no directional effect (signed test: $p=.52$ GLM, $p=.15$ Qwen)
 individual grades substantially (mean absolute change 0.098 of the scale for GLM, 0.077 for Qwen):
 position is variance, not bias. Because Qwen's zero-collapse can hide order effects (an answer
 floored at zero cannot move), GLM is the cleaner read, and it shows the larger order sensitivity.
-For deployment the implication is direct: clean, question-by-question grading is both the least
-biased and the most reproducible conversation regime.
+For deployment the sub-study points the same way, though on 20 submissions and two models it is a
+direction to confirm at scale rather than a settled result: clean, question-by-question grading was
+both the least biased and the most reproducible regime here.
 
 \subsection{RQ6: Transfer to the Deployment Context}
 \label{sec:rq6}
@@ -180,21 +186,24 @@ biased and the most reproducible conversation regime.
 \input{tables/tab_transfer_verified}
 \input{tables/tab_ranking_transfer}
 
-Transfer is partial: the top of the public ranking carries over, the middle does not
-(Table~\ref{tab:ranktransfer}). The two public co-leaders among the open configurations, Qwen3.5 and
-GLM-5.1 with reasoning on (public mean QWK 0.667 each), are also the two best verified short-answer
-configurations (0.795 and 0.771, Table~\ref{tab:transfer}). Reasoning helps both open families on
-verified short answers (Qwen 0.652 to 0.795, GLM 0.692 to 0.771, N=84 off / 32 on). Below the top,
-the ranking reshuffles: GPT-5.1 with reasoning off is last on the public mean (0.566) yet strong on
-the verified stratum; DeepSeek's off and on variants swap; and the best verified-code configuration
-is GLM-5.1 with reasoning off (0.672 at N=295), which leads no public dataset. The GPT-5.1 anchor's
-verified short-answer cells rest on 11 items, so they are directional corroboration only, never a
-ranked result; their intervals (e.g.\ 0.897, CI $[0.62,0.98]$) say as much. We show bootstrap
-intervals for the cells below 100 items, where sampling noise dominates; the N=295 verified-code
-cells are precise enough to omit them. Combined with the
-per-dataset winner changes within the public set itself (Section~\ref{sec:cost}), the picture is
-consistent: a strong configuration found on public data is a good starting point, and nothing below
-the top is predictable enough to deploy unvalidated.
+Transfer is at best partial, and the small verified samples warrant a conservative reading
+(Table~\ref{tab:transfer}, Table~\ref{tab:ranktransfer}). The two public co-leaders among the open
+configurations, Qwen3.5 and GLM-5.1 with reasoning on (public mean QWK 0.667 each), are also the
+numerically top verified short-answer configurations (0.795 and 0.771), which is consistent with
+transfer at the top; reasoning helps both open families on verified short answers (Qwen 0.652 to
+0.795, GLM 0.692 to 0.771, N=84 off / 32 on). Below the top, however, the verified intervals overlap
+almost entirely (for example 0.795 [0.62,0.89], 0.692 [0.54,0.80], and 0.647 [0.46,0.78]), so the
+apparent reshuffles, GPT-5.1 with reasoning off moving from last on the public mean (0.566) to strong
+on the verified stratum, DeepSeek's off and on variants swapping, and the best verified-code
+configuration being GLM-5.1 with reasoning off (0.672 at N=295), are not statistically distinguishable
+from sampling noise at this N. The GPT-5.1 anchor's verified short-answer cells rest on 11 items, so
+they are directional corroboration only, never a ranked result; their intervals (e.g.\ 0.897,
+CI $[0.62,0.98]$) say as much. We show bootstrap intervals for the cells below 100 items, where
+sampling noise dominates; the N=295 verified-code cells are precise enough to omit them. The honest
+reading is therefore that transfer is not refuted at the top and indeterminate below it. Combined with
+the per-dataset winner changes within the public set itself (Section~\ref{sec:cost}), the prescription
+is unchanged: a strong public configuration is a good starting point, and nothing below the top is
+established firmly enough to deploy unvalidated.
 
 \subsection{The Gold Lesson: Reference Quality Changes Conclusions}
 \label{sec:gold}
