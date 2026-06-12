@@ -48,7 +48,7 @@ Agreement gains are model- and dataset-specific, never uniform (Table~\ref{tab:r
 change in QWK from reasoning off to on). Reasoning
 helped Qwen3.5 significantly on four of its five cells: Mohler (dQWK $+0.071$), SemEval ($+0.098$),
 RIAYN ($+0.250$), and PT-CS code ($+0.136$, with the verified column agreeing at $+0.113$ on 61
-items); its PT-CS short-answer gain ($+0.104$, CI $[-0.01,+0.20]$) is borderline and not
+items). Its PT-CS short-answer gain ($+0.104$, CI $[-0.01,+0.20]$) is borderline and not
 significant. The other significant cells are GLM-5.1 and GPT-5.1 on PT-CS short answers ($+0.220$
 and $+0.208$) and GPT-5.1 on RIAYN ($+0.192$). Everywhere else, including every Mohler and SemEval
 cell of the three discriminating models, the contrast is not significant. The verified column on the
@@ -189,7 +189,9 @@ the ranking reshuffles: GPT-5.1 with reasoning off is last on the public mean (0
 the verified stratum; DeepSeek's off and on variants swap; and the best verified-code configuration
 is GLM-5.1 with reasoning off (0.672 at N=295), which leads no public dataset. The GPT-5.1 anchor's
 verified short-answer cells rest on 11 items, so they are directional corroboration only, never a
-ranked result; their intervals (e.g.\ 0.897, CI $[0.62,0.98]$) say as much. Combined with the
+ranked result; their intervals (e.g.\ 0.897, CI $[0.62,0.98]$) say as much. We show bootstrap
+intervals for the cells below 100 items, where sampling noise dominates; the N=295 verified-code
+cells are precise enough to omit them. Combined with the
 per-dataset winner changes within the public set itself (Section~\ref{sec:cost}), the picture is
 consistent: a strong configuration found on public data is a good starting point, and nothing below
 the top is predictable enough to deploy unvalidated.

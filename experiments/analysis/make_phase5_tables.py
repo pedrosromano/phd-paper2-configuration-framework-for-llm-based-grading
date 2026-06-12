@@ -129,7 +129,7 @@ def main() -> int:
     _tex(pd.DataFrame(rows), "tab_rq1_reasoning.tex",
          "RQ1: reasoning OFF$\\to$ON on the paired, clean (non-truncated) items: agreement gain (dQWK, K=5), "
          "token cost premium, and within-item SD (consistency). PT-CS rows: full-N primary; the V column repeats "
-         "the contrast on the PT-CS-verified (intervened) stratum as robustness (hybrid rule, 2026-06-11).", "tab:rq1",
+         "the contrast on the PT-CS-verified (intervened) stratum as robustness.", "tab:rq1",
          star=True)
 
     # --- T2: dimension contrasts (context per dataset, scope, decomposition).
@@ -171,7 +171,7 @@ def main() -> int:
     _tex(pd.DataFrame([r for r in drows if r]), "tab_dimension_contrasts.tex",
          "RQ2/RQ3: context (per dataset; grounding type differs; the context arm ran on Qwen3.5 only), scope, "
          "and decomposition contrasts (dQWK, K=5, bootstrap CI). Qwen3.5, reasoning off. PT-CS rows: full-N "
-         "primary; the V column repeats the contrast on PT-CS-verified (hybrid rule, 2026-06-11).", "tab:dims",
+         "primary; the V column repeats the contrast on PT-CS-verified.", "tab:dims",
          star=True)
 
     # --- T3: SemEval per split ---
@@ -332,15 +332,15 @@ def main() -> int:
         {"Task / context": "Consistency/fairness-critical", "Recommended": "Reasoning OFF",
          "Trade-off in the rule": "ON less reproducible (partly length$\\times$backend, partly reasoning-intrinsic)"},
         {"Task / context": "Rubric with per-criterion structure", "Recommended": "Holistic scoring",
-         "Trade-off in the rule": f"criterion-by-criterion mildly hurts agreement with the final grade: small and gold-sensitive (${decomp_full:+.3f}$ sig full / ${decomp_ver:+.3f}$ ns verified); consistent with our original distrust of per-criterion scores, which motivated scoring against the final grade"},
+         "Trade-off in the rule": f"criterion-by-criterion mildly hurts agreement with the final grade: small and gold-sensitive (${decomp_full:+.3f}$ sig full / ${decomp_ver:+.3f}$ ns verified), measured with reasoning off only; consistent with our original distrust of per-criterion scores, which motivated scoring against the final grade"},
         {"Task / context": "Multi-question / session", "Recommended": "Clean, question-by-question",
-         "Trade-off in the rule": "shared history $\\to$ stricter (p$<$.01); order adds variance"},
+         "Trade-off in the rule": "shared history $\\to$ stricter (p$<$.01, 20-submission sub-study); order adds variance"},
         {"Task / context": "Deploy in a new context", "Recommended": "Validate locally (governs the above)",
          "Trade-off in the rule": "transfer is partial: top config carried over, mid-ranking shuffled; unvalidated gold flipped effect readings"},
     ])
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
     _tex(fw, "tab_framework.tex",
-         "The configuration decision guide (Phase 5.6): starting priors per axis, with the trade-off inside "
+         "The configuration decision guide: starting priors per axis, with the trade-off inside "
          "each rule; ``validate locally'' governs the per-axis priors. Code rows keyed by baseline behaviour "
          "(collapse vs not), not model identity.", "tab:framework",
          star=True, colspec="p{3.0cm}p{3.4cm}p{10.0cm}")

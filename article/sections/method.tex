@@ -56,10 +56,13 @@ solutions, and we did not synthesise any, to avoid introducing a confound.
 
 We develop every comparison on three public datasets and reserve the deployment dataset for transfer.
 \emph{Mohler}~\cite{mohler_text_2009,mohler_learning_2011} provides 2{,}273 CS short answers over 80
-questions, each graded 0 to 5 by two teachers (we use their mean). \emph{SemEval-2013
+questions, each graded 0 to 5 by two teachers (we use their mean). The two annotators themselves agree
+only moderately~\cite{mohler_learning_2011}, so agreement against their mean carries a human ceiling
+that we keep in mind when reading absolute Mohler scores. \emph{SemEval-2013
 Task~7}~\cite{dzikovska_semeval_2013} (SciEntsBank and Beetle) provides short answers with binary
-correct/incorrect gold labels and standardised generalisation splits; we sample 800 items across the
-seen, unseen-answers, unseen-domain, and unseen-questions splits. \emph{Rubric Is All You Need}
+correct/incorrect gold labels and standardised generalisation splits; we draw 800 items by a
+fixed-seed uniform sample over the pooled items, so each split appears in proportion to its size in
+the corpus (seen, unseen-answers, unseen-domain, unseen-questions). \emph{Rubric Is All You Need}
 (RIAYN)~\cite{pathak_rubric_2025} provides 149 Java object-oriented-programming and data-structures
 submissions with question-specific rubrics, graded by two graders in consensus; it is our public code
 comparator. Published results on these datasets (Table~\ref{tab:published-baselines}) situate our
