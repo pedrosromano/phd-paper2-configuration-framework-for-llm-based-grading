@@ -24,8 +24,8 @@ GROUP_ORDER = [
     ("OUR-shortanswer", "Our short-answer datasets (Mohler, SemEval-2013 T7: SciEntsBank/Beetle)"),
     ("OUR-code", "Our code datasets (RIAYN OOP/DSA) and nearest code-rubric analogues"),
     ("DEMARCATION", "Model-comparison-as-graders (demarcation: we do a framework, not a ranking)"),
-    ("BENCHMARK-context", "Benchmark context (ASAP/ASAP-SAS -- not our datasets)"),
-    ("LLM-comparison", "LLM-as-grader landscape (mixed datasets -- which models, which metrics)"),
+    ("BENCHMARK-context", "Benchmark context (ASAP/ASAP-SAS, not our datasets)"),
+    ("LLM-comparison", "LLM-as-grader landscape (mixed datasets: which models, which metrics)"),
 ]
 PROV = {"PDF": r"$\bullet$", "SLR": r"$\circ$", "ABS": r"$\dagger$"}
 
@@ -79,7 +79,14 @@ def main() -> int:
         for _, r in sub.iterrows():
             # study cell carries a resolvable \cite (do NOT escape the cite command)
             study = esc(f"{r.study} ({r.year})") + (rf"~\cite{{{r.ref}}}" if r.ref else "")
-            val = r.value if not r.note else f"{r.value} -- {r.note}"
+            # §9.2: no en-dash as prose punctuation in table notes. Join value and note with a
+            # colon; when value is the "--" placeholder (no numeric metric), show the note alone.
+            if not r.note:
+                val = r.value
+            elif str(r.value).strip() in ("", "--"):
+                val = r.note
+            else:
+                val = f"{r.value}: {r.note}"
             A(" & ".join([
                 esc(r.dataset), study, esc(r.model_method),
                 esc(r.protocol), esc(r.metric), esc(val),

@@ -129,8 +129,8 @@ subsets and are a reference, not a ranked competitor.}
 
 No model wins everywhere (Fig.~\ref{fig:perdataset}). On the public datasets the open configurations
 sit close together (mean QWK 0.590 to 0.667, Table~\ref{tab:ranktransfer}), and the per-dataset
-winner changes: Qwen3.5 with reasoning on Mohler (0.659), GLM-5.1 with reasoning off on SemEval
-(0.621), GLM-5.1 with reasoning on RIAYN (0.803). GPT-5.1 is shown beside them on its 60-item
+winner changes: on Mohler it is Qwen3.5 with reasoning on (0.659), on SemEval GLM-5.1 with reasoning
+off (0.621), and on RIAYN GLM-5.1 with reasoning on (0.803). GPT-5.1 is shown beside them on its 60-item
 subsets as a paid reference point; on that footing it does not dominate the open models on the
 public datasets (public mean 0.643 with reasoning on), and we do not rank it.
 
@@ -165,8 +165,8 @@ position (variance). Qwen3.5 is read under the zero-collapse caveat of Section~\
 
 Conversation state biases grades; answer order adds noise (Fig.~\ref{fig:conversation}). Grading
 inside one shared, accumulating conversation makes both models stricter than grading each answer in
-a clean conversation: the mean normalised grade drops by $+0.040$ for Qwen3.5 (Wilcoxon $p=.0009$)
-and $+0.027$ for GLM-5.1 ($p=.003$). Reversing the answer order within a shared conversation,
+a clean conversation: the mean normalised grade drops by $0.040$ for Qwen3.5 (Wilcoxon $p=.0009$)
+and $0.027$ for GLM-5.1 ($p=.003$). Reversing the answer order within a shared conversation,
 however, produces no directional effect (signed test: $p=.52$ GLM, $p=.15$ Qwen) while changing
 individual grades substantially (mean absolute change 0.098 of the scale for GLM, 0.077 for Qwen):
 position is variance, not bias. Because Qwen's zero-collapse can hide order effects (an answer

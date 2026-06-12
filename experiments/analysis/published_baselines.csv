@@ -1,5 +1,5 @@
 group,dataset,study,year,model_method,protocol,metric,value,provenance,note,ref
-OUR-shortanswer,Mohler,Aminah et al.,2025,LLaMA3-70B,zero-shot LLM,QWK,0.948,PDF,on a SUBSET only -- empty/#NAME? answers dropped (inflates QWK; motivates pi extractable-rate),aminah_evaluating_2025
+OUR-shortanswer,Mohler,Aminah et al.,2025,LLaMA3-70B,zero-shot LLM,QWK,0.948,PDF,on a SUBSET only; empty/#NAME? answers dropped (inflates QWK; motivates pi extractable-rate),aminah_evaluating_2025
 OUR-shortanswer,Mohler,Aminah et al.,2025,DeepSeek,zero-shot LLM,QWK / MAE,0.902 / 0.30,PDF,open-source LLM; most balanced score distribution,aminah_evaluating_2025
 OUR-shortanswer,Mohler,Aminah et al.,2025,GPT-3.5 Turbo,zero-shot LLM,QWK / MAE,0.662 / 1.047,PDF,scored 0 on #NAME? answers (harsh on parse errors),aminah_evaluating_2025
 OUR-shortanswer,Mohler,Fischer et al. (NodeGrade),2025,sem-sim + LLM hybrid,public-set eval,Pearson r / QWK,0.73 / 0.55,SLR,moderate; struggles on boundary cases,fischer_evaluation_2025
@@ -13,7 +13,7 @@ OUR-shortanswer,SciEntsBank,Dada et al. (iAttention),2025,iAttention-BERT,superv
 OUR-shortanswer,SemEval-2013 Beetle,Dada et al. (iAttention),2025,iAttention-BERT,supervised; 2-way/3-way,Macro-F1,0.872 (2-way UA) / 0.666 (3-way UQ),PDF,beats XLNet/ETS/UKP-BIU,dada_iattention_2025
 OUR-code,RIAYN-OOP (80),Pathak et al. (RIAYN),2025,GPT-4o + question-specific rubric (CRE),rubric; thinking OFF,Pearson r / Cohen kappa_B / Leniency,0.912 / 0.598 / 0.082,PDF,best on OOP; question-specific >> question-agnostic >> no-rubric,pathak_rubric_2025
 OUR-code,RIAYN-DSA (150),Pathak et al. (RIAYN),2025,EME ensemble + question-specific rubric (QS),rubric; thinking OFF,Pearson r / Cohen kappa_B,0.825 / 0.646,PDF,best on DSA; GPT-4o-mini + Claude 3.7 Sonnet ensemble,pathak_rubric_2025
-OUR-code,RIAYN (no-rubric ref),Pathak et al. (RIAYN),2025,CodeJudge (no rubric),no-rubric LLM,Cohen kappa_B,OOP 0.433 / DSA 0.406,PDF,no-rubric baseline -- rubric lifts kappa substantially (RQ2 support),pathak_rubric_2025
+OUR-code,RIAYN (no-rubric ref),Pathak et al. (RIAYN),2025,CodeJudge (no rubric),no-rubric LLM,Cohen kappa_B,OOP 0.433 / DSA 0.406,PDF,no-rubric baseline; rubric lifts kappa substantially (RQ2 support),pathak_rubric_2025
 OUR-code,(code; rubric; partial credit),Havare et al.,2025,Qwen-2.5-Coder-7B + DPO,rubric; 3725 subs,micro-accuracy,~85%,SLR,~20% error still too high for full automation,havare_ai-based_2025
 OUR-code,(code; rubric),Grandel et al. (GreAIter),2024,GPT-4 + human-in-loop,rubric; 26 students,Accuracy / Recall / Precision,98.21% / 100% / 59.30%,SLR,small N; high recall low precision; 81.2% less time,grandel_applying_2024
 DEMARCATION,programming assignments,Jukiewicz,2026,LLM model comparison (6000+ subs),side-by-side,grade-distribution / leniency,(no QWK; distributional),ABS,'yet another model ranking' we differentiate from,jukiewicz_comparison_2026

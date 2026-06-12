@@ -162,7 +162,7 @@ resolution. $K$ was fixed a priori, and a sensitivity check over $K \in \{4,5,6\
 per-dataset baseline QWK by more than 0.033, so the conclusions do not hinge on the bin count. QWK is
 computed on per-item means across the $k$ repetitions. Alongside it we report mean absolute error
 (MAE) on the normalised score, which reads as the average grading error as a fraction of the scale,
-and Spearman correlation. Consistency is the mean within-item standard deviation of the normalised
+and Spearman rank correlation. Consistency is the mean within-item standard deviation of the normalised
 score across the $k$ repetitions (SD$_k$): it needs no ground truth, and lower is more consistent.
 Cost is measured on completion tokens; for the open models the provider folds reasoning tokens into
 the completion count, while GPT-5.1 itemises them separately, so reasoning cost is compared within

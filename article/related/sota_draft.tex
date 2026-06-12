@@ -69,9 +69,10 @@ conclusions are stated more tentatively than the short-answer ones.
 We develop on established public short-answer corpora, the Mohler dataset of graded computer-science
 answers~\cite{mohler_text_2009,mohler_learning_2011} and the SemEval-2013 Task~7 SciEntsBank/Beetle
 sets~\cite{dzikovska_semeval_2013}, and confirm transfer on a Portuguese deployment context.
-Table~\ref{tab:published-baselines} collects reported per-dataset performance, from supervised transformers
-(e.g.\ ASAP-SAS quadratic weighted kappa (QWK, defined in Section~\ref{sec:metrics})
-$\approx0.79$~\cite{kumar_get_2019}; recent essay QWK $0.81$--$0.83$~\cite{dadi_robust_2025,elmassry_systematic_2025})
+Reported numbers are usually quadratic weighted kappa (QWK), an ordinal-agreement score that runs from
+0 at chance to 1 at perfect agreement and is defined fully in Section~\ref{sec:metrics}.
+Table~\ref{tab:published-baselines} collects them per dataset, from supervised transformers
+(ASAP-SAS $\approx0.79$~\cite{kumar_get_2019}; recent essays $0.81$--$0.83$~\cite{dadi_robust_2025,elmassry_systematic_2025})
 to prompted and fine-tuned LLMs on our own sets~\cite{aminah_evaluating_2025,chen_cemft_2026,dada_iattention_2025,fischer_evaluation_2025,duong_automatic_2024,ferreira_mello_automatic_2025,kazi_enhancing_2023,henkel_roars_2025}.
 Crucially, these numbers were produced under \emph{different models, prompts, and protocols}; they situate
 our study but are \emph{not} its success criterion, which comes from our own like-for-like comparisons. The
@@ -94,7 +95,7 @@ auditable LLM grading (structured ``grading events'' with local hosting and fine
 data~\cite{arz_von_straussenburg_enabling_2025}, and embedding-based short-answer
 grading~\cite{putnikovic_embeddings_2023}), and feeds the design decisions of a deployed assessment
 platform. Throughout, we treat the human reference grades as consensus records of mixed provenance and
-uneven validation (Section~\ref{sec:datasets}), not as independent double annotation, and declare the
+uneven validation (Section~\ref{sec:datasets}), not as independent double annotation. We also declare the
 conflict of interest arising from the platform context, in line with the ground-truth-honesty requirements
 such deployments demand.
 
