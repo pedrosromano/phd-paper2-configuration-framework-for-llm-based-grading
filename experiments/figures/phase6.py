@@ -129,7 +129,7 @@ def fig3(df):
                 qs.append(q); los.append(q - lo if q == q else 0); his.append(hi - q if q == q else 0)
             pos = x + (i * 2 + j - 3.5) * w
             ax.bar(pos, qs, w, color=MCOL[m], alpha=0.55 if rs == "off" else 1.0, edgecolor="k", lw=0.3,
-                   hatch="" if rs == "off" else "//", label=f"{m.split('-')[0]}|{rs}")
+                   hatch="" if rs == "off" else "//", label=f"{m.split('-')[0]}$|${rs}")
             ax.errorbar(pos, qs, yerr=[los, his], fmt="none", ecolor="k", elinewidth=0.5, capsize=1.2)
     ax.set_xticks(x); ax.set_xticklabels([d if d != "ptcs" else "ptcs*" for d in dsets]); ax.set_ylabel("QWK (K=5)")
     ax.set_title("RQ4: agreement by model $\\times$ reasoning, per dataset")
@@ -179,7 +179,7 @@ def fig5(df):
     axB.set_xticks(range(len(mods))); axB.set_xticklabels([m.split("-")[0] for m in mods])
     _glm = [m for m in mods if m.startswith("glm")]          # GLM = the cleaner read (§11); cite its order p
     _op = cs[_glm[0]]["order_p"] if _glm and "order_p" in cs[_glm[0]] else max((v.get("order_p", 1.0) for v in cs.values()), default=1.0)
-    axB.set_ylabel("mean |natural $-$ inverse|"); axB.set_title(f"RQ5 order: variance, not bias (p$=${_op:.2f})")
+    axB.set_ylabel("mean $|$natural $-$ inverse$|$"); axB.set_title(f"RQ5 order: variance, not bias (p$=${_op:.2f})")
     fig.tight_layout()
     _save(fig, "fig5_conversation")
 

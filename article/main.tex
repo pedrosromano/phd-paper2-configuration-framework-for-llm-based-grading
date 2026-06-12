@@ -42,9 +42,10 @@ datasets covering short answers and code. Reasoning is isolated within each of t
 model families, and every measurement is repeated, so its effect on cost and on run-to-run
 consistency is measured alongside quality. Reasoning raised agreement with teacher grades in only
 seven of twenty model-dataset combinations, at 10 to 925 times the output tokens and with reduced
-consistency in nearly every cell. Evaluation guidance helped wherever the human reference was
-trustworthy; on grades from a real Portuguese deployment, an unvalidated reference masked a real
-rubric benefit until evaluation was restricted to teacher-verified grades. Transfer of public-dataset
+consistency in nearly every cell. Evaluation guidance, tested within one model, helped
+wherever the human reference was trustworthy; on grades from a real Portuguese deployment, an
+unvalidated reference masked a real rubric benefit until evaluation was restricted to teacher-verified
+grades. Transfer of public-dataset
 results to that deployment was partial: the top configuration carried over, the mid-ranking did not.
 We synthesise these comparisons into a decision guide mapping task characteristics to a recommended
 configuration and its cost, governed by one rule: validate locally against a reference you trust. The

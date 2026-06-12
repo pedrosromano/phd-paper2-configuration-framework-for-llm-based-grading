@@ -31,11 +31,16 @@ PROV = {"PDF": r"$\bullet$", "SLR": r"$\circ$", "ABS": r"$\dagger$"}
 
 
 def esc(s: str) -> str:
+    # Order matters: structural escapes (\ & % _ # $ { }) run FIRST, so the math snippets
+    # introduced afterwards ($\sim$, $>$, $\gg$, $\pi$ ...) keep their literal $ and \.
+    # In this numeric context every raw '~' means "approximately" (-> $\sim$, not a text
+    # tilde), and '>>' / '>' are comparison operators; '>>' must precede the single '>'.
     s = str(s)
     for a, b in [("\\", r"\textbackslash{}"), ("&", r"\&"), ("%", r"\%"), ("_", r"\_"),
                  ("#", r"\#"), ("$", r"\$"), ("{", r"\{"), ("}", r"\}"),
-                 ("~", r"\textasciitilde{}"), ("^", r"\textasciicircum{}"),
-                 (">>", r"$\gg$"), ("+-1", r"$\pm$1"), ("kappa", r"$\kappa$")]:
+                 ("~", r"$\sim$"), ("^", r"\textasciicircum{}"),
+                 (">>", r"$\gg$"), (">", r"$>$"), ("+-1", r"$\pm$1"),
+                 ("kappa", r"$\kappa$"), ("pi extractable", r"$\pi$ extractable")]:
         s = s.replace(a, b)
     return s
 

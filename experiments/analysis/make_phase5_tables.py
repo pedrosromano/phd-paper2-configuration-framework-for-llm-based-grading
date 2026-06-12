@@ -120,7 +120,7 @@ def main() -> int:
             lov, mdv, hiv = _boot_ci(sAv, sBv)
             dqwk_by[(ds, dom, m, "V")] = (mdv, len(cleanv))
             ver_cell = f"{mdv:+.3f} [{lov:+.2f},{hiv:+.2f}] ({len(cleanv)})" if mdv == mdv else f"-- (N={len(cleanv)}<8)"
-        rows.append({"Dataset": ds, "Dom": dom[:4], "Model": m, "N": len(clean),
+        rows.append({"Dataset": ds, "Dom": dom.split("_")[0], "Model": m, "N": len(clean),
                      "dQWK": f"{md:+.3f}", "95\\% CI": f"[{lo:+.2f},{hi:+.2f}]",
                      "Sig": "yes" if (lo > 0 or hi < 0) else "no",
                      "dQWK-V [CI] (N$_V$)": ver_cell,
@@ -274,7 +274,7 @@ def main() -> int:
                        "V-short QWK [CI] (N, rk)": x["sa"][2] + f" ({x['sa'][1]}" + ("" if anchor else f", {sa_rank[x['sa'][0]]}") + ")",
                        "V-code QWK [CI] (N, rk)": x["code"][2] + f" ({x['code'][1]}" + ("" if anchor else f", {code_rank[x['code'][0]]}") + ")",
                        "Note": "anchor: corrob. only, unranked" if anchor else ""})
-    winners = {ds: max(((x["per"][ds], f"{x['m']}|{x['r']}") for x in rk if x["m"] != "gpt-5.1")) for ds in ["mohler", "semeval", "riayn"]}
+    winners = {ds: max(((x["per"][ds], f"{x['m']}$|${x['r']}") for x in rk if x["m"] != "gpt-5.1")) for ds in ["mohler", "semeval", "riayn"]}
     wtxt = "; ".join(f"{ds}: {w[1]} ({w[0]:.3f})" for ds, w in winners.items())
     _tex(pd.DataFrame(rkrows), "tab_ranking_transfer.tex",
          "RQ6 ranking comparison, public vs PT-CS-verified. Basis: QWK (K=5) on item means, with-guidance, "
@@ -282,7 +282,8 @@ def main() -> int:
          "(open models k=5; the GPT-5.1 anchor graded 60-item subsets, reference only, unranked). Ranks over "
          f"the open configs. Per-dataset public winners differ ({wtxt}). The public top "
          "(qwen3.5$|$on $\\approx$ glm-5.1$|$on) contains the verified short-answer winner: the top transfers; "
-         "the mid-ranking does not.", "tab:ranktransfer", star=True)
+         "the mid-ranking does not. Bootstrap 95\\% CIs accompany the small-N cells (N$<$100); the N=295 "
+         "verified-code cells omit them, their intervals being correspondingly narrow.", "tab:ranktransfer", star=True)
 
     # --- T4c: gold full-vs-verified SENSITIVITY (the 'unreliable gold distorts' result) ---
     def qcell(d):
