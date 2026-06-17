@@ -34,9 +34,9 @@ random, and every claim in this subsection holds for the tractable items only.
 \caption{The reasoning trade-off on one plane. Each point is one model on one dataset. The horizontal
 axis is the change in agreement with the teacher grades when reasoning is turned on (QWK on minus
 off), so points to the right gained agreement. The vertical axis is the change in run-to-run
-consistency (within-item SD), on the same convention as Fig.~\ref{fig:rq1}: points below zero became
+consistency (within-item SD): points below zero became
 less consistent. Most points sit low and near the vertical axis, so reasoning usually costs
-consistency while moving agreement little. PT-CS points use the verified stratum.}
+consistency while moving agreement little. PT-CS points are from PT-CS-verified.}
 \label{fig:rq1trade}
 \end{figure}
 
@@ -51,15 +51,15 @@ run-to-run consistency (within-item SD), bars below zero mean reasoning made the
 consistent. Right: how many times more output tokens reasoning uses (log scale). In the first two
 panels a bar above zero is better and below zero is worse, so reading one model in one dataset group
 across the panels shows its trade: most cells gain little agreement, lose consistency, and cost far
-more. PT-CS uses the verified stratum.}
+more. PT-CS bars are from PT-CS-verified.}
 \label{fig:rq1}
 \end{figure*}
 
 Agreement gains are specific to the model and the dataset, never uniform: on the trade-off plane of
-Fig.~\ref{fig:rq1trade} the points spread widely along the horizontal agreement axis (dQWK is the
+Fig.~\ref{fig:rq1trade} the points spread widely along the horizontal agreement axis ($\Delta$QWK is the
 change in QWK from reasoning off to on). Reasoning
 helped Qwen3.5 significantly on four of its five cells (each percentage is the gain relative to that
-cell's reasoning-off QWK): Mohler (dQWK $+0.071$, $+11$\%), SemEval ($+0.098$, $+18$\%), RIAYN
+cell's reasoning-off QWK): Mohler ($\Delta$QWK $+0.071$, $+11$\%), SemEval ($+0.098$, $+18$\%), RIAYN
 ($+0.250$, $+45$\%), and PT-CS-verified code ($+0.113$, $+23$\%, on 61 items). Its PT-CS-verified
 short-answer gain ($+0.092$, $+12$\%, N=25) is not significant. The only other significant cell is
 GPT-5.1 on RIAYN ($+0.192$, $+32$\%). Everywhere else the contrast is not significant, including every
@@ -93,8 +93,7 @@ falls to 25\%, and the $+0.113$ gain above follows), so that gain is best read a
 baseline, not as evidence that reasoning helps code grading in general. Away from the collapse the
 code gains are inconsistent: significant for GPT-5.1 on RIAYN, but not for GLM or DeepSeek on either
 code dataset, nor for GPT-5.1 on PT-CS-verified code. The framework (Section~\ref{sec:framework}) therefore
-keys its code guidance on baseline behaviour rather than model identity. We saw the collapse in one
-model on one serving backend, so we treat it as illustrative rather than established.
+keys its code guidance on baseline behaviour rather than model identity.
 
 Overall, reasoning emerges from RQ1 as a conditional trade rather than a default upgrade. It improved
 agreement with teacher grades in only some model-dataset cells, always at a large and domain-dependent
@@ -108,9 +107,9 @@ turning reasoning on rarely pays for itself.
 \begin{figure}[t]
 \centering
 \input{figures/fig_rq2_guidance.pgf}
-\caption{Evaluation-guidance benefit per dataset: the change in agreement (dQWK, K=5, with 95\%
+\caption{Evaluation-guidance benefit per dataset: the change in agreement ($\Delta$QWK, K=5, with 95\%
 confidence intervals) when the reference answer or rubric is added on top of the question and student
-answer. Qwen3.5, reasoning off. PT-CS code is the verified stratum.}
+answer. Qwen3.5, reasoning off. PT-CS code is PT-CS-verified.}
 \label{fig:rq2}
 \end{figure}
 
@@ -123,7 +122,7 @@ SemEval ($+67$\%); adding the rubric raises it by $+0.123$ on RIAYN ($+29$\%). O
 code, the 295 items with evidence of teacher review, the rubric is worth $+0.146$ ($+46$\%, CI
 $[+0.10,+0.20]$), in line with RIAYN. All four gains are significant.
 
-Overall, evaluation guidance is a low-cost and reliable gain when the reference is sound, lifting
+Overall, evaluation guidance is a low-cost and reliable gain, lifting
 agreement by 0.12 to 0.24 QWK across the public datasets and PT-CS-verified code, roughly a third to
 two-thirds above the no-guidance baseline. For the model we tested, the practical reading is simple:
 add a trustworthy rubric or reference answer whenever one exists.
@@ -141,7 +140,7 @@ one question at a time with a single holistic score, on PT-CS-verified code (Fig
 \begin{figure}[!ht]
 \centering
 \input{figures/fig_rq3_scope_decomp.pgf}
-\caption{Scope and decomposition contrasts on PT-CS-verified code (dQWK, K=5, with 95\% confidence
+\caption{Scope and decomposition contrasts on PT-CS-verified code ($\Delta$QWK, K=5, with 95\% confidence
 intervals): the change in agreement from grading question by question to grading the whole exam in one
 call, and from holistic to criterion-by-criterion scoring. Below zero means the alternative scored
 worse than the baseline. Qwen3.5, reasoning off.}
@@ -187,7 +186,7 @@ reference samples and does not outperform the open models, so we leave it unrank
 \input{figures/fig3_per_dataset_config.pgf}
 \caption{Agreement (QWK, K=5, item means, bootstrap CIs) by model and reasoning mode, per dataset,
 on the with-guidance question-by-question cells. No configuration wins everywhere; the per-dataset
-winner changes. PT-CS is the verified stratum (N=379 items); the GPT-5.1 bars rest on 60-item
+winner changes. PT-CS is PT-CS-verified (N=379 items); the GPT-5.1 bars rest on 60-item
 subsets and are a reference, not a ranked competitor.}
 \label{fig:perdataset}
 \end{figure}

@@ -68,21 +68,20 @@ Pedro~J.~A.~Sebastião$^{1,2}$~\orcidicon{0000-0001-7729-4033}\\
 \begin{abstract}
 Instructors adopting graders based on large language models (LLMs) face a configuration problem:
 should the model reason before scoring, what guidance should it receive, should an exam be graded in
-one call or question by question, and which model is worth its cost? We study this design space
+one call or question by question, and which configuration is worth its cost? We study this design space
 systematically for computer science assessment, crossing extended reasoning, evaluation guidance,
 grading scope, rubric decomposition, model family, and conversation state under one protocol, on four
 datasets covering short answers and code. Reasoning is isolated within each of three open-weight
 model families, and every measurement is repeated, so its effect on cost and on run-to-run
 consistency is measured alongside quality. Reasoning raised agreement with teacher grades in only
 five of twenty model-dataset combinations, at 10 to 925 times the output tokens and with reduced
-consistency in nearly every cell. Evaluation guidance, measured on one model, helped where the
-reference answer or rubric was sound, lifting quadratic weighted kappa (QWK) by 0.12 to 0.24 on the
-public datasets and by 0.146 on the teacher-reviewed deployment data. Configuration rankings
-transferred only partly to the deployment, where the best public configuration held up but the
+consistency in nearly every cell. Evaluation guidance, measured on one model, lifted quadratic
+weighted kappa (QWK) by 0.12 to 0.24 on the public datasets and by 0.146 on the teacher-reviewed
+deployment data. Configuration rankings
+transferred to the deployment, where the best public configuration held up but the
 verified samples were too small to order the rest. We turn these
-comparisons into a decision guide that maps a grading task to a recommended configuration, its cost,
-and the conditions under which the choice holds. The harness, prompts, and configuration matrices are
-released.
+comparisons into a decision guide and configuration framework that maps a grading task to a recommended configuration, its cost,
+and the conditions under which the choice holds.
 \end{abstract}
 
 \begin{IEEEkeywords}

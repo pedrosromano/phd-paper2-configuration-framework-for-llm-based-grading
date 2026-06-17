@@ -20,9 +20,9 @@ call or question by question, whether to score a rubric criterion by criterion o
 which model family to run or pay for.
 
 The literature answers these questions only in fragments. Reasoning is the clearest example. Extended
-thinking improves general LLM-as-a-judge accuracy~\cite{jayarao_explicit_2025}, but its effect is task-
-and architecture-dependent~\cite{larionov_deepseek_2025}, long reasoning traces carry verbose,
-redundant computation~\cite{sui_stop_2025}, and no peer-reviewed study isolates its effect on
+thinking improves general LLM-as-a-judge accuracy~\cite{jayarao_explicit_2025}, but its effect depends
+on the task and the architecture~\cite{larionov_deepseek_2025}. Long reasoning traces also carry
+verbose, redundant computation~\cite{sui_stop_2025}, and no peer-reviewed study isolates its effect on
 rubric-bounded educational grading. Model comparisons exist for programming and course
 deployments~\cite{jukiewicz_comparison_2026,policar_automated_2025}, but they rank systems under one
 fixed prompt configuration, so they cannot say how the ranking moves when the configuration does.
@@ -41,8 +41,8 @@ serves as a reference point. The study runs on four datasets in two domains. Thr
 validity: the Mohler~\cite{mohler_text_2009,mohler_learning_2011} and
 SemEval-2013 Task~7~\cite{dzikovska_semeval_2013} corpora of graded computer-science short answers,
 and the Rubric Is All You Need corpus of rubric-graded Java code~\cite{pathak_rubric_2025}. The
-fourth, PT-CS, is an export of a real Portuguese university grading deployment built by the first
-author; we use it to test whether the public-dataset guidance transfers to a deployment context, and
+fourth, PT-CS, is an export of a real Portuguese university grading deployment built by the
+authors; we use it to test whether the public-dataset guidance transfers to a deployment context, and
 because its grades are of uneven reliability we curate a teacher-reviewed subset and set out the
 accompanying safeguards in Section~\ref{sec:threats}.
 
@@ -68,13 +68,12 @@ budget, and the reliability of the reference grades available, to a recommended 
 cost that choice implies, and the conditions under which it applies. Section~\ref{sec:results} reports
 the controlled comparisons behind the guide, and Section~\ref{sec:framework} presents it.
 
-The contribution is fourfold. First, a configuration decision guide for LLM grading in CS, keyed by
+The contribution is threefold. First, a configuration decision guide for LLM grading in CS, keyed by
 observable task and model behaviour rather than by model identity. Second, the first
 grading-specific, within-family isolation of the reasoning effect, measured jointly on agreement,
 consistency, and cost. Third, a strategy for deployment grades of uneven reliability: an auditable
 criterion that isolates a teacher-reviewed subset, so the deployment conclusions rest on a reference we
-can trust. Fourth, a released harness, prompt templates, and configuration matrices that make the
-protocol reproducible.
+can trust.
 
 The paper is organised as follows. Section~\ref{sec:related} positions the study in the
 learning-analytics and LLM-grading literature. Section~\ref{sec:method} describes the design space,
