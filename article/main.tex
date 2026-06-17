@@ -18,6 +18,9 @@
 \renewcommand{\topfraction}{0.95}\renewcommand{\dbltopfraction}{0.95}
 \renewcommand{\textfraction}{0.05}
 \renewcommand{\floatpagefraction}{0.75}\renewcommand{\dblfloatpagefraction}{0.75}
+% stfloats enables [b] (bottom) placement for double-column floats (figure*/table*), which standard
+% LaTeX forbids; used so the wide RQ1 figure can sit at the foot of its page, after its text reference.
+\usepackage{stfloats}
 % hyperref makes \href (ORCID links), \cite, \ref, \url clickable. NOTE (2026-06-12): it was
 % NOT previously loaded -- only the `url` package (\url) was; \orcidicon needs \href, so hyperref
 % is required here. [hidelinks] keeps the current look (no coloured link boxes). Loaded last per
@@ -29,6 +32,7 @@
 % tlmgr needs admin; \orcidicon below scales the logo with \resizebox (graphicx, loaded by tikz)
 % to 1em, the visual equivalent of scaling it to the height of a `|'.
 \usetikzlibrary{svg.path}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc}  % framework decision diagram (Fig. fig:frameworkdiagram)
 \definecolor{orcidlogocol}{HTML}{A6CE39}
 \tikzset{
   orcidlogo/.pic={
@@ -70,16 +74,15 @@ grading scope, rubric decomposition, model family, and conversation state under 
 datasets covering short answers and code. Reasoning is isolated within each of three open-weight
 model families, and every measurement is repeated, so its effect on cost and on run-to-run
 consistency is measured alongside quality. Reasoning raised agreement with teacher grades in only
-seven of twenty model-dataset combinations, at 10 to 925 times the output tokens and with reduced
-consistency in nearly every cell. Evaluation guidance, tested within one model, helped
-wherever the human reference was trustworthy; on grades from a real Portuguese deployment, an
-unvalidated reference masked a real rubric benefit until evaluation was restricted to teacher-verified
-grades. Transfer of public-dataset
-results to that deployment was at best partial: the top configuration was not refuted, but below it
-the verified samples were too small to separate the ranking from noise.
-We synthesise these comparisons into a decision guide mapping task characteristics to a recommended
-configuration and its cost, governed by one rule: validate locally against a reference you trust. The
-harness, prompts, and configurations are released.
+five of twenty model-dataset combinations, at 10 to 925 times the output tokens and with reduced
+consistency in nearly every cell. Evaluation guidance, measured on one model, helped where the
+reference answer or rubric was sound, lifting quadratic weighted kappa (QWK) by 0.12 to 0.24 on the
+public datasets and by 0.146 on the teacher-reviewed deployment data. Configuration rankings
+transferred only partly to the deployment, where the best public configuration held up but the
+verified samples were too small to order the rest. We turn these
+comparisons into a decision guide that maps a grading task to a recommended configuration, its cost,
+and the conditions under which the choice holds. The harness, prompts, and configuration matrices are
+released.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -94,6 +97,7 @@ short-answer grading, code assessment, configuration framework.
 \input{sections/method}
 \input{sections/results}
 \input{sections/discussion}
+\input{sections/framework}
 \input{sections/threats}
 \input{sections/conclusion}
 

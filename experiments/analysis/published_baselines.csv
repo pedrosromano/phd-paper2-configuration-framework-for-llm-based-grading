@@ -1,28 +1,29 @@
 group,dataset,study,year,model_method,protocol,metric,value,provenance,note,ref,compact
-OUR-shortanswer,Mohler,Aminah et al.,2025,LLaMA3-70B,zero-shot LLM,QWK,0.948,PDF,on a SUBSET only; empty/#NAME? answers dropped (inflates QWK; motivates pi extractable-rate),aminah_evaluating_2025,0
-OUR-shortanswer,Mohler,Aminah et al.,2025,DeepSeek,zero-shot LLM,QWK / MAE,0.902 / 0.30,PDF,open-source LLM; most balanced score distribution,aminah_evaluating_2025,1
-OUR-shortanswer,Mohler,Aminah et al.,2025,GPT-3.5 Turbo,zero-shot LLM,QWK / MAE,0.662 / 1.047,PDF,scored 0 on #NAME? answers (harsh on parse errors),aminah_evaluating_2025,0
-OUR-shortanswer,Mohler,Fischer et al. (NodeGrade),2025,sem-sim + LLM hybrid,public-set eval,Pearson r / QWK,0.73 / 0.55,SLR,moderate; struggles on boundary cases,fischer_evaluation_2025,0
-OUR-shortanswer,Mohler,Duong & Meng,2024,GPT-4 (few-shot),few-shot; SE+Mohler,Pearson r,0.844,SLR,context/few-shot improves quality,duong_automatic_2024,0
-OUR-shortanswer,Mohler,Mello et al.,2025,GPT-4o vs BERT,seen vs unseen split,MAE,BERT 0.34 (seen) / GPT-4o competitive (unseen),SLR,"LLM value is generalisation to unseen, not beating tuned on seen",ferreira_mello_automatic_2025,0
-OUR-shortanswer,SciEntsBank (SemEval-2013 T7),Kazi & Kahanda,2023,RoBERTa + MNLI (entailment),fine-tuned,weighted-F1,~0.72,SLR,gains on 'contradiction' class,kazi_enhancing_2023,0
-OUR-shortanswer,SemEval-2013 T7,Fischer et al. (NodeGrade),2025,sem-sim + LLM hybrid,public-set eval,(qualitative),outperforms GPT-4 on SemEval-2013 T7,SLR,no single metric reported in abstract,fischer_evaluation_2025,0
-OUR-shortanswer,SciEntsBank (unseen ans.),Chen et al. (CEM-FT),2026,CEM-FT (Qwen3-4B + LoRA),fine-tune; unseen-answers,QWK,0.767,PDF,vs BERT 0.20 / Qwen3-8B FT 0.729; Qwen family = our roster,chen_cemft_2026,1
-OUR-shortanswer,Mohler (unseen ans.),Chen et al. (CEM-FT),2026,CEM-FT (Qwen3-1.7B + LoRA),fine-tune; unseen-answers,MAE / TAA,0.402 / 0.715,PDF,Mohler is continuous (no QWK reported),chen_cemft_2026,0
-OUR-shortanswer,SciEntsBank,Dada et al. (iAttention),2025,iAttention-BERT,supervised; UA split,Accuracy / Macro-F1,0.828 / 0.823 (2-way); 0.690 / 0.662 (3-way),PDF,inter-sentence attention; beats RoBERTa-lrg/XLNet,dada_iattention_2025,1
-OUR-shortanswer,SemEval-2013 Beetle,Dada et al. (iAttention),2025,iAttention-BERT,supervised; 2-way/3-way,Macro-F1,0.872 (2-way UA) / 0.666 (3-way UQ),PDF,beats XLNet/ETS/UKP-BIU,dada_iattention_2025,0
-OUR-code,RIAYN-OOP (80),Pathak et al. (RIAYN),2025,GPT-4o + question-specific rubric (CRE),rubric; thinking OFF,Pearson r / Cohen kappa_B / Leniency,0.912 / 0.598 / 0.082,PDF,best on OOP; question-specific >> question-agnostic >> no-rubric,pathak_rubric_2025,1
-OUR-code,RIAYN-DSA (150),Pathak et al. (RIAYN),2025,EME ensemble + question-specific rubric (QS),rubric; thinking OFF,Pearson r / Cohen kappa_B,0.825 / 0.646,PDF,best on DSA; GPT-4o-mini + Claude 3.7 Sonnet ensemble,pathak_rubric_2025,0
-OUR-code,RIAYN (no-rubric ref),Pathak et al. (RIAYN),2025,CodeJudge (no rubric),no-rubric LLM,Cohen kappa_B,OOP 0.433 / DSA 0.406,PDF,no-rubric baseline; rubric lifts kappa substantially (RQ2 support),pathak_rubric_2025,0
-OUR-code,(code; rubric; partial credit),Havare et al.,2025,Qwen-2.5-Coder-7B + DPO,rubric; 3725 subs,micro-accuracy,~85%,SLR,~20% error still too high for full automation,havare_ai-based_2025,0
-OUR-code,(code; rubric),Grandel et al. (GreAIter),2024,GPT-4 + human-in-loop,rubric; 26 students,Accuracy / Recall / Precision,98.21% / 100% / 59.30%,SLR,small N; high recall low precision; 81.2% less time,grandel_applying_2024,0
-DEMARCATION,programming assignments,Jukiewicz,2026,LLM model comparison (6000+ subs),side-by-side,grade-distribution / leniency,(no QWK; distributional),ABS,'yet another model ranking' we differentiate from,jukiewicz_comparison_2026,1
-DEMARCATION,bioinformatics course,Policar et al.,2025,LLM graders comparison,deployed; 100+ students,(qualitative: comparable to human),--,ABS,domain-specific model comparison,policar_automated_2025,1
-BENCHMARK-context,ASAP-SAS,Kumar et al. (AutoSAS),2019,feature-rich + tree,supervised,QWK,0.79,SLR,prior SOTA band 0.7-0.8 (NOT our dataset),kumar_get_2019,1
-BENCHMARK-context,ASAP,Dadi & Sanampudi,2025,DL + coherence,supervised,QWK,~0.81,SLR,adversarial-sensitive,dadi_robust_2025,0
-BENCHMARK-context,ASAP,ElMassry et al.,2025,BERT-family (review best),supervised,QWK,~0.83,SLR,best holistic in reviewed set,elmassry_systematic_2025,0
-LLM-comparison,German essays (multidim.),Sessler et al. (Can AI grade),2025,GPT-3.5/GPT-4/o1/LLaMA3-70B/Mixtral,rubric; 10 criteria,Spearman r / ICC,o1 best: 0.74 / 0.80,PDF,closed>open; LLMs more lenient than teachers; o1 (reasoning) tops,sessler_canai_2025,1
-LLM-comparison,ELL writing (TOEFL-like),Pack et al.,2024,PaLM2/Claude2/GPT-3.5/GPT-4,rubric; two timepoints,ICC / Pearson r,GPT-4 ICC 0.897-0.927,SLR,temporal drift across timepoints (motivates k=5),pack_large_2024,0
-LLM-comparison,algorithm/programming answers,Moazzez et al.,2024,4 open-source LLMs (rubric),672 trials,ICC,Claude 0.828 (best) / Copilot 0.293 (worst),SLR,model choice dominates consistency,moazzez_assessing_2024,1
-LLM-comparison,essays (minimal prompt),Tate et al.,2024,ChatGPT,minimal prompting; n=1786,Cohen kappa / within-+-1,human-AI 0.23-0.52 / up to 89% within-+-1,SLR,low kappa for summative use,tate_can_2024,0
-LLM-comparison,reading comprehension (ROARs),Henkel et al.,2025,GPT-4 (minimal prompt),public dataset,QWK / F1,0.91 / 0.87,ABS,near-parity with expert raters (Ghana data),henkel_roars_2025,0
+OUR-shortanswer,Mohler,Aminah et al.,2025.0,LLaMA3-70B,zero-shot LLM,QWK,0.948,PDF,on a SUBSET only; empty/#NAME? answers dropped (inflates QWK; motivates pi extractable-rate),aminah_evaluating_2025,0
+OUR-shortanswer,Mohler,Aminah et al.,2025.0,DeepSeek,zero-shot LLM,QWK / MAE,0.902 / 0.30,PDF,open-source LLM; most balanced score distribution,aminah_evaluating_2025,1
+OUR-shortanswer,Mohler,Aminah et al.,2025.0,GPT-3.5 Turbo,zero-shot LLM,QWK / MAE,0.662 / 1.047,PDF,scored 0 on #NAME? answers (harsh on parse errors),aminah_evaluating_2025,0
+OUR-shortanswer,Mohler,Fischer et al. (NodeGrade),2025.0,sem-sim + LLM hybrid,public-set eval,Pearson r / QWK,0.73 / 0.55,SLR,moderate; struggles on boundary cases,fischer_evaluation_2025,0
+OUR-shortanswer,Mohler,Duong & Meng,2024.0,GPT-4 (few-shot),few-shot; SE+Mohler,Pearson r,0.844,SLR,context/few-shot improves quality,duong_automatic_2024,0
+OUR-shortanswer,Mohler,Mello et al.,2025.0,GPT-4o vs BERT,seen vs unseen split,MAE,BERT 0.34 (seen) / GPT-4o competitive (unseen),SLR,"LLM value is generalisation to unseen, not beating tuned on seen",ferreira_mello_automatic_2025,0
+OUR-shortanswer,SciEntsBank (SemEval-2013 T7),Kazi & Kahanda,2023.0,RoBERTa + MNLI (entailment),fine-tuned,weighted-F1,~0.72,SLR,gains on 'contradiction' class,kazi_enhancing_2023,0
+OUR-shortanswer,SemEval-2013 T7,Fischer et al. (NodeGrade),2025.0,sem-sim + LLM hybrid,public-set eval,(qualitative),outperforms GPT-4 on SemEval-2013 T7,SLR,no single metric reported in abstract,fischer_evaluation_2025,0
+OUR-shortanswer,SciEntsBank (unseen ans.),Chen et al. (CEM-FT),2026.0,CEM-FT (Qwen3-4B + LoRA),fine-tune; unseen-answers,QWK,0.767,PDF,vs BERT 0.20 / Qwen3-8B FT 0.729; Qwen family = our roster,chen_cemft_2026,1
+OUR-shortanswer,Mohler (unseen ans.),Chen et al. (CEM-FT),2026.0,CEM-FT (Qwen3-1.7B + LoRA),fine-tune; unseen-answers,MAE / TAA,0.402 / 0.715,PDF,Mohler is continuous (no QWK reported),chen_cemft_2026,0
+OUR-shortanswer,SciEntsBank,Dada et al. (iAttention),2025.0,iAttention-BERT,supervised; UA split,Accuracy / Macro-F1,0.828 / 0.823 (2-way); 0.690 / 0.662 (3-way),PDF,inter-sentence attention; beats RoBERTa-lrg/XLNet,dada_iattention_2025,1
+OUR-shortanswer,SemEval-2013 Beetle,Dada et al. (iAttention),2025.0,iAttention-BERT,supervised; 2-way/3-way,Macro-F1,0.872 (2-way UA) / 0.666 (3-way UQ),PDF,beats XLNet/ETS/UKP-BIU,dada_iattention_2025,0
+OUR-code,RIAYN-OOP (80),Pathak et al. (RIAYN),2025.0,GPT-4o + question-specific rubric (CRE),rubric; thinking OFF,Pearson r / Cohen kappa_B / Leniency,0.912 / 0.598 / 0.082,PDF,best on OOP; question-specific >> question-agnostic >> no-rubric,pathak_rubric_2025,1
+OUR-code,RIAYN-DSA (150),Pathak et al. (RIAYN),2025.0,EME ensemble + question-specific rubric (QS),rubric; thinking OFF,Pearson r / Cohen kappa_B,0.825 / 0.646,PDF,best on DSA; GPT-4o-mini + Claude 3.7 Sonnet ensemble,pathak_rubric_2025,0
+OUR-code,RIAYN (no-rubric ref),Pathak et al. (RIAYN),2025.0,CodeJudge (no rubric),no-rubric LLM,Cohen kappa_B,OOP 0.433 / DSA 0.406,PDF,no-rubric baseline; rubric lifts kappa substantially (RQ2 support),pathak_rubric_2025,0
+OUR-code,(code; rubric; partial credit),Havare et al.,2025.0,Qwen-2.5-Coder-7B + DPO,rubric; 3725 subs,micro-accuracy,~85%,SLR,~20% error still too high for full automation,havare_ai-based_2025,0
+OUR-code,(code; rubric),Grandel et al. (GreAIter),2024.0,GPT-4 + human-in-loop,rubric; 26 students,Accuracy / Recall / Precision,98.21% / 100% / 59.30%,SLR,small N; high recall low precision; 81.2% less time,grandel_applying_2024,0
+DEMARCATION,programming assignments,Jukiewicz,2026.0,LLM model comparison (6000+ subs),side-by-side,grade-distribution / leniency,(no QWK; distributional),ABS,'yet another model ranking' we differentiate from,jukiewicz_comparison_2026,1
+DEMARCATION,bioinformatics course,Policar et al.,2025.0,LLM graders comparison,deployed; 100+ students,(qualitative: comparable to human),--,ABS,domain-specific model comparison,policar_automated_2025,1
+BENCHMARK-context,ASAP-SAS,Kumar et al. (AutoSAS),2019.0,feature-rich + tree,supervised,QWK,0.79,SLR,prior SOTA band 0.7-0.8 (NOT our dataset),kumar_get_2019,0
+BENCHMARK-context,ASAP,Dadi & Sanampudi,2025.0,DL + coherence,supervised,QWK,~0.81,SLR,adversarial-sensitive,dadi_robust_2025,0
+BENCHMARK-context,ASAP,ElMassry et al.,2025.0,BERT-family (review best),supervised,QWK,~0.83,SLR,best holistic in reviewed set,elmassry_systematic_2025,0
+LLM-comparison,German essays (multidim.),Sessler et al. (Can AI grade),2025.0,GPT-3.5/GPT-4/o1/LLaMA3-70B/Mixtral,rubric; 10 criteria,Spearman r / ICC,o1 best: 0.74 / 0.80,PDF,closed>open; LLMs more lenient than teachers; o1 (reasoning) tops,sessler_canai_2025,1
+LLM-comparison,ELL writing (TOEFL-like),Pack et al.,2024.0,PaLM2/Claude2/GPT-3.5/GPT-4,rubric; two timepoints,ICC / Pearson r,GPT-4 ICC 0.897-0.927,SLR,temporal drift across timepoints (motivates k=5),pack_large_2024,0
+LLM-comparison,algorithm/programming answers,Moazzez et al.,2024.0,4 open-source LLMs (rubric),672 trials,ICC,Claude 0.828 (best) / Copilot 0.293 (worst),SLR,model choice dominates consistency,moazzez_assessing_2024,1
+LLM-comparison,essays (minimal prompt),Tate et al.,2024.0,ChatGPT,minimal prompting; n=1786,Cohen kappa / within-+-1,human-AI 0.23-0.52 / up to 89% within-+-1,SLR,low kappa for summative use,tate_can_2024,0
+LLM-comparison,reading comprehension (ROARs),Henkel et al.,2025.0,GPT-4 (minimal prompt),public dataset,QWK / F1,0.91 / 0.87,ABS,near-parity with expert raters (Ghana data),henkel_roars_2025,0
+OUR-ptcs,PT-CS (ours),This work,,--,,--,--,,introduced here; not previously studied as a grading benchmark,,1

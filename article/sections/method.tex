@@ -1,33 +1,40 @@
 %% sections/method.tex -- Phase 7.1. Register: CLAUDE.md S9.2 (no em/en dashes as prose
 %% punctuation). Encodes: PT-CS stratification = curation; the hybrid reporting rule (stated
 %% ONCE, here); the S5.0 conventions; the MANDATORY QWK calibration sentence (first use of QWK
-%% in the paper); SemEval fixed-0.5 + per-split + AUROC; backend reporting.
+%% in the paper); SemEval fixed-0.5 + pooled accuracy/AUROC (per-split CUT 2026-06-15, CLAUDE.md S11);
+%% backend reporting.
 %% Every number here is sourced from the engine, matrix.yaml, runs.jsonl, or the generated tables.
 
 \section{Study Design and Method}
 \label{sec:method}
 
+This section describes how the study was run. We set out the configuration design space
+(Section~\ref{sec:design}), the four
+datasets and the reliability of their reference grades (Section~\ref{sec:datasets}), the models and
+serving backends (Section~\ref{sec:models}), the grading harness that drives every model through one
+interface (Section~\ref{sec:harness}), and the metrics and statistical protocol applied throughout
+(Section~\ref{sec:metrics}). Grading and scoring are identical across every model and configuration,
+so that the comparisons the study draws are like-for-like.
+
 \subsection{Design Space}
 \label{sec:design}
 
 The study crosses six configuration dimensions under one grading protocol
-(Table~\ref{tab:design}). \emph{Reasoning} switches the model's extended-thinking mode off or on.
+(Table~\ref{tab:design}). \emph{Reasoning} switches the model's thinking mode off or on.
 \emph{Evaluation guidance} controls what grading material accompanies the question: the question stem
-and the student answer are always sent, and the guidance level adds either nothing or the
-dataset's grounding material. \emph{Scope} contrasts grading a whole multi-question exam in one call
+and the student answer are always sent, and the guidance level adds either nothing or the rubric (the
+scoring criteria) or reference answer the dataset provides. \emph{Scope} contrasts grading a whole multi-question exam in one call
 against one call per question. \emph{Decomposition} contrasts one holistic score against scoring each
 rubric criterion separately and summing. \emph{Model family} covers three open-weight families and one
 closed frontier model. \emph{Conversation state} contrasts a clean conversation per answer against a
-single conversation that accumulates the grading history. It is run as a focused sub-study rather than
-a factorial dimension, with answer order controlled (natural versus inverse) because shared history
+single conversation that accumulates the grading history, and is run as a focused sub-study rather
+than a factorial dimension. Answer order is controlled (natural versus inverse) because shared history
 makes position a potential confound.
 
 \begin{table}[!t]
 \centering
 \footnotesize
-\caption{The configuration design space. Scope and decomposition apply only to PT-CS, the one dataset
-with multi-question submissions and rubric criteria; criterion decomposition was run with reasoning
-off only, so the reasoning $\times$ decomposition interaction is not measured.}
+\caption{The configuration design space and the datasets each dimension applies to.}
 \label{tab:design}
 \begin{tabular}{lll}
 \hline
@@ -48,25 +55,27 @@ data support them: PT-CS is the only dataset with multi-question submissions and
 rubrics, so those two dimensions run on PT-CS alone. Second, guidance means different material in the
 two domains: a question-specific rubric for the code datasets (PT-CS, RIAYN) and a reference answer
 for the short-answer datasets (Mohler, SemEval). The guidance effect is therefore two related
-interventions, not one, and we never pool it across the two groundings. PT-CS has no reference
+interventions, not one, and we never pool the two. PT-CS has no reference
 solutions, and we did not synthesise any, to avoid introducing a confound.
 
 \subsection{Datasets and Ground Truth}
 \label{sec:datasets}
 
-We develop every comparison on three public datasets and reserve the deployment dataset for transfer.
+We develop every comparison on three public datasets and reserve PT-CS, our deployment dataset, for
+transfer validation.
 \emph{Mohler}~\cite{mohler_text_2009,mohler_learning_2011} provides 2{,}273 CS short answers over 80
 questions, each graded 0 to 5 by two teachers (we use their mean). The two annotators themselves agree
 only moderately~\cite{mohler_learning_2011}, so agreement against their mean carries a human ceiling
 that we keep in mind when reading absolute Mohler scores. \emph{SemEval-2013
 Task~7}~\cite{dzikovska_semeval_2013} (SciEntsBank and Beetle) provides short answers with binary
-correct/incorrect gold labels and standardised generalisation splits; we draw 800 items by a
-fixed-seed uniform sample over the pooled items, so each split appears in proportion to its size in
-the corpus (seen, unseen-answers, unseen-domain, unseen-questions). \emph{Rubric Is All You Need}
+correct/incorrect gold labels (the human reference a grader is scored against, which we call the gold).
+SemEval is far larger than our other corpora, so it is the one we subsample: we draw 800 items by a
+fixed-seed sample that preserves the dataset's question and domain proportions. The other public
+datasets are graded in full. \emph{Rubric Is All You Need}
 (RIAYN)~\cite{pathak_rubric_2025} provides 149 Java object-oriented-programming and data-structures
 submissions with question-specific rubrics, graded by two graders in consensus; it is our public code
-comparator. Published results on these datasets (Table~\ref{tab:published-baselines}) situate our
-numbers but are not the success criterion: they come from different models, prompts, and protocols, so
+comparator. Published results situate our numbers but are not the success criterion
+(Table~\ref{tab:published-baselines}): they come from different models, prompts, and protocols, so
 all conclusions here rest on our own like-for-like contrasts.
 
 \emph{PT-CS} is an export of a real Portuguese university grading deployment: 737 Java code answers
@@ -91,14 +100,10 @@ proxy for review evidence, not a validation guarantee.
 
 \input{tables/tab_ptcs_strata}
 
-PT-CS numbers follow one reporting rule, stated here once. Paired contrasts computed within PT-CS
-(reasoning, guidance, scope, decomposition) are reported on the full dataset as primary, with the same
-contrast repeated on PT-CS-verified as a robustness column. The verified cells are smaller (25 to 295
-items depending on the contrast), so wide intervals there are read as precision caveats, not as new
-effect estimates. Absolute agreement levels, cross-dataset comparisons, and all transfer claims (RQ6)
-use PT-CS-verified only. Figures show PT-CS as the verified stratum only, with the stratum and its
-size stated in every caption. The difference between the full and verified readings is itself a result
-(Section~\ref{sec:gold}).
+Because the PT-CS gold is of uneven reliability, every PT-CS agreement result we report uses
+PT-CS-verified, the teacher-reviewed (intervened) subset defined above; the unreliable strata are
+excluded by that declared criterion. The conversation sub-study (Section~\ref{sec:rq5}) needs no
+stratum: it measures model behaviour and does not depend on the reference grades at all.
 
 \subsection{Models and Backends}
 \label{sec:models}
@@ -110,82 +115,90 @@ toggle, so the reasoning contrast holds the model fixed and flips only its think
 the DeepInfra inference application programming interface (API) with \texttt{enable\_thinking} off or
 on. The fourth, \emph{GPT-5.1} (via
 OpenAI, \texttt{reasoning\_effort} mapped to \texttt{none} or \texttt{high}), is a closed frontier
-anchor: a paid reference point run on reduced item sets, used to situate the open models, never as an
+anchor: a reference point run on reduced item sets, used to situate the open models, never as an
 inference target. Qwen3.5 with reasoning off, with guidance, question-by-question, and holistic
 scoring is the internal baseline configuration against which the dimension contrasts are framed.
 
 All calls use temperature 0 with a 4{,}096-token output ceiling for reasoning-off and 32{,}768 for
 reasoning-on cells; every run row logs the provider, served model identifier, sampling parameters,
-prompt hash, and timestamp (main matrix executed June 2026). We report these because the results are
-conditional on the served backends: the same model name on another provider can differ in
-quantisation, chat template, and sampling behaviour, so the transferable claim is the configuration
-guidance, not the absolute scores. Spending was controlled by a persistent cost guard with separate
-\euro{}150 ceilings per provider; the final matrix cost \euro{}35.97 (\euro{}10.24 OpenAI,
-\euro{}25.73 DeepInfra), and Section~\ref{sec:cost} returns to the budgeting lesson in that number.
+prompt hash, and timestamp (main matrix executed June 2026). We log these because absolute scores are conditional on the full serving setup, not just the prompt
+and sampling we control: the served quantization, the inference software, and the hardware differ
+across providers and cannot be matched exactly, so a different setup can yield different absolute
+scores. The transferable claim is the configuration guidance (which configuration beats which), not
+the absolute scores.
 
 \subsection{Grading Harness}
 \label{sec:harness}
 
-A single harness drives all models behind one interface. Prompt templates are keyed by domain,
+A single grading harness, the software that runs every model through one common interface and records
+its output, drives the whole study. Prompt templates are keyed by domain,
 guidance level, scope, and decomposition; all templates request a machine-parseable JSON (JavaScript Object Notation) score, one
 score per question for whole-exam calls and a per-criterion breakdown for criterion-level calls. A
 deterministic parser extracts the grade and records whether extraction succeeded. We define the
 \emph{extractable rate} $\pi$ as the fraction of runs whose output yields a parseable grade;
 unparseable output is logged and excluded, never coerced to a zero score, because silent coercion
 fabricates strictness. Each measurement is repeated $k=5$ times per item and configuration ($k=3$ for
-the paid anchor), and results are cached by item, configuration hash, and repetition index, so reruns
-never re-bill completed calls. Whole-exam calls grade many questions at once; their question rows
-share one API call, identified by a call group, and all token and cost aggregates deduplicate by call
-group (the per-row naive sum would overcount cost 4.2 times).
+the closed anchor), and results are cached by item, configuration hash, and repetition index, so reruns
+never re-bill completed calls. Whole-exam calls grade many questions in one
+API call, so token and cost are counted once per call, not once per question.
 
-The sampled matrix balances power and cost. Reasoning-off cells run on the full datasets (2{,}273
-Mohler, 800 SemEval, 149 RIAYN, 737 PT-CS code, 437 PT-CS theory items, $k=5$). Reasoning-on cells run
-on a fixed sample of 175 items per dataset and domain. The whole-exam arm grades 60 PT-CS submissions
+The sampled matrix balances power and cost. Reasoning-off cells run on the full public and PT-CS
+datasets (2{,}273 Mohler, 149 RIAYN, 737 PT-CS code, 437 PT-CS theory items) and on the 800-item
+SemEval sample, all at $k=5$. Reasoning-on is the most expensive axis, because reasoning traces run long, so those cells use a fixed
+sample of 175 items per dataset and domain. The whole-exam arm grades 60 PT-CS submissions
 (252 questions), and the anchor grades 60-item subsets at $k=3$. The conversation sub-study runs 20
 submissions in two fixed answer orders (natural and inverse) on two models (Qwen3.5 and GLM-5.1) at
-$k=3$, with everything else frozen at the baseline configuration. Expensive interactions are deliberately not
-crossed: the design is full-factorial on the cheap axes and one-factor-at-a-time from the baseline on
-the expensive ones, so interactions among expensive factors are not estimable, and we do not read
-them.
+$k=3$, with everything else frozen at the baseline configuration. We did not run every combination.
+Model family and reasoning are fully crossed: each of the four families grades with reasoning off and
+on. The other dimension contrasts (evaluation guidance, scope, and decomposition) are secondary to
+the reasoning question, so each was varied on its own from the baseline configuration, on the baseline
+model (Qwen3.5), rather than crossed with every family, which would multiply the matrix. We therefore
+report each of these effects on its own, not how two of them combine, and we make no claims about
+combined effects.
 
 \subsection{Metrics and Statistical Protocol}
 \label{sec:metrics}
 
-Scores are prepared by two fixed conventions before any metric. Predicted scores are clamped to
-$[0, \text{scale max}]$, because rubrics with penalty criteria can drive a criterion sum below zero
-(88 such rows; a question cannot score negative), and all scores are normalised to $[0,1]$ by their
-native scale maximum, because the native scales differ (Mohler 5, SemEval 1, PT-CS 1 to 12) and raw
-scores must never be pooled.
+Two conventions are applied to every score before any metric. Predicted scores are clamped to
+$[0, \text{scale max}]$, because rubrics with penalty criteria can push a criterion sum below zero
+(88 such rows) and a grade cannot be negative. Scores are then normalised to $[0,1]$ by their scale
+maximum, because the native scales differ (Mohler 5, SemEval 1, PT-CS 1 to 12) and raw scores must
+never be pooled.
 
-We report Quadratic Weighted Kappa (QWK), the standard agreement measure for ordinal scoring, which
-penalises large disagreements between grader and reference more heavily than small ones; it ranges
-from 0 (chance-level agreement) to 1 (perfect agreement), and we bin the normalised scores into
-$K{=}5$ ordinal levels before computing it, aligning all datasets to Mohler's native 0-to-5
-resolution. $K$ was fixed a priori, and a sensitivity check over $K \in \{4,5,6\}$ moves no
-per-dataset baseline QWK by more than 0.033, so the conclusions do not hinge on the bin count. QWK is
-computed on per-item means across the $k$ repetitions. Alongside it we report mean absolute error
-(MAE) on the normalised score, which reads as the average grading error as a fraction of the scale,
-and Spearman rank correlation. Consistency is the mean within-item standard deviation of the normalised
-score across the $k$ repetitions (SD$_k$): it needs no ground truth, and lower is more consistent.
-Cost is measured on completion tokens; for the open models the provider folds reasoning tokens into
-the completion count, while GPT-5.1 itemises them separately, so reasoning cost is compared within
-backend only, as an on/off premium ratio. We also track the signed model-minus-gold deviation, an
-item-level leniency measure used in Section~\ref{sec:threats}.
+Agreement is reported primarily as Quadratic Weighted Kappa (QWK), the standard measure for ordinal
+scoring: it penalises large grader-reference disagreements more than small ones. It reaches 1 at
+perfect agreement and 0 at chance, and can in principle fall below 0 when a grader disagrees with the
+reference more than chance would; all the values we report are positive. QWK needs discrete, ordered grades, but the model
+produces a continuous score, so we first round each normalised score onto a common 0-to-5 ordinal
+scale ($K{=}5$), the resolution of Mohler's native grades. Using the same scale for every dataset
+makes the QWK values comparable. We fixed $K$ in advance, and recomputing with $K{=}4$ or $K{=}6$
+changes no baseline QWK by more than 0.033, so the choice does not drive the results. QWK is then
+computed on the mean of each item's $k$ repetitions.
 
-SemEval requires its own mapping because the model emits a continuous score and the gold is binary. We
-map score to label with a fixed threshold of 0.5, pre-registered rather than tuned (tuning on the data
-would be circular), and report accuracy and macro-F1 (the unweighted mean of per-class F1, robust to
-class imbalance) per generalisation split, never pooled across splits. We add threshold-free measures (AUROC, the probability that a randomly chosen correct answer
-outscores a randomly chosen incorrect one, plus MAE and Spearman) so the result does not hinge on the
-0.5 cut.
+Alongside QWK we report mean absolute error (MAE) on the normalised score, the average grading error
+as a fraction of the scale, and Spearman rank correlation. Consistency is the mean within-item
+standard deviation across the $k$ repetitions (SD$_k$); it needs no reference, and a lower value means
+more reproducible grading. Cost is measured in output tokens and reported as the reasoning on/off
+premium within each provider, since DeepInfra and OpenAI account for reasoning tokens differently. We also
+track the signed model-minus-gold deviation, an item-level leniency measure used in
+Section~\ref{sec:threats}.
 
-Every expensive contrast is computed on its paired subset, with the pairing stated where the result is
-reported: the reasoning contrast pairs off and on cells on the 175 sampled items (further restricted
-to items whose reasoning runs never overflowed the token ceiling, Section~\ref{sec:rq1}); the scope
-contrast pairs on the 252 whole-exam questions; anchor comparisons pair on the anchor's 60-item
-subsets. Uncertainty is quantified by bootstrap 95\% confidence intervals (CIs) over items (800
-resamples, fixed seed); we call a contrast significant when its CI excludes zero, and we report effect
-sizes with CIs rather than p-values throughout. No multiple-comparison correction is applied across
-cells; we therefore enumerate which cells reach significance instead of making family-wise claims. The
-conversation sub-study uses paired Wilcoxon signed-rank tests, the standard nonparametric test for
-paired grade differences.
+SemEval needs its own mapping, because the model emits a continuous score while its gold is binary
+(correct or incorrect). We turn the score into a correct/incorrect label at a fixed 0.5 cutoff, set in
+advance rather than tuned to the data, because choosing the cutoff that maximised accuracy here would
+inflate the result. We then report pooled accuracy together with AUROC, the area under the ROC curve,
+a threshold-free measure equal to the chance a correct answer outscores an incorrect one (0.5 is
+chance, 1 is perfect); it confirms the result does not hinge on the 0.5 cut.
+We do not break SemEval into its seen and unseen subsets: those splits were defined for supervised
+systems relative to a training set, and our prompted models have none, so the labels do not denote
+novelty to our grader.
+
+Every expensive contrast is computed on its paired subset, stated where the result is reported: the
+reasoning contrast pairs off and on cells on the 175 sampled items (restricted to those whose
+reasoning never overflowed the token ceiling, Section~\ref{sec:rq1}), the scope contrast on the 252
+whole-exam questions, and anchor comparisons on the anchor's 60-item subsets. Uncertainty is given by
+bootstrap 95\% confidence intervals (CIs) over items (800 resamples, fixed seed), and we call a
+contrast significant when its CI excludes zero. We report effect sizes with CIs rather than p-values,
+and apply no multiple-comparison correction; instead of family-wise claims we enumerate which cells
+reach significance. The conversation sub-study uses paired Wilcoxon signed-rank tests, the standard
+nonparametric test for paired differences.

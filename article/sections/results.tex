@@ -2,127 +2,187 @@
 %% the auto-generated tables in article/tables/ or the figures in article/figures/ (verify, don't
 %% recall). Fences: enumerate RQ1 cells (never "significant across all datasets"); scope qbq vs
 %% whole-exam = "not significant, not equivalence" (no TOST); RQ2 scoped to Qwen3.5; RQ6 anchor =
-%% corroboration only, never winner; PT-CS hybrid rule per Method (full-N + V column in tables,
-%% verified-only in figures and absolute levels).
+%% corroboration only, never winner; PT-CS = verified stratum throughout (unreliable strata excluded by
+%% the declared criterion; conversation sub-study is gold-independent).
 
 \section{Results}
 \label{sec:results}
 
-All tables in this section are generated directly by the analysis code from the run stores. PT-CS
-follows the reporting rule of Section~\ref{sec:datasets}: full data as primary for paired contrasts,
-with a verified-stratum robustness column (marked V); verified only for absolute levels and transfer;
-figures show the verified stratum.
+All tables and figures in this section report values computed from the experimental runs. Following
+Section~\ref{sec:datasets}, every PT-CS agreement result uses the teacher-reviewed verified stratum;
+the conversation sub-study (Section~\ref{sec:rq5}) is gold-independent and uses all its submissions.
 
-\subsection{RQ1: Reasoning Trades Consistency for Agreement}
+\subsection{RQ1: Reasoning}
 \label{sec:rq1}
-
-\input{tables/tab_rq1_reasoning}
-
-\begin{figure}[t]
-\centering
-\input{figures/fig1_rq1_twodim.pgf}
-\caption{RQ1 in two dimensions: agreement change ($\Delta$QWK, off$\to$on) against consistency
-change ($\Delta$ within-item SD) per dataset and model, on the paired clean items. Most points sit
-in the upper half: reasoning costs consistency whether or not it buys agreement. Basis: PT-CS points
-are the verified stratum (figures rule, Section~\ref{sec:datasets}).}
-\label{fig:rq1}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\input{figures/fig2_cost_vs_agreement.pgf}
-\caption{Agreement gain against the reasoning token premium (log scale), per dataset and model.
-The large gains concentrate at the expensive right end (Qwen); the cheap left end buys little.
-Same basis as Fig.~\ref{fig:rq1}.}
-\label{fig:cost}
-\end{figure}
 
 Reasoning is evaluated on the paired sampled items, restricted to the \emph{tractable} items: those
 whose reasoning runs never overflowed the 32{,}768-token output ceiling, so a clean on-score exists.
 The overflow exclusion removes 337 run rows (222 distinct items: 91 SemEval, 65 Mohler, 49 PT-CS, 17
-RIAYN), all from Qwen with reasoning on; the extractable rate $\pi$ is 1.0 everywhere else. Because
+RIAYN), all from Qwen with reasoning on; of the 49 PT-CS items, 13 fall in the verified subset. The
+extractable rate $\pi$ is 1.0 everywhere else. Because
 the overflowing items are the ones provoking the longest reasoning, the excluded items are not
 random, and every claim in this subsection holds for the tractable items only.
 
-Agreement gains are model- and dataset-specific, never uniform (Table~\ref{tab:rq1}; dQWK is the
-change in QWK from reasoning off to on). Reasoning
-helped Qwen3.5 significantly on four of its five cells: Mohler (dQWK $+0.071$), SemEval ($+0.098$),
-RIAYN ($+0.250$), and PT-CS code ($+0.136$, with the verified column agreeing at $+0.113$ on 61
-items). Its PT-CS short-answer gain ($+0.104$, CI $[-0.01,+0.20]$) is borderline and not
-significant. The other significant cells are GLM-5.1 and GPT-5.1 on PT-CS short answers ($+0.220$
-and $+0.208$) and GPT-5.1 on RIAYN ($+0.192$). Everywhere else, including every Mohler and SemEval
-cell of the three discriminating models, the contrast is not significant. As with scope
-(Section~\ref{sec:rq3}), a non-significant cell means no gain was detected at N=175, not that reasoning
-is equivalent to no reasoning: we ran no equivalence test, and several of these intervals are wide
-enough to contain practically relevant gains. The verified column on the
-reasoning rows rests on 25 to 67 items, so its wide intervals are precision caveats rather than new
-estimates (Section~\ref{sec:datasets}).
-
-The price has two parts. First, tokens: reasoning multiplied completion tokens by 10 to 925 times,
-and the premium is domain-conditional even within one model. GPT-5.1 pays roughly 10 to 35 times on
-short answers but 136 to 170 times on code; Qwen3.5, whose traces are the longest, pays 582 to 925
-times (Fig.~\ref{fig:cost}). A single overall span hides exactly the conditionality this study is
-about, so the framework quotes the premium per domain. Second, consistency: the within-item SD
-across repetitions rises from off to on in 17 of the 20 cells (it is flat in one and falls only in
-GPT-5.1's two code cells), all at temperature 0 (Fig.~\ref{fig:rq1}, Fig.~\ref{fig:consistency}).
-Reasoning therefore trades reproducibility for agreement even when the agreement gain itself is not
-significant; Section~\ref{sec:discussion} unpacks how much of that loss is mechanical.
-
-\begin{figure}[t]
+% Fig. 1 (RQ1 trade-off scatter): single-column, [!b] anchored after the first RQ1 paragraph so it
+% settles at the foot of the left-hand column on this page, near its first citation just below (the !
+% overrides \bottomfraction, which the ~31%-tall figure just exceeds); the wide Fig. 2 (panels) sits
+% at the top of the next page, so the two never share a page. Declared before Fig. 2 so it numbers
+% first.
+\begin{figure}[!b]
 \centering
-\input{figures/fig4_consistency.pgf}
-\caption{The sacrificed axis: mean within-item SD across the $k$ repetitions, reasoning off versus
-on, per dataset (with-guidance cells). PT-CS is the verified stratum (N=379 items).}
-\label{fig:consistency}
+\input{figures/fig1_rq1_twodim.pgf}
+\caption{The reasoning trade-off on one plane. Each point is one model on one dataset. The horizontal
+axis is the change in agreement with the teacher grades when reasoning is turned on (QWK on minus
+off), so points to the right gained agreement. The vertical axis is the change in run-to-run
+consistency (within-item SD), on the same convention as Fig.~\ref{fig:rq1}: points below zero became
+less consistent. Most points sit low and near the vertical axis, so reasoning usually costs
+consistency while moving agreement little. PT-CS points use the verified stratum.}
+\label{fig:rq1trade}
 \end{figure}
 
-One code-specific failure shapes how the code cells must be read. On PT-CS code, Qwen3.5 with
-reasoning off assigns a grade of exactly zero to roughly half of the answers (53\% of the paired
-sample), a behaviour we call the \emph{zero-collapse}: the model stops discriminating at the lower
-end of the scale and floors most partial-credit answers. These are genuine, parseable zero scores,
-they recur on the same items regardless of scope, and the other models do not show them (GLM and
-DeepSeek floor about 13\%). Reasoning repairs the collapse for Qwen (the zero fraction drops to 27\%
-and agreement rises by the $+0.136$ above), which is best read as the recovery of a broken baseline,
-not as evidence that reasoning helps code grading in general. Off the collapse, the code-cell gains
-are inconsistent: not significant for GLM or DeepSeek on either code dataset, nor for GPT-5.1 on
-PT-CS code, yet significant for GPT-5.1 on RIAYN. That below-collapse unpredictability is a finding
-in its own right, and the framework (Section~\ref{sec:discussion}) keys its code guidance on
-baseline behaviour rather than on model identity because of it. We saw the collapse in only one model
-on one serving backend, so we treat it as an illustrative case rather than an established phenomenon;
-showing that it generalises would need another model family or backend.
+% Fig. 2 (RQ1 panels): full width at the top of the following page.
+\begin{figure*}[t]
+\centering
+\input{figures/fig_rq1_panels.pgf}
+\caption{What reasoning buys and what it costs, per model and dataset, shown as the change from
+reasoning off to on. Each bar is one model on one dataset. Left: agreement change (QWK on minus off),
+bars above zero mean reasoning improved agreement with the teacher grades. Middle: change in
+run-to-run consistency (within-item SD), bars below zero mean reasoning made the grader less
+consistent. Right: how many times more output tokens reasoning uses (log scale). In the first two
+panels a bar above zero is better and below zero is worse, so reading one model in one dataset group
+across the panels shows its trade: most cells gain little agreement, lose consistency, and cost far
+more. PT-CS uses the verified stratum.}
+\label{fig:rq1}
+\end{figure*}
+
+Agreement gains are specific to the model and the dataset, never uniform: on the trade-off plane of
+Fig.~\ref{fig:rq1trade} the points spread widely along the horizontal agreement axis (dQWK is the
+change in QWK from reasoning off to on). Reasoning
+helped Qwen3.5 significantly on four of its five cells (each percentage is the gain relative to that
+cell's reasoning-off QWK): Mohler (dQWK $+0.071$, $+11$\%), SemEval ($+0.098$, $+18$\%), RIAYN
+($+0.250$, $+45$\%), and PT-CS-verified code ($+0.113$, $+23$\%, on 61 items). Its PT-CS-verified
+short-answer gain ($+0.092$, $+12$\%, N=25) is not significant. The only other significant cell is
+GPT-5.1 on RIAYN ($+0.192$, $+32$\%). Everywhere else the contrast is not significant, including every
+Mohler and SemEval cell of the three discriminating models and every PT-CS-verified cell of GLM-5.1,
+DeepSeek-V4-Flash, and GPT-5.1. A non-significant cell means no gain was detected, not that reasoning
+is equivalent to no reasoning: we ran no equivalence test, and several intervals are wide, especially
+the PT-CS-verified reasoning cells, which rest on 11 to 67 items (Section~\ref{sec:datasets}).
+
+Reasoning's gains come at a price, and Fig.~\ref{fig:rq1trade} already shows the dominant pattern:
+most points sit below the horizontal axis, so consistency falls even where agreement rises.
+Fig.~\ref{fig:rq1} breaks the same comparison out per cell as aligned bars and adds the token cost the
+plane omits, with the left panel the agreement change of each cell, the middle panel its consistency
+change, and the right panel its token cost; a reader can pick one model on one dataset and read what
+reasoning bought and what it cost across the three panels. The price has two parts.
+First, tokens: reasoning multiplied completion tokens by 10 to 925 times, and the premium is
+domain-conditional even within one model. GPT-5.1 costs roughly 10 to 37 times as much on short
+answers but 94 to 170 times on code; Qwen3.5, whose traces are the longest, costs 666 to 925 times
+as much (right panel). A single overall span hides exactly the conditionality this study is about, so
+the framework quotes the premium per domain. Second, consistency: the within-item SD across
+repetitions rises from off to on in 16 of the 20 cells (it falls in four: GLM-5.1 and GPT-5.1 on
+PT-CS-verified code, GPT-5.1 on PT-CS-verified short answers, and GPT-5.1 on RIAYN), all at temperature 0 (middle panel). Reasoning therefore trades
+reproducibility for agreement even when the agreement gain itself is not significant;
+Section~\ref{sec:discussion} unpacks how much of that loss is mechanical.
+
+One code-specific failure shapes how the code cells must be read. On PT-CS-verified code, Qwen3.5 with
+reasoning off floors roughly half of the answers to exactly zero (47\% of the paired sample), a
+behaviour we call the \emph{zero-collapse}: it stops discriminating at the low end of the scale.
+These are genuine, parseable zeros that recur regardless of scope, and the other models do not show
+them (GLM and DeepSeek floor about 13\%). Reasoning repairs the collapse for Qwen (the zero fraction
+falls to 25\%, and the $+0.113$ gain above follows), so that gain is best read as repairing a broken
+baseline, not as evidence that reasoning helps code grading in general. Away from the collapse the
+code gains are inconsistent: significant for GPT-5.1 on RIAYN, but not for GLM or DeepSeek on either
+code dataset, nor for GPT-5.1 on PT-CS-verified code. The framework (Section~\ref{sec:framework}) therefore
+keys its code guidance on baseline behaviour rather than model identity. We saw the collapse in one
+model on one serving backend, so we treat it as illustrative rather than established.
+
+Overall, reasoning emerges from RQ1 as a conditional trade rather than a default upgrade. It improved
+agreement with teacher grades in only some model-dataset cells, always at a large and domain-dependent
+token cost, and usually at some loss of run-to-run consistency. Its one dependable use was repairing a
+model that had collapsed to zero on code; absent that, the gains were small or uncertain enough that
+turning reasoning on rarely pays for itself.
 
 \subsection{RQ2: Evaluation Guidance}
 \label{sec:rq2}
 
-\input{tables/tab_dimension_contrasts}
+\begin{figure}[t]
+\centering
+\input{figures/fig_rq2_guidance.pgf}
+\caption{Evaluation-guidance benefit per dataset: the change in agreement (dQWK, K=5, with 95\%
+confidence intervals) when the reference answer or rubric is added on top of the question and student
+answer. Qwen3.5, reasoning off. PT-CS code is the verified stratum.}
+\label{fig:rq2}
+\end{figure}
 
-Guidance helps wherever the reference is trustworthy; this contrast ran on Qwen3.5 only, and every
-claim here is scoped to it (Table~\ref{tab:dims}). Adding the reference answer raises agreement by
-$+0.162$ QWK on Mohler and $+0.238$ on SemEval; adding the rubric raises it by $+0.123$ on RIAYN
-(all significant). On full PT-CS code the rubric appears useless ($+0.005$, not significant), but
-the verified column overturns that reading: on the 295 items with evidence of teacher review the
-rubric is worth $+0.146$ (CI $[+0.10,+0.20]$), in line with RIAYN. The result is the pair of
-numbers, not the null: an unvalidated reference masked a real rubric benefit
-(Section~\ref{sec:gold}).
+Evaluation guidance adds the reference answer or rubric on top of the question and student answer;
+as a secondary axis it was measured on the baseline model (Qwen3.5) only, not crossed with every
+family (Section~\ref{sec:method}), so every claim here is scoped to it (Fig.~\ref{fig:rq2}). Adding
+the reference answer raises agreement by
+$+0.162$ QWK on Mohler ($+34$\%, each percentage relative to the no-guidance QWK) and $+0.238$ on
+SemEval ($+67$\%); adding the rubric raises it by $+0.123$ on RIAYN ($+29$\%). On PT-CS-verified
+code, the 295 items with evidence of teacher review, the rubric is worth $+0.146$ ($+46$\%, CI
+$[+0.10,+0.20]$), in line with RIAYN. All four gains are significant.
+
+Overall, evaluation guidance is a low-cost and reliable gain when the reference is sound, lifting
+agreement by 0.12 to 0.24 QWK across the public datasets and PT-CS-verified code, roughly a third to
+two-thirds above the no-guidance baseline. For the model we tested, the practical reading is simple:
+add a trustworthy rubric or reference answer whenever one exists.
 
 \subsection{RQ3: Scope and Decomposition}
 \label{sec:rq3}
 
-Neither exam-level scope nor criterion-level decomposition improved agreement, and both effects are
-small (Table~\ref{tab:dims}). Grading a whole exam in one call instead of question by question moves
-agreement by $-0.033$ QWK (CI $[-0.10,+0.03]$, N=252 paired questions; verified column $-0.060$ at
-77, also not significant). Not significant does not mean equivalent: we ran no equivalence test, and
-the interval allows effects in either direction, so the honest reading is that no harm was detected
-at this sample size, not that the two scopes are interchangeable. Scoring criterion by criterion
-instead of holistically yields $-0.043$ (CI $[-0.08,-0.01]$, significant, N=737), an effect that the
-verified column weakens to $-0.022$ (not significant at 295): a small, gold-sensitive penalty, not a
-robust harm. Both contrasts are scored against the final grade, per the design decision not to trust
-per-criterion human scores as ground truth.
+A grade can be requested in more than one shape. Scope is whether the whole exam is graded in one
+call or one question at a time; decomposition is whether each answer gets a single holistic score or
+is scored criterion by criterion. In both, the model is shown the same
+criteria; criterion-by-criterion scoring simply asks it to score each criterion separately and sum them,
+instead of giving one holistic score. We compare each shape against the baseline, which scores
+one question at a time with a single holistic score, on PT-CS-verified code (Fig.~\ref{fig:rq3}).
+
+\begin{figure}[!ht]
+\centering
+\input{figures/fig_rq3_scope_decomp.pgf}
+\caption{Scope and decomposition contrasts on PT-CS-verified code (dQWK, K=5, with 95\% confidence
+intervals): the change in agreement from grading question by question to grading the whole exam in one
+call, and from holistic to criterion-by-criterion scoring. Below zero means the alternative scored
+worse than the baseline. Qwen3.5, reasoning off.}
+\label{fig:rq3}
+\end{figure}
+
+PT-CS exams are short, about four questions each (median four, range one to six), so the whole-exam
+call grades roughly four answers in one pass. The useful question is not which shape grades best but
+whether the shape changes the grade at all: if it does not, the cheaper shape, with fewer and simpler
+calls, is the better default. These changes start from a modest baseline: question-by-question
+holistic grading reaches QWK between 0.35 and 0.47 on the verified stratum, so even a small absolute
+change is a noticeable share of it. Grading a whole exam in one call instead of question by question
+lowers agreement by $-0.060$ QWK, about 17\% of that baseline (CI $[-0.13,+0.01]$, N=77), not
+significant. Scoring criterion by criterion instead of holistically lowers it by $-0.022$ QWK, about
+5\% (CI $[-0.07,+0.02]$, N=295), not significant. Both contrasts are scored
+against the final grade, per the design decision not to trust per-criterion human scores as ground
+truth.
+
+We did not run an equivalence test, so we cannot call the shapes interchangeable, and the intervals
+still admit small effects in either direction. What is clear is that no shape bought a meaningful
+agreement gain over the baseline, and the more granular shapes, if anything, scored slightly lower.
+Overall, the way a correction is requested barely moved agreement here, so the choice can be made on
+cost rather than quality: grading the whole exam in one call is cheaper than question by question,
+and holistic scoring is cheaper than going criterion by criterion, with no agreement gain to justify
+the more expensive shapes.
 
 \subsection{RQ4: Models, Splits, and Cost}
 \label{sec:cost}
 
-\begin{figure*}[t]
+RQ4 asks how the four model families compare as graders and what each costs. We read agreement per
+dataset (Fig.~\ref{fig:perdataset}), then weigh it against cost both for the matrix as a whole and
+task by task (Fig.~\ref{fig:costquality}). The public datasets fall into two task types, short answer
+(Mohler and SemEval) and code (RIAYN), so Fig.~\ref{fig:perdataset} (per dataset) and
+Fig.~\ref{fig:costquality} (per task, with cost) are the same evidence at two grains. On the public
+datasets the open configurations sit close together (mean QWK 0.590 to 0.667 across the three
+public datasets), and the per-dataset winner changes (Fig.~\ref{fig:perdataset}): on Mohler it is
+Qwen3.5 with reasoning on (0.659), on SemEval GLM-5.1 with reasoning off (0.621), and on RIAYN GLM-5.1
+with reasoning on (0.803). GPT-5.1, the closed anchor, was graded only on smaller
+reference samples and does not outperform the open models, so we leave it unranked.
+
+\begin{figure}[!ht]
 \centering
 \input{figures/fig3_per_dataset_config.pgf}
 \caption{Agreement (QWK, K=5, item means, bootstrap CIs) by model and reasoning mode, per dataset,
@@ -130,100 +190,152 @@ on the with-guidance question-by-question cells. No configuration wins everywher
 winner changes. PT-CS is the verified stratum (N=379 items); the GPT-5.1 bars rest on 60-item
 subsets and are a reference, not a ranked competitor.}
 \label{fig:perdataset}
-\end{figure*}
+\end{figure}
 
-No model wins everywhere (Fig.~\ref{fig:perdataset}). On the public datasets the open configurations
-sit close together (mean QWK 0.590 to 0.667, Table~\ref{tab:ranktransfer}), and the per-dataset
-winner changes: on Mohler it is Qwen3.5 with reasoning on (0.659), on SemEval GLM-5.1 with reasoning
-off (0.621), and on RIAYN GLM-5.1 with reasoning on (0.803). GPT-5.1 is shown beside them on its 60-item
-subsets as a paid reference point; on that footing it does not dominate the open models on the
-public datasets (public mean 0.643 with reasoning on), and we do not rank it.
+Because SemEval's gold is a binary correct-or-incorrect label, the natural readings are accuracy and
+AUROC (the chance a correct answer scores higher than an incorrect one), which suit it better than the
+binned QWK of Fig.~\ref{fig:perdataset}. Across all SemEval items, with reasoning off, the models label
+answers correctly 0.73 to 0.79 of the time, with AUROC 0.81 to 0.85, so the grader separates correct
+from incorrect well above chance. We do not break SemEval into its seen and unseen subsets: those splits were defined for
+supervised systems relative to a training set, and our prompted models have none, so the labels do
+not mark novelty to our grader.
 
-\input{tables/tab_semeval_splits}
-
-The SemEval generalisation splits add a calibration view (Table~\ref{tab:semeval}). With reasoning
-off, accuracy is broadly stable from seen to unseen-domain and unseen-questions items (0.72 to 0.80
-across models), with AUROC between 0.72 and 0.89; the unseen-answers split is the weakest for GLM
-(accuracy 0.672). Discrimination of correct from incorrect answers therefore survives domain shift
-better than a fixed threshold might suggest, which supports reporting the splits separately.
-
-Cost closes the comparison, and it carries an operational lesson. The full final matrix (deduplicated
-by call group) cost \euro{}35.97: \euro{}10.24 on the OpenAI anchor and \euro{}25.73 on the DeepInfra
+Cost closes the comparison, and it carries an operational lesson. The full final matrix (with
+whole-exam cost counted once per call) cost \euro{}35.97: \euro{}10.24 on the OpenAI anchor and \euro{}25.73 on the DeepInfra
 open roster. Our a-priori estimate was \euro{}16.7, an underestimate of roughly 2.2 times (1.9 on
 OpenAI, 2.3 on DeepInfra), because real reasoning traces exceeded the assumed output lengths. The
 first reasoning arm had to be re-run with the token ceiling raised eightfold (4{,}096 to 32{,}768).
 Practitioners budgeting a reasoning-on grading arm should expect 2 to 3 times the naive
 token-estimate, on top of the per-call premium of Section~\ref{sec:rq1}.
 
+Two readings turn this into guidance. First, how much the configuration
+matters depends on the task: on short answers the eight configurations fall within about 0.07 QWK of
+each other, but on code they span 0.259 (Fig.~\ref{fig:costquality}). On short answers almost any
+configuration grades about as well, so the choice can be made on cost; on code the configuration is
+worth optimising, which is where reasoning and model choice earn their keep.
+
+\begin{figure}[!ht]
+\centering
+\input{figures/fig_rq4_cost.pgf}
+\caption{Agreement versus cost on the public datasets: public mean QWK against the cost of 1000 grades
+in euros (log scale), one point per model and reasoning mode. Up and to the left is better. The cheap
+open models with reasoning off (top left) match the best agreement at a fraction of the cost, while
+the closed anchor (GPT-5.1) and the reasoning-on cells cost far more without leading. Cost is taken from
+the logged per-call charges.}
+\label{fig:costquality}
+\end{figure}
+
+Second, cost separates the configurations far more than agreement, and how that plays out depends on
+the task (Fig.~\ref{fig:costquality}). On short answers cost spans two orders of magnitude
+(\euro{}0.02 to \euro{}3.8 per thousand grades) for almost no change in agreement, so the cheapest
+configuration with reasoning off is the efficient pick (DeepSeek-V4-Flash and Qwen3.5 reach about 0.61
+at \euro{}0.02 to \euro{}0.04). On code the spread tracks effort, and reasoning is what buys it: it
+lifted code agreement for every family, significantly for two of the four (Section~\ref{sec:rq1}), and
+GLM-5.1 leads at 0.726 with reasoning off (\euro{}0.36) and 0.803 with reasoning on (\euro{}1.29). For
+Qwen3.5 the code gain (0.544 to 0.754) is mostly the repair of its zero-collapse, not a general
+benefit. The closed frontier anchor never justifies its cost: GPT-5.1 is the weakest short-answer
+grader and, on code, reaches 0.787 only at \euro{}24 per thousand grades, the most expensive cell in
+the study and still below GLM-5.1.
+
+GLM-5.1 is the efficient all-rounder: with reasoning off it is already the best code grader (0.726)
+and near the top on short answers (0.619), both at trivial cost. The dependable rule is therefore
+reasoning off by default, on the cost argument that holds on every task. Reasoning earns its keep only
+on code, and conditionally: it gives the study's best cell (GLM 0.803) but that gain is not
+significant, and across families the code benefit was significant only where it repaired a collapsed
+baseline (Qwen) or on isolated cells (Section~\ref{sec:rq1}). So turn it on for code when a model
+collapses or local validation shows it pays. The next section builds exactly this into the framework,
+where cost sits alongside agreement and consistency as a first-class axis.
+
 \subsection{RQ5: Conversation State}
 \label{sec:rq5}
 
-\begin{figure*}[t]
+Grades can be shaped not only by how each answer is scored, but by how the whole grading session is
+run. This sub-study varies whether each answer is graded in its own clean conversation or inside one shared
+conversation that accumulates across the exam, and, within that shared conversation, the order in
+which answers are presented, natural or reversed. It uses PT-CS code,
+the only dataset with multi-question submissions, because the public datasets are independent single
+items with no exam to share a conversation across or to reorder. The sample is 20 submissions graded
+by two models, Qwen3.5 and GLM-5.1, with everything else held at the baseline configuration. Unlike
+the other PT-CS analyses, this one uses the full set rather than the verified stratum: it compares the
+model's grades against one another across session conditions, never against the human grade, so the
+gold's reliability does not enter and restricting to the verified subset would only shrink the sample,
+with no added reliability.
+
+\begin{figure}[!ht]
 \centering
 \input{figures/fig5_conversation.pgf}
-\caption{Conversation sub-study on PT-CS code (20 submissions, two fixed answer orders, $k=3$,
-baseline configuration), per model. Left: shared history lowers the mean normalised grade relative
-to a clean conversation (bias). Right: the mean absolute grade change when the same answer moves
-position (variance). Qwen3.5 is read under the zero-collapse caveat of Section~\ref{sec:rq1}.}
+\caption{Conversation sub-study on PT-CS code (20 submissions, $k=3$, baseline configuration), per
+model. Grading inside one shared, accumulating conversation gives lower grades than grading each
+answer in its own clean conversation, for both models.}
 \label{fig:conversation}
-\end{figure*}
+\end{figure}
 
-Conversation state biases grades; answer order adds noise (Fig.~\ref{fig:conversation}). Grading
-inside one shared, accumulating conversation makes both models stricter than grading each answer in
-a clean conversation: the mean normalised grade drops by $0.040$ for Qwen3.5 (Wilcoxon $p=.0009$)
-and $0.027$ for GLM-5.1 ($p=.003$). Reversing the answer order within a shared conversation,
-however, produces no directional effect (signed test: $p=.52$ GLM, $p=.15$ Qwen) while changing
-individual grades substantially (mean absolute change 0.098 of the scale for GLM, 0.077 for Qwen):
-position is variance, not bias. Because Qwen's zero-collapse can hide order effects (an answer
-floored at zero cannot move), GLM is the cleaner read, and it shows the larger order sensitivity.
-For deployment the sub-study points the same way, though on 20 submissions and two models it is a
-direction to confirm at scale rather than a settled result: clean, question-by-question grading was
-both the least biased and the most reproducible regime here.
+Grading inside one shared, accumulating conversation makes both models stricter than grading each
+answer in a clean conversation (Fig.~\ref{fig:conversation}): the mean grade drops by $0.040$ for
+Qwen3.5 (Wilcoxon $p=.0009$) and $0.027$ for GLM-5.1 ($p=.003$). The answer order behaves
+differently. Reversing it does not raise or lower grades on average (signed test: $p=.52$ GLM,
+$p=.15$ Qwen), but it moves individual grades: the same answer can score noticeably differently
+depending on its position, by a typical $0.098$ of the scale for GLM and $0.077$ for Qwen. So order
+is a source of noise, not a systematic bias. Because Qwen's zero-collapse can hide order effects (an
+answer floored at zero cannot move), GLM is the cleaner read.
+
+So how the session is run matters: a shared history biases grades downward, and answer order adds
+noise, while clean, question-by-question grading was both the least biased and the most reproducible
+regime here. On 20 submissions and two models this is a direction to confirm at scale rather than a
+settled result.
 
 \subsection{RQ6: Transfer to the Deployment Context}
 \label{sec:rq6}
 
-\input{tables/tab_transfer_verified}
-\input{tables/tab_ranking_transfer}
-
-Transfer is at best partial, and the small verified samples warrant a conservative reading
-(Table~\ref{tab:transfer}, Table~\ref{tab:ranktransfer}). The two public co-leaders among the open
-configurations, Qwen3.5 and GLM-5.1 with reasoning on (public mean QWK 0.667 each), are also the
-numerically top verified short-answer configurations (0.795 and 0.771), which is consistent with
-transfer at the top; reasoning helps both open families on verified short answers (Qwen 0.652 to
-0.795, GLM 0.692 to 0.771, N=84 off / 32 on). Below the top, however, the verified intervals overlap
-almost entirely (for example 0.795 [0.62,0.89], 0.692 [0.54,0.80], and 0.647 [0.46,0.78]), so the
-apparent reshuffles, GPT-5.1 with reasoning off moving from last on the public mean (0.566) to strong
-on the verified stratum, DeepSeek's off and on variants swapping, and the best verified-code
-configuration being GLM-5.1 with reasoning off (0.672 at N=295), are not statistically distinguishable
-from sampling noise at this N. The GPT-5.1 anchor's verified short-answer cells rest on 11 items, so
-they are directional corroboration only, never a ranked result; their intervals (e.g.\ 0.897,
-CI $[0.62,0.98]$) say as much. We show bootstrap intervals for the cells below 100 items, where
-sampling noise dominates; the N=295 verified-code cells are precise enough to omit them. The honest
-reading is therefore that transfer is not refuted at the top and indeterminate below it. Combined with
-the per-dataset winner changes within the public set itself (Section~\ref{sec:cost}), the prescription
-is unchanged: a strong public configuration is a good starting point, and nothing below the top is
-established firmly enough to deploy unvalidated.
-
-\subsection{The Gold Lesson: Reference Quality Changes Conclusions}
-\label{sec:gold}
-
-\input{tables/tab_gold_sensitivity}
-
-\begin{figure*}[t]
+\begin{figure}[!b]
 \centering
-\input{figures/fig6_gold_sensitivity.pgf}
-\caption{Full PT-CS versus PT-CS-verified, Qwen3.5 baseline cell. Left: the same grader scores
-0.308 QWK against the full gold but 0.468 against the verified stratum. Right: the rubric benefit is
-invisible on the full gold ($+0.005$) and substantial on the verified stratum ($+0.146$).}
-\label{fig:gold}
-\end{figure*}
+\input{figures/fig_rq6_transfer.pgf}
+\caption{Transfer of the configuration ranking from the public datasets to the deployment context,
+within each domain. Left: public short answers (mean over Mohler, SemEval) against PT-CS-verified short
+answers. Right: public code (RIAYN) against PT-CS-verified code. Each line is one configuration (a model
+with reasoning on or off); the vertical axis is agreement with the human grade (QWK, K=5). The public
+ranking is computed from the public datasets only, with PT-CS held out of it. Verified N: short answers
+32 on, 84 off; code 67 on, 295 off. The GPT-5.1 anchor is drawn thin and grey because its verified cells
+rest on 11 to 25 items, so it is directional corroboration only, never ranked.}
+\label{fig:transfer}
+\end{figure}
 
-The same model output reads very differently against the two versions of the PT-CS gold
-(Table~\ref{tab:goldsens}, Fig.~\ref{fig:gold}). Against the full, mixed-provenance gold, the
-baseline grader scores 0.308 QWK; against the verified stratum, 0.468. The rubric benefit goes from
-an apparent null ($+0.005$) to $+0.146$. The signed model-minus-gold deviation also grows in
-magnitude ($-0.192$ to $-0.269$): an unvalidated reference does not merely add noise, it pulls
-measured effects toward zero and can flip a qualitative conclusion. This sensitivity is itself a
-result of the study, and it grounds the framework's governing rule: configuration findings are only
-as good as the reference they are validated against.
+The sixth and final research question is whether the configuration guidance found on the public datasets
+carries over to a real deployment context. PT-CS, an export of a live Portuguese university grading
+platform, is that context; its grades are of uneven reliability, so the comparison uses the
+teacher-reviewed verified stratum, at reduced and declared N (Section~\ref{sec:threats}). PT-CS has
+already appeared in the earlier questions, but at the level of a single factor, asking whether reasoning,
+guidance, or scope behaves on it as on the public data. The question here is asked once and at the level
+of the whole configuration ranking: if you pick the configuration that ranks best on the public datasets,
+is it the one that ranks best in deployment? Two choices keep the comparison clean. The public ranking is
+computed from the public datasets alone, with PT-CS held out of it, so this is a genuine
+out-of-public-sample check, not a re-reading of data that drove the ranking. And the comparison is made
+within domain, public short answers against verified short answers and public code against verified code,
+so short and code are never averaged together (Fig.~\ref{fig:transfer}).
+
+The ranking is largely preserved. Across the six open configurations, the public and deployment orderings
+correlate at Spearman $\rho=0.77$ on code and $\rho=0.66$ on short answers, where 1 would be an identical
+order and 0 an unrelated one; in Fig.~\ref{fig:transfer} the lines mostly keep their vertical order, and
+the few crossings are local swaps. The evidence is firmest on code, where the public datasets spread the
+graders over 0.26 QWK and so impose a real order: GLM-5.1 is the best code grader on both the public and
+the verified data, and Qwen3.5 with reasoning off, held down by its zero-collapse (Section~\ref{sec:rq1}),
+is the worst on both. On short answers the same positive correlation rests on a weaker base, because the
+public datasets separate the six configurations by only 0.04 QWK, so the preserved order is one among
+near-ties; even so, the extremes hold, with Qwen3.5 reasoning on top and DeepSeek reasoning on last on
+both sides. The finest within-family ordering does not carry over, for example whether reasoning on or off
+is GLM's best code cell, which flips between the two (0.803 to 0.633 on, 0.726 to 0.672 off, within
+sampling noise at the verified N of 67 to 295). Absolute levels shift between contexts too, up on the
+verified short answers and down on the verified code, but transfer concerns the ordering, not the level.
+The GPT-5.1 anchor sits apart in both panels: its verified cells rest on 11 to 25 items, so it is
+directional corroboration only, never ranked.
+
+Overall, the configuration ranking transfers in the sense that matters for a decision guide: the best
+public configuration is also at the top in deployment. The match is exact on short answers, where the
+very same configuration leads on both sides (Qwen3.5 with reasoning on), and close on code, where the
+same model family leads (GLM-5.1) and its reasoning-on and reasoning-off variants score too near each
+other to separate. The rest of the order largely follows. Two honest limits bound the claim. With only six
+configurations the rank correlations do not reach statistical significance, and the finest distinctions
+between close competitors are within sampling noise at the verified N. The practical reading follows
+directly (Section~\ref{sec:cost}): a configuration chosen on the public data is a strong, transferable
+default.
+

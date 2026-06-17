@@ -1,65 +1,66 @@
-%% sections/discussion.tex -- Phase 7.1. Register: CLAUDE.md S9.2. The framework (tab_framework)
-%% is the centre; "validate locally" governs the per-axis priors. Two threads: (1) consistency
-%% sacrificed (SD x length only moderate/heterogeneous -- neither pure-mechanical nor pure-intrinsic),
-%% (2) the gold lesson. The SemEval unseen_domain observation enters LABELLED post-hoc, separate
-%% from the confirmatory RQ results.
+%% sections/discussion.tex -- Phase 7.1, rewritten 2026-06-16. Register: CLAUDE.md S9.2 (no em/en
+%% dashes as prose punctuation; one idea per sentence; numbers with meaning; paragraph openers carry
+%% the point; refer back to Results, do not re-list every number). The framework artifact is presented
+%% in its own section (sections/framework.tex, sec:framework); this section interprets the cross-cutting
+%% findings and leads into it. Avoid the word "gold" and the "nearly published" framing.
+%% (SemEval seen/unseen splits CUT 2026-06-15: do not reintroduce the unseen-domain observation.)
 
-\section{Discussion: The Configuration Framework}
+\section{Discussion}
 \label{sec:discussion}
 
-\input{tables/tab_framework}
+Read together, the six questions return one message: in LLM grading almost nothing is unconditional.
+Whether a configuration choice helps depends on the task at hand, the model's behaviour, the reliability
+of the grades used as reference, and which quality is being optimised, whether agreement, consistency, or
+cost. The paragraphs below draw the findings out along these lines and then take up what they imply for
+choosing a configuration.
 
-The study's deliverable is the decision guide in Table~\ref{tab:framework}, and its rows should be
-read as priors, not guarantees. Each row maps a task characteristic to a recommended starting
-configuration and states the trade-off inside the rule, with the supporting evidence in
-Section~\ref{sec:results}. The bottom row governs the others. Transfer was at best partial (the top public
-configuration was not refuted, but the verified samples below it could not separate the ranking from
-noise), effects were model-conditional (the reasoning gain) and gold-conditional (the rubric benefit),
-and the gains below the top were not predictable a priori. A deployment should therefore adopt the row that matches its task as a starting
-point and validate it locally, against a reference it trusts, before relying on it.
+Reasoning was the clearest conditional effect. Extended thinking improved agreement with teacher grades
+in only a minority of model and dataset cells, and it always came with a high price. It multiplied output tokens by
+between 10 and 925 times, with the premium itself depending on the domain, and in most cells it lowered
+run-to-run consistency, so the same answer scored itself less alike across repetitions. That consistency
+loss is only partly mechanical: longer outputs give a non-deterministic backend more room to diverge, but
+the link between an answer's length and its grade variability was moderate and uneven, so part of the
+loss behaves like a property of reasoning itself rather than of length alone. Even the largest agreement
+gain in the study was modest, about a quarter of a QWK point, while most cells gained little or nothing
+and a few lost ground. Such a small return rarely justified a cost this large. The one dependable
+exception was a grader whose baseline had collapsed to scoring much of the code at exactly zero; there,
+reasoning restored the discrimination the baseline had lost. This is why the advice about
+reasoning is keyed to an observable behaviour, whether the baseline collapses, rather than to a model's
+name, a choice that also lets it outlast the next model release.
 
-The code rows are keyed on observable model behaviour rather than model identity, and that choice is
-itself a finding. Whether reasoning helps a code grader depended not on the model's name but on
-whether its baseline collapsed to zero. The collapse is the one case the data explain (reasoning is
-the lever, or switch model); off the collapse, the gains were scattered across cells with no
-pattern a practitioner could anticipate. Identity-keyed advice would also age with every model
-release; behaviour-keyed advice survives it, because the diagnostic (run the cheap baseline, look at
-the grade distribution) is a one-afternoon local check. This is the framework's answer to the
-fast-moving model landscape, and it is why the unpredictability below the collapse reinforces, rather
-than weakens, the governing rule.
+Evaluation guidance was the cheapest reliable improvement we found, raising agreement by 0.12 to 0.24 QWK
+across the public datasets. The same benefit held on the teacher-reviewed subset of the deployment data,
+where the rubric helped the code grader about as much as on the public code. Providing it is the one
+configuration change in the study that reliably improved agreement.
 
-The first cross-cutting thread is that reasoning sacrifices consistency, and the loss is not fully
-explained by mechanics. A natural deflation would be that longer outputs simply give a
-non-deterministic backend more tokens to diverge on, making the inconsistency a length artefact. The
-data support that only partially: the correlation between an item's grade variability and its output
-length is moderate and heterogeneous across cells (Spearman median 0.46, range 0.11 to 0.78, weakest
-on Mohler at 0.11 to 0.28). Part of the
-consistency loss is therefore mechanical, length interacting with backend non-determinism, and part
-behaves like a property of reasoning itself; we claim neither pure story. For the grader's user the
-distinction matters less than the fact: the same answer, graded twice under identical settings,
-disagrees with itself more when the model reasons, which is why the consistency-critical row of
-Table~\ref{tab:framework} recommends reasoning off.
+How the grade was requested mattered far less. Grading a whole exam in one pass rather than question by
+question, and scoring a rubric criterion by criterion rather than holistically, barely changed agreement
+with the final grade, so these choices can be settled on cost and simplicity, with the cheaper shape the
+better default. A whole exam here is about four questions, the size of these exams; we did not test
+larger sets, so whole-exam grading should be read as a block of roughly that size rather than an
+arbitrarily long one. The way the grading session is run had a small effect of a different kind. Grading
+every answer inside one conversation that accumulated across the exam biased grades slightly downward
+relative to giving each answer a clean conversation, and the order in which answers were presented added
+variation with no consistent direction. Clean, question-by-question grading was thus both the least
+biased and the most reproducible regime, which recommends it on fairness grounds.
 
-The second thread is the gold lesson. The most consequential error in this study would have been one
-we nearly published: concluding that rubrics do not help code grading, when the null was an artefact
-of an unvalidated reference (Section~\ref{sec:gold}). The curation that prevented it cost nothing but
-honesty: a mechanical, auditable criterion (does the final grade differ from the criterion sum?)
-separated grades with evidence of human review from the rest. Institutions evaluating LLM graders on
-their own historical grades should assume that reference quality is a first-order variable, audit it
-before measuring anything, and prefer a smaller trusted reference over a larger doubtful one. For the
-assessment platform this study feeds, the design consequence is two floors: grade provenance must be
-traceable (who validated this grade?), and the grading standard itself must be calibrated, because
-validation evidence and rigour are different properties.
+Among the LLM models and configurations we tested, none graded best everywhere. On short answers the configurations clustered
+within about 0.07 QWK of one another, so the choice is nearly free and is best made on cost; on code they
+spread far more widely, about 0.26 QWK, and there the configuration is worth optimising. Across both
+tasks the open models with reasoning off were the efficient choice, GLM-5.1 most of all, while the closed
+frontier model never justified its much higher cost. The ranking learned on the public datasets carried
+over at the top: the configuration that ranked first on public data also ranked first in deployment.
+Below the top, the verified deployment samples were too small to tell the close-ranked configurations
+apart, so their relative order remained statistically indeterminate. The natural choice is therefore the
+configuration that ranks highest on public data: it is both the strongest grader there and the
+configuration whose lead carried over to deployment.
 
-One observation enters as exploratory, post hoc, and outside the pre-registered questions. With
-reasoning on, SemEval discrimination improved most on the unseen-domain split (AUROC $+0.013$ to
-$+0.039$ across all four models) while the seen and unseen-questions splits fell for the open
-models. If it replicates, it suggests reasoning helps most where surface familiarity helps least,
-which would refine the short-answer row of the framework; we flag it for confirmatory follow-up and
-build nothing on it here.
-
-For practice, the framework reduces to three habits. Start from the row that matches the task, not
-from the newest model. Measure consistency and cost alongside agreement, because two of the three
-are routinely omitted and both moved against reasoning here. And before deployment, re-run the cheap
-baseline locally: the one-afternoon check (grade distribution, agreement on a trusted sample,
-repetition variance) is what converts these priors into a defensible configuration choice.
+Taken together, these results argue for a structured set of conditional choices rather than a single
+recommended grader. The deciding factors recurred throughout the study: the task, the model's observable
+behaviour, the reliability of the reference, and the quality being optimised. Two of the three quantities
+that matter, consistency and cost, are routinely left unreported in other studies, yet both moved against
+reasoning here, so reporting agreement alone would have hidden half of what a practitioner needs to
+decide. Because the
+choices turn on observable behaviour rather than on model identity, they also do not expire with each new
+release. We therefore express the contribution not as a leaderboard but as a decision guide: a small set
+of task-keyed priors, each carrying its own trade-off. The next section presents it.

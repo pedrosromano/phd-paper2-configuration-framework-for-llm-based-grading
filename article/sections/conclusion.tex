@@ -3,21 +3,29 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We mapped the configuration space of LLM-based grading for computer science under one controlled
-protocol and condensed it into a decision guide. Three results carry the weight. Reasoning is a
+An instructor adopting an LLM grader faces several choices, not one, and prior studies addressed them
+only in fragments, with some left unstudied. We aggregated those fragments, verified them for computer-science
+grading under one controlled protocol, and condensed the result into a decision guide. Three results carry the weight. Reasoning is a
 conditional trade, not an upgrade: it bought agreement in a minority of model-dataset cells, always
 at a large, domain-conditional token premium and almost always at a consistency cost. Its one
 reliably explained success was repairing a grader whose baseline had collapsed to zero on code.
-Evaluation guidance is the cheapest reliable lever for the model we tested it on, with the caveat that
-an unvalidated reference can hide its benefit entirely. And transfer to a real deployment was at best partial, established only for the
-top configuration and indeterminate below it at the verified sample sizes. Together these justify the framework's governing rule: configuration
-priors are starting points, and the deciding measurement is local, against a reference the
-institution trusts.
+Evaluation guidance is the cheapest reliable lever for the model we tested it on. And the configuration that ranked best on the
+public data also led in deployment, so it makes a strong default, even though the verified samples were
+too small to confirm the order below the top. Together these define the framework's stance: the right
+configuration depends on the task, not on a single best grader, and by keying every prior to observable
+properties rather than to model identity, we built the guidance to outlast the models we tested.
 
-Future work follows the declared gaps. The reasoning by decomposition interaction was not measured;
-few-shot example guidance was deliberately excluded and is now justified by the strong guidance
-effect, provided it brings its own example-selection protocol; a fine-tuning arm remains open; and
-the post-hoc unseen-domain observation awaits confirmatory replication. The framework itself now
-feeds the redesign of the assessment platform that motivated it, where its two operational lessons
-(traceable grade provenance and a calibrated grading standard) become design requirements rather
-than threats.
+Future work follows from the gaps this study declares and from what the literature has yet to settle.
+Two gaps now arise in our design. Few-shot guidance, adding a few already-graded answers to the prompt
+as examples, was held out; the strong effect of the studied guidance makes it worth testing, but only with a
+principled rule for choosing the examples. And a
+fine-tuning arm remains open: fine-tuning is already competitive for grading~\cite{cong_memorization_2026},
+but it has not been placed in this framework, comparing a fine-tuned grader against its base model on
+agreement, consistency, and cost together. Three more follow from the
+literature. Code evidence rests on two Java-centric datasets because human-rubric-graded code corpora are
+scarce~\cite{havare_ai-based_2025,pathak_rubric_2025}, so widening it to other languages and paradigms,
+and contributing such data, is the clearest way to firm up the code conclusions. Transfer was shown in a
+single Portuguese deployment, so testing the priors across more institutions and student populations would
+establish how far they carry. And the low-end score collapse we found on code, where a grader floors much
+of the scale at zero, is not described in the grading literature and deserves study in its own right, both
+to detect it and to prevent it without paying for reasoning.

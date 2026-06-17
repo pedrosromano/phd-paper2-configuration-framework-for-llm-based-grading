@@ -1,0 +1,128 @@
+%% sections/framework.tex -- Phase 7.1. Register: CLAUDE.md S9.2. The configuration framework is the
+%% deliverable of the paper, given its own section (split from Discussion 2026-06-16) to foreground the
+%% artifact. Centre = tab_framework; "validate locally" governs the per-axis priors. The cross-cutting
+%% findings that justify the rows are discussed in Section~\ref{sec:discussion}.
+
+\section{The Configuration Framework}
+\label{sec:framework}
+
+\begin{figure*}[b]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\footnotesize, >={Latex[length=2mm]},
+  proc/.style={rectangle, rounded corners=2pt, draw=black!70, fill=black!6, align=center, inner sep=4pt, font=\footnotesize},
+  data/.style={rectangle, rounded corners=1.5pt, draw=black!55, dashed, fill=white, align=center, font=\scriptsize, inner sep=2.5pt},
+  dec/.style={diamond, aspect=1.4, draw=black!70, fill=black!9, align=center, inner sep=1pt, font=\scriptsize},
+  llm/.style={rectangle, rounded corners=2pt, draw=black!85, line width=0.7pt, fill=black!14, align=center, font=\footnotesize, inner sep=4pt},
+  bc/.style={rectangle, rounded corners=3pt, draw=black!60, fill=white, inner sep=4mm},
+  start/.style={circle, fill=black, draw=black, minimum size=3mm, inner sep=0pt},
+  edgelbl/.style={font=\scriptsize\itshape, fill=white, inner sep=1pt},
+  arr/.style={->, draw=black!75, semithick},
+]
+% --- one block: question, answer and guidance are all the prompt; group them in one column,
+%     and let the code/short decision pick which guidance the column carries ---
+\node[data, text width=22mm] (q) {the question};
+\node[data, text width=22mm, below=1.8mm of q] (ans) {the student answer};
+\node[data, text width=22mm, below=1.8mm of ans] (rub) {a rubric};
+\node[data, text width=22mm, below=1.8mm of rub] (ref) {a reference answer};
+\coordinate (gmid) at ($(rub.west)!0.5!(ref.west)$);
+\node[dec] (cs) at ([xshift=-16mm]gmid) {code or\\short?};
+\draw[arr] (cs.east) to[out=35,in=180] node[edgelbl,above,pos=0.55,yshift=0.6mm,inner sep=0.6pt]{code} (rub.west);
+\draw[arr] (cs.east) to[out=-35,in=180] node[edgelbl,below,pos=0.55,yshift=-0.6mm,inner sep=0.6pt]{short} (ref.west);
+\node[draw=black!45, dotted, rounded corners=2pt, inner sep=2.2mm, fit=(q)(ans)(rub)(ref)] (ctx) {};
+\node[font=\scriptsize\itshape, black!55, below=0.9mm of ctx] (ctxlbl) {prompt context};
+\node[bc, fill=none, fit=(cs)(ctx)(ctxlbl)] (block) {};
+\node[font=\scriptsize\itshape, anchor=south] at ([yshift=4mm]block.north) (blocklbl) {one block, ready to grade};
+% stack effect: peers of the front block, offset up-right, suggesting many blocks.
+% Shadows behind, then a white mask so the front block stays clean and the inputs show.
+\begin{scope}[on background layer]
+  \draw[bc, fill=black!5] ([xshift=3.2mm,yshift=3.2mm]block.south west) rectangle ([xshift=3.2mm,yshift=3.2mm]block.north east);
+  \draw[bc, fill=black!3] ([xshift=1.6mm,yshift=1.6mm]block.south west) rectangle ([xshift=1.6mm,yshift=1.6mm]block.north east);
+  \fill[white, rounded corners=3pt] (block.south west) rectangle (block.north east);
+\end{scope}
+% --- start, the exam, and the split, stacked at the left to save width (activity-diagram start node) ---
+\node[proc, left=16mm of block, text width=24mm] (split) {Split into blocks of $n$ questions};
+\node[proc, above=6mm of split] (exam) {A student's exam};
+\node[start, above=6mm of exam] (start) {};
+\draw[arr] (start) -- (exam);
+\draw[arr] (exam) -- (split);
+\draw[arr] (split.east) -- (block.west);
+% --- prompt the LLM: the call applied to the assembled block (outside it) ---
+\node[llm, right=16mm of block] (llm) {prompt the LLM\\[1pt]\tiny holistic $\cdot$ clean conversation};
+\draw[arr] (block.east) -- (llm.west);
+% reasoning is the one conditional setting of the call -> a decision above it,
+% with the two outcomes placed below the diamond so they do not overlap the block
+\node[dec, above=20mm of llm, xshift=9mm] (rdec) {code grader\\collapses to 0?};
+\node[data, below left=5mm and 6mm of rdec] (roff) {reasoning off\\\tiny(default)};
+\node[data, below right=5mm and 6mm of rdec] (ron) {reasoning on};
+\draw[arr] (rdec) -- node[edgelbl,left,pos=0.45]{no} (roff.north);
+\draw[arr] (rdec) -- node[edgelbl,right,pos=0.45]{yes} (ron.north);
+\draw[arr] (roff.south) -- (llm.north);
+\draw[arr] (ron.south) -- (llm.north);
+% --- loop and the activity-diagram final node ---
+\node[dec, right=14mm of llm, text width=13mm] (more) {more blocks?};
+\node[circle, draw=black, minimum size=4.4mm, inner sep=0pt, right=11mm of more] (end) {};
+\fill[black] (end) circle (1.1mm);
+\node[font=\scriptsize\itshape, anchor=north] at ([yshift=-1mm]end.south) {exam graded};
+\draw[arr] (llm) -- (more);
+\draw[arr] (more) -- node[edgelbl,above]{no} (end);
+\coordinate (loopbot) at ([yshift=-12mm]block.south);
+\draw[arr] (more.south) |- (loopbot) -| node[edgelbl,pos=0.25,below]{yes, next block} (block.south);
+\end{tikzpicture}%
+}
+\caption{How the recommended configuration grades an exam. The questions are split into blocks of $n$
+questions (about four in the exams we studied), graded one block per call to keep the number of calls down (the
+stack stands for the remaining blocks, run the same way). Each block assembles the input data the call needs, shown dashed: the question,
+the student answer, and the matching guidance, a rubric for code or a reference answer for short answers.
+That block is then sent to the model holistically, in a clean conversation, and the grades come back; the
+process repeats block by block until the exam is graded. Reasoning is the one conditional setting: it stays
+off by default and turns on only to rescue a grader that collapses to zero on code. The framework is
+model-independent.}
+\label{fig:frameworkdiagram}
+\end{figure*}
+
+\input{tables/tab_framework}
+
+The study's deliverable is a configuration framework for LLM-based grading: a compact decision guide
+that, for a given grading task, says which configuration to use and why. It is a small set of priors, one
+per design axis, each giving a recommended default, the trade-off that justifies it, and the condition
+that would call for a different choice. Table~\ref{tab:framework} sets out the priors with their
+evidence, and Fig.~\ref{fig:frameworkdiagram} shows how it grades an exam. They are starting points
+backed by the controlled comparisons of Section~\ref{sec:results}, not universal laws. We take them axis
+by axis.
+
+Reasoning is the axis that most repays care, and its default is off. On short answers the gain is small
+while the token cost runs up to 925 times higher, so off is the clear choice. On code reasoning does
+raise agreement, but on a model that already discriminates, one that spreads grades across the scale
+rather than collapsing them toward zero, it is not worth the cost: GLM-5.1, the strongest code grader in
+the study, gains only a small, non-significant amount from reasoning on, at several times the price, so
+off stays the efficient default. Reasoning earns its keep in only one case, rescuing a weak model that collapses to scoring much of
+the code at exactly zero, where it restores the discrimination the model had lost. Even there, switching
+to a model that discriminates is the better fix.
+
+The other axes resolve into simpler priors. Evaluation guidance is the one change that reliably helped, so
+a trustworthy rubric or reference answer should be supplied whenever one exists. Grading scope did not
+move agreement, so it is settled on efficiency: grade in blocks of a few questions rather than one at a
+time, because each request carries a fixed overhead, so fewer and larger calls run faster and cost less, a
+difference that compounds across a whole cohort. Scoring a rubric criterion by criterion did not
+reliably change agreement with the final grade, so holistic scoring, which is also
+cheaper, is the default. The grading
+session should be kept clean, each answer scored on its own, because a shared conversation that accumulated
+across the exam biased grades downward and answer order added noise, while clean grading was the most
+reproducible regime. For the model itself, the cheapest one that discriminates is the efficient choice: an
+open model with reasoning off matched the best agreement at a fraction of the cost, and the closed frontier
+model never justified its much higher price.
+
+Two design decisions give the framework its reach. First, the rows are keyed on
+observable properties, whether the baseline collapses and whether a trustworthy reference exists, rather
+than on model identity, so the guidance does not expire when a new model appears. Second, the guide treats consistency and cost
+as first-class alongside agreement, because both moved against reasoning here and a recommendation made on
+agreement alone would have pointed the wrong way. The two artifacts play complementary parts:
+Fig.~\ref{fig:frameworkdiagram} shows the grading process the priors prescribe, and
+Table~\ref{tab:framework} is where each choice is backed by its trade-off and the evidence behind it.
+
+In practice the guide is a short, confident routine. Pick the cheapest model that discriminates (GLM-5.1
+was the efficient all-rounder), and grade with reasoning off, a trustworthy rubric or reference where one
+exists, in blocks rather than one question at a time, with holistic scores and a clean conversation per
+answer.

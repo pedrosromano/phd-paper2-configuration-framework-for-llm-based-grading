@@ -42,7 +42,7 @@ whole study and the Results structure):
 - **RQ5 (sub-study).** Does **conversation state** (clean vs shared history) affect consistency/fairness?
 - **RQ6 (transfer — PARTIAL, demonstrated at reduced N).** Does the configuration guidance found on public
   datasets **transfer** to a real Portuguese deployment context (PT-CS-verified, the curated intervened
-  stratum, §2.3/§11)? **Rewritten (2026-06-11; supersedes both the "illustrative" and the "ranking-inversion"
+  stratum, §2.2/§11)? **Rewritten (2026-06-11; supersedes both the "illustrative" and the "ranking-inversion"
   framings):** transfer is **partial and heterogeneous** — the public top open config (qwen3.5|on,
   statistically tied with glm-5.1|on) is **also the verified short-answer winner**, but the **mid-ranking
   shuffles** (gpt-5.1|off: last on public, strong on verified; deepseek on/off flips), the **per-dataset winner
@@ -87,15 +87,12 @@ ref from planning that could not be confirmed in TLT — do not cite it; see `re
 
 These are not features; they gate submission. Keep them visible and track them as tasks.
 
-1. **Conflict of interest.** The author owns and built GradeGenie, the source of the PT-CS dataset and
-   the target of Article 3. A COI statement **must** appear in the paper. Never present GradeGenie-produced
-   grades as independent human ground truth without the framing in §5.
-2. **Ethics / GDPR (Iscte).** Secondary use of real student answers for research requires a legal basis,
+1. **Ethics / GDPR (Iscte).** Secondary use of real student answers for research requires a legal basis,
    a likely Iscte ethics committee opinion, and **pseudonymisation** of the study set. The processed
    dataset **must not** contain `nome`, `email`, `password`, `reset_token`, or any direct identifier.
    This is a parallel workstream starting now, not at submission time. **Gate:** PT-CS experiments and any
    data release must not proceed **to publication** before the legal basis / ethics opinion is confirmed.
-3. **Ground-truth honesty — PT-CS gold has LIMITED, HETEROGENEOUS reliability (revised 2026-06-10, do NOT
+2. **Ground-truth honesty — PT-CS gold has LIMITED, HETEROGENEOUS reliability (revised 2026-06-10, do NOT
    over-claim).** The earlier "two-teacher consensus, human-validated" premise is **OVERSTATED** for much of
    PT-CS. Reality (author, 2026-06-10): PT-CS comes from a **lower-rigour requalification course** (grades
    possibly inflated — flagged as a threat, **not** a finding: the quantitative proxy is weak/unconfirmed and the
@@ -115,7 +112,7 @@ These are not features; they gate submission. Keep them visible and track them a
    over, the mid-ranking does not — see §1.2 RQ6, corrected 2026-06-11). The framework rests on
    the public datasets and does not depend on PT-CS gold; the conversation sub-study measures model behaviour
    and is gold-independent.
-4. **No circularity.** Data used to *evaluate* configurations in Article 2 must stay conceptually separate
+3. **No circularity.** Data used to *evaluate* configurations in Article 2 must stay conceptually separate
    from the GradeGenie *system* evaluated in Article 3. Do not validate an improved GradeGenie against
    grades a previous GradeGenie helped produce.
 
@@ -196,7 +193,7 @@ public code datasets PT-CS is one of the most complete; short-answer has strong 
 
 | Dataset | Domain | Lang | Size (approx) | Gold | Notes / role |
 |---|---|---|---|---|---|
-| **PT-CS** (GradeGenie export) | code (Java) + theory | PT | ~738 code / ~437 theory | final per-question grade (`cotacao`), normalised by `pergunta.cotacao` | rubric JSON; **no reference solution**; gold is **mixed-provenance, limited/uneven reliability — see §2.3** (where intervened: consensus correction of AI-seeded suggestions); stratified → **PT-CS-verified**. **Primary code; transfer (verified stratum)** |
+| **PT-CS** (GradeGenie export) | code (Java) + theory | PT | ~738 code / ~437 theory | final per-question grade (`cotacao`), normalised by `pergunta.cotacao` | rubric JSON; **no reference solution**; gold is **mixed-provenance, limited/uneven reliability — see §2.2** (where intervened: consensus correction of AI-seeded suggestions); stratified → **PT-CS-verified**. **Primary code; transfer (verified stratum)** |
 | **Rubric Is All You Need** (OOP+DSA) | code (Java + DSA) | EN | 149 ingested (~230 in source) | two graders collaboratively (consensus) | public (GitHub); question-specific rubrics. **Public code comparator (external validity)** |
 | **Mohler** | short-answer (CS) | EN | ~2,273 ans / 80 q | mean of 2 graders, 0–5 | public; question + reference answer. **Primary short-answer** |
 | **SemEval-2013 Task 7** (SciEntsBank + Beetle) | short-answer (science) | EN | ~13k facets | 2/3/5-way labels | public; reference; **unseen-answers / unseen-questions** splits. **Development** |
@@ -283,9 +280,11 @@ rationale: `experiments/model_roster.md`. This supersedes the inherited/stale ro
 ### 6.2 Metrics
 - **Agreement:** QWK (binned for continuous PT-CS scores — binning strategy TBD §11), Cohen's κ, Spearman/Pearson r.
 - **Error:** MAE, RMSE on normalised 0–1 score.
-- **Classification (SemEval labels):** accuracy, macro-F1 (2/3/5-way).
+- **Classification (SemEval binary labels):** pooled accuracy + AUROC at the fixed-0.5 cutoff. **Per-split
+  reporting CUT (2026-06-15)** — the seen/unseen splits are not a valid generalisation axis for zero-shot
+  prompted models (see §11); 2/3/5-way labels unused.
 - **Consistency:** SD/variance across k, ICC. (Needs no ground truth — a clean axis regardless of the
-  reference; PT-CS gold reliability is limited/uneven — see §2.3 — but consistency does not depend on it.)
+  reference; PT-CS gold reliability is limited/uneven — see §2.2 — but consistency does not depend on it.)
 - **Operational:** tokens; **cost — € for paid models, wall-clock/compute for local** (define per model class,
   don't conflate); latency; throughput. The headline reasoning premium must state **which** cost metric — and
   it is **measured on `completion_tokens`** (Phase 4 found it **far larger than the old ≈5–10× guess**: ON
@@ -424,8 +423,8 @@ written before the results exist — do not produce 4 pages of review that later
 
 ### 9.2 Writing register (binding for all paper prose)
 The paper is written for **human reviewers and readers, not for maximum information density**. Target register:
-a good TLT paper — technical, precise, and **readable at normal speed** by a researcher in an adjacent area
-(learning analytics, EDM) who does not work on LLM-grading specifically.
+a strong journal paper in the target venue, technical, precise, and **readable at normal speed** by a
+researcher in an adjacent area who does not work on this exact topic.
 
 **Rules:**
 - **Acronyms & technical terms — three tiers of explanatory load:**
@@ -433,24 +432,116 @@ a good TLT paper — technical, precise, and **readable at normal speed** by a r
   - **Tier B** (field-standard but interpretation-dependent — QWK, ICC, MAE, AUROC, macro-F1): expand at first
     use **plus one light clause** saying what it measures and how to read it. One clause, not a paragraph — the
     reader knows the family, we are calibrating the instrument.
-  - **Tier C** (project-specific or uncommon — the 0-collapse, the verified stratum, π extractable-rate,
-    "tractable items"): **one full plain-language sentence** defining it at first appearance, before it is ever
-    used as shorthand.
-  - **Never invent acronyms for project-internal concepts** (no "PVR" for PT-CS-verified — write it out;
-    "PT-CS-verified" after introducing it once is fine). When in doubt about the tier, **go one tier heavier** —
-    the cost is a clause; the cost of the alternative is a reviewer who cannot read the results.
+  - **Tier C** (project-specific or uncommon — a coined phenomenon name, a curated data subset, a custom
+    metric): **one full plain-language sentence** defining it at first appearance, before it is ever used as
+    shorthand.
+  - **Never invent acronyms for project-internal concepts** (do not coin an acronym for a multi-word project
+    term, write it out; a short descriptive name, used consistently after introducing it once, is fine). When in
+    doubt about the tier, **go one tier heavier** — the cost is a clause; the cost of the alternative is a
+    reviewer who cannot read the results.
+- **Gloss anything a reader stops on, and prefer the ordinary word.** The acronym tiers extend to *any* term a
+  non-specialist could pause over: statistical vocabulary (significance, a multiple-comparison correction,
+  pooling, a stratum, a robustness check) and project-specific descriptive labels both get a one-clause plain
+  gloss at first use or are rewritten in plain words. If a phrase keeps prompting the question "what does that
+  mean?", that is the signal to **rewrite it, not to defend it**. Between two accurate words, choose the
+  ordinary one over the stiff or rare one (e.g. "cautiously" over "tentatively").
 - **Sentence load:** one idea per sentence as the default. If a sentence needs three qualifications, the
   qualifications likely belong in the **threats/limitations** section, not inline — state the claim cleanly and
   point to where it is scoped.
-- **Numbers in prose:** a number appears **with its meaning**, not alone ("agreement rose by 0.17 QWK
-  (0.44 → 0.61)" — not a bare "+0.170 (N=67, all-intervened)" mid-sentence; the bases live in **table notes**).
+- **Numbers in prose:** a number appears **with its meaning**, not alone ("agreement rose by 0.17, from 0.44
+  to 0.61" reads; a bare "+0.170 (N=67)" dropped mid-sentence does not; sample sizes and other bases live in
+  **table notes**).
 - **Paragraph openers carry the point:** a reader who reads only the first sentence of every paragraph should
   follow the argument of the section.
 - **Punctuation:** **avoid em dashes and en dashes as prose punctuation** (the long dash used for asides or
   emphasis). Use commas, colons, parentheses, or separate sentences instead. This applies to **all paper prose,
   including the abstract, captions, and table notes**. Hyphens in compound words (state-of-the-art,
-  question-by-question) and minus signs or ranges in math and tables (dQWK of -0.043, pages 4-7) are fine and
-  not covered by this rule.
+  question-by-question) and minus signs or ranges in math and tables (a delta of -0.043, pages 4-7) are fine
+  and not covered by this rule.
+- **Section structure — each section type has its own job; do not leak content across them.** The single most
+  important discipline: **a finding appears only in Results (and is interpreted in Discussion).** Do not preview
+  results, numbers, or verdicts in the Introduction or Method, and do not introduce new method detail in
+  Results. Each section does its own work and only its own work.
+  - **Introduction — motivation and the question, never the answer.** State the problem, the gap, the research
+    questions, and the contribution *claims at the level of "we study/deliver X"*; do **not** report what was
+    found (no result numbers, no "we show that reasoning helps"). It says *what the paper does and why it
+    matters*, then hands off.
+  - **Method — how the experiments were run, never how they turned out.** Describe the design space, datasets,
+    harness, protocol, metrics, and statistics so the study is reproducible. No results, no interpretation, no
+    "as we will see". Define instruments here (Tier-B/C calibration of metrics belongs at first use, which is
+    usually Method).
+  - **Results — the setup→evidence→verdict arc, per subsection:**
+    - **Never put the conclusion in the heading.** Headings name the *topic*, not the finding (name the factor
+      under study, not the verdict about it). The reader reaches the verdict by reading, not by reading the
+      title.
+    - **Never open a subsection with its label or a bare claim.** Do not start with the research-question label
+      ("RQ N asks…") or with the answer stated flat. Open with the **substance**: what the thing under test
+      *is*, what is being compared, and against what baseline, pointing to the figure/table. The first paragraph
+      sets up the comparison neutrally.
+    - **Put the verdict in a closing paragraph that opens with "Overall, …"** (a light semi-conclusion). State
+      the finding once, cleanly, with its practical reading, and only there. Cadence: set up → evidence →
+      "Overall, …".
+    - **Paragraph openers carry the argument:** a reader skimming first sentences gets setup, then evidence,
+      then the "Overall" verdict, in that order.
+  - **Discussion — interpretation and synthesis, not a re-listing of results.** Pull the threads together into
+    the framework/implications; refer back to Results rather than repeating its numbers.
+- **Evidence presentation — comparison over enumeration, figures over dense tables:**
+  - **Privilege a comparative reading, not a data dump.** The job of a results subsection is to *compare* (this
+    config vs that, with effect size + CI) and say what it means, not to recite every cell. If a table merely
+    re-lists what a sentence or figure already says, cut it.
+  - **Prefer the right chart to a dense table.** When the point is a comparison of magnitudes or a trade-off,
+    a well-chosen figure (bars with CIs, a trade-off scatter) reads faster than a wide numeric table. Choose the
+    chart type for the message; do not default to a table because it is easier to generate. Reserve tables for
+    reference material a reader will look values up in, not for the headline comparison.
+  - **One figure, one message.** If a panel has no level difference to show, do not plot it (state it in prose);
+    a chart that "transmits no information" is worse than a sentence.
+  - **Place the figure at its reference.** A figure should sit on or near the page (and, where it matters, the
+    column) where it is first cited. Prefer **inline single-column** figures so they flow with the text; only
+    promote to a full-width (`figure*`) float when the content genuinely needs the width. Keep captions readable
+    on their own (Tier-B/C terms calibrated) but trim caption text that only describes a panel you removed.
+- **Neutral provenance for generated artifacts.** Describe figures and tables as **built from the experiment
+  values** (e.g. "created from the run data", "computed from the logged outputs"), not as "generated by the
+  analysis script / the code that analysed X". The reader cares that the numbers come from the experiments, not
+  about the tooling. (Reproducibility/engine-backed-numbers discipline still applies behind the scenes; it is
+  just not the register of the prose.)
+- **Naming is a scientific claim, not a label.** Name things by what is *true*, not by what is convenient: pick
+  the term that denotes the actual contrast under study, not a loose synonym that happens to be handy but
+  describes a different axis. If explaining a phrase takes piece-by-piece unpacking, the phrase is wrong:
+  rewrite the idea plainly instead of defending the wording.
+- **Do not overclaim, and align prose with the synthesis.** Results prose must not assert more than the tables
+  show (a non-significant gain is not "X helps"); and it must agree with the paper's own framework/decision
+  table. When a clean-sounding rule contradicts the evidence or the framework, state the honest, conditional
+  rule instead, even if it is less catchy. **Any statement of *how* results are reported** (which subset,
+  metric, or basis is primary, and which is a robustness check) **must match what the tables and figures
+  actually do** — verify the prose against the artifacts, do not describe an intended reporting rule the
+  tables do not follow.
+- **Limitations belong in one place and must not sap the contribution.** State each limitation **once**, in the
+  threats/limitations section, not as a recurring caveat threaded through Results, Discussion, and Conclusion;
+  a weakness repeated in every section reads as the paper's headline and quietly removes its own relevance.
+  The limitations section **leads with containment** (why the limitation does not reach the main conclusions),
+  then states each limitation crisply, one per sentence, without wandering into mechanism or mitigation detail
+  that belongs in Method. Open it on the strongest reassurance, not the deepest fear.
+- **Describe cited work only as it actually reports.** Every claim about what a reference did or found must be
+  **checkable against that source**: verify it against the abstract or paper before writing it, not from memory
+  or a secondary note, and never characterise a reference beyond what it reports. A misattributed method or
+  result is a correctness error, not a wording one. This applies with full force to *future work*, where the
+  temptation to contrast "unlike prior work, we will…" invites misstating what prior work did.
+- **The Conclusion closes the loop the Introduction opened.** A reader going straight from introduction to
+  conclusion should feel continuity: open the conclusion by **returning to the problem the introduction framed**,
+  not with an abrupt cold restatement, and let the two be readable back to back. End on strength: the last
+  sentence of a section carries its contribution or takeaway, so **cut closing sentences that add no
+  information**.
+- **Future work separates internal gaps from open questions in the field, and never proposes work already done.**
+  Distinguish what *this study* left open (declared design gaps) from what the *literature* has not settled;
+  check each proposed direction against prior work and drop or reframe any already addressed, citing to show the
+  awareness. A "gap" that is not a genuinely interesting next step is not future work; cut it.
+- **Reference and decision tables: make every row self-contained.** When cells wrap to several lines, separate
+  rows with a rule or vertical space so a wrapped line is never mistaken for a new row; give the first column a
+  header that names *what the rows are keyed on* (not a vague "Item / context"); left-align prose columns rather
+  than justify them; keep each cell to its one point and its key number.
+- **A figure is graphical, not a container for prose.** Represent the content as nodes, arrows, decisions, and
+  short labels, with consistent visual styles for inputs, decisions, and processes; explanatory sentences belong
+  in the caption or the body, never as paragraphs inside the figure.
 - **Test:** before any section is declared done, re-read it asking **"would a tired reviewer follow this on
   first pass?"** — if a sentence requires re-reading, rewrite it. **Density is not rigor**; the rigor lives in
   the tables, the engine, and the threats.
@@ -559,7 +650,7 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   datasets, 5.5b can compare it on PT-CS. (Whole-exam/criterion/conversation are additionally PT-CS-only by
   design.)
 - ✅ **PT-CS gold reliability — STRATIFIED (Phase 5, 2026-06-10), RQ6 = partial transfer at reduced N** —
-  PT-CS gold is mixed-provenance, limited reliability (§2.3). Stratified by intervention evidence (`cotacao`
+  PT-CS gold is mixed-provenance, limited reliability (§2.2). Stratified by intervention evidence (`cotacao`
   vs Σ`nota_parcial`, re-queried READ-ONLY from the DB → `data/processed/_ptcs_strata.parquet`): of 1184
   responses, only **32.3% INTERVENED** (final ≠ sum, human moved it; mean adjustment 1.43), **33.2% exact-sum**
   (suspected unreviewed), **34.5% no-criteria** (unassessable). **Two-thirds lack evidence of human review.**
@@ -594,6 +685,37 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   comparisons and transfer: verified only**; **(iii) figures stay verified-only** with captions stating the
   stratum; the full-vs-verified **SENSITIVITY remains itself a result** ("non-validated gold distorts: QWK
   0.31→0.47, and masks real effects: rubric +0.005→+0.146"). State the stratum + N in every caption.
+  - **VERIFIED-ONLY THROUGHOUT (2026-06-17, user-ratified) — SUPERSEDES the hybrid rule above for the paper.**
+    Every PT-CS *agreement* result in the paper now uses the **PT-CS-verified** stratum: RQ1 reasoning, RQ2
+    guidance, RQ3 scope/decomposition, RQ4 per-dataset, RQ6 transfer, all figures, and the framework table
+    (guidance +0.146, decomp −0.022, scope −0.060, collapse-repair Qwen +0.113, premium 94--192×). The full
+    dataset no longer appears in the Results/Method/Threats prose — the "full-N primary + V column" wording was
+    removed from `method.tex`, the results preamble, and `threats.tex`, and no V column appears in any in-paper
+    table. **Consequences ratified:** (a) the RQ1 PT-CS-short reasoning cells **GLM +0.220 / GPT +0.208 (full,
+    sig) drop to ns** on verified (−0.022 @N=32 / +0.021 @N=11); the surviving significant reasoning cells are
+    Qwen on Mohler/SemEval/RIAYN/PT-CS-verified-code (+0.113) and GPT on RIAYN (+0.192); "Qwen sig on 4/5" still
+    holds. (b) the **gold-artifact contrast (+0.005 full → +0.146 verified) was REMOVED from RQ2** — verified
+    +0.146 now stands alone as the guidance result, so the 2026-06-16 note below ("already shown in RQ2") is
+    **STALE**: the artifact is now shown nowhere. (c) the premium in `make_phase5_tables.py` is computed on the
+    intervened stratum for PT-CS (public datasets unchanged), so the framework discrim-code range moved 116→94
+    at the low end; `tab_rq1_reasoning`/`tab_dimension_contrasts` still carry both bases but are NOT in the
+    paper. Rationale: verified is the honest basis (the full PT-CS numbers were on unreliable gold), and it
+    removes the dataset-defence framing the author has consistently cut. The conversation sub-study stays
+    gold-independent (all 20 submissions, no stratum).
+  - **Gold-sensitivity SUBSECTION + table + figure CUT from the paper body (2026-06-16, user-ratified).**
+    Rationale: a full results subsection ("Sensitivity to Reference Quality") plus `tab_gold_sensitivity`
+    and the full-width `fig6_gold_sensitivity` spent disproportionate space **defending the dataset** rather
+    than **building the framework**, and the one framework-relevant point (an unreliable reference hides real
+    effects) was **redundant** — the rubric artifact (+0.005 full → +0.146 verified) is already shown in RQ2
+    and its figure. **Now:** one short paragraph inside **RQ6 (sec:rq6)** carries the lesson with the key
+    numbers (QWK 0.308→0.468 full→verified; rubric +0.005→+0.146; the framework's "validate against trusted
+    gold" rule); the **gold-reliability threat stays in §Threats** (the −0.19→−0.27 deviation now inlined
+    there, no table). The numbers stay **engine-backed**: the former `tab_gold_sensitivity` block in
+    `make_phase5_tables.py` still recomputes them and **prints them as an audit line** (no table emitted);
+    `phase6.fig6` was removed and its `.pgf`/`.pdf` deleted. The deviation metric (the weakest, near-circular
+    "verified = better gold" claim) is **dropped from the RQ6 prose** and kept only as the conservative-proxy
+    threat. Do NOT reintroduce the subsection/figure; if a numeric exhibit is ever needed, git-restore the
+    `_tex` call or read the audit print.
   - **Transfer framing (updated 2026-06-11):** stated via the **open models (N=84 OFF / 32 ON, declared)** —
     reasoning helps them on verified short-answer (qwen .652→.795, glm .692→.771); **ranking transfer is
     partial** (the top carries over, the below-top shuffles — `tab_ranking_transfer`). **The GPT-5.1 anchor is
@@ -646,12 +768,21 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ✅ **QWK binning** (Phase 5, 2026-06-10) — bin the **normalised** 0–1 score into **K = 5** ordinal levels
   (0..5, 6 bins ≈ Mohler's native 0–5, so QWK is comparable across datasets); fixed a priori, with a
   **sensitivity over K∈{4,5,6}** reported. See Phase 5.0.
-- ✅ **SemEval score→label + splits** (Phase 5 review, user 2026-06-10) — the model emits a continuous 0–1
+- ✅ **SemEval score→label** (Phase 5 review, user 2026-06-10) — the model emits a continuous 0–1
   score; SemEval gold is a **binary 2-way label** (correct/incorrect; gold_score 0/1). Map with a **fixed
-  threshold 0.5** on the normalised score — **NOT data-tuned** (would be circular). Report accuracy + macro-F1
-  **per split separately**: seen / unseen_domain / unseen_q / unseen_ans (distinct generalisations; never
-  grouped). **Also** report threshold-free MAE/Spearman of the continuous score vs the 0/1 gold. (3/5-way
-  labels unused — model wasn't asked for them.)
+  threshold 0.5** on the normalised score — **NOT data-tuned** (would be circular). Report accuracy + AUROC
+  (threshold-free MAE/Spearman also available). (3/5-way labels unused — model wasn't asked for them.)
+- ⛔ **SemEval seen/unseen SPLITS — CUT (2026-06-15), do NOT reintroduce as a generalisation claim** (user
+  decision, option B). The SemEval-2013 Task 7 splits (seen / unseen_ans / unseen_domain / unseen_q) were
+  defined for **SUPERVISED** systems **relative to a training set**. Our models are **prompted, zero-shot,
+  with no training set**, and the reference answer is provided in every split (no few-shot), so the splits
+  **do not denote novelty/familiarity to our grader** — to a zero-shot LLM the four groups are just different
+  content subsets, not a train→test shift. The earlier per-split table (old Table IV) and its framing
+  (`generalisation`, `domain shift`, `holds up as material gets less familiar`) were **over-claiming and are
+  removed**. Results now report **only pooled SemEval accuracy/AUROC** (acc 0.73–0.79, AUROC 0.81–0.85 across
+  models, off, with_guidance) plus one sentence stating why we do not split. `phase5.semeval_splits()` is kept
+  for audits but **must not** be turned into a generalisation result. **Future writing: never frame SemEval
+  splits as generalisation/domain-shift for these models.**
 - ✅ **Consistency = first-line RQ1 result** (Phase 5 review, 2026-06-10) — the Phase-4 data shows reasoning
   ON **reduces** k-consistency (even at temp=0, where 10–43% of items still vary — backend-conditional). So
   **RQ1 has two dimensions that can diverge: agreement vs consistency** — analysed as a headline (5.3/5.5a),
@@ -759,12 +890,43 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   (loaded by `experiments/harness/env.py`), never committed.
 - ⬜ **Statistical model** — paired tests for reasoning on/off; mixed-effects vs ANOVA for the factorial;
   multiple-comparison correction.
-- ✅ **5.8 emergent observations (Phase 5 close, 2026-06-10)** — the gate (log unexpected patterns, promote
-  only with sign-off, label exploratory/post-hoc) holds **one** item: **reasoning ON improves SemEval
-  generalisation to NEW domains more than seen** (AUROC unseen_domain rises most with reasoning) — exploratory,
-  not pre-registered. **Verified 2026-06-11 under the corrected with-guidance-only filter** (the original
-  semeval_splits pooled Qwen's no-guidance rows — fixed): the pattern HOLDS across all 4 models — unseen_domain
-  AUROC rises off→on (+0.013…+0.039) while seen/unseen_q fall for the open models. **NOT emergent (these were
-  pre-registered RQs → confirmatory):** the partial ranking transfer (RQ6, corrected 2026-06-11) and the rubric
-  "non-transfer" (RQ2, now resolved as a PT-CS-gold artifact). The `unseen_ans` ON split (N 27–30) is noise —
-  not interpreted.
+- ⛔ **5.8 emergent observation — WITHDRAWN (2026-06-15)** — the one exploratory item was "reasoning ON
+  improves SemEval generalisation to NEW domains more than seen (AUROC unseen_domain rises most off→on)". This
+  is **withdrawn as uninterpretable**: it rests on the seen/unseen split semantics, which **do not apply to our
+  zero-shot prompted models** (splits defined relative to a supervised training set we do not have — see the
+  SemEval-splits CUT item above). With the splits invalid as a novelty axis, "rises most on unseen_domain" is
+  just reasoning helping on one content subset, with no generalisation meaning. **Do not promote or revive it.**
+  The pre-registered, confirmatory results are unaffected (partial ranking transfer RQ6, rubric "non-transfer"
+  RQ2 = PT-CS-gold artifact). After this withdrawal the 5.8 emergent-observations gate holds **no** items.
+- ✅ **Percent-of-baseline readings in Results prose (Phase 7, 2026-06-15)** — the RQ1, RQ2 and RQ3 sections
+  quote each effect as a **percentage of its baseline** (RQ1: dQWK / reasoning-OFF QWK per cell; RQ2: guidance
+  dQWK / no-guidance QWK per dataset; RQ3: contrast dQWK / question-by-question-holistic QWK), a relative-magnitude
+  reading that is **NOT in any generated table/figure** (those carry absolute dQWK + CIs). These prose numbers are
+  **regenerated and auditable** via `experiments/analysis/audit_pct_baselines.py` (reuses the table generator's
+  `_qwk_items`/`_boot_ci`, K=5, same SEED, so the dQWK matches `tab_rq1_reasoning`/the RQ2/RQ3 figures; % divides
+  the **bootstrap-median dQWK** the prose quotes by the **point QWK baseline**). Current values: RQ1 Mohler +11%,
+  SemEval +18%, RIAYN +45%, PT-CS code +41% (verified +23%), PT-CS short Qwen +28% / GLM +59% / GPT +50%, RIAYN
+  GPT +32%; RQ2 Mohler +34%, SemEval +67%, RIAYN +29%, PT-CS code +2% (verified +46%); RQ3 scope −12%/−17%
+  (full/verified), decomp −14%/−5%. **High % on low/depressed baselines is expected** (PT-CS code RQ1 +41% rides
+  the zero-collapse-deflated OFF baseline 0.33 — consistent with the "recovery of a broken baseline" framing, not
+  a separate claim). Re-run the script if any of these prose % change.
+- ✅ **RQ4 reframed as cost-efficiency + new BY-TASK cost-quality figure (Phase 7, 2026-06-15)** — the old RQ4
+  close ("no configuration wins, choose on cost") read as an anticlimax; replaced with two grounded, **per-task**
+  conclusions (the pooled-public version was an intermediate step, superseded so prose matches the figure):
+  **(i) spread** — on short-answer the 8 configs fall within ~0.07 QWK, on code they span 0.259, so short-answer
+  = pick cheapest, code = worth optimising; **(ii) cost-efficiency, by task** — short-answer: cost spans 2 orders
+  of magnitude (€0.02–€3.8/1000) for ~no agreement change and **reasoning does not help (slightly hurts)**, so
+  cheapest-off wins (DeepSeek/Qwen off ~0.61 @ €0.02–0.04); code: effort pays, **GLM-5.1 leads (0.726 off @
+  €0.36, 0.803 on @ €1.29)**, reasoning repairs Qwen's code 0-collapse (0.544→0.754), and **GPT-5.1 is dominated**
+  (weakest short-answer; on code 0.787 only at €24/1000, the priciest cell, still below GLM). New **two-panel**
+  single-column figure **`fig_rq4_cost`** (`fig:costquality`, QWK vs €/1000 grades, log x, panels short-answer |
+  code, shared y) in `experiments/figures/phase6.py`; cost from logged `cost_eur` (NB: matplotlib pgf has no
+  eurosym, so the axis label says "EUR", the caption uses €). Per-task prose numbers regenerate via
+  `experiments/analysis/audit_pct_baselines.py::rq4`. **€ figures stay backend-conditional (§6.4).**
+  **RECONCILED RULE (do NOT write "on for code" as a default):** the RQ4 close and the framework agree on
+  **reasoning OFF by default** (cost holds on every task); reasoning earns its keep **only on code, and
+  conditionally** (it repairs a collapsed baseline, or local validation shows it pays). The clean "off for
+  short, on for code" was considered and **rejected** because the code reasoning gain is **not significant** for
+  the discriminating models (GLM +0.077 ns, DeepSeek ns; significant only via Qwen's collapse-repair and
+  GPT$|$RIAYN) and would contradict `tab_framework`. **NAMING (2026-06-15): GPT-5.1 is the "closed"/frontier
+  anchor, never "paid"** (DeepInfra is paid too; the scientific contrast is open-weight vs closed).

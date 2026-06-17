@@ -8,56 +8,62 @@
 \label{sec:related}
 
 Automated grading is a long-standing concern of the learning-analytics and educational-data-mining
-communities. There it is valued less as a stand-alone scoring engine than as an assessment \emph{tool}
-that must be reliable, transparent, and fair before it can scale formative or summative feedback. A prior
+communities~\cite{putnikovic_embeddings_2023,ferreira_mello_automatic_2025}. There, it is valued less
+as a stand-alone scoring engine than as an assessment \emph{tool} that must be reliable, transparent,
+and fair before it can scale formative or summative feedback~\cite{arz_von_straussenburg_enabling_2025,li_am_2023}. A prior
 systematic review of the field~\cite{romano_slr_2025} synthesises this trajectory across five eras, from
 feature-engineered essay scoring through transformer encoders to the current generation of large language
 models (LLMs), and draws one organising conclusion: grading quality is a triad of task, metric, and
 deployment, not a single leaderboard. A strong number on one axis (agreement, error, consistency, or
-operational cost) does not imply reliability on another. Everything established up to mid-2025 is taken from
-that review; here we focus on what the most recent evidence implies for \emph{which configuration} a grader
+operational cost) does not imply reliability on another. Here we focus on what the most recent
+evidence implies for \emph{which configuration} a grader
 should use, the question this paper addresses.
 
-\textbf{LLMs as graders: capable but inconsistent.}
-Prompted LLMs now match or approach human raters on well-specified short-answer and essay tasks, yet their
-reliability is the recurring caveat. Across rubric-conditioned settings, agreement is strong but
-\emph{model-} and \emph{prompt-dependent}. Consistency varies sharply between systems (e.g.\ open-source
-models span an intraclass correlation (ICC), the standard repeated-measurement consistency index, of
-$0.29$--$0.83$ on the same task~\cite{moazzez_assessing_2024}), repeated scoring drifts over
-time~\cite{pack_large_2024}, and minimally-prompted grading can stay within one rubric point of teachers yet
-yield low summative agreement~\cite{tate_can_2024}. Two design levers recur as decisive. First, evaluation
+\subsection{LLMs as Graders: Capable but Inconsistent}
+Prompted LLMs now match or approach human raters on well-specified short-answer and essay
+tasks~\cite{aminah_evaluating_2025,sessler_canai_2025,henkel_roars_2025}, yet their reliability is the
+recurring caveat. Agreement is strong but depends on the model and the prompt: consistency varies sharply
+between systems, with open-source models spanning an intraclass correlation (ICC), the standard
+repeated-measurement consistency index, from 0.29 to 0.83 on the same
+task~\cite{moazzez_assessing_2024}. Repeated scoring also drifts over time~\cite{pack_large_2024}, and
+minimally-prompted grading can stay within one rubric point of teachers yet still yield low summative
+agreement~\cite{tate_can_2024}. Two design levers recur as decisive. First, evaluation
 \emph{guidance}: clearer, more explicit rubrics raise consistency~\cite{garcia-huertes_leveraging_2024}, and
-closed models with rubric grounding outperform open ones while remaining more lenient than human
+closed models given a rubric outperform open ones while remaining more lenient than human
 raters~\cite{sessler_canai_2025}. Second, \emph{repetition}: because single-shot scores are unstable,
 temporal-drift evidence~\cite{pack_large_2024} motivates reporting variance across runs rather than a point
 estimate. Reliability is not optional here: grading errors can themselves harm learning, as false positives
 and negatives distort how students revise their work~\cite{li_am_2023}. These two observations directly
 motivate our evaluation-guidance (RQ2) and consistency (RQ5) axes.
 
-\textbf{Does reasoning help grading? An open question.}
+\subsection{Reasoning in Grading: An Open Question}
 The headline uncertainty concerns \emph{extended reasoning}. In the general LLM-as-a-judge setting, explicit
-reasoning improves judgement: using a within-family thinking toggle on Qwen3, ``thinking'' models gain
-roughly ten accuracy points at modest extra cost~\cite{jayarao_explicit_2025}. The benefit, however, is
-\emph{task- and architecture-dependent}: on adjacent natural-language-generation evaluation (machine
-translation and summarisation), one reasoning model improves with extended thinking while another
+reasoning improves judgement. As an example, using a within-family thinking toggle on Qwen3,
+``thinking'' models gain roughly ten accuracy points at modest extra cost~\cite{jayarao_explicit_2025}. The benefit, however,
+depends on the task and the architecture: on adjacent natural-language-generation evaluation (machine
+translation and summarisation), one reasoning model improves with more reasoning while another
 \emph{underperforms} its own non-reasoning variant~\cite{larionov_deepseek_2025}. The ``overthinking''
-literature adds that long reasoning traces carry redundant computation and can degrade
-calibration-sensitive tasks~\cite{sui_stop_2025}. Grading a student answer is exactly such a task: it is
+literature adds that long reasoning traces carry verbose, redundant
+computation~\cite{sui_stop_2025}. Grading a student answer is calibration-sensitive: it is
 bounded by a rubric and sensitive to score calibration rather than to open-ended deliberation. Whether
-reasoning helps or hurts here is therefore \emph{a priori} uncertain. Within educational short-answer grading
-itself, the task is increasingly framed as a move ``from memorization to reasoning''~\cite{cong_memorization_2026},
-yet that work studies fine-tuning and rubric-based prompting rather than isolating the effect of \emph{model}
-reasoning. Prior comparisons, meanwhile, confound reasoning with model identity by pitting reasoning and
-non-reasoning systems from different vendors. This paper resolves the question empirically with a within-family on/off toggle
-(RQ1), the central contribution motivating the study.
+reasoning helps or hurts here is therefore \emph{a priori} uncertain, and the evidence to settle it is
+missing: the studies above measure reasoning in general judging or in adjacent generation tasks, not
+in grading. Where reasoning has entered educational grading it has done so only indirectly. Work that
+frames short-answer grading as a move ``from memorization to reasoning''~\cite{cong_memorization_2026}
+studies fine-tuning and rubric-based prompting rather than isolating the effect of \emph{model}
+reasoning, and prior model comparisons confound reasoning with vendor by pitting reasoning and
+non-reasoning systems from different families. To our knowledge, no study has isolated the effect of
+extended reasoning on grading itself, holding the model fixed and measuring quality, consistency, and
+cost together. This paper does so with a within-family on/off toggle (RQ1).
 
-\textbf{Code grading with rubrics.}
+\subsection{Code Grading with Rubrics}
 Our code domain is narrower and less mature than short-answer grading. Locally-run open-source LLMs are
 already used to \emph{assist} grading in introductory computer science, positioned as teaching-assistant
-support rather than as final graders~\cite{mazzone_exploring_2024}. Reviews of programming education
-frame the task as dynamic (test-case) versus static (code-quality) grading with semi-automatic
-triage~\cite{manorat_artificial_2025}. Rubric-based code graders that award partial credit reach about
-85\% micro-accuracy but still leave roughly a fifth of cases mis-scored, too high for full
+support rather than as final graders~\cite{mazzone_exploring_2024}. A systematic review of artificial
+intelligence in programming education confirms automated assessment and feedback as one of its core
+application areas, alongside course design and progress monitoring~\cite{manorat_artificial_2025}.
+Rubric-based code graders that award partial credit reach about
+85\% micro-accuracy but still mis-score about 15\% of cases, too high for full
 automation~\cite{havare_ai-based_2025}. Most relevant to our framing, question-specific rubrics
 substantially outperform question-agnostic or no-rubric prompting on object-oriented and data-structures
 code (e.g.\ Cohen's $\kappa$ rising from $\approx0.41$ with no rubric to $0.60$--$0.65$ with a
@@ -65,40 +71,36 @@ question-specific one)~\cite{pathak_rubric_2025}, tying the evaluation-guidance 
 code setting. Because public code datasets with \emph{human} rubric grades are scarce, our code-domain
 conclusions are stated more tentatively than the short-answer ones.
 
-\textbf{Datasets and published baselines as context.}
+\subsection{Datasets and Published Baselines as Context}
 We use two established public short-answer corpora, the Mohler dataset of graded computer-science
 answers~\cite{mohler_text_2009,mohler_learning_2011} and the SemEval-2013 Task~7 SciEntsBank/Beetle
-sets~\cite{dzikovska_semeval_2013}, and confirm transfer on a Portuguese deployment context.
+sets~\cite{dzikovska_semeval_2013}, and confirm transfer on PT-CS, our own Portuguese university
+deployment dataset (Section~\ref{sec:datasets}).
 Reported numbers are usually quadratic weighted kappa (QWK), an ordinal-agreement score that runs from
 0 at chance to 1 at perfect agreement and is defined fully in Section~\ref{sec:metrics}.
-Table~\ref{tab:published-baselines} collects representative results per dataset, from supervised
-transformers
-(ASAP-SAS $\approx0.79$~\cite{kumar_get_2019}; recent essays $0.81$--$0.83$~\cite{dadi_robust_2025,elmassry_systematic_2025})
-to prompted and fine-tuned LLMs on our own sets~\cite{aminah_evaluating_2025,chen_cemft_2026,dada_iattention_2025,fischer_evaluation_2025,duong_automatic_2024,ferreira_mello_automatic_2025,kazi_enhancing_2023,henkel_roars_2025}.
-Crucially, these numbers were produced under \emph{different models, prompts, and protocols}; they situate
-our study but are \emph{not} its success criterion, which comes from our own like-for-like comparisons. The
+Table~\ref{tab:published-baselines} situates our datasets within the published landscape: it gathers
+representative results on Mohler, SemEval, and
+RIAYN~\cite{aminah_evaluating_2025,chen_cemft_2026,dada_iattention_2025,fischer_evaluation_2025,duong_automatic_2024,ferreira_mello_automatic_2025,kazi_enhancing_2023,henkel_roars_2025},
+the nearest supervised benchmark band (ASAP short-answer scoring reaches QWK $\approx0.79$~\cite{kumar_get_2019},
+essay scoring $\approx0.83$~\cite{dadi_robust_2025,elmassry_systematic_2025}), and a sample of the wider LLM-as-grader
+literature. Crucially, these numbers were produced under \emph{different models, prompts, and
+protocols}; they situate our study but are \emph{not} its success criterion, which comes from our own
+like-for-like comparisons. The
 literature also illustrates why protocol matters: a reported QWK of $0.95$ on Mohler is an artefact of
-silently dropping unparseable answers~\cite{aminah_evaluating_2025}, underscoring our use of an
+silently dropping empty or malformed answers~\cite{aminah_evaluating_2025}, underscoring our use of an
 extractable-rate ($\pi$) metric and our refusal to coerce unparseable output to zero. Dedicated fine-grained
 benchmarks for LLM short-answer scoring are also beginning to appear~\cite{lai_sasbench_2026}, but none yet
 isolates the configuration axes we study.
 
-\textbf{From model rankings to a configuration framework.}
+\subsection{From Model Rankings to a Configuration Framework}
 A growing body of work compares LLMs \emph{as graders}: large side-by-side studies of programming
 submissions~\cite{jukiewicz_comparison_2026}, deployed course evaluations~\cite{policar_automated_2025}, and
 multi-model frameworks emphasising transparency and reproducibility~\cite{anghel_graderassist_2025}.
-This paper is deliberately \emph{not} another such ranking. Following the design-insight orientation that
-IEEE Transactions on Learning Technologies (TLT) asks of evaluation-centred work, our contribution is a
+Where these studies compare which model grades best, we ask which configuration a grading task calls
+for. Our contribution is a
 \emph{configuration framework}: an empirically
 grounded decision guide mapping task characteristics (domain, rubric availability, budget) to a recommended
-grader configuration and its cost. This complements the learning-analytics literature on responsible,
-auditable LLM grading (structured ``grading events'' with local hosting and fine-tuning on course
-data~\cite{arz_von_straussenburg_enabling_2025}, and embedding-based short-answer
-grading~\cite{putnikovic_embeddings_2023}), and feeds the design decisions of a deployed assessment
-platform. Throughout, we treat the human reference grades as consensus records of mixed provenance and
-uneven validation (Section~\ref{sec:datasets}), not as independent double annotation. We also declare the
-conflict of interest arising from the platform context, in line with the ground-truth-honesty requirements
-such deployments demand.
+grader configuration and its cost.
 
 % [ToE] If the venue becomes IEEE Transactions on Education, re-foreground the pedagogical contribution:
 % lead with instructor workload, assessment validity, fairness, and the computing-education context;

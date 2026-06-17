@@ -21,8 +21,8 @@ which model family to run or pay for.
 
 The literature answers these questions only in fragments. Reasoning is the clearest example. Extended
 thinking improves general LLM-as-a-judge accuracy~\cite{jayarao_explicit_2025}, but its effect is task-
-and architecture-dependent~\cite{larionov_deepseek_2025}, long reasoning traces can degrade
-calibration-sensitive tasks~\cite{sui_stop_2025}, and no peer-reviewed study isolates its effect on
+and architecture-dependent~\cite{larionov_deepseek_2025}, long reasoning traces carry verbose,
+redundant computation~\cite{sui_stop_2025}, and no peer-reviewed study isolates its effect on
 rubric-bounded educational grading. Model comparisons exist for programming and course
 deployments~\cite{jukiewicz_comparison_2026,policar_automated_2025}, but they rank systems under one
 fixed prompt configuration, so they cannot say how the ranking moves when the configuration does.
@@ -37,11 +37,14 @@ decomposition (holistic versus criterion by criterion), model family, and conver
 conversation per answer versus shared history). Three open-weight model families (Qwen3.5,
 DeepSeek-V4-Flash, GLM-5.1) expose a within-family reasoning toggle, so the reasoning effect is
 isolated from model identity, a confound in prior comparisons; a closed frontier model (GPT-5.1)
-serves as a paid reference point. The study runs on four datasets in two domains: the Mohler corpus
-and SemEval-2013 Task~7 for CS short answers, and the Rubric Is All You Need corpus plus PT-CS, an
-export of a real Portuguese university grading deployment, for code. Every cell is repeated five times
-(three for the paid model), so consistency is measured rather than assumed, and every call's token
-cost is recorded.
+serves as a reference point. The study runs on four datasets in two domains. Three are public and give cross-population external
+validity: the Mohler~\cite{mohler_text_2009,mohler_learning_2011} and
+SemEval-2013 Task~7~\cite{dzikovska_semeval_2013} corpora of graded computer-science short answers,
+and the Rubric Is All You Need corpus of rubric-graded Java code~\cite{pathak_rubric_2025}. The
+fourth, PT-CS, is an export of a real Portuguese university grading deployment built by the first
+author; we use it to test whether the public-dataset guidance transfers to a deployment context, and
+because its grades are of uneven reliability we curate a teacher-reviewed subset and set out the
+accompanying safeguards in Section~\ref{sec:threats}.
 
 Six research questions structure the study:
 \begin{itemize}
@@ -52,38 +55,31 @@ Six research questions structure the study:
   \item \textbf{RQ3.} How do grading scope (whole exam versus question by question) and rubric
         decomposition (holistic versus criterion by criterion) affect agreement with the final grade?
   \item \textbf{RQ4.} How do current-generation models compare as graders, and what is the
-        cost-quality trade-off between local open-weight and paid frontier models?
+        cost-quality trade-off between open-weight and closed frontier models?
   \item \textbf{RQ5.} Does conversation state (clean versus shared history) affect consistency and
         fairness?
   \item \textbf{RQ6.} Does the configuration guidance found on public datasets transfer to a real
         Portuguese deployment context?
 \end{itemize}
 
-The findings motivate a framework rather than a leaderboard. Reasoning turned out to be a trade, not
-an upgrade: it raised agreement with teacher grades in seven of the twenty model-dataset combinations
-we tested. Its price was tokens (10 to 925 times more output, model- and domain-dependent) and
-reliability: repeated grades of the same answer agreed with each other less in nearly every cell.
-Where a grading model collapsed, assigning zero to roughly half of the code answers, reasoning
-repaired it; where the model already discriminated, the gain was unpredictable. Evaluation guidance
-helped wherever the human reference was trustworthy. That qualifier became a finding in itself: on
-the deployment dataset, an unvalidated human reference masked a real rubric benefit, which only
-became visible on the stratum of grades with evidence of teacher review. Transfer of the public-dataset results to the deployment
-context was at best partial: the top configuration was not refuted, but the verified samples below it
-were too small to tell the ranking apart from sampling noise. Together
-these results yield the central design rule of the framework: configuration priors are starting
-points, and a deployment must validate them locally against a reference it trusts.
+This synthesis takes the form of a framework, not a leaderboard. Rather than crowning one best grader,
+we build a decision guide that maps the characteristics of a grading task, its domain, its rubric, its
+budget, and the reliability of the reference grades available, to a recommended configuration, the
+cost that choice implies, and the conditions under which it applies. Section~\ref{sec:results} reports
+the controlled comparisons behind the guide, and Section~\ref{sec:framework} presents it.
 
 The contribution is fourfold. First, a configuration decision guide for LLM grading in CS, keyed by
 observable task and model behaviour rather than by model identity. Second, the first
 grading-specific, within-family isolation of the reasoning effect, measured jointly on agreement,
-consistency, and cost. Third, an evidence-backed account of how unreliable reference grades distort
-configuration conclusions, with a curation strategy that recovers a usable signal. Fourth, a released
-harness, prompt templates, and configuration matrices that make the protocol reproducible. PT-CS
-originates from a grading platform built by the first author; we declare this conflict of interest
-and the safeguards it requires in Section~\ref{sec:threats}.
+consistency, and cost. Third, a strategy for deployment grades of uneven reliability: an auditable
+criterion that isolates a teacher-reviewed subset, so the deployment conclusions rest on a reference we
+can trust. Fourth, a released harness, prompt templates, and configuration matrices that make the
+protocol reproducible.
 
 The paper is organised as follows. Section~\ref{sec:related} positions the study in the
 learning-analytics and LLM-grading literature. Section~\ref{sec:method} describes the design space,
-datasets, grading harness, and evaluation protocol. Section~\ref{sec:results} reports the results by
-research question. Section~\ref{sec:discussion} synthesises the configuration framework.
-Section~\ref{sec:threats} states the threats to validity, and Section~\ref{sec:conclusion} concludes.
+datasets, grading harness, and experimental protocol. Section~\ref{sec:results} reports the
+experiments and their results by research question. Section~\ref{sec:discussion} discusses the
+cross-cutting findings and Section~\ref{sec:framework} presents the configuration framework.
+Section~\ref{sec:threats} states the threats to validity, and Section~\ref{sec:conclusion} draws the
+study's conclusions and outlines future work.
