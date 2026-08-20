@@ -528,9 +528,13 @@ researcher in an adjacent area who does not work on this exact topic.
   tables do not follow.
 - **Limitations belong in one place and must not sap the contribution — and this applies WHILE writing**
   (diretiva Pedro 2026-08-20): a caveat or methodological reservation that surfaces while drafting analysis or
-  conclusions is written into the limitations/threats section immediately, not inline where it surfaced; the
-  abstract and the Conclusion carry claims, magnitudes, and consequences only, with a methodological caveat
-  admitted there only if the paper would be misread without it. State each limitation **once**, in the
+  conclusions goes to the threats section **only if it materially matters to the paper's claims; otherwise it
+  is dropped** — not every sentence earns a caveat, and the default for a drafting-time reservation is
+  deletion, not relocation. **The threats section's own size is controlled**: it must read as the scoping of a
+  solid contribution, never as one disclaimer per finding — if it drifts toward that, prune to the few caveats
+  that could actually change a reader's decision. The abstract and the Conclusion carry claims, magnitudes,
+  and consequences only, with a methodological caveat admitted there only if the paper would be misread
+  without it. State each limitation **once**, in the
   threats/limitations section, not as a recurring caveat threaded through Results, Discussion, and Conclusion;
   a weakness repeated in every section reads as the paper's headline and quietly removes its own relevance.
   The limitations section **leads with containment** (why the limitation does not reach the main conclusions),
