@@ -458,6 +458,17 @@ researcher in an adjacent area who does not work on this exact topic.
   including the abstract, captions, and table notes**. Hyphens in compound words (state-of-the-art,
   question-by-question) and minus signs or ranges in math and tables (a delta of -0.043, pages 4-7) are fine
   and not covered by this rule.
+- **"X, not Y" constructions are banned as rhetoric** ("empirical, not conceptual"; "operational, not
+  predictive"; "not an autonomous system, but..."): they read as templated AI prose. Write the positive claim
+  and let context carry the contrast. Sole exception: when the contrast IS the finding.
+- **No defensive hedges or disclaimers; assert what the evidence supports.** Openers like "results are real
+  but...", conclusions that re-derive methodology, and sections that end by listing what remains difficult are
+  banned. Conclusions state findings, magnitudes, and consequences. Weaknesses of the field are reported as
+  measured findings, never as accusations against prior work and never phrased so they undermine this paper's
+  own evidence.
+- **Claims carry magnitude and an anchor.** Effect sizes appear with both endpoint values and an
+  interpretation anchor (the scale's maximum, an agreement band such as moderate to substantial, a human
+  ceiling from the same experiment). Never convert non-ratio coefficients (kappa/QWK) into percentage changes.
 - **Section structure — each section type has its own job; do not leak content across them.** The single most
   important discipline: **a finding appears only in Results (and is interpreted in Discussion).** Do not preview
   results, numbers, or verdicts in the Introduction or Method, and do not introduce new method detail in
@@ -515,7 +526,11 @@ researcher in an adjacent area who does not work on this exact topic.
   metric, or basis is primary, and which is a robustness check) **must match what the tables and figures
   actually do** — verify the prose against the artifacts, do not describe an intended reporting rule the
   tables do not follow.
-- **Limitations belong in one place and must not sap the contribution.** State each limitation **once**, in the
+- **Limitations belong in one place and must not sap the contribution — and this applies WHILE writing**
+  (diretiva Pedro 2026-08-20): a caveat or methodological reservation that surfaces while drafting analysis or
+  conclusions is written into the limitations/threats section immediately, not inline where it surfaced; the
+  abstract and the Conclusion carry claims, magnitudes, and consequences only, with a methodological caveat
+  admitted there only if the paper would be misread without it. State each limitation **once**, in the
   threats/limitations section, not as a recurring caveat threaded through Results, Discussion, and Conclusion;
   a weakness repeated in every section reads as the paper's headline and quietly removes its own relevance.
   The limitations section **leads with containment** (why the limitation does not reach the main conclusions),
