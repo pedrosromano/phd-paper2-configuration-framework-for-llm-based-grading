@@ -43,8 +43,9 @@ STEPS = [
     ("c1", "C1 · Guidance no DeepSeek (4 datasets)",
      [M + ["c1_context_roster", "--concurrency", "48"]]),
     ("c4", "C4 · Conversa limpa vs partilhada, 80 exames, k=5 (Qwen + DeepSeek)",
-     [[PY, "-m", "experiments.run.conversation_runner", "--models", "qwen3.5,deepseek-v4-flash",
-       "--concurrency", "24"]]),
+     # DeepSeek first, then Qwen: on 2026-10-15 DeepInfra answered Qwen3.5 with 429 "Model busy" for minutes
+     [[PY, "-m", "experiments.run.conversation_runner", "--models", "deepseek-v4-flash", "--concurrency", "24"],
+      [PY, "-m", "experiments.run.conversation_runner", "--models", "qwen3.5", "--concurrency", "16"]]),
     ("c1_gpt", "C1 · Guidance no GPT-5.1 (4 datasets)",
      [M + ["c1_context_gpt", "--concurrency", "64"]]),
     ("c5_off", "C5 · GPT-5.1 sem reasoning, cobertura completa (k=5)",
