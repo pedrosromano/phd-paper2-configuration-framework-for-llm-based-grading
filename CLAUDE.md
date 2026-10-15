@@ -1027,3 +1027,13 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   DeepInfra, so October runs would not match the June "off" condition. C1 runs on DeepSeek + GPT-5.1; C2,
   C3 and C4 on DeepSeek (with Qwen). The October GLM rows were deleted. **Do not draw any paper conclusion
   from this** (user: it is a provider matter). June GLM results stay as they are.
+- ⚠️ **Spend: provider billing ≠ our ledger (found 2026-10-15) — re-base the paper's € figures.** DeepInfra's
+  own billing (GET /payment/usage) for June 2026: **$83.27** (Qwen3.5 $45.53, GLM-5.1 $30.80, DeepSeek-V4-Flash
+  $2.54, DeepSeek-V4-Pro $4.40), against ≈€37 in our ledger: pricing.yaml prices were below the real ones
+  (real per 1M tokens: Qwen in $0.14 / out $1.00; DeepSeek-V4-Flash $0.09 / $0.18; yaml had Qwen out $0.60,
+  DeepSeek $0.14 / $0.28). GPT-5.1 yaml price ($1.25 / $10) matches the public list price. **TODO before the
+  paper's cost claims (€35.97 matrix total, €/1000 grades in the RQ4 figure, the €16.7 estimate story):**
+  recompute from real per-token prices (or provider-billed totals) and update pricing.yaml. In October the
+  provider billed requests for zai-org/GLM-5.1 as zai-org/GLM-5.3 (June billing shows GLM-5.1, so the June
+  GLM data are GLM-5.1). Cost watchdog: `experiments/run/cost_watchdog.py` (reads DeepInfra billing,
+  stops a queue at a cap; OpenAI read from our journal because the key lacks api.usage.read).
