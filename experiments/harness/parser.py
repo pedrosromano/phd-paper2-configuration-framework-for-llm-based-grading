@@ -28,6 +28,16 @@ def _strip_thinking(s: str) -> str:
     return s
 
 
+def _drop_ellipsis(v):
+    """ast.literal_eval turns a literal `...` (e.g. a model writing "criteria": [...]) into Ellipsis,
+    which is not JSON-serialisable and once crashed a whole run (C2, 2026-10-15). Drop it."""
+    if isinstance(v, dict):
+        return {k: _drop_ellipsis(x) for k, x in v.items() if x is not Ellipsis}
+    if isinstance(v, list):
+        return [_drop_ellipsis(x) for x in v if x is not Ellipsis]
+    return v
+
+
 def _loads_lenient(s: str):
     """json.loads, then fix common LLM JSON slips, then ast.literal_eval."""
     for attempt in (s,):
@@ -41,7 +51,7 @@ def _loads_lenient(s: str):
     except (json.JSONDecodeError, TypeError):
         pass
     try:                                                # single quotes / py literals
-        v = ast.literal_eval(s)
+        v = _drop_ellipsis(ast.literal_eval(s))
         return v if isinstance(v, dict) else None
     except (ValueError, SyntaxError):
         return None

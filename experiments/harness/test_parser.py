@@ -76,3 +76,12 @@ def test_pi():
     assert compute_pi([True, True, False, True]) == 0.75
     assert compute_pi([]) == 0.0
     assert compute_pi([False, False]) == 0.0
+
+
+def test_criterion_with_literal_ellipsis_is_serialisable():
+    """C2 crash (2026-10-15): "criteria": [...] went through ast.literal_eval as Ellipsis."""
+    import json
+    from experiments.harness.parser import parse_output
+    out, ok = parse_output("{'criteria': [...], 'total': 7}", "question_by_question", "criterion")
+    assert ok and out["score"] == 7
+    json.dumps(out)

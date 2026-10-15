@@ -75,7 +75,8 @@ class RunStore:
     def append(self, row: dict) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+            # default=str: a stray non-JSON value in a parsed field must never kill a run
+            f.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
         k = (row["item_id"], row["config_hash"], row["run_index"])
         self._keys.add(k)
         self._index[k] = row
