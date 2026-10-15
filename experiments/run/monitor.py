@@ -38,6 +38,7 @@ RUNS_FILE = RUNS_DIR / "runs.jsonl"
 PRICING = REPO_ROOT / "experiments" / "configs" / "pricing.yaml"
 _PROG = re.compile(r"([\d,]+)/([\d,]+).*?(?:π|pi)=([\d.]+)")   # "8,340/13,635  π=0.951" (matrix) or "pi=" (runners)
 BLOCO_C = RUNS_DIR / "_bloco_c_status.json"                      # written by experiments.run.bloco_c_run
+BLOCO_C_PLAN = RUNS_DIR / "_bloco_c_plan.json"                   # per-step new calls + effective s/call
 _SPEND = re.compile(r"DeepInfra €([\d.]+) \| OpenAI €([\d.]+)")
 _ARMS = re.compile(r"arms=(\[[^\]]*\])")
 
@@ -179,6 +180,8 @@ _PAGE = """<!doctype html><meta charset=utf-8><title>experiment monitor</title>
 </style>
 <h1>experiment monitor <span id=badge class=badge></span> <span class=muted id=now></span>
  <span class=muted>· read-only</span></h1>
+<div class=card id=globalcard style="display:none;margin-bottom:10px"><div class=k>BLOCO C · progresso global</div>
+ <div class=bar><div class=fill id=gfill></div></div><div class=s id=gprog></div></div>
 <div class=card><div class=k id=armline>arm</div>
  <div class=bar><div class=fill id=fill></div></div>
  <div class=s id=prog></div></div>
@@ -211,6 +214,18 @@ async function tick(){
  let b2; try{b2=await (await fetch('/bloco_c.json')).json()}catch(e){b2=null}
  const el=document.getElementById('blococ');
  if(!b2||!b2.steps){el.innerHTML='';return}
+ let plan; try{plan=await (await fetch('/bloco_c_plan.json')).json()}catch(e){plan=null}
+ if(plan&&plan.order){
+  let tT=0,dT=0,tC=0,dC=0;
+  for(const id of plan.order){const p=plan[id], s=b2.steps.find(x=>x.id==id), w=p.todo*p.spc; tT+=w; tC+=p.todo;
+   let f=0; if(s&&(s.state.startsWith('done')||s.state=='analysing'))f=1;
+   else if(s&&s.state=='running'&&d.total)f=Math.min(1,d.done/d.total);
+   dT+=f*w; dC+=f*p.todo;}
+  const pt=100*dT/tT, pc=100*dC/tC;
+  document.getElementById('globalcard').style.display='block';
+  document.getElementById('gfill').style.width=pt.toFixed(1)+'%';
+  document.getElementById('gprog').textContent=`${pt.toFixed(0)}% do tempo estimado · ${pc.toFixed(0)}% das chamadas (${Math.round(dC).toLocaleString()}/${tC.toLocaleString()}) · faltam ~${hms(tT-dT)}`;
+ }
  const col={pending:'#30363d',running:'#1f6feb',analysing:'#8957e5',failed:'#da3633'};
  el.innerHTML='<h1 style="margin-top:16px">Bloco C <span class=muted>· atualizado '+(b2.updated||'')+'</span></h1>'+
   b2.steps.map(s=>{const c=col[s.state]||'#1f6f3f';
@@ -227,6 +242,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):                              # GET-only; no write routes exist
         if self.path.startswith("/status"):
             body = json.dumps(_STATE.snapshot()).encode()
+            ctype = "application/json"
+        elif self.path.startswith("/bloco_c_plan"):
+            body = BLOCO_C_PLAN.read_bytes() if BLOCO_C_PLAN.exists() else b"{}"
             ctype = "application/json"
         elif self.path.startswith("/bloco_c"):
             body = BLOCO_C.read_bytes() if BLOCO_C.exists() else b"{}"
