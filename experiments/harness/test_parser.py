@@ -85,3 +85,11 @@ def test_criterion_with_literal_ellipsis_is_serialisable():
     out, ok = parse_output("{'criteria': [...], 'total': 7}", "question_by_question", "criterion")
     assert ok and out["score"] == 7
     json.dumps(out)
+
+
+def test_nested_braces_do_not_raise():
+    """C2 crash #2 (2026-10-15): "{{...}}" made ast.literal_eval raise TypeError (unhashable set)."""
+    from experiments.harness.parser import parse_output
+    out, ok = parse_output('Analysis: {{"criterion": "x"}, {"score": 1}} then {"total": 3}',
+                           "question_by_question", "criterion")
+    assert ok and out["score"] == 3

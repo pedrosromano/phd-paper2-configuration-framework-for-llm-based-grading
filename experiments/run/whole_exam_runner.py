@@ -77,7 +77,11 @@ def main(argv=None) -> int:
     def work(sid, ri):
         items = submap[sid]
         cfg = replace(cfg0, run_index=ri)
-        per, meta = adapter_api.grade_whole_exam(items, cfg, guard)
+        try:
+            per, meta = adapter_api.grade_whole_exam(items, cfg, guard)
+        except Exception as e:   # not stored -> retried on resume; never kill the run
+            print(f"  !! skipped exam {sid} r{ri}: {type(e).__name__}: {e}", flush=True)
+            return
         with lock:
             for p in per:
                 res = GradeResult(score=p["score"], parse_ok=p["parse_ok"], raw=meta["raw"],

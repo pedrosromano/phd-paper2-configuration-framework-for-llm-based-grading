@@ -95,7 +95,7 @@ def main(argv=None) -> int:
              for ri in range(k) for (cs, od) in PASSES]
 
     def write(row):
-        fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+        fh.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
         done["rows"] += 1
         done["ok"] += int(bool(row["parse_ok"]))
 
@@ -110,15 +110,19 @@ def main(argv=None) -> int:
         if all((str(it["item_id"]), cfg.config_hash, ri, order) in seen for it in items):
             return
         rows = []
-        if cstate == "clean":
-            for pos, it in enumerate(items):
-                res = adapter_api.grade(it, cfg, guard)
-                rows.append(store.build_run_row(it, cfg, res, prompts.render(cfg, it),
-                            session_id=sess, order_id=order, order_index=pos))
-        else:
-            for rec in adapter_api.grade_conversation(items, cfg, guard):
-                rows.append(store.build_run_row(rec["item"], cfg, _res_from(rec, cfg), rec["prompt"],
-                            session_id=sess, order_id=order, order_index=rec["position"]))
+        try:   # one bad session must not kill the run; it is not stored, so a resume retries it
+            if cstate == "clean":
+                for pos, it in enumerate(items):
+                    res = adapter_api.grade(it, cfg, guard)
+                    rows.append(store.build_run_row(it, cfg, res, prompts.render(cfg, it),
+                                session_id=sess, order_id=order, order_index=pos))
+            else:
+                for rec in adapter_api.grade_conversation(items, cfg, guard):
+                    rows.append(store.build_run_row(rec["item"], cfg, _res_from(rec, cfg), rec["prompt"],
+                                session_id=sess, order_id=order, order_index=rec["position"]))
+        except Exception as e:
+            print(f"  !! skipped session {sess}: {type(e).__name__}: {e}", flush=True)
+            return
         with lock:
             for row in rows:
                 write(row)

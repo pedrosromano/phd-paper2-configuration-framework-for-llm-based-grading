@@ -204,8 +204,12 @@ def _execute(tasks: list[tuple], st: store.RunStore, guard: CostGuard, concurren
     rows: list[dict] = []
 
     def work(it, c):
-        res = adapter_api.grade(it, c, guard)
-        row = store.build_run_row(it, c, res, prompts.render(c, it))
+        try:
+            res = adapter_api.grade(it, c, guard)
+            row = store.build_run_row(it, c, res, prompts.render(c, it))
+        except Exception as e:   # one bad cell must not kill a multi-hour run; not stored -> retried on resume
+            _log(f"  !! skipped {it['item_id']} {c.config_hash} r{c.run_index}: {type(e).__name__}: {e}")
+            return None
         with lock:
             st.append(row)
             done["n"] += 1

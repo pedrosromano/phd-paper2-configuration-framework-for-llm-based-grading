@@ -43,18 +43,18 @@ def _loads_lenient(s: str):
     for attempt in (s,):
         try:
             return json.loads(attempt)
-        except (json.JSONDecodeError, TypeError):
+        except (json.JSONDecodeError, TypeError, RecursionError):
             pass
     fixed = re.sub(r",\s*([}\]])", r"\1", s)            # trailing commas
     try:
         return json.loads(fixed)
-    except (json.JSONDecodeError, TypeError):
+    except (json.JSONDecodeError, TypeError, RecursionError):
         pass
     try:                                                # single quotes / py literals
         v = _drop_ellipsis(ast.literal_eval(s))
         return v if isinstance(v, dict) else None
-    except (ValueError, SyntaxError):
-        return None
+    except Exception:                                   # any failure = not a JSON object (e.g. "{{...}}"
+        return None                                     # -> TypeError: unhashable set, C2 2026-10-15)
 
 
 def _iter_json_objects(text: str):
