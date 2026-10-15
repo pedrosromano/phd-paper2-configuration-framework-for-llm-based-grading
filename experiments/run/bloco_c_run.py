@@ -27,8 +27,7 @@ PY = sys.executable
 STEPS = [
     ("c2", "C2 · Decomposição critério a critério (RIAYN + PT-CS, Qwen + DeepSeek)",
      [[PY, "-m", "experiments.run.matrix", "run", "--arm", "c2_decomposition", "--concurrency", "48"]]),
-    # GLM-5.1 replaced by DeepSeek-V4-Flash (C2-C4) and GPT-5.1 (C1) on 2026-10-15: DeepInfra no longer
-    # disables GLM's reasoning, so its October "off" cells are not the June condition (archive_glm_drift.py).
+    # GLM-5.1 is not used in bloco C: its reasoning can no longer be switched off on DeepInfra (2026-10-15).
     ("c3", "C3 · Exame inteiro numa chamada, 88 exames (Qwen + DeepSeek)",
      [[PY, "-m", "experiments.run.whole_exam_runner", "--model", "qwen3.5", "--exams", "validated"],
       [PY, "-m", "experiments.run.whole_exam_runner", "--model", "deepseek-v4-flash", "--exams", "validated",
