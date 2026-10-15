@@ -37,6 +37,10 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--concurrency", type=int, default=8)
     ap.add_argument("--limit", type=int, default=None, help="cap submissions (writer validation)")
+    ap.add_argument("--model", default="qwen3.5", help="grader model (C3 adds glm-5.1)")
+    ap.add_argument("--exams", choices=["sample", "validated"], default="sample",
+                    help="sample = the seeded 60-exam prefix (4.7); validated = every exam holding at least "
+                         "one teacher-validated code answer (C3, 2026-10-15)")
     args = ap.parse_args(argv)
 
     spec = yaml.safe_load(MATRIX.read_text())
@@ -47,9 +51,15 @@ def main(argv=None) -> int:
     submap = {sid: [r for _, r in g.iterrows()] for sid, g in pt.groupby("submission_id")}
     subs = sorted(submap)
     random.Random(SEED).shuffle(subs)
-    subs = subs[: (args.limit or n_subs)]
+    if args.exams == "validated":
+        strata = pd.read_parquet(REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
+        keep = set(strata.query("stratum=='intervened'").item_id.astype(str))
+        subs = [s for s in subs if any(str(it["item_id"]) in keep for it in submap[s])]
+        subs = subs[: args.limit] if args.limit else subs
+    else:
+        subs = subs[: (args.limit or n_subs)]
 
-    cfg0 = Config("ptcs", "code", "qwen3.5", reasoning="off", context_level="with_guidance",
+    cfg0 = Config("ptcs", "code", args.model, reasoning="off", context_level="with_guidance",
                   scope="whole_exam", decomposition="holistic", k=k)
     st = store.RunStore(RUNS_FILE)
     guard = CostGuard()
@@ -58,7 +68,7 @@ def main(argv=None) -> int:
     # skip a (submission, rep) only if EVERY question already has its row
     todo = [(sid, ri) for sid, ri in tasks
             if not all(st.has(it["item_id"], chash, ri) for it in submap[sid])]
-    print(f"scope arm (whole-exam): {len(subs)} submissions x k={k} = {len(tasks)} calls | "
+    print(f"scope arm (whole-exam, {args.model}, {args.exams}): {len(subs)} submissions x k={k} = {len(tasks)} calls | "
           f"{len(tasks)-len(todo)} cached | {len(todo)} to run @ {args.concurrency}x")
 
     lock = threading.Lock()

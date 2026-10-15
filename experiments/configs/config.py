@@ -148,8 +148,10 @@ class Config:
         # applicability
         if self.scope == "whole_exam" and self.dataset != "ptcs":
             raise ConfigError("whole_exam scope is PT-CS only")
-        if self.decomposition == "criterion" and self.dataset != "ptcs":
-            raise ConfigError("criterion decomposition is PT-CS only")
+        # criterion decomposition needs per-criterion rubrics: PT-CS, and RIAYN since C2
+        # (2026-10-15; RIAYN rubrics list marked steps per solution path, with human step marks)
+        if self.decomposition == "criterion" and self.dataset not in ("ptcs", "riayn"):
+            raise ConfigError("criterion decomposition is PT-CS / RIAYN only")
         if self.conversation_state in ("clean", "shared") and self.dataset != "ptcs":
             raise ConfigError("conversation-state sub-study (clean/shared) is PT-CS only")
         if self.reasoning == "on" and not _model_has_toggle(self.model):

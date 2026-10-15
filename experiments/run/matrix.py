@@ -43,6 +43,19 @@ GATE_PHASE1 = ["baseline", "nonreasoning_main"]
 GATE_PHASE2 = ["reasoning_arm", "context_arm", "decomposition_arm", "anchor_reduced"]
 GATE_MIN_PI = 0.85            # abort the expensive arms if parse-rate falls below this
 DEFAULT_SEED = 20260609      # deterministic item sampling (stable across resume)
+STRATA = REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet"
+
+
+def _item_filter(name: str | None):
+    """Optional per-arm item filter (bloco C, 2026-10-15). 'ptcs_validated' keeps only the PT-CS
+    answers the paper uses (teacher-validated = intervened stratum); other datasets pass through.
+    Applied AFTER the seeded prefix, so filtered arms stay paired with the earlier unfiltered ones."""
+    if not name:
+        return None
+    if name == "ptcs_validated":
+        keep = set(pd.read_parquet(STRATA).query("stratum=='intervened'").item_id.astype(str))
+        return lambda it: it["dataset"] != "ptcs" or str(it["item_id"]) in keep
+    raise ValueError(f"unknown item_filter {name!r}")
 
 
 # --------------------------------------------------------------------------- sampling model
@@ -156,6 +169,7 @@ def _arm_tasks(arm: dict, sampler: Sampler, by_id: dict, seed: int, order_cache:
     sets nest (anchor60 ⊂ on175 ⊂ offN) -> reasoning/anchor contrasts are properly paired.
     Whole-exam / conversation configs are skipped (not core)."""
     cap = arm.get("item_cap")
+    keep = _item_filter(arm.get("item_filter"))
     tasks = []
     for c in expand_arm(arm):
         if c.scope == "whole_exam" or c.conversation_state in ("clean", "shared"):
@@ -167,7 +181,8 @@ def _arm_tasks(arm: dict, sampler: Sampler, by_id: dict, seed: int, order_cache:
             order_cache[key] = ids
         n = sampler.n_items(c, cap)
         for iid in order_cache[key][:n]:
-            tasks.append((by_id[iid], c))
+            if keep is None or keep(by_id[iid]):
+                tasks.append((by_id[iid], c))
     return tasks
 
 

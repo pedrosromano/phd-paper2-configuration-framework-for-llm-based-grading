@@ -62,7 +62,7 @@ def main() -> int:
       r"grading studies. They come from different models, prompts, and protocols, so they situate "
       r"our work but are \textbf{not} its success criterion. Abbreviations: MAE, mean absolute error; "
       r"FT, fine-tuned; LoRA, low-rank adaptation; BERT, RoBERTa, and XLNet, pretrained transformer text "
-      r"encoders; CRE, the complete-rubric grader of~\cite{pathak_rubric_2025}; ICC, intraclass correlation "
+      r"encoders; EME, the ensemble grader of~\cite{pathak_rubric_2025}; QS, question-specific; ICC, intraclass correlation "
       r"coefficient; $\kappa$ (binned), Cohen's kappa after grouping scores into five bins.}")
     A(r"\label{tab:published-baselines}")
     A(r"\footnotesize")

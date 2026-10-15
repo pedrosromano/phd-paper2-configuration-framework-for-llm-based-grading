@@ -25,7 +25,7 @@ sampling:
     ptcs:short_answer: 437       # all PT-CS theory
   reasoning_on_subsample: 175    # RQ1 axis: moderate power on the key contrast (was 60); still a few €
   whole_exam_submissions: 60     # PT-CS submissions graded as one call each (scope arm, RQ3)
-  conversation_submissions: 20   # PT-CS submissions for the conversation sub-study (4.9)
+  conversation_submissions: 80   # C4 (2026-10-15): 20 -> 80 exams; the seeded prefix nests, so the first 20 are reused
   conversation_orders: 2         # answer-order permutations for order control (§11 open: shuffle vs fixed)
   conversation_shared_input_factor: 4   # shared-history input inflation (accumulating context)
 
@@ -116,7 +116,7 @@ arms:
     conversation_state: [clean, shared]
     dataset: ptcs
     domain: code
-    k: 3
+    k: 5                           # C4 (2026-10-15): 3 -> 5, parity with the main matrix; runs 0-2 reused
 
   - name: anchor_reduced           # 4.10 GPT-5.1 paid anchor, reduced set, k=3, OFF vs ON
     model: gpt-5.1
@@ -157,6 +157,54 @@ arms:
     k: 3
     item_cap: 60
     max_tokens: 32768
+
+  # --- Bloco C (advisor review, user-approved 2026-10-15). k=5 throughout; k and run_index are not
+  #     in config_hash, so earlier runs 0..k-1 of the same cells are reused. item_filter
+  #     ptcs_validated restricts PT-CS to the teacher-validated answers the paper analyses. ---
+  - name: c1_context_roster        # C1: guidance none vs with on GLM-5.1 and DeepSeek (RQ2 beyond one model)
+    model: [glm-5.1, deepseek-v4-flash]
+    reasoning: off
+    context_level: [none, with_guidance]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 5
+    item_filter: ptcs_validated
+
+  - name: c2_decomposition         # C2: holistic vs criterion on RIAYN (public code) + GLM on PT-CS
+    model: [qwen3.5, glm-5.1]
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: [holistic, criterion]
+    dataset: [riayn, ptcs]
+    domain: code
+    k: 5
+    item_filter: ptcs_validated
+
+  - name: c5_anchor_full_off       # C5: GPT-5.1 off on every item the open models graded (k=5)
+    model: gpt-5.1
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 5
+    item_filter: ptcs_validated
+
+  - name: c5_anchor_full_on        # C5: GPT-5.1 on, same 175-item reasoning samples as the open models (k=5)
+    model: gpt-5.1
+    reasoning: on
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 5
+    max_tokens: 32768
+    item_filter: ptcs_validated
 
 # RQ6 transfer dependency (§11): the public-dataset winner needs a like-for-like PT-CS run
 # for 5.5b. SATISFIED structurally -- ptcs(code) is included in baseline, nonreasoning_main,

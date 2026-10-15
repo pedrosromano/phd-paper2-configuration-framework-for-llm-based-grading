@@ -998,3 +998,28 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   dangling reference to the Discussion and no engine source. Recomputed by
   `audit_pct_baselines.temp0_variation` on the paper basis (with guidance, one question per call, holistic,
   PT-CS validated): **9–56% with reasoning off** (18–46% on). Prose updated.
+- ✅ **Bloco C approved (user 2026-10-15): C1–C5 + C7–C10; C6 deferred.** C1 guidance on GLM-5.1 +
+  DeepSeek; C2 criterion decomposition on RIAYN (+ GLM on PT-CS); C3 whole-exam on all 88 exams with
+  validated code answers (Qwen + GLM); C4 conversation scaled up at k=5; C5 GPT-5.1 at full open-model
+  coverage (k=5); C7 Mohler human ceiling; C8 SemEval cut-off sensitivity; C9 Holm + TOST; C10 regret of
+  the guide vs the best configuration in hindsight. **C6 (a model released after June 2026) is NOT run**:
+  the study is meant to be of its time; revisit its benefit only after C is done and report to the user.
+- ✅ **Equivalence margin PRE-REGISTERED: ±0.05 QWK (user 2026-10-15), fixed BEFORE any C-arm data was
+  run.** Used by every TOST in the paper (scope, decomposition, any null result the guide relies on).
+  Rationale: smaller changes would not alter any recommendation and are near the binning sensitivity
+  (0.033). Do not tune it after seeing the new data.
+- 🔧 **Bloco C status (2026-10-15).** Harness ready: criterion decomposition allowed on RIAYN (same rubric
+  text as holistic, so the contrast is clean); `item_filter: ptcs_validated` in matrix arms; whole-exam
+  runner takes `--model` and `--exams validated` (88 exams); conversation scaled to 80 exams at k=5; new
+  arms c1_context_roster, c2_decomposition, c5_anchor_full_off/on. Realistic cost (real per-call costs,
+  filter, cache) ≈ €35 (C1 €2.5, C2 €1.4, C5 €31). **BLOCKED:** OpenAI account has no credits
+  (insufficient_quota) and the DeepInfra key in .env is rejected (401 invalid_api_key) — user must top up /
+  issue a new key. Run arms SEQUENTIALLY (one process at a time writes runs.jsonl and the spend ledger).
+- ⚠️ **RIAYN is the DSA subset only (found 2026-10-15).** The corpus holds 149 data-structures-and-algorithms
+  submissions over 25 problems (148 Java, 1 Python); the OOP subset was never ingested. Method said "OOP and
+  data-structures" — corrected; Table I now shows the RIAYN-DSA published row. Rubrics list marked steps per
+  accepted solution path; the gold is the sum of the steps of the student's path.
+- ⬜ **C9 Holm result needs a presentation decision (pending user).** On current data, with Holm across the
+  20 RQ1 combinations only Qwen|RIAYN stays significant (Qwen Mohler/SemEval/PT-CS code and GPT|RIAYN do not).
+  RQ2 guidance survives Holm on all four datasets. No TOST equivalence at ±0.05 yet for scope (N=77) or
+  decomposition. Re-run `bloco_c c9` after the C arms; do not change RQ1 prose until the user decides.
