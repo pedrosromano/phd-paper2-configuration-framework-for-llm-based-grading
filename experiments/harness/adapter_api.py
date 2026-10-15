@@ -18,7 +18,7 @@ import time
 import urllib.error
 import urllib.request
 
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
+from tenacity import retry, retry_if_exception_type, stop_after_delay, wait_random_exponential
 
 from experiments.harness import prompts
 from experiments.harness.cost_guard import BudgetExceeded, CostGuard, load_pricing
@@ -50,7 +50,11 @@ def retry_stats() -> dict:
 # 429 together do NOT retreat in lockstep -> avoids a synchronized retry storm at high
 # concurrency. Retries only on transient server/network errors (429 + 5xx gateway + net);
 # 4xx like 400/401/403/404 re-raise immediately (not retried).
-@retry(stop=stop_after_attempt(4), wait=wait_random_exponential(multiplier=1, max=30),
+# Retry window 15 min (was 4 attempts, ~1-2 min; changed 2026-10-15 for bloco C): the author's laptop
+# changes networks while runs are live, and an exhausted retry is stored as an error row that a resume
+# does NOT retry. Waiting out an outage keeps those rows from appearing at all. Same request re-sent,
+# so results are unaffected.
+@retry(stop=stop_after_delay(900), wait=wait_random_exponential(multiplier=1, max=60),
        retry=retry_if_exception_type(_Transient), reraise=True)
 def _chat(base_url: str, key: str, payload: dict) -> dict:
     req = urllib.request.Request(
