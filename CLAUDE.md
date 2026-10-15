@@ -15,11 +15,17 @@ context, scope, decomposition, model family, fine-tuning) and the **guidance tha
 across the model families tested, not a universal claim): *for a given CS assessment task, which configuration
 should you use?*
 
-- This is **Article 2** of the PhD compilation (Article 1 = the published PRISMA SLR, Q1, in IEEE ToE).
+- This is **Article 2** of the PhD compilation (Article 1 = the PRISMA SLR, IEEE ToE). **Do NOT cite Article 1
+  in this paper** (user 2026-10-15): it will not be published when Article 2 is submitted. Its `.tex` stays a
+  private source for the state of the art; cite the primary studies directly.
 - It **feeds Article 3** = the improved **GradeGenie** platform (design decisions fixed here flow there).
-- **Target venue: IEEE Transactions on Learning Technologies (TLT)** — primary. **IEEE Transactions on
-  Education (ToE)** — fallback. Both Q1 (= 8 PhD points either way). The experimental design serves both;
-  only the **framing** differs (see §1.1). The same `IEEEtran` toolchain works for both.
+- **Target venue (since 2026-10-15): IEEE Access** (user decision; quartile accepted by the user for the PhD
+  points). Built with the vendored `ieeeaccess` class (§9). Access has no hard page limit and a broad
+  engineering readership: keep the educational guidance, but the register can be more technical than the
+  TLT framing below. *History:* the paper was written for **TLT** (primary) / **ToE** (fallback); §1.1 and
+  §9.1 keep that framing as background, and the TLT build is in git history (commit 7ec38b5).
+- **Advisor review (Daniel Fernandes, 2026-07-01, 79 PDF comments)** is being addressed on branch
+  `revisao-access`; the triage (simple / decisions / core) was agreed with the user on 2026-10-15.
 - Arc across the thesis: **Map (SLR) → Analyse (this) → Build (GradeGenie)**.
 
 ### 1.2 Research questions & the deliverable's form
@@ -385,7 +391,11 @@ unchanged in spirit — keep the matrix affordable — but the lever is **token 
 
 ## 9. Article build (reuse Article 1 toolchain)
 
-- Class: **IEEEtran** `[lettersize,journal]`; bib via BibTeX + `IEEEtran.bst`; class file vendored.
+- Class: **ieeeaccess** (IEEE Access template, vendored with its fonts, maps and logos in
+  `article/access-template/`; `article/latexmkrc` adds that folder to the TeX search paths). Author photos in
+  `article/bios/`. The class redefines the `\year` primitive: the shim at the top of `main.tex` must stay or
+  tikz/pgf fail. Bib via BibTeX + `IEEEtran.bst`. Figure widths in `experiments/figures/phase6.py` follow the
+  Access column (85.29 mm) and text width (177.53 mm).
 - Compile:
   ```bash
   eval "$(/usr/libexec/path_helper)"
@@ -949,3 +959,23 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   the discriminating models (GLM +0.077 ns, DeepSeek ns; significant only via Qwen's collapse-repair and
   GPT$|$RIAYN) and would contradict `tab_framework`. **NAMING (2026-06-15): GPT-5.1 is the "closed"/frontier
   anchor, never "paid"** (DeepInfra is paid too; the scientific contrast is open-weight vs closed).
+- ✅ **Scope default = one question per call (B3, user 2026-10-15; supersedes "grade in blocks").** The
+  framework had recommended grading in blocks of ~4 questions "to cut the per-call overhead", which clashed
+  with RQ5/Discussion ("clean, question-by-question grading was the least biased") and confused the advisor.
+  The data settle it: per question, whole-exam grading costs only **3% less** (Qwen3.5 off, 252 whole-exam
+  questions, call_group-deduped; `audit_pct_baselines.rq3_cost`, and derived in `make_phase5_tables` for the
+  framework row) while its ΔQWK is −0.060 (ns, both point estimates below baseline). Criterion scoring
+  roughly **doubles** the cost per answer. Framework table, Fig. framework diagram, RQ3, Discussion all say
+  "one question per call, holistic, clean conversation".
+- ✅ **RQ1 figures plotted a different basis from the prose (fixed 2026-10-15, advisor comment p.6).** Figs.
+  rq1trade/rq1 used `phase5.reasoning_contrast` dQWK (point estimate on ALL paired items, incl. the ones whose
+  reasoning overflowed), while the prose/Method use the tractable (clean) items + bootstrap median (e.g.
+  Qwen|RIAYN figure +0.179 vs prose +0.250). Both figures and the new paper table `tab_rq1_values` now read
+  `make_phase5_tables.rq1_cells` (dQWK on tractable items; SD and token premium on all paired items, which
+  is what the "16 of 20" count and the 10–925× range always used). No prose claim changed.
+- ⬜ **Ethics / GDPR statement (B4)** — user 2026-10-15: deferred ("non-identifying data"; revisit before
+  submission). NB: pseudonymised data is still personal data under the GDPR, and Access may ask for an
+  ethics statement; the §2.1 gate still applies to publication.
+- ⬜ **"Framework" wording (B1) and PT-CS presentation (B2)** — pending the user's answer to the proposals
+  of 2026-10-15 (title without "framework"; PT-CS = the curated dataset, selection criterion stated once,
+  one-sentence threat). Do not rename until ratified.

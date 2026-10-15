@@ -7,7 +7,7 @@
 \section{Introduction}
 \label{sec:intro}
 
-Large language models (LLMs) are moving from demonstrations to deployed graders in computer science
+\PARstart{L}{arge} language models (LLMs) are moving from demonstrations to deployed graders in computer science
 (CS) courses. The promise for learning analytics is well documented: rubric-conditioned LLMs approach
 human raters on well-specified short-answer tasks, and they return criterion-level feedback at a scale
 no teaching team can match~\cite{sessler_canai_2025,henkel_roars_2025}. The risk is equally well
@@ -28,9 +28,9 @@ deployments~\cite{jukiewicz_comparison_2026,policar_automated_2025}, but they ra
 fixed prompt configuration, so they cannot say how the ranking moves when the configuration does.
 Guidance, scope, decomposition, and conversation state have each been touched as point solutions
 (Section~\ref{sec:related}), never crossed under one protocol. What is missing is the practical
-synthesis: for a given CS assessment task, which configuration should you use, and what does it cost?
+synthesis: for a given CS assessment task, which configuration should be used, and what does it cost?
 
-This paper studies the configuration space systematically and delivers the synthesis as a decision
+This paper studies these configuration choices systematically and delivers the synthesis as a decision
 guide. We cross six design dimensions: extended reasoning (on or off), evaluation guidance (none
 versus a rubric or reference answer), grading scope (whole exam versus question by question), rubric
 decomposition (holistic versus criterion by criterion), model family, and conversation state (a clean
@@ -41,10 +41,8 @@ serves as a reference point. The study runs on four datasets in two domains. Thr
 validity: the Mohler~\cite{mohler_text_2009,mohler_learning_2011} and
 SemEval-2013 Task~7~\cite{dzikovska_semeval_2013} corpora of graded computer-science short answers,
 and the Rubric Is All You Need corpus of rubric-graded Java code~\cite{pathak_rubric_2025}. The
-fourth, PT-CS, is an export of a real Portuguese university grading deployment built by the
-authors; we use it to test whether the public-dataset guidance transfers to a deployment context, and
-because its grades are of uneven reliability we curate a teacher-reviewed subset and set out the
-accompanying safeguards in Section~\ref{sec:threats}.
+fourth, PT-CS, comes from a real Portuguese university grading deployment and was built by the
+authors; we use it to test whether the public-dataset guidance transfers to a deployment context.
 
 Six research questions structure the study:
 \begin{itemize}

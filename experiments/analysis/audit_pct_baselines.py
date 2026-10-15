@@ -118,6 +118,50 @@ def rq3():
             print(f"{name:28} {stratum:9} {qbase:8.3f} {md:+7.3f} {_pct(md, qbase):+5.0f}% {n:5d}")
 
 
+def rq3_cost():
+    """RQ3 scope cost (advisor review 2026-10-15): per question and per repetition, what grading the
+    whole exam in one call costs versus one call per question, on the 252 whole-exam questions
+    (Qwen3.5 off, with guidance, holistic). Whole-exam cost is deduplicated by call_group (one call
+    covers several questions). Backs the framework's 'per question by default' choice."""
+    df = phase5.load_main()
+    we = df[df.scope == "whole_exam"]
+    items = set(we.item_id)
+    calls = phase5.dedupe_call_groups(we).copy()
+    qb = df[(df.model == "qwen3.5") & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.domain == "code")
+            & (df.context_level == "with_guidance") & (df.scope == "question_by_question")
+            & (df.decomposition == "holistic") & df.item_id.isin(items)].copy()
+    print("\n=== RQ3 scope cost per question (Section IV-C / framework) ===")
+    for name, d in [("whole exam", calls), ("per question", qb)]:
+        k = d.run_index.nunique()
+        tot = {c: pd.to_numeric(d[c], errors="coerce").sum() / k / len(items)
+               for c in ["prompt_tokens", "completion_tokens", "cost_eur"]}
+        print(f"  {name:12} calls/run={len(d) / k:6.0f}  in={tot['prompt_tokens']:.0f}  "
+              f"out={tot['completion_tokens']:.0f}  EUR/question={tot['cost_eur']:.6f}")
+    eur = lambda d: pd.to_numeric(d.cost_eur, errors="coerce").sum() / d.run_index.nunique() / len(items)
+    print(f"  -> whole exam saves {100 * (1 - eur(calls) / eur(qb)):.1f}% of the cost per question")
+    dd = df[(df.model == "qwen3.5") & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.domain == "code")
+            & (df.context_level == "with_guidance") & (df.scope == "question_by_question")]
+    for dec, g in dd.groupby("decomposition"):
+        print(f"  {dec:12} out={pd.to_numeric(g.completion_tokens, errors='coerce').mean():.0f} tokens  "
+              f"EUR/1000 answers={1000 * pd.to_numeric(g.cost_eur, errors='coerce').mean():.3f}")
+
+
+def zero_collapse():
+    """RQ1 zero-collapse (advisor review 2026-10-15): share of Qwen3.5 reasoning-off runs scored exactly 0
+    on PT-CS-verified code (paired reasoning items), against the teachers' share of zero grades on the
+    same items."""
+    df = phase5.load_main()
+    rp = phase5.reasoning_paired(df[(df.dataset != "ptcs") | df.item_id.isin(_INTERV)])
+    b = rp[(rp.dataset == "ptcs") & (rp.domain == "code") & (rp.model == "qwen3.5")
+           & (rp.context_level == "with_guidance") & (rp.scope == "question_by_question")
+           & (rp.decomposition == "holistic")]
+    o, n = b[b.reasoning == "off"], b[b.reasoning == "on"]
+    gold = o.groupby("item_id").gold_norm.first()
+    print("\n=== RQ1 zero-collapse, Qwen3.5, PT-CS-verified code (Section IV-A) ===")
+    print(f"  model zeros: off {100 * (o.pred_norm < 1e-9).mean():.0f}%  on {100 * (n.pred_norm < 1e-9).mean():.0f}%"
+          f"  | teacher zeros on the same {len(gold)} items: {100 * (gold < 1e-9).mean():.0f}%")
+
+
 def rq4():
     """RQ4 cost-quality BY TASK (Section IV-D, Fig. agreement-vs-cost, 2 panels): per-task QWK spread
     across the eight configs, and per-config QWK + euro cost per 1000 grades for short-answer
@@ -145,6 +189,8 @@ def main() -> int:
     rq1()
     rq2()
     rq3()
+    rq3_cost()
+    zero_collapse()
     rq4()
     print("\nPaper cross-check (Phase 7): RQ1 Mohler +11%, SemEval +18%, RIAYN +45%, PT-CS-verified "
           "code +23%, PT-CS-verified short Qwen +12% (ns), RIAYN GPT +32% (GLM/GPT PT-CS short ns on verified). "

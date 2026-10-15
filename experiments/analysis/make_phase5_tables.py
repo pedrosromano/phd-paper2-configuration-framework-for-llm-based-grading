@@ -46,6 +46,38 @@ def _boot_ci(sA, sB, nb=800):
     return tuple(np.percentile(ds, [2.5, 50, 97.5]))
 
 
+def rq1_cells(df: pd.DataFrame, interv: set) -> pd.DataFrame:
+    """RQ1 per (dataset, domain, model) on the bases the paper declares (single source for the RQ1
+    values table AND Figs. rq1trade / rq1, fixed 2026-10-15: the figures had plotted dQWK on all
+    paired items, including those whose reasoning overflowed, while the prose and Method use the
+    tractable items only). PT-CS rows use the verified (intervened) stratum.
+      - dQWK, CI, QWK_off, N: tractable (clean) paired items, bootstrap median, as in T1.
+      - pct: dQWK as a percent of QWK_off (the prose percentages; cf. audit_pct_baselines.rq1).
+      - SDk_off/on and prem_x: all paired items (truncated runs were still generated and paid for),
+        via phase5.reasoning_contrast, so they match the figures and the '16 of 20' prose count."""
+    dv = df[(df.dataset != "ptcs") | df.item_id.isin(interv)]
+    rp = phase5.reasoning_paired(dv)
+    base = rp[(rp.context_level == "with_guidance") & (rp.scope == "question_by_question") & (rp.decomposition == "holistic")]
+    rc = phase5.reasoning_contrast(dv).set_index(["dataset", "domain", "model"])
+    rows = []
+    for (ds, dom, m), g in base.groupby(["dataset", "domain", "model"]):
+        o, n = g[g.reasoning == "off"], g[g.reasoning == "on"]
+        if o.empty or n.empty:
+            continue
+        k = n.run_index.nunique(); ppi = n[n.parse_ok].groupby("item_id").size()
+        clean = set(ppi[ppi == k].index) if n.parse_ok.mean() < 1 else set(n.item_id.unique())
+        qoff, sA = _qwk_items(o[o.item_id.isin(clean)]); _, sB = _qwk_items(n[n.item_id.isin(clean)])
+        lo, md, hi = _boot_ci(sA, sB)
+        prem = (pd.to_numeric(n.completion_tokens, errors="coerce").mean()
+                / max(pd.to_numeric(o.completion_tokens, errors="coerce").mean(), 1))
+        r = rc.loc[(ds, dom, m)]
+        rows.append({"dataset": ds, "domain": dom, "model": m, "N": len(clean), "QWK_off": qoff,
+                     "dQWK": md, "lo": lo, "hi": hi, "pct": 100 * md / qoff if qoff else np.nan,
+                     "sig": bool(lo > 0 or hi < 0), "prem_x": prem,
+                     "SDk_off": r.SDk_off, "SDk_on": r.SDk_on})
+    return pd.DataFrame(rows)
+
+
 def _tex(df, path, caption, label, star=False, colspec=None, size="\\small", placement=None,
          rowsep=None, rowrule=False):
     """star=True emits table* (two-column span, IEEEtran) for tables too wide for one column;
@@ -143,6 +175,40 @@ def main() -> int:
          "the contrast on the PT-CS-verified (intervened) stratum as robustness.", "tab:rq1",
          star=True)
 
+    # --- T1b: RQ1 values table FOR THE PAPER (advisor review 2026-10-15: every dQWK and percentage
+    #     quoted in the RQ1 prose must be checkable in an exhibit). Same engine as the RQ1 figures
+    #     (rq1_cells); PT-CS rows on the verified stratum; significant gains in bold. ---
+    cells = rq1_cells(df, interv)
+    dsorder = [("mohler", "short_answer", "Mohler"), ("semeval", "short_answer", "SemEval"),
+               ("riayn", "code", "RIAYN"), ("ptcs", "code", "PT-CS-verified code"),
+               ("ptcs", "short_answer", "PT-CS-verified short")]
+    mname = {"qwen3.5": "Qwen3.5", "glm-5.1": "GLM-5.1", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1"}
+    sgn = lambda x, d: (f"{x:+.{d}f}").replace("-", "$-$")
+    vrows = []
+    for ds, dom, lbl in dsorder:
+        for j, m in enumerate(mname):
+            c = cells[(cells.dataset == ds) & (cells.domain == dom) & (cells.model == m)]
+            if c.empty:
+                continue
+            c = c.iloc[0]
+            dq = sgn(c.dQWK, 3)
+            first = "\\hline " if (j == 0 and vrows) else ""      # rule between dataset groups
+            vrows.append({"Dataset": first + lbl if j == 0 else "", "Model": mname[m], "N": int(c.N),
+                          "QWK off": f"{c.QWK_off:.3f}",
+                          "$\\Delta$QWK": f"\\textbf{{{dq}}}" if c.sig else dq,
+                          "95\\% CI": f"[{sgn(c.lo, 2)}, {sgn(c.hi, 2)}]",
+                          "Change": sgn(c.pct, 0) + "\\%",
+                          "Tokens": f"{c.prem_x:.0f}$\\times$",
+                          "SD off $\\to$ on": f"{c.SDk_off:.3f} $\\to$ {c.SDk_on:.3f}"})
+    _tex(pd.DataFrame(vrows), "tab_rq1_values.tex",
+         "Reasoning off versus on, per model and dataset. $\\Delta$QWK is the change in agreement (QWK on "
+         "minus off; bold when its 95\\% bootstrap confidence interval excludes zero), and Change expresses it "
+         "as a percentage of the reasoning-off QWK; both use the items whose reasoning never exceeded the "
+         "output-token limit, whose number is N. Tokens is how many times more output tokens reasoning used, "
+         "and SD is the mean within-item standard deviation across repetitions (lower is more consistent); "
+         "both use all paired items. PT-CS rows use the verified subset.",
+         "tab:rq1values", star=True, colspec="llrrrrrrr", size="\\footnotesize")
+
     # --- T2: dimension contrasts (context per dataset, scope, decomposition).
     #     Hybrid PT-CS rule (§11 2026-06-11): PT-CS contrasts get a verified robustness column. ---
     def contrast_row(A, B, label, nb=800, verified=None):
@@ -209,7 +275,7 @@ def main() -> int:
     sc = sc.rename(columns={"stratum": "Stratum", "pct": "\\%"})
     _tex(sc, "tab_ptcs_strata.tex",
          f"PT-CS gold reliability strata. The intervened stratum, the only one with evidence of human "
-         f"review, is PT-CS-verified; full PT-CS is all three strata ({total:,} responses).",
+         f"review, is PT-CS-verified; full PT-CS is all three strata ({total} responses).",
          "tab:strata")
 
     # --- T4b / T4d REMOVED (2026-06-15): the two RQ6 transfer tables (tab_transfer_verified,
@@ -267,6 +333,14 @@ def main() -> int:
     riayn_ctx = float(ctx_by["riayn"]["dQWK"]); ptcs_ctx_full = float(ctx_by["ptcs"]["dQWK"])
     ptcs_ctx_ver = float(ctx_by["ptcs"]["dQWK-V [CI] (N$_V$)"].split()[0]); scope_ver = float(scope_row["dQWK-V [CI] (N$_V$)"].split()[0])
     R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "10--925", "94--192", "2.5--5"   # composite; verified by the test
+    # scope cost per question: whole exam in one call vs one call per question, on the 252 whole-exam
+    # questions (whole-exam cost deduplicated by call_group); backs the 'one question per call' row
+    we_items = set(df[df.scope == "whole_exam"].item_id)
+    we_calls = phase5.dedupe_call_groups(df[df.scope == "whole_exam"])
+    qb_calls = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance")
+                 & (q.scope == "question_by_question") & (q.decomposition == "holistic") & q.item_id.isin(we_items)]
+    eur_per_q = lambda d: pd.to_numeric(d.cost_eur, errors="coerce").sum() / d.run_index.nunique() / len(we_items)
+    scope_saving = 100 * (1 - eur_per_q(we_calls) / eur_per_q(qb_calls))
     fw = pd.DataFrame([
         {"Scenario": "Grading short answers", "Recommended": "Reasoning off; the cheapest model",
          "Trade-off in the rule": f"the reasoning gain is small and only sometimes significant (Qwen on Mohler and SemEval, not the other models), and reasoning off is {R_OVERALL}$\\times$ cheaper"},
@@ -280,16 +354,16 @@ def main() -> int:
          "Trade-off in the rule": f"guidance was the one change that reliably raised agreement: it helped across datasets (RIAYN ${riayn_ctx:+.3f}$ QWK, PT-CS-verified code ${ptcs_ctx_ver:+.3f}$), at the cost of only the extra prompt tokens"},
         {"Scenario": "The rubric has several criteria", "Recommended": "Holistic scoring (one overall score)",
          "Trade-off in the rule": f"on PT-CS-verified code, scoring criterion by criterion did not reliably change agreement (${decomp_ver:+.3f}$ QWK, not significant) at a higher token cost"},
-        {"Scenario": "The exam has several questions", "Recommended": "Grade in blocks of a few questions, one call per block",
-         "Trade-off in the rule": f"on PT-CS-verified code, grouping questions into one call barely changed agreement (question-by-question to whole-exam ${scope_ver:+.3f}$ QWK, not significant), so batching them wins on cost by cutting the per-call overhead"},
-        {"Scenario": "Grading many answers in sequence", "Recommended": "Fresh conversation per block; no history carried across the exam",
+        {"Scenario": "The exam has several questions", "Recommended": "Grade one question per call",
+         "Trade-off in the rule": f"on PT-CS-verified code, grading the whole exam in one call did not improve agreement (question-by-question to whole-exam ${scope_ver:+.3f}$ QWK, not significant) and cut the cost per question by only {scope_saving:.0f}\\%"},
+        {"Scenario": "Grading many answers in sequence", "Recommended": "Fresh conversation per question; no history carried across the exam",
          "Trade-off in the rule": "a shared, accumulating conversation made grading stricter and answer order added noise (a 20-submission sub-study)"},
     ])
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
     fw["Trade-off in the rule"] = fw["Trade-off in the rule"].map(lambda s: s[0].upper() + s[1:] if s else s)
     fw["Scenario"] = "\\raggedright " + fw["Scenario"]   # left-align (ragged right), not justified
     _tex(fw, "tab_framework.tex",
-         "The configuration decision guide (Section~\\ref{sec:framework}). Each row pairs a grading scenario "
+         "The configuration decision guide. Each row pairs a grading scenario "
          "with a recommended setting and the trade-off behind it.",
          "tab:framework", star=True, colspec="p{2.8cm}p{4.2cm}p{9.2cm}", rowsep="3pt", rowrule=True)
     print("done.")

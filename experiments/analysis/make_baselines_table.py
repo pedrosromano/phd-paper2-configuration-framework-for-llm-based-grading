@@ -60,14 +60,18 @@ def main() -> int:
     A(r"\centering")
     A(r"\caption{Published results as external context, grouped into the datasets we use and other "
       r"grading studies. They come from different models, prompts, and protocols, so they situate "
-      r"our work but are \textbf{not} its success criterion.}")
+      r"our work but are \textbf{not} its success criterion. Abbreviations: MAE, mean absolute error; "
+      r"FT, fine-tuned; LoRA, low-rank adaptation; BERT, RoBERTa, and XLNet, pretrained transformer text "
+      r"encoders; CRE, the complete-rubric grader of~\cite{pathak_rubric_2025}; ICC, intraclass correlation "
+      r"coefficient; $\kappa$ (binned), Cohen's kappa after grouping scores into five bins.}")
     A(r"\label{tab:published-baselines}")
     A(r"\footnotesize")
     A(r"\setlength{\tabcolsep}{4pt}")
     A(r"\renewcommand{\arraystretch}{1.12}")
-    A(r"\begin{tabular}{>{\raggedright\arraybackslash}p{3.0cm} "
-      r">{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}p{3.2cm} "
-      r">{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{4.6cm}}")
+    # column widths sum to 16.3 cm + 10 x 4pt padding = 17.7 cm, inside the IEEE Access text width (17.75 cm)
+    A(r"\begin{tabular}{>{\raggedright\arraybackslash}p{2.8cm} "
+      r">{\raggedright\arraybackslash}p{3.1cm} >{\raggedright\arraybackslash}p{3.1cm} "
+      r">{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}p{4.6cm}}")
     A(r"\hline")
     A(r"\textbf{Dataset} & \textbf{Study (year)} & \textbf{Model / method} & "
       r"\textbf{Metric} & \textbf{Value / note}\\")

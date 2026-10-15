@@ -20,6 +20,7 @@ import matplotlib
 matplotlib.use("Agg")
 matplotlib.rcParams["pgf.texsystem"] = "pdflatex"
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import numpy as np
 import pandas as pd
 from sklearn.metrics import cohen_kappa_score
@@ -27,7 +28,8 @@ from sklearn.metrics import cohen_kappa_score
 from experiments.analysis import phase5
 
 OUT = phase5.REPO_ROOT / "article" / "figures"
-COL = 3.4
+COL = 3.3      # IEEE Access column width is 85.29 mm (3.36 in)
+WIDE = 6.9     # IEEE Access text width is 177.53 mm (6.99 in)
 K = 5
 RNG = np.random.default_rng(20260610)
 MARK = {"qwen3.5": "o", "glm-5.1": "s", "deepseek-v4-flash": "^", "gpt-5.1": "D"}
@@ -100,11 +102,10 @@ def fig1(rc):
                    c=COLOR[r.domain], edgecolor="k", lw=0.3, alpha=0.85)
     ax.set_xlabel("agreement change ($\\Delta$QWK): reasoning helps $\\to$")
     ax.set_ylabel("consistency change\n(below 0 = less consistent)")
-    ax.set_title("RQ1: reasoning trades consistency for agreement")
     h1 = [plt.Line2D([], [], marker=m, color="grey", ls="", mec="k", mew=0.3, label=k) for k, m in MARK.items()]
     # label: "short_answer" -> "short answer" (a raw _ breaks LaTeX text mode in the .pgf; 7.4 fix)
     h2 = [plt.Line2D([], [], marker="o", color=c, ls="", mec="k", mew=0.3, label=d.replace("_", " ")) for d, c in COLOR.items()]
-    ax.legend(handles=h1 + h2, loc="lower right", ncol=2, framealpha=0.9)
+    ax.legend(handles=h1 + h2, loc="upper left", ncol=2, framealpha=0.9)
     _save(fig, "fig1_rq1_twodim")
 
 
@@ -116,7 +117,6 @@ def fig2(rc):
     ax.set_xscale("log")
     ax.set_xlabel("reasoning cost: ON/OFF token premium ($\\times$, log)")
     ax.set_ylabel("agreement change ($\\Delta$QWK)")
-    ax.set_title("RQ1: cost vs agreement of reasoning")
     _save(fig, "fig2_cost_vs_agreement")
 
 
@@ -135,11 +135,11 @@ def fig_panels(rc):
         r = rc[(rc.dataset == ds) & (rc.domain == dom) & (rc.model == m)]
         return float(r[col].iloc[0]) if len(r) else np.nan
 
-    fig, axes = plt.subplots(1, 3, figsize=(COL * 2.1, COL * 0.74))
-    specs = [("dQWK", "agreement: $\\Delta$QWK\n(above 0 = reasoning helps)", False),
+    fig, axes = plt.subplots(1, 3, figsize=(WIDE, COL * 0.74))
+    specs = [("dQWK", "agreement change, $\\Delta$QWK\n(above 0 = reasoning helps)", False),
              ("dSD", "consistency change\n(below 0 = less consistent)", False),
-             ("premium_x", "cost: ON/OFF token premium\n($\\times$, log)", True)]
-    for ax, (col, ttl, logy) in zip(axes, specs):
+             ("premium_x", "output tokens, on/off ($\\times$)\nlog scale", True)]
+    for ax, (col, ttl, logy), letter in zip(axes, specs, "abc"):
         for i, m in enumerate(models):
             # dSD plotted as stability change (off SD minus on SD): below 0 = reasoning is LESS
             # consistent, so it reads like the agreement panel (up = better, down = worse).
@@ -148,14 +148,15 @@ def fig_panels(rc):
             ax.bar(x + (i - 1.5) * w, vals, w, color=MCOL[m], edgecolor="k", lw=0.3,
                    alpha=0.9, label=m.split("-")[0])
         ax.set_xticks(x); ax.set_xticklabels(lbl, rotation=30, ha="right")
-        ax.set_title(ttl)
+        ax.set_ylabel(ttl)
+        ax.set_title(f"({letter})", loc="left", fontsize=7.5)
         if logy:
             ax.set_yscale("log")
+            ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
         else:
             ax.axhline(0, color="k", lw=0.6)
     h, l = axes[0].get_legend_handles_labels()
     fig.legend(h, l, loc="lower center", ncol=4, framealpha=0.9, bbox_to_anchor=(0.5, -0.04))
-    fig.suptitle("RQ1: what reasoning buys and what it costs, per model and dataset", fontsize=8)
     fig.tight_layout(rect=(0, 0.04, 1, 1))
     _save(fig, "fig_rq1_panels")
 
@@ -188,7 +189,6 @@ def fig_rq2(full):
     ax.axhline(0, color="k", lw=0.6)
     ax.set_xticks(x); ax.set_xticklabels(labels, rotation=30, ha="right")
     ax.set_ylabel("agreement gain ($\\Delta$QWK)\nwith guidance vs none")
-    ax.set_title("RQ2: evaluation-guidance benefit per dataset")
     h = [plt.Line2D([], [], marker="s", color=c, ls="", mec="k", mew=0.3, label=d.replace("_", " "))
          for d, c in COLOR.items()]
     ax.legend(handles=h, loc="upper right", framealpha=0.9)
@@ -225,7 +225,6 @@ def fig_rq3(full):
     ax.axhline(0, color="k", lw=0.6)
     ax.set_xticks(x); ax.set_xticklabels([g[0] for g in groups])
     ax.set_ylabel("agreement change ($\\Delta$QWK)\n(below 0 = worse than baseline)")
-    ax.set_title("RQ3: scope and decomposition (PT-CS-verified code)")
     _save(fig, "fig_rq3_scope_decomp")
 
 
@@ -238,10 +237,10 @@ def fig_rq4_cost(full):
     base = full[(full.context_level == "with_guidance") & (full.scope == "question_by_question")
                 & (full.decomposition == "holistic") & full.dataset.isin(["mohler", "semeval", "riayn"])].copy()
     base["ce"] = pd.to_numeric(base.get("cost_eur"), errors="coerce")
-    panels = [("short answer", ["mohler", "semeval"]), ("code", ["riayn"])]
     models = ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]
     mk = {"off": "o", "on": "s"}
-    fig, axes = plt.subplots(1, 2, figsize=(COL, COL * 0.6), sharey=True, sharex=True)
+    fig, axes = plt.subplots(2, 1, figsize=(COL, COL * 1.05), sharey=True, sharex=True)
+    panels = [("(a) short answers (Mohler, SemEval)", ["mohler", "semeval"]), ("(b) code (RIAYN)", ["riayn"])]
     for ax, (title, dsets) in zip(axes, panels):
         sub = base[base.dataset.isin(dsets)]
         for m in models:
@@ -253,18 +252,18 @@ def fig_rq4_cost(full):
                     continue
                 ax.scatter(cell.ce.mean() * 1000, np.mean(qs), s=30, marker=mk[rs], color=MCOL[m],
                            edgecolor="k", lw=0.3, alpha=0.9, zorder=3)
-        ax.set_xscale("log"); ax.set_title(title)
-        ax.set_box_aspect(1)   # square plot boxes (equal height and width), both panels identical
-    axes[0].set_ylabel("agreement (QWK, K=5)")
-    for ax in axes:
-        ax.set_xlabel("cost/1000 (EUR, log)")
-    fig.suptitle("RQ4: agreement vs cost, by task", fontsize=8)
+        ax.set_xscale("log"); ax.set_title(title, loc="left", fontsize=7)
+        ax.set_ylabel("agreement (QWK)")
+        ax.set_xticks([0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30])
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+        ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    axes[1].set_xlabel("cost of 1000 grades (EUR, log scale)")
     h1 = [plt.Line2D([], [], marker="o", color=MCOL[m], ls="", mec="k", mew=0.4, label=m.split("-")[0])
           for m in models]
     h2 = [plt.Line2D([], [], marker=mk[r], color="grey", ls="", mec="k", mew=0.4, label=f"reasoning {r}")
           for r in ["off", "on"]]
     fig.tight_layout()
-    fig.legend(handles=h1 + h2, loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.01), framealpha=0.9)
+    fig.legend(handles=h1 + h2, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 0.0), framealpha=0.9)
     _save(fig, "fig_rq4_cost")
 
 
@@ -287,7 +286,7 @@ def fig_rq6_transfer(full):
         return _qwk(_itemmeans(g[(g.dataset == "ptcs") & (g.domain == dom) & g.item_id.isin(_INTERV)]))
 
     from scipy.stats import spearmanr
-    panels = [("short answer", ["mohler", "semeval"], "short_answer"), ("code", ["riayn"], "code")]
+    panels = [("(a) short answers", ["mohler", "semeval"], "short_answer"), ("(b) code", ["riayn"], "code")]
     fig, axes = plt.subplots(1, 2, figsize=(COL, COL * 0.62), sharey=True)
     for ax, (title, pub_ds, dom) in zip(axes, panels):
         pub_open, ver_open = [], []
@@ -307,9 +306,8 @@ def fig_rq6_transfer(full):
         ax.text(0.5, 0.03, f"rank $\\rho={rho:.2f}$", transform=ax.transAxes, ha="center", va="bottom",
                 fontsize=6.5, bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#bbb", lw=0.4))
         ax.set_xticks([0, 1]); ax.set_xticklabels(["public", "PT-CS\nverified"])
-        ax.set_xlim(-0.3, 1.3); ax.set_title(title); ax.set_box_aspect(1)
+        ax.set_xlim(-0.3, 1.3); ax.set_title(title, loc="left", fontsize=7); ax.set_box_aspect(1)
     axes[0].set_ylabel("agreement (QWK, K=5)")
-    fig.suptitle("RQ6: does the public ranking transfer?", fontsize=8)
     mh = [plt.Line2D([], [], color=MCOL[m], marker=MARK[m], ls="-", mec=MCOL[m], label=m.split("-")[0])
           for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash"]]
     rh = [plt.Line2D([], [], color="grey", ls="-", label="reasoning on"),
@@ -339,7 +337,6 @@ def fig3(df):
                    hatch="" if rs == "off" else "//", label=f"{m.split('-')[0]}$|${rs}")
             ax.errorbar(pos, qs, yerr=[los, his], fmt="none", ecolor="k", elinewidth=0.5, capsize=1.2)
     ax.set_xticks(x); ax.set_xticklabels([d if d != "ptcs" else "ptcs*" for d in dsets]); ax.set_ylabel("agreement (QWK, K=5)")
-    ax.set_title("RQ4: agreement by model $\\times$ reasoning, per dataset")
     ax.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.13), framealpha=0.9)
     ax.text(0.99, 0.97, f"*PT-CS verified, N={_ptcs_n(base)}", transform=ax.transAxes, ha="right", va="top", fontsize=5, color="#555")
     _save(fig, "fig3_per_dataset_config")
@@ -357,7 +354,6 @@ def fig4(df):
                edgecolor="k", lw=0.3, alpha=0.85)
     ax.set_xticks(x); ax.set_xticklabels([d if d != "ptcs" else "ptcs*" for d in dsets])
     ax.set_ylabel("within-item SD across $k$\n(lower = more consistent)")
-    ax.set_title("RQ1: reasoning reduces consistency (the sacrificed axis)")
     ax.legend(framealpha=0.9)
     ax.text(0.99, 0.97, f"*PT-CS verified, N={_ptcs_n(base)}", transform=ax.transAxes, ha="right", va="top", fontsize=5, color="#555")
     _save(fig, "fig4_consistency")
@@ -375,7 +371,7 @@ def fig5(df):
         ax.bar(x + (j - 0.5) * w, means, w, label=st, color="#888" if st == "clean" else "#8e44ad",
                edgecolor="k", lw=0.3, alpha=0.85)
     ax.set_xticks(x); ax.set_xticklabels([m.split("-")[0] for m in mods]); ax.set_ylabel("mean grade")
-    ax.set_title("RQ5: clean vs shared conversation"); ax.legend(framealpha=0.9)
+    ax.legend(framealpha=0.9)
     fig.tight_layout()
     _save(fig, "fig5_conversation")
 
@@ -390,16 +386,13 @@ def main() -> int:
     _style()
     print("Phase 6 figures ->", OUT)
     df = load_verified()                 # PT-CS = verified stratum everywhere
-    rc = phase5.reasoning_contrast(df)
-    rp = phase5.reasoning_paired(df)
-    b = rp[(rp.context_level == "with_guidance") & (rp.scope == "question_by_question") & (rp.decomposition == "holistic")]
-    prem = {}
-    for (ds, dom, m), g in b.groupby(["dataset", "domain", "model"]):
-        o = pd.to_numeric(g[g.reasoning == "off"].completion_tokens, errors="coerce").mean()
-        n = pd.to_numeric(g[g.reasoning == "on"].completion_tokens, errors="coerce").mean()
-        prem[(ds, dom, m)] = n / max(o, 1)
-    rc["premium_x"] = rc.apply(lambda r: prem.get((r.dataset, r.domain, r.model), np.nan), axis=1)
+    # RQ1 cells come from the table generator's rq1_cells, so Figs. rq1trade/rq1 plot exactly the
+    # values of the RQ1 table and prose: dQWK on the tractable (non-overflowing) items, SD and token
+    # premium on all paired items, PT-CS on the verified stratum. (Until 2026-10-15 the figures plotted
+    # dQWK on all paired items, a different basis from the prose; the advisor review caught it.)
+    from experiments.analysis.make_phase5_tables import rq1_cells
     _full = phase5.load_main()
+    rc = rq1_cells(_full, _INTERV).rename(columns={"prem_x": "premium_x"})
     fig1(rc); fig2(rc); fig_panels(rc); fig_rq2(_full); fig_rq3(_full); fig_rq4_cost(_full)
     fig_rq6_transfer(_full); fig3(df); fig4(df); fig5(df)
     print("done.")

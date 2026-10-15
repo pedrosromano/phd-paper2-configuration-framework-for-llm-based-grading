@@ -33,7 +33,7 @@
 \node[draw=black!45, dotted, rounded corners=2pt, inner sep=2.2mm, fit=(q)(ans)(rub)(ref)] (ctx) {};
 \node[font=\scriptsize\itshape, black!55, below=0.9mm of ctx] (ctxlbl) {prompt context};
 \node[bc, fill=none, fit=(cs)(ctx)(ctxlbl)] (block) {};
-\node[font=\scriptsize\itshape, anchor=south] at ([yshift=4mm]block.north) (blocklbl) {one block, ready to grade};
+\node[font=\scriptsize\itshape, anchor=south] at ([yshift=4mm]block.north) (blocklbl) {one question, ready to grade};
 % stack effect: peers of the front block, offset up-right, suggesting many blocks.
 % Shadows behind, then a white mask so the front block stays clean and the inputs show.
 \begin{scope}[on background layer]
@@ -42,7 +42,7 @@
   \fill[white, rounded corners=3pt] (block.south west) rectangle (block.north east);
 \end{scope}
 % --- start, the exam, and the split, stacked at the left to save width (activity-diagram start node) ---
-\node[proc, left=16mm of block, text width=24mm] (split) {Split into blocks of $n$ questions};
+\node[proc, left=16mm of block, text width=24mm] (split) {Take the questions one at a time};
 \node[proc, above=6mm of split] (exam) {A student's exam};
 \node[start, above=6mm of exam] (start) {};
 \draw[arr] (start) -- (exam);
@@ -61,24 +61,22 @@
 \draw[arr] (roff.south) -- (llm.north);
 \draw[arr] (ron.south) -- (llm.north);
 % --- loop and the activity-diagram final node ---
-\node[dec, right=14mm of llm, text width=13mm] (more) {more blocks?};
+\node[dec, right=14mm of llm, text width=15mm] (more) {more questions?};
 \node[circle, draw=black, minimum size=4.4mm, inner sep=0pt, right=11mm of more] (end) {};
 \fill[black] (end) circle (1.1mm);
 \node[font=\scriptsize\itshape, anchor=north] at ([yshift=-1mm]end.south) {exam graded};
 \draw[arr] (llm) -- (more);
 \draw[arr] (more) -- node[edgelbl,above]{no} (end);
 \coordinate (loopbot) at ([yshift=-12mm]block.south);
-\draw[arr] (more.south) |- (loopbot) -| node[edgelbl,pos=0.25,below]{yes, next block} (block.south);
+\draw[arr] (more.south) |- (loopbot) -| node[edgelbl,pos=0.25,below]{yes, next question} (block.south);
 \end{tikzpicture}%
 }
-\caption{How the recommended configuration grades an exam. The questions are split into blocks of $n$
-questions (about four in the exams we studied), graded one block per call to keep the number of calls down (the
-stack stands for the remaining blocks, run the same way). Each block assembles the input data the call needs, shown dashed: the question,
-the student answer, and the matching guidance, a rubric for code or a reference answer for short answers.
-That block is then sent to the model holistically, in a clean conversation, and the grades come back; the
-process repeats block by block until the exam is graded. Reasoning is the one conditional setting: it stays
-off by default and turns on only to rescue a grader that collapses to zero on code. The framework is
-model-independent.}
+\caption{How the recommended configuration grades an exam. Each question is graded in its own call
+(the stack stands for the remaining questions, graded the same way). The call carries the input data
+shown dashed: the question, the student answer, and the matching guidance, a rubric for code or a
+reference answer for short answers. The model returns one holistic score, in a clean conversation, and
+the process repeats until every question is graded. Reasoning is the one conditional setting: it stays
+off by default and turns on only to rescue a grader that collapses to zero on code.}
 \label{fig:frameworkdiagram}
 \end{figure*}
 
@@ -103,9 +101,8 @@ to a model that discriminates is the better fix.
 
 The other axes resolve into simpler priors. Evaluation guidance is the one change that reliably helped, so
 a trustworthy rubric or reference answer should be supplied whenever one exists. Grading scope did not
-move agreement, so it is settled on efficiency: grade in blocks of a few questions rather than one at a
-time, because each request carries a fixed overhead, so fewer and larger calls run faster and cost less, a
-difference that compounds across a whole cohort. Scoring a rubric criterion by criterion did not
+improve agreement, and grading the whole exam in one call saved only 3\% of the cost per question, so each
+question is graded in its own call. Scoring a rubric criterion by criterion did not
 reliably change agreement with the final grade, so holistic scoring, which is also
 cheaper, is the default. The grading
 session should be kept clean, each answer scored on its own, because a shared conversation that accumulated
@@ -114,15 +111,6 @@ reproducible regime. For the model itself, the cheapest one that discriminates i
 open model with reasoning off matched the best agreement at a fraction of the cost, and the closed frontier
 model never justified its much higher price.
 
-Two design decisions give the framework its reach. First, the rows are keyed on
-observable properties, whether the baseline collapses and whether a trustworthy reference exists, rather
-than on model identity, so the guidance does not expire when a new model appears. Second, the guide treats consistency and cost
-as first-class alongside agreement, because both moved against reasoning here and a recommendation made on
-agreement alone would have pointed the wrong way. The two artifacts play complementary parts:
-Fig.~\ref{fig:frameworkdiagram} shows the grading process the priors prescribe, and
-Table~\ref{tab:framework} is where each choice is backed by its trade-off and the evidence behind it.
-
 In practice the guide is a short, confident routine. Pick the cheapest model that discriminates (GLM-5.1
 was the efficient all-rounder), and grade with reasoning off, a trustworthy rubric or reference where one
-exists, in blocks rather than one question at a time, with holistic scores and a clean conversation per
-answer.
+exists, one question per call, with holistic scores and a clean conversation per answer.

@@ -1,38 +1,42 @@
-% main.tex -- Article 2 (IEEEtran). Skeleton; full assembly in Phase 7.1.
-% Reuses the Article 1 toolchain (CLAUDE.md S9). Compile:
+% main.tex -- Article 2, IEEE Access template (ieeeaccess.cls, vendored in access-template/).
+% Converted from IEEEtran (TLT) on 2026-10-15; the TLT version is in git history (commit 7ec38b5).
+% Compile from article/ (latexmkrc adds access-template/ to the TeX search paths):
 %   eval "$(/usr/libexec/path_helper)"; latexmk -pdf -synctex=1 -interaction=nonstopmode main.tex
-% NOTE: \usepackage{url} is REQUIRED -- the BibTeX .bbl wraps Scopus URLs (with % and &)
-% in \url{}; without the url package the bbl's \providecommand{\url}[1]{#1} treats % as a
-% comment and swallows the bibliography (runaway argument). Do not remove it.
-\documentclass[lettersize,journal]{IEEEtran}
+% NOTE: \usepackage{url} is REQUIRED -- the BibTeX .bbl wraps URLs (with % and &) in \url{};
+% without it the bbl's \providecommand{\url}[1]{#1} treats % as a comment and swallows the
+% bibliography (runaway argument). Do not remove it.
+\documentclass{ieeeaccess}
+% The class redefines the \year primitive as a front-matter macro; pgf/tikz need the primitive.
+% Without this shim tikz fails with ~100 errors (gotcha inherited from the Article 1 Access build).
+\makeatletter
+\gdef\theyear{2026}
+\def\year{\pdfprimitive\year}
+\makeatother
 \usepackage[table]{xcolor}
 \usepackage{array,amsmath,amssymb}
 \usepackage{url}
-\usepackage{pgf}        % figures are matplotlib .pgf, composed natively (Phase 7.3)
+\usepackage{graphicx}
+\usepackage{pgf}        % figures are matplotlib .pgf, composed natively
 \def\mathdefault#1{#1}  % matplotlib pgf math tick labels (e.g. 10^2) without mpl's preamble
 \usepackage{eurosym}    % \euro in Method/Results cost reporting
-\usepackage{tikz}       % ORCID logo is a tikz \pic (pgf alone lacks tikzpicture/\usetikzlibrary)
-% Float tuning (7.4): 16 floats over ~9 text pages; defaults defer the big table* queue past
-% the references. Allow fuller float pages/tops so tables interleave with their sections.
+\usepackage{tikz}       % ORCID logo is a tikz \pic; framework decision diagram
+% Float tuning: many floats over few text pages; let tables interleave with their sections.
 \setcounter{topnumber}{4}\setcounter{dbltopnumber}{3}\setcounter{totalnumber}{8}
 \renewcommand{\topfraction}{0.95}\renewcommand{\dbltopfraction}{0.95}
 \renewcommand{\textfraction}{0.05}
 \renewcommand{\floatpagefraction}{0.75}\renewcommand{\dblfloatpagefraction}{0.75}
-% stfloats enables [b] (bottom) placement for double-column floats (figure*/table*), which standard
-% LaTeX forbids; used so the wide RQ1 figure can sit at the foot of its page, after its text reference.
+% stfloats enables [b] placement for double-column floats (figure*/table*).
 \usepackage{stfloats}
-% hyperref makes \href (ORCID links), \cite, \ref, \url clickable. NOTE (2026-06-12): it was
-% NOT previously loaded -- only the `url` package (\url) was; \orcidicon needs \href, so hyperref
-% is required here. [hidelinks] keeps the current look (no coloured link boxes). Loaded last per
-% hyperref convention.
+% hyperref: clickable \href (ORCID), \cite, \ref, \url. The class loads it only in JTEHM mode.
 \usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={A Configuration Framework for LLM-Based Grading in Computer Science},
+  pdfauthor={Pedro S. Romano, Daniel F. S. Fernandes, Pedro J. A. Sebastiao}}
 
 % --- ORCID icon (coauthor request) ---
-% scalerel.sty (used by the original \scalerel*{}{|}) is absent from this BasicTeX install and
-% tlmgr needs admin; \orcidicon below scales the logo with \resizebox (graphicx, loaded by tikz)
-% to 1em, the visual equivalent of scaling it to the height of a `|'.
+% scalerel.sty is absent from this BasicTeX install; \orcidicon scales the logo with \resizebox
+% (graphicx) to 1em, the visual equivalent of scaling it to the height of a `|'.
 \usetikzlibrary{svg.path}
-\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc}  % framework decision diagram (Fig. fig:frameworkdiagram)
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc}  % framework decision diagram
 \definecolor{orcidlogocol}{HTML}{A6CE39}
 \tikzset{
   orcidlogo/.pic={
@@ -49,33 +53,37 @@
 }}}}
 
 \begin{document}
+\history{Date of publication xxxx 00, 0000, date of current version xxxx 00, 0000.}
+\doi{10.1109/ACCESS.2026.0000000}
+
 \title{A Configuration Framework for LLM-Based Grading in Computer Science}
 
-\author{Pedro~S.~Romano$^{1}$~\orcidicon{0009-0002-2566-851X},
-Daniel~F.~S.~Fernandes$^{1,2}$~\orcidicon{0000-0002-1356-9349}, and
-Pedro~J.~A.~Sebastião$^{1,2}$~\orcidicon{0000-0001-7729-4033}\\
-\small $^{1}$Iscte -- Instituto Universitário de Lisboa, Lisbon 1649-026, Portugal\\
-\small $^{2}$Instituto de Telecomunicações, Lisbon 1049-001, Portugal
-\thanks{Corresponding author: Pedro S. Romano (e-mail: Pedro\_Romano@iscte-iul.pt).}}
+\author{\uppercase{Pedro S. Romano}\authorrefmark{1}~\orcidicon{0009-0002-2566-851X},
+\uppercase{Daniel F. S. Fernandes}\authorrefmark{1,2}~\orcidicon{0000-0002-1356-9349}, AND
+\uppercase{Pedro J. A. Sebasti\~ao}\authorrefmark{1,2}~\orcidicon{0000-0001-7729-4033}}
 
-\markboth{IEEE Transactions on Learning Technologies, Vol. XX, No. X, Month Year}%
-         {Romano \MakeLowercase{\textit{et al.}}: A Configuration Framework for LLM-Based Grading in Computer Science}
+\address[1]{Iscte -- Instituto Universit\'ario de Lisboa, 1649-026 Lisbon, Portugal}
+\address[2]{Instituto de Telecomunica\c{c}\~oes, 1049-001 Lisbon, Portugal}
 
-\maketitle
+\markboth
+{Romano \headeretal: A Configuration Framework for LLM-Based Grading in Computer Science}
+{Romano \headeretal: A Configuration Framework for LLM-Based Grading in Computer Science}
+
+\corresp{Corresponding author: Pedro S. Romano (e-mail: Pedro\_Romano@iscte-iul.pt).}
 
 % Register: CLAUDE.md S9.2 (no em/en dashes as prose punctuation). RQ1 fence: no
 % "significant across all datasets"; the GPT-5.1 anchor never appears in the abstract.
 \begin{abstract}
-Instructors adopting graders based on large language models (LLMs) face a configuration problem:
-should the model reason before scoring, what guidance should it receive, should an exam be graded in
-one call or question by question, and which configuration is worth its cost? We study this design space
-systematically for computer science assessment, crossing extended reasoning, evaluation guidance,
+Instructors adopting graders based on large language models (LLMs) must answer several configuration
+questions. Should the model reason before scoring? What guidance should it receive? Should an exam be
+graded in one call or question by question? Which configuration is worth its cost? We study these
+choices systematically for computer science assessment, crossing extended reasoning, evaluation guidance,
 grading scope, rubric decomposition, model family, and conversation state under one protocol, on four
 datasets covering short answers and code. Reasoning is isolated within each of three open-weight
 model families, and every measurement is repeated, so its effect on cost and on run-to-run
 consistency is measured alongside quality. Reasoning raised agreement with teacher grades in only
-five of twenty model-dataset combinations, at 10 to 925 times the output tokens and with reduced
-consistency in nearly every cell. Evaluation guidance, measured on one model, lifted quadratic
+five of twenty model-dataset combinations, at 10 to 925 times the output tokens, and it reduced
+consistency in sixteen of the twenty. Evaluation guidance, measured on one model, lifted quadratic
 weighted kappa (QWK) by 0.12 to 0.24 on the public datasets and by 0.146 on the teacher-reviewed
 deployment data. Configuration rankings
 transferred to the deployment, where the best public configuration held up but the
@@ -84,15 +92,18 @@ comparisons into a decision guide and configuration framework that maps a gradin
 and the conditions under which the choice holds.
 \end{abstract}
 
-\begin{IEEEkeywords}
+\begin{keywords}
 Automated grading, large language models, learning analytics, computer science education,
 short-answer grading, code assessment, configuration framework.
-\end{IEEEkeywords}
+\end{keywords}
 
-% --- Sections (Phase 7.1) ---
+\titlepgskip=-21pt
+
+\maketitle
+
 \input{sections/introduction}
-\input{related/sota_draft}            % Related Work -- drafted in Phase 1.6
-\input{tables/published_baselines}    % Phase 1.5 context table (referenced from Related Work)
+\input{related/sota_draft}            % Related Work
+\input{tables/published_baselines}    % context table (referenced from Related Work)
 \input{sections/method}
 \input{sections/results}
 \input{sections/discussion}
@@ -102,5 +113,44 @@ short-answer grading, code assessment, configuration framework.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{bios/romano.jpeg}}]{Pedro S. Romano}
+received the M.Sc. degree in telecommunications and computer engineering from Iscte -- Instituto
+Universit\'ario de Lisboa, Lisbon, Portugal, where he is currently pursuing the Ph.D. degree. He has 11
+years of experience in teaching and in mobile and web development. He is currently a University Teacher at
+Iscte -- Instituto Universit\'ario de Lisboa, and an Executive Partner at AppX. His research focuses on
+machine learning and artificial intelligence, on which he has published peer-reviewed machine-learning
+studies; his interests also include mobile networks and software engineering.
+\end{IEEEbiography}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{bios/fernandes.jpeg}}]{Daniel F. S. Fernandes}
+received the B.S. and M.S. degrees in telecommunications and computer engineering and the Ph.D. degree in
+information science and technology from Iscte -- Instituto Universit\'ario de Lisboa, in 2012, 2017, and
+2021, respectively. He is an Assistant Professor at Iscte -- Instituto Universit\'ario de Lisboa, and a
+Researcher at Instituto de Telecomunica\c{c}\~oes, in the areas of computer science and
+telecommunications. He has 11 scientific publications as an author in journals or international
+conferences and 14 scientific publications as a co-author.
+\end{IEEEbiography}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{bios/sebastiao.jpeg}}]{Pedro J. A. Sebasti\~ao}
+(Member, IEEE) received the Ph.D. degree in electrical and computer engineering from Instituto Superior
+T\'ecnico, Lisbon, Portugal. He is a Full Professor at Iscte -- Instituto Universit\'ario de Lisboa, where
+he coordinates the curricular units of Technology-Based Project (Innovation and Entrepreneurship) and
+Telecommunication Project (Telecommunication Engineering). He is the President of AUDAX-ISCTE, the
+Innovation and Entrepreneurship Center, and has been responsible for several national and international
+technological innovation projects involving knowledge and technology transfer. He has supervised or
+co-supervised several M.Sc. and Ph.D. theses. He is the author or co-author of more than two hundred
+scientific articles and of several e-books and handbooks on innovation and entrepreneurship in emergent
+technologies. He has served as an expert and evaluator of more than one hundred national and international
+research and development projects (defense and civil), and has received several scientific, engineering,
+and teaching awards. He has supported technology-transfer projects leading to the creation of start-ups and
+spin-offs, accompanying investment, pilots, and sales, has worked in the national defense industry, and was
+responsible for communication technology systems in the Nokia Siemens business area. His research
+interests include the monitoring, control, and communications of drones and unmanned vehicles,
+telecommunication planning tools, stochastic-process modeling, efficient simulations, and efficient
+communication systems.
+\end{IEEEbiography}
+
+\EOD
 
 \end{document}

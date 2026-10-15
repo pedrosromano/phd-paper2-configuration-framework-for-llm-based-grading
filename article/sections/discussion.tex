@@ -15,13 +15,13 @@ cost. The paragraphs below draw the findings out along these lines and then take
 choosing a configuration.
 
 Reasoning was the clearest conditional effect. Extended thinking improved agreement with teacher grades
-in only a minority of model and dataset cells, and it always came with a high price. It multiplied output tokens by
-between 10 and 925 times, with the premium itself depending on the domain, and in most cells it lowered
+in only a minority of model-dataset combinations, and it always came with a high price. It multiplied output tokens by
+between 10 and 925 times, with the premium itself depending on the domain, and in most of them it lowered
 run-to-run consistency, so the same answer scored itself less alike across repetitions. That consistency
 loss is only partly mechanical: longer outputs give a non-deterministic backend more room to diverge, but
 the link between an answer's length and its grade variability was moderate and uneven, so part of the
 loss behaves like a property of reasoning itself rather than of length alone. Even the largest agreement
-gain in the study was modest, about a quarter of a QWK point, while most cells gained little or nothing
+gain in the study was modest, about a quarter of a QWK point, while most combinations gained little or nothing
 and a few lost ground. Such a small return rarely justified a cost this large. The one dependable
 exception was a grader whose baseline had collapsed to scoring much of the code at exactly zero; there,
 reasoning restored the discrimination the baseline had lost. This is why the advice about
@@ -34,11 +34,11 @@ where the rubric helped the code grader about as much as on the public code. Pro
 configuration change in the study that reliably improved agreement.
 
 How the grade was requested mattered far less. Grading a whole exam in one pass rather than question by
-question, and scoring a rubric criterion by criterion rather than holistically, barely changed agreement
-with the final grade, so these choices can be settled on cost and simplicity, with the cheaper shape the
-better default. A whole exam here is about four questions, the size of these exams; we did not test
-larger sets, so whole-exam grading should be read as a block of roughly that size rather than an
-arbitrarily long one. The way the grading session is run had a small effect of a different kind. Grading
+question, and scoring a rubric criterion by criterion rather than holistically, did not improve agreement
+with the final grade, and neither saved enough to matter: grading the whole exam at once cut the cost per
+question by only 3\%, and scoring criterion by criterion doubled it. The simple shape, one question per
+call with one holistic score, is therefore the default. A whole exam here is about four questions; we did
+not test larger sets. The way the grading session is run had a small effect of a different kind. Grading
 every answer inside one conversation that accumulated across the exam biased grades slightly downward
 relative to giving each answer a clean conversation, and the order in which answers were presented added
 variation with no consistent direction. Clean, question-by-question grading was thus both the least

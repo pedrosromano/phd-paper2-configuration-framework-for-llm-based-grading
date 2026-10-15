@@ -8,12 +8,11 @@
 \section{Study Design and Method}
 \label{sec:method}
 
-This section describes how the study was run. We set out the configuration design space
-(Section~\ref{sec:design}), the four
-datasets and the reliability of their reference grades (Section~\ref{sec:datasets}), the models and
-serving backends (Section~\ref{sec:models}), the grading harness that drives every model through one
-interface (Section~\ref{sec:harness}), and the metrics and statistical protocol applied throughout
-(Section~\ref{sec:metrics}). Grading and scoring are identical across every model and configuration,
+This section describes how the study was run: the configuration choices compared
+(Section~\ref{sec:design}), the four datasets and the reliability of their reference grades
+(Section~\ref{sec:datasets}), the models and serving backends (Section~\ref{sec:models}), the grading
+harness that drives every model through one interface (Section~\ref{sec:harness}), and the metrics and
+statistical protocol applied throughout (Section~\ref{sec:metrics}). Grading and scoring are identical across every model and configuration,
 so that the comparisons the study draws are like-for-like.
 
 \subsection{Design Space}
@@ -27,27 +26,40 @@ scoring criteria) or reference answer the dataset provides. \emph{Scope} contras
 against one call per question. \emph{Decomposition} contrasts one holistic score against scoring each
 rubric criterion separately and summing. \emph{Model family} covers three open-weight families and one
 closed frontier model. \emph{Conversation state} contrasts a clean conversation per answer against a
-single conversation that accumulates the grading history, and is run as a focused sub-study rather
-than a factorial dimension. Answer order is controlled (natural versus inverse) because shared history
-makes position a potential confound.
+single conversation that accumulates the grading history of one student's exam, and is run as a
+focused sub-study rather than a factorial dimension. In a shared conversation the answers graded first
+can influence the ones graded later, so the sub-study grades each exam twice: once with the answers in
+the exam's own question order and once in reverse order. Comparing the two isolates the effect of an
+answer's position.
+
+Model family and reasoning are crossed in full: every family grades every dataset with reasoning off
+and on. Evaluation guidance, scope, and decomposition are each varied one at a time from a baseline
+configuration on a single model, Qwen3.5 (Section~\ref{sec:models}), which keeps the number of runs
+affordable (Section~\ref{sec:harness}).
 
 \begin{table}[!t]
 \centering
 \footnotesize
-\caption{The configuration design space and the datasets each dimension applies to.}
+\caption{The configuration dimensions studied and the datasets each one applies to.}
 \label{tab:design}
 \begin{tabular}{lll}
 \hline
 Dimension & Levels & Applies to \\
 \hline
-Model family & 4 families (\S\ref{sec:models}) & all datasets \\
+Model family & four families & all datasets \\
 Reasoning & off, on & all datasets \\
-Evaluation guidance & none, with guidance & all datasets \\
-Scope & q-by-q, whole exam & PT-CS only \\
-Decomposition & holistic, criterion & PT-CS only \\
+Evaluation guidance & none, with guidance$^{a}$ & all datasets \\
+Scope & per question, whole exam$^{b}$ & PT-CS only \\
+Decomposition & holistic, per criterion$^{c}$ & PT-CS only \\
 Conversation state & clean, shared history & PT-CS sub-study \\
 \hline
 \end{tabular}
+
+\vspace{2pt}
+\parbox{0.95\columnwidth}{\scriptsize $^{a}$A rubric for the code datasets or a reference answer for the
+short-answer datasets, added to the question and the student answer. $^{b}$One call per question, or
+one call for all the questions of a student's exam. $^{c}$One overall score, or one score per rubric
+criterion, summed.}
 \end{table}
 
 Two applicability rules keep the design honest. First, scope and decomposition exist only where the
@@ -64,12 +76,13 @@ solutions, and we did not synthesise any, to avoid introducing a confound.
 We develop every comparison on three public datasets and reserve PT-CS, our deployment dataset, for
 transfer validation and for the experiments only it can support, which need its multi-question
 submissions and rubric criteria.
-\emph{Mohler}~\cite{mohler_text_2009,mohler_learning_2011} provides 2{,}273 CS short answers over 80
+Throughout, the \emph{gold} grade is the human grade that a model's score is compared against.
+\emph{Mohler}~\cite{mohler_text_2009,mohler_learning_2011} provides 2273 CS short answers over 80
 questions, each graded 0 to 5 by two teachers (we use their mean). The two annotators themselves agree
 only moderately~\cite{mohler_learning_2011}, so agreement against their mean carries a human ceiling
 that we keep in mind when reading absolute Mohler scores. \emph{SemEval-2013
-Task~7}~\cite{dzikovska_semeval_2013} (SciEntsBank and Beetle) provides short answers with binary
-correct/incorrect gold labels (the human reference a grader is scored against, which we call the gold).
+Task~7}~\cite{dzikovska_semeval_2013} (SciEntsBank and Beetle) provides short answers whose gold grade is
+a binary label, correct or incorrect.
 SemEval is far larger than our other corpora, so it is the one we subsample: we draw 800 items by a
 fixed-seed sample that preserves the dataset's question and domain proportions. The other public
 datasets are graded in full. \emph{Rubric Is All You Need}
@@ -80,8 +93,9 @@ comparator. Published results situate our numbers but are not the success criter
 all conclusions here rest on our own like-for-like contrasts.
 
 \emph{PT-CS} is an export of a real Portuguese university grading deployment: 737 Java code answers
-and 437 theory answers, in Portuguese, with question-specific rubrics (no reference solutions) and
-heterogeneous point scales (1 to 12, normalised before any analysis). The export was pseudonymised at
+and 437 theory answers, in Portuguese, with question-specific rubrics and no reference solutions.
+Each question carries its own weight in the exam, between 1 and 12 points, so all scores are
+normalised to a common scale before any analysis (Section~\ref{sec:metrics}). The export was pseudonymised at
 ingest: all direct identifiers were dropped and every platform-generated comment was stripped, so no
 model output from the platform reaches the graders we test. The platform seeds each grade with an artificial-intelligence (AI)
 suggestion that teachers can review and correct, and the final grade is a two-teacher consensus with
@@ -89,12 +103,12 @@ no per-teacher records, so no inter-rater agreement is recoverable.
 
 The reliability of the PT-CS gold is limited and uneven, and we treat that as a design input rather
 than a footnote. Not all grades were teacher-reviewed; some may be unreviewed AI output. We therefore
-stratify the 1{,}184 graded responses by an auditable criterion: a response is \emph{intervened} when
+stratify the 1184 graded responses by an auditable criterion: a response is \emph{intervened} when
 its final grade differs from the sum of its per-criterion scores, which is direct evidence that a human
 moved the grade. Table~\ref{tab:strata} reports the strata: 382 responses (32.3\%) are intervened, 393
 (33.2\%) match the sum exactly (suspected unreviewed), and 409 (34.5\%) have no per-criterion record at
 all. We promote the intervened stratum to a curated transfer set in its own right,
-\emph{PT-CS-verified} (295 code and 84 short-answer items in the analysed cells), and exclude the rest
+\emph{PT-CS-verified} (295 code and 84 short-answer items in the analysed configurations), and exclude the rest
 from transfer claims by this declared criterion. The criterion detects intervention, not correctness:
 an exact-sum grade may still be a teacher who reviewed and agreed, so the stratum is a conservative
 proxy for review evidence, not a validation guarantee.
@@ -111,17 +125,20 @@ stratum: it measures model behaviour and does not depend on the reference grades
 
 Four model families grade every dataset. Three are open-weight and expose a within-family reasoning
 toggle, so the reasoning contrast holds the model fixed and flips only its thinking mode:
-\emph{Qwen3.5} (served as \texttt{Qwen/Qwen3.5-35B-A3B}), \emph{DeepSeek-V4-Flash}
-(\texttt{deepseek-ai/DeepSeek-V4-Flash}), and \emph{GLM-5.1} (\texttt{zai-org/GLM-5.1}), all run via
-the DeepInfra inference application programming interface (API) with \texttt{enable\_thinking} off or
-on. The fourth, \emph{GPT-5.1} (via
-OpenAI, \texttt{reasoning\_effort} mapped to \texttt{none} or \texttt{high}), is a closed frontier
-anchor: a reference point run on reduced item sets, used to situate the open models, never as an
-inference target. Qwen3.5 with reasoning off, with guidance, question-by-question, and holistic
+\emph{Qwen3.5}~\cite{qwen_qwen35_2026} (served as \texttt{Qwen/Qwen3.5-35B-A3B}),
+\emph{DeepSeek-V4-Flash}~\cite{deepseek_v4_2026} (\texttt{deepseek-ai/DeepSeek-V4-Flash}), and
+\emph{GLM-5.1}~\cite{glm5_2026} (\texttt{zai-org/GLM-5.1}), all run via the DeepInfra inference
+application programming interface (API) with \texttt{enable\_thinking} off or on. The fourth,
+\emph{GPT-5.1}~\cite{openai_gpt51_2025} (via OpenAI, \texttt{reasoning\_effort} mapped to
+\texttt{none} or \texttt{high}), is a closed frontier anchor. Its price per grade is one to two orders
+of magnitude above the open models', so it grades 60-item subsets of each dataset: enough to situate
+the open models against a frontier reference, too few to rank it among them. Qwen3.5 with reasoning off, with guidance, question-by-question, and holistic
 scoring is the internal baseline configuration against which the dimension contrasts are framed.
 
-All calls use temperature 0 with a 4{,}096-token output ceiling for reasoning-off and 32{,}768 for
-reasoning-on cells; every run row logs the provider, served model identifier, sampling parameters,
+All calls use temperature 0, the setting that makes a model's output as repeatable as the backend
+allows, so that the repeated runs measure the variation that remains rather than deliberate sampling
+noise. Output is capped at 4096 tokens with reasoning off and at 32\,768 tokens with reasoning on.
+Every run logs the provider, served model identifier, sampling parameters,
 prompt hash, and timestamp (main matrix executed June 2026). We log these because absolute scores are conditional on the full serving setup, not just the prompt
 and sampling we control: the served quantization, the inference software, and the hardware differ
 across providers and cannot be matched exactly, so a different setup can yield different absolute
@@ -143,10 +160,12 @@ the closed anchor), and results are cached by item, configuration hash, and repe
 never re-bill completed calls. Whole-exam calls grade many questions in one
 API call, so token and cost are counted once per call, not once per question.
 
-The sampled matrix balances power and cost. Reasoning-off cells run on the full public and PT-CS
-datasets (2{,}273 Mohler, 149 RIAYN, 737 PT-CS code, 437 PT-CS theory items) and on the 800-item
-SemEval sample, all at $k=5$. Reasoning-on is the most expensive axis, because reasoning traces run long, so those cells use a fixed
-sample of 175 items per dataset and domain. The whole-exam arm grades 60 PT-CS submissions
+We call the full set of model, configuration, and dataset combinations that were run the
+\emph{experiment matrix}, and it balances statistical power against cost. With reasoning off, every
+model grades the full public and PT-CS datasets (2273 Mohler, 149 RIAYN, 737 PT-CS code, 437 PT-CS
+theory items) and the 800-item SemEval sample, all at $k=5$. Reasoning on is the most expensive
+setting, because reasoning traces run long, so it uses a fixed sample of 175 items per dataset and
+domain. The whole-exam arm grades 60 PT-CS submissions
 (252 questions), and the anchor grades 60-item subsets at $k=3$. The conversation sub-study runs 20
 submissions in two fixed answer orders (natural and inverse) on two models (Qwen3.5 and GLM-5.1) at
 $k=3$, with everything else frozen at the baseline configuration. We did not run every combination.
@@ -166,8 +185,7 @@ $[0, \text{scale max}]$, because rubrics with penalty criteria can push a criter
 maximum, because the native scales differ (Mohler 5, SemEval 1, PT-CS 1 to 12) and raw scores must
 never be pooled.
 
-Agreement is reported primarily as Quadratic Weighted Kappa (QWK), the standard measure for ordinal
-scoring: it penalises large grader-reference disagreements more than small ones. It reaches 1 at
+Agreement is reported primarily as QWK, the standard measure for ordinal scoring: it penalises large grader-reference disagreements more than small ones. It reaches 1 at
 perfect agreement and 0 at chance, and can in principle fall below 0 when a grader disagrees with the
 reference more than chance would; all the values we report are positive. QWK needs discrete, ordered grades, but the model
 produces a continuous score, so we first round each normalised score onto a common 0-to-5 ordinal
@@ -187,19 +205,20 @@ Section~\ref{sec:threats}.
 SemEval needs its own mapping, because the model emits a continuous score while its gold is binary
 (correct or incorrect). We turn the score into a correct/incorrect label at a fixed 0.5 cutoff, set in
 advance rather than tuned to the data, because choosing the cutoff that maximised accuracy here would
-inflate the result. We then report pooled accuracy together with AUROC, the area under the ROC curve,
-a threshold-free measure equal to the chance a correct answer outscores an incorrect one (0.5 is
+inflate the result. We then report pooled accuracy together with AUROC, the area under the receiver operating
+characteristic (ROC) curve, a threshold-free measure equal to the chance a correct answer outscores an incorrect one (0.5 is
 chance, 1 is perfect); it confirms the result does not hinge on the 0.5 cut.
 We do not break SemEval into its seen and unseen subsets: those splits were defined for supervised
 systems relative to a training set, and our prompted models have none, so the labels do not denote
 novelty to our grader.
 
 Every expensive contrast is computed on its paired subset, stated where the result is reported: the
-reasoning contrast pairs off and on cells on the 175 sampled items (restricted to those whose
+reasoning contrast pairs the off and on runs on the 175 sampled items (restricted to those whose
 reasoning never overflowed the token ceiling, Section~\ref{sec:rq1}), the scope contrast on the 252
-whole-exam questions, and anchor comparisons on the anchor's 60-item subsets. Uncertainty is given by
+whole-exam questions, and anchor comparisons on the anchor's 60-item subsets; $N$ denotes the number of
+items a contrast rests on. Uncertainty is given by
 bootstrap 95\% confidence intervals (CIs) over items (800 resamples, fixed seed), and we call a
-contrast significant when its CI excludes zero. We report effect sizes with CIs rather than p-values,
-and apply no multiple-comparison correction; instead of family-wise claims we enumerate which cells
-reach significance. The conversation sub-study uses paired Wilcoxon signed-rank tests, the standard
+contrast significant when its CI excludes zero. We report effect sizes with CIs rather than $p$-values,
+and apply no multiple-comparison correction; instead of family-wise claims we enumerate which
+model-dataset combinations reach significance. The conversation sub-study uses paired Wilcoxon signed-rank tests, the standard
 nonparametric test for paired differences.
