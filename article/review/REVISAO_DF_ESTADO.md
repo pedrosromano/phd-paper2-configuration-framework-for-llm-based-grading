@@ -74,17 +74,18 @@ Incidentes resolvidos (código já corrigido e com testes): parser com `[...]` e
 
 **Feito** (commits no branch): template Access; título e nomes; PT-CS (Intro, Método, Ameaças parcial); Resultados RQ1–RQ6 reescritos; Método (dimensões, modelos, matriz, métricas: Holm, TOST, custo re-preçado; sem datas); Discussão; tabelas (`tab_rq1_values` com Holm, `tab_framework` derivada, `tab_guide_regret` nova, Tabela I); figuras (RQ1, RQ2 3 modelos, RQ3 2 modelos, RQ4 custo re-preçado, RQ5 painéis de efeito, RQ6 8 configs).
 
-**Falta fazer (por esta ordem):**
-1. **Guia (`sections/framework.tex`)** com a regra D13: "reasoning off; o modelo mais forte que não colapsa (GLM-5.1 aqui)"; regra de reasoning on: se o modelo colapsa em zeros (Qwen, e GPT em versão mais leve: D15); âmbito "uma pergunta por chamada" (7% mais caro o exame inteiro); decomposição holística (~2× custo); conversa limpa; parágrafo novo com **C10** e `\input{tables/tab_guide_regret}` (Tabela "How the guide's default compares…"). No gerador (`make_phase5_tables.py`, bloco T6) mudar `bloco_c.GUIDE` para `{"short_answer": ["glm-5.1"], "code": ["glm-5.1"]}` (ou mostrar GLM e DeepSeek); na `tab_framework` mudar a linha "Grading short answers" (Recommended: "Reasoning off; the strongest model that does not collapse").
-2. **RQ4 (results.tex)**: alinhar o parágrafo das respostas curtas com D13 (hoje diz "the cheapest configuration with reasoning off is the efficient pick"); dizer que, nos itens comparáveis, o GLM off fica mais perto do melhor (remeter para o guia).
-3. **Ameaças (`sections/threats.tex`)**: retirar "GPT-5.1 is a reference point…"; manter "guidance bundles two interventions"; acrescentar que o âmbito só pôde ser testado no PT-CS (D, p3); confirmar "9 to 56%" com `audit_pct_baselines.temp0_variation` (o GPT completo pode mudar o intervalo); sem caveats a mais (§9.2).
-4. **Conclusão**: guidance "across three model families"; reasoning (5/20, 2 após Holm); transferência (topo transfere; ordem transfere no código, não nas curtas); manter futuro trabalho (few-shot, fine-tuning, mais dados de código, mais instituições, zero-collapse).
-5. **Abstract (`main.tex`)**: reasoning "in at most five of twenty model-dataset combinations, two after correcting for multiple comparisons, at 9 to 925 times the output tokens, and it reduced consistency in seventeen of the twenty"; guidance "across three model families raised QWK in 11 of 12 combinations, by 0.10 to 0.26"; transferência; tirar "measured on one model".
-6. **Introdução**: "a closed frontier model (GPT-5.1) serves as a reference point" → passa a comparar-se de igual para igual.
-7. Comentários de cabeçalho desatualizados em `results.tex`/`main.tex` (mencionam "anchor", "verified").
-8. Compilar, ver todas as páginas (contact sheet), overfull boxes, nº de páginas.
-9. Atualizar CLAUDE.md (§1.2 RQ6, §6.1 "anchor", decisões D12–D15) e commit.
-10. (Opcional) Documento de resposta ao Daniel; (opcional) publicar como artifact para partilhar.
+**Feito depois da compactação (2026-10-15):** 1. guia reescrito com D13 (linha nova "Choosing the model",
+Tabela 5 `tab_guide_regret` com GLM-5.1 off e o modelo mais barato lado a lado, parágrafo C10); 2. RQ4 alinhado
+(respostas curtas: "reasoning off é a escolha eficiente; o modelo pouco importa, 0.02"); 3. Ameaças (sem
+"reference point"; âmbito e conversa só no PT-CS; temperatura 0 agora **9–60%**); 4. Conclusão reescrita
+(quatro resultados + default do guia); 5. Abstract (249 palavras: 5/20 e 2 após Holm, 9–925×, 17/20,
+guidance 11/12 em três famílias 0.10–0.26, exame inteiro e critério nunca melhoram, transferência,
+default a ≤0.08 do melhor com até 30× menos custo); 6. Introdução (quatro famílias com toggle; GPT deixa de
+ser "reference point"); 7. comentários de cabeçalho; 8. compilado (16 páginas; overfull só do template);
+9. CLAUDE.md atualizado. Também: Discussão alinhada com D13; aberturas "RQ4 asks"/"The sixth research
+question" reescritas (§9.2).
+
+**Falta (opcional):** documento de resposta ao Daniel (a partir da secção 2); publicar como artifact.
 
 ---
 

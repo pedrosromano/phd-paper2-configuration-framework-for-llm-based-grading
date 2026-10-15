@@ -34,10 +34,9 @@ This paper studies these configuration choices systematically and delivers the s
 configuration guide. We cross six configuration dimensions: extended reasoning (on or off), evaluation guidance (none
 versus a rubric or reference answer), grading scope (whole exam versus question by question), rubric
 decomposition (holistic versus criterion by criterion), model family, and conversation state (a clean
-conversation per answer versus shared history). Three open-weight model families (Qwen3.5,
-DeepSeek-V4-Flash, GLM-5.1) expose a within-family reasoning toggle, so the reasoning effect is
-isolated from model identity, a confound in prior comparisons; a closed frontier model (GPT-5.1)
-serves as a reference point. The study runs on four datasets in two domains. Three are public and give cross-population external
+conversation per answer versus shared history). Four model families, three open-weight (Qwen3.5,
+DeepSeek-V4-Flash, GLM-5.1) and one closed frontier model (GPT-5.1), expose a within-family reasoning
+toggle, so the reasoning effect is isolated from model identity, a confound in prior comparisons. The study runs on four datasets in two domains. Three are public and give cross-population external
 validity: the Mohler~\cite{mohler_text_2009,mohler_learning_2011} and
 SemEval-2013 Task~7~\cite{dzikovska_semeval_2013} corpora of graded computer-science short answers,
 and the Rubric Is All You Need corpus of rubric-graded Java code~\cite{pathak_rubric_2025}. The

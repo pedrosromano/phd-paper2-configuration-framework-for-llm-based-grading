@@ -1,9 +1,9 @@
-%% sections/results.tex -- Phase 7.1/7.2/7.3. Register: CLAUDE.md S9.2. Every number comes from
-%% the auto-generated tables in article/tables/ or the figures in article/figures/ (verify, don't
-%% recall). Fences: enumerate RQ1 cells (never "significant across all datasets"); scope qbq vs
-%% whole-exam = "not significant, not equivalence" (no TOST); RQ2 scoped to Qwen3.5; RQ6 anchor =
-%% corroboration only, never winner; PT-CS = the 379 teacher-validated answers (B2, 2026-10-15: no
-%% strata or 'verified' wording in the paper; the conversation sub-study uses complete deployment exams).
+%% sections/results.tex -- Register: CLAUDE.md S9.2. Every number comes from the auto-generated tables
+%% in article/tables/, the figures in article/figures/, or the audits (audit_pct_baselines, bloco_c);
+%% verify, don't recall. Fences: enumerate RQ1 combinations (5 of 20 significant, 2 after Holm); no
+%% TOST equivalence for scope or decomposition; GPT-5.1 graded the same items as the open models and is
+%% ranked like them; PT-CS = the 379 teacher-validated answers (B2, 2026-10-15: no strata or 'verified'
+%% wording); no distinction between run periods (D12).
 
 \section{Results}
 \label{sec:results}
@@ -177,7 +177,7 @@ grading is therefore the default.
 \subsection{RQ4: Models and Cost}
 \label{sec:cost}
 
-RQ4 asks how the four model families compare as graders and what each costs. We read agreement per
+The four model families differ both in how well they grade and in what they cost. We read agreement per
 dataset (Fig.~\ref{fig:perdataset}), then weigh it against cost task by task
 (Fig.~\ref{fig:costquality}). The public datasets fall into two task types, short answer (Mohler and
 SemEval) and code (RIAYN), so the two figures show the same evidence at two grains. On the public
@@ -229,12 +229,13 @@ billed per-token rates.}
 
 Second, cost separates the configurations far more than agreement, and how that plays out depends on
 the task (Fig.~\ref{fig:costquality}). On short answers cost spans more than two orders of magnitude
-(\euro{}0.02 to \euro{}6.3 per thousand grades) for almost no change in agreement, so the cheapest
-configuration with reasoning off is the efficient pick: in Fig.~\ref{fig:costquality}a, the
-DeepSeek-V4-Flash and Qwen3.5 circles at the far left reach 0.60 to 0.61 at \euro{}0.02 to \euro{}0.03,
-while the best short-answer configuration, Qwen3.5 with reasoning on, adds 0.01 at about 200 times the
-cost. On code (Fig.~\ref{fig:costquality}b) the spread tracks effort, and reasoning is what buys it: it
-lifted code agreement for every family, significantly for two of the four (Section~\ref{sec:rq1}), and
+(\euro{}0.02 to \euro{}6.3 per thousand grades) for almost no change in agreement, so reasoning off is
+the efficient pick: in Fig.~\ref{fig:costquality}a, the four models with reasoning off reach 0.60 to
+0.62 at \euro{}0.02 to \euro{}0.34, while the best short-answer configuration, Qwen3.5 with reasoning on,
+adds about 0.01 at about 200 times the cost of Qwen3.5 with reasoning off. Because the models with
+reasoning off sit within 0.02 of each other, the choice of model matters little on short answers. On
+code (Fig.~\ref{fig:costquality}b) the spread tracks effort, and reasoning is what buys it: on RIAYN it
+lifted agreement for every family, significantly for two of the four (Section~\ref{sec:rq1}), and
 GLM-5.1 leads at 0.726 with reasoning off (\euro{}0.95) and 0.803 with reasoning on (\euro{}6.4). For
 Qwen3.5 the code gain (0.544 to 0.754) is mostly the repair of its zero-collapse, not a general
 benefit. The closed frontier model is never the efficient choice: GPT-5.1 sits mid-pack on short
@@ -249,8 +250,8 @@ earns its keep only on code, and conditionally: it gives the study's best config
 that gain is not significant, and across families the code benefit was significant only where it
 repaired a collapsed baseline (Qwen) or on one dataset for GPT-5.1 (Section~\ref{sec:rq1}). So turn it
 on for code when a model collapses or local validation shows it pays. The configuration guide
-(Section~\ref{sec:framework}) builds exactly this rule in, with cost alongside agreement and consistency
-as a first-class axis.
+(Section~\ref{sec:framework}) builds this rule in and tests its default against the best configuration
+on each dataset.
 
 Cost also carries an operational lesson. All the experiments together (whole-exam cost counted once per
 call) cost \euro{}101.1 at the providers' billed rates: \euro{}50.4 on OpenAI and \euro{}50.7 on
@@ -321,8 +322,8 @@ answers 84 with reasoning off and 32 with reasoning on; code 295 and 67.}
 \label{fig:transfer}
 \end{figure}
 
-The sixth and final research question is whether the configuration guidance found on the public datasets
-carries over to a real deployment context. PT-CS, with its 379 teacher-validated answers from a live
+The last comparison asks whether the configuration guidance found on the public datasets carries over
+to a real deployment context. PT-CS, with its 379 teacher-validated answers from a live
 AI-assisted grading platform, is that context. PT-CS has
 already appeared in the earlier questions, but at the level of a single factor, asking whether reasoning,
 guidance, or scope behaves on it as on the public data. The question here is asked once and at the level
@@ -353,4 +354,4 @@ reasoning on) and at the model-family level on code (GLM-5.1). Below the top, th
 the public data separate the configurations clearly, on code, and not where they barely do, on short
 answers. The practical reading follows directly (Section~\ref{sec:cost}): on code, a configuration chosen
 on public data is a strong, transferable default; on short answers, where the configurations are close,
-choose on cost and confirm locally.
+the choice matters less and is best confirmed locally.

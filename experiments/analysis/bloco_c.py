@@ -181,15 +181,18 @@ def c9(df: pd.DataFrame) -> dict[str, pd.DataFrame]:
 
 
 # --------------------------------------------------------------------------- C10
-GUIDE = {"short_answer": ["deepseek-v4-flash"], "code": ["deepseek-v4-flash", "glm-5.1"]}
+# D13 (user 2026-10-15): the guide's default is reasoning off with the strongest model that does not
+# collapse to zeros (GLM-5.1 here), on both tasks; "cheapest" = the cheapest model with reasoning off on
+# that dataset, shown as the budget alternative.
+GUIDE = {"short_answer": ["glm-5.1", "cheapest"], "code": ["glm-5.1", "cheapest"]}
 
 
 def c10(df: pd.DataFrame) -> pd.DataFrame:
     """Per dataset, among the graded configurations (model x reasoning; with guidance, one question per
-    call, holistic): the best in hindsight vs the guide's default (reasoning off; the cheapest model, and
-    on code also GLM-5.1, the all-rounder the guide names). Regret = QWK lost; cost ratio = how many times
-    cheaper the guide's pick is than the best configuration. Only configurations graded on every item of
-    the dataset compete (so the 60-item GPT-5.1 subsets do not, until C5 completes)."""
+    call, holistic): the best in hindsight vs each pick in GUIDE, always with reasoning off ("cheapest" is
+    resolved per dataset to the cheapest model with reasoning off). Regret = QWK lost; cost ratio = how many
+    times cheaper the pick is than the best configuration. Only configurations graded on at least 90% of
+    the largest reasoning-on sample compete, all scored on the items they share."""
     d = _paper(df)
     d = d[(d.context_level == "with_guidance") & (d.scope == "question_by_question") & (d.decomposition == "holistic")]
     cost = phase5.dedupe_call_groups(d).assign(ce=lambda x: pd.to_numeric(x.cost_eur, errors="coerce"))
@@ -210,9 +213,10 @@ def c10(df: pd.DataFrame) -> pd.DataFrame:
             cfg.append({"m": m, "r": r, "qwk": q, "n": len(s), "eur": eur})
         cf = pd.DataFrame(cfg)
         best = cf.sort_values("qwk", ascending=False).iloc[0]
-        for pick in GUIDE[dom]:
+        for role in GUIDE[dom]:
+            pick = cf[cf.r == "off"].sort_values("eur").iloc[0].m if role == "cheapest" else role
             gp = cf[(cf.m == pick) & (cf.r == "off")].iloc[0]
-            rows.append({"dataset": f"{ds}:{dom[:5]}", "N_common": int(best.n), "best": f"{best.m}|{best.r}", "best_qwk": round(best.qwk, 3),
+            rows.append({"dataset": f"{ds}:{dom[:5]}", "role": role, "N_common": int(best.n), "best": f"{best.m}|{best.r}", "best_qwk": round(best.qwk, 3),
                          "guide": f"{pick}|off", "guide_qwk": round(gp.qwk, 3), "regret": round(best.qwk - gp.qwk, 3),
                          "best_eur/1000": round(best.eur, 3), "guide_eur/1000": round(gp.eur, 3),
                          "cheaper_x": round(best.eur / gp.eur, 1) if gp.eur else np.nan})

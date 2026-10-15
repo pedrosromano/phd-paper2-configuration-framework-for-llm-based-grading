@@ -1,7 +1,7 @@
-%% sections/framework.tex -- Phase 7.1. Register: CLAUDE.md S9.2. The configuration framework is the
-%% deliverable of the paper, given its own section (split from Discussion 2026-06-16) to foreground the
-%% artifact. Centre = tab_framework; "validate locally" governs the per-axis priors. The cross-cutting
-%% findings that justify the rows are discussed in Section~\ref{sec:discussion}.
+%% sections/framework.tex -- the configuration guide, the paper's deliverable (own section since
+%% 2026-06-16). Register: CLAUDE.md S9.2. Centre = tab_framework; tab_guide_regret (C10) tests the default.
+%% Default rule D13 (2026-10-15): reasoning off with the strongest model that does not collapse to zero
+%% (GLM-5.1 here), on both tasks. Every number here regenerates from make_phase5_tables (T5, T6).
 
 \section{The Configuration Guide}
 \label{sec:framework}
@@ -84,32 +84,46 @@ off by default and turns on only to rescue a grader that collapses to zero on co
 
 The study's deliverable is a configuration guide for LLM-based grading: for a given grading task, it
 says which configuration to use and why. It is a small set of priors, one per configuration choice, each
-giving a recommended default, the trade-off that justifies it, and the condition
-that would call for a different choice. Table~\ref{tab:framework} sets out the priors with their
-evidence, and Fig.~\ref{fig:frameworkdiagram} shows how it grades an exam. They are starting points
-backed by the controlled comparisons of Section~\ref{sec:results}. We take them one choice at a time.
+giving a recommended default, the trade-off that justifies it, and the condition that would call for a
+different choice. Table~\ref{tab:framework} sets out the priors with their evidence, and
+Fig.~\ref{fig:frameworkdiagram} shows how the recommended configuration grades an exam. They are
+starting points backed by the controlled comparisons of Section~\ref{sec:results}. We take them one
+choice at a time.
 
-Reasoning is the axis that most repays care, and its default is off. On short answers the gain is small
-while the token cost runs up to 925 times higher, so off is the clear choice. On code reasoning does
-raise agreement, but on a model that already discriminates, one that spreads grades across the scale
-rather than collapsing them toward zero, it is not worth the cost: GLM-5.1, the strongest code grader in
-the study, gains only a small, non-significant amount from reasoning on, at several times the price, so
-off stays the efficient default. Reasoning earns its keep in only one case, rescuing a weak model that collapses to scoring much of
-the code at exactly zero, where it restores the discrimination the model had lost. Even there, switching
-to a model that discriminates is the better fix.
+The first choice is the model, and the guide's default is the strongest model that does not collapse to
+zero, used with reasoning off on both tasks. Collapse is the property to check first, because a
+collapsing model gives a score of exactly zero to many answers that teachers credit
+(Section~\ref{sec:rq1}). In this study the default is GLM-5.1, the best code grader with reasoning off
+and near the top on short answers (Section~\ref{sec:cost}). On short answers the four models with
+reasoning off agreed with the teachers almost equally, within 0.02 QWK of each other on the public
+datasets, so one model chosen for its behaviour on code serves both tasks.
 
-The other axes resolve into simpler priors. Evaluation guidance is the one change that reliably helped, so
-a trustworthy rubric or reference answer should be supplied whenever one exists. Grading scope did not
-improve agreement, and grading the whole exam in one call saved only 3\% of the cost per question, so each
-question is graded in its own call. Scoring a rubric criterion by criterion did not
-reliably change agreement with the final grade, so holistic scoring, which is also
-cheaper, is the default. The grading
-session should be kept clean, each answer scored on its own, because a shared conversation that accumulated
-across the exam biased grades downward and answer order added noise, while clean grading was the most
-reproducible regime. For the model itself, the cheapest one that discriminates is the efficient choice: an
-open model with reasoning off matched the best agreement at a fraction of the cost, and the closed frontier
-model never justified its much higher price.
+\input{tables/tab_guide_regret}
 
-In practice the guide is a short, confident routine. Pick the cheapest model that discriminates (GLM-5.1
-was the efficient all-rounder), and grade with reasoning off, a trustworthy rubric or reference where one
-exists, one question per call, with holistic scores and a clean conversation per answer.
+Table~\ref{tab:guideregret} tests this default against the best configuration found in hindsight on each
+dataset, with every configuration scored on the same items. The default gave up between 0.000 and 0.077
+QWK, less than a third of the 0.26 spread between configurations on code, and cost up to 30 times less
+than the best configuration. The cheapest model, DeepSeek-V4-Flash with reasoning off, cost about ten
+times less again but gave up 0.073 to 0.131, so it suits a budget that can absorb that loss.
+
+Reasoning stays off by default. On short answers its gain was small and none survived correction for
+multiple comparisons, while it multiplied the output tokens by up to 925 and made grades less consistent
+across repetitions in most combinations. On code the gain depended on the model. For the two models that
+discriminate, GLM-5.1 and DeepSeek-V4-Flash, reasoning changed agreement by $-0.048$ to $+0.076$, with no
+change significant, at 109 to 192 times the output tokens. Reasoning earned its keep only where a model
+gave too many zeros: it restored much of the discrimination Qwen3.5 had lost, and it lifted GPT-5.1,
+which also overused zero on code, by 0.228 on RIAYN. Even there, switching to a model that does not
+collapse is the cheaper fix.
+
+The other choices resolve into simpler priors. Evaluation guidance was the one change that reliably
+helped, so a trustworthy rubric or reference answer should be supplied whenever one exists. Grading the
+whole exam in one call never improved agreement and cost 7\% more per question, so each question is
+graded in its own call. Scoring a rubric criterion by criterion never improved agreement with the final
+grade and cost about twice as much, so holistic scoring is the default. The grading session should be
+kept clean, each answer scored on its own, because a shared conversation that accumulated across the
+exam lowered grades slightly and answer order moved individual grades.
+
+In practice the guide is a short routine. Check on a small set of teacher-graded answers that a candidate
+model does not collapse to zero, take the strongest one that passes (GLM-5.1 here), and grade with
+reasoning off, a trustworthy rubric or reference where one exists, one question per call, holistic
+scores and a clean conversation per answer.

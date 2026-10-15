@@ -14,6 +14,7 @@
 \makeatother
 \usepackage[table]{xcolor}
 \usepackage{array,amsmath,amssymb}
+\usepackage{booktabs}     % \cmidrule for grouped column heads (tab_guide_regret)
 \usepackage{url}
 \usepackage{graphicx}
 \usepackage{pgf}        % figures are matplotlib .pgf, composed natively
@@ -72,24 +73,25 @@
 \corresp{Corresponding author: Pedro S. Romano (e-mail: Pedro\_Romano@iscte-iul.pt).}
 
 % Register: CLAUDE.md S9.2 (no em/en dashes as prose punctuation). RQ1 fence: no
-% "significant across all datasets"; the GPT-5.1 anchor never appears in the abstract.
+% "significant across all datasets" (5 of 20, 2 after Holm; D9). Numbers: tab_rq1_values,
+% tab_framework, tab_guide_regret, audit_pct_baselines.rq6_transfer.
 \begin{abstract}
 Instructors adopting graders based on large language models (LLMs) must answer several configuration
 questions. Should the model reason before scoring? What guidance should it receive? Should an exam be
 graded in one call or question by question? Which configuration is worth its cost? We study these
 choices systematically for computer science assessment, crossing extended reasoning, evaluation guidance,
 grading scope, rubric decomposition, model family, and conversation state under one protocol, on four
-datasets covering short answers and code. Reasoning is isolated within each of three open-weight
-model families, and every measurement is repeated, so its effect on cost and on run-to-run
-consistency is measured alongside quality. Reasoning raised agreement with teacher grades in only
-five of twenty model-dataset combinations, at 10 to 925 times the output tokens, and it reduced
-consistency in sixteen of the twenty. Evaluation guidance, measured on one model, lifted quadratic
-weighted kappa (QWK) by 0.12 to 0.24 on the public datasets and by 0.146 on the
-deployment data. Configuration rankings
-transferred to the deployment, where the best public configuration held up but the
-deployment samples were too small to order the rest. We turn these comparisons into a configuration
-guide that maps a grading task to a recommended configuration, its cost, and the conditions under which
-the choice holds.
+datasets covering short answers and code. Reasoning is switched on and off within each of four model
+families, three open-weight and one closed, and every measurement is repeated, so cost and run-to-run
+consistency are measured alongside quality. Reasoning raised agreement with teacher grades
+in at most five of twenty model-dataset combinations, two after correcting for multiple comparisons, at
+9 to 925 times the output tokens, and it reduced consistency in seventeen of the twenty. Evaluation
+guidance raised quadratic weighted kappa (QWK) in eleven of twelve combinations across three model
+families, by 0.10 to 0.26. Grading a whole exam in one call and scoring a rubric criterion by criterion
+never improved agreement. Configuration rankings on public code data carried over to a real deployment; on
+short answers, where configurations differed by at most 0.04 QWK, only the top did. We turn these comparisons into a configuration guide that maps a grading task to a
+recommended configuration and its cost; its default stayed within 0.08 QWK of the best configuration on
+every dataset, at up to 30 times lower cost.
 \end{abstract}
 
 \begin{keywords}

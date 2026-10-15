@@ -159,21 +159,22 @@ def rq1_cells(df: pd.DataFrame, interv: set) -> pd.DataFrame:
 
 
 def _tex(df, path, caption, label, star=False, colspec=None, size="\\small", placement=None,
-         rowsep=None, rowrule=False):
+         rowsep=None, rowrule=False, head_pre=None):
     """star=True emits table* (two-column span, IEEEtran) for tables too wide for one column;
     colspec overrides the default all-'l' spec (e.g. p{} columns so long prose cells wrap);
     placement overrides the default float specifier (e.g. '!ht' to let a single-column table sit
     in-column next to its reference instead of only at a page top);
     rowsep (e.g. '3pt') adds vertical space between body rows so multi-line cells in adjacent rows
     stay visually separated (a wrapped line cannot be mistaken for a new row);
-    rowrule=True draws a horizontal rule between every body row (same purpose, stronger separation).
+    rowrule=True draws a horizontal rule between every body row (same purpose, stronger separation);
+    head_pre is a raw LaTeX line set above the column names (e.g. \\multicolumn group heads).
     Layout-only knobs (Phase 7.2): cell CONTENT is unchanged by any of them."""
     cols = list(df.columns)
     rs = f" \\\\[{rowsep}]" if rowsep else " \\\\"
     head = " & ".join(str(c) for c in cols) + " \\\\"
     lines = [" & ".join(str(v) for v in r) + rs for r in df.itertuples(index=False)]
     joiner = "\n\\hline\n" if rowrule else "\n"
-    body = ("\\begin{tabular}{" + (colspec or "l" * len(cols)) + "}\n\\hline\n" + head
+    body = ("\\begin{tabular}{" + (colspec or "l" * len(cols)) + "}\n\\hline\n" + (head_pre + "\n" if head_pre else "") + head
             + "\n\\hline\n" + joiner.join(lines) + "\n\\hline\n\\end{tabular}")
     env = "table*" if star else "table"
     plc = placement or ("!tp" if star else "!t")
@@ -435,9 +436,52 @@ def main() -> int:
                & (df.domain == "code") & df.model.isin(["qwen3.5", "deepseek-v4-flash"]) & df.dataset.isin(["riayn", "ptcs"])]
     _cc = dcost.groupby(["model", "dataset", "decomposition"]).cost_eur.mean().unstack()
     dec_ratio = float((_cc["criterion"] / _cc["holistic"]).mean())   # criterion vs holistic cost per answer
+    # --- T6: how well the guide does (C10, 2026-10-15; D13). Per dataset, the guide's default (reasoning
+    #     off with the strongest model that does not collapse to zeros, GLM-5.1, on both tasks) and the
+    #     budget alternative (the cheapest model with reasoning off) against the best configuration in
+    #     hindsight, all on the items every configuration graded (the reasoning samples). Engine: bloco_c.c10.
+    #     Computed before T5 because the guide's model row quotes it. ---
+    from experiments.analysis import bloco_c
+    bloco_c.GUIDE = {"short_answer": ["glm-5.1", "cheapest"], "code": ["glm-5.1", "cheapest"]}
+    reg = bloco_c.c10(df)
+    names = {"qwen3.5": "Qwen3.5", "glm-5.1": "GLM-5.1", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1"}
+    lbl = {"mohler:short": "Mohler", "semeval:short": "SemEval", "ptcs:short": "PT-CS short",
+           "riayn:code": "RIAYN", "ptcs:code": "PT-CS code"}
+    order = ["mohler:short", "semeval:short", "ptcs:short", "riayn:code", "ptcs:code"]
+    dft = reg[reg.role == "glm-5.1"].set_index("dataset").loc[order]
+    chp = reg[reg.role == "cheapest"].set_index("dataset").loc[order]
+    cheapest = chp.guide.str.split("|").str[0].unique()
+    assert len(cheapest) == 1, f"the cheapest model differs across datasets: {cheapest}"
+    cheapest = names[cheapest[0]]
+    rt = pd.DataFrame([[lbl[ds], int(a.N_common), names[a.best.split("|")[0]] + ", reasoning " + a.best.split("|")[1],
+                        f"{a.best_qwk:.3f}", f"{a['best_eur/1000']:.2f}",
+                        f"{a.guide_qwk:.3f}", f"{a['guide_eur/1000']:.2f}", f"{a.regret:.3f}",
+                        f"{b.guide_qwk:.3f}", f"{b['guide_eur/1000']:.2f}", f"{b.regret:.3f}"]
+                       for ds, a, b in zip(order, (dft.loc[o] for o in order), (chp.loc[o] for o in order))],
+                      columns=["Dataset", "N", "Configuration", "QWK", "\\euro/1000", "QWK", "\\euro/1000",
+                               "Given up", "QWK", "\\euro/1000", "Given up"])
+    _tex(rt, "tab_guide_regret.tex",
+         "How the guide's default compares with the best configuration in hindsight, per dataset. All "
+         "configurations use guidance, one question per call and holistic scoring. The guide's default is "
+         f"GLM-5.1 with reasoning off; the cheapest alternative is {cheapest} with reasoning off. Every "
+         "configuration is scored on the same N items, those that all of them graded (the reasoning samples). "
+         "Given up is the QWK lost against the best configuration; costs are euros per 1000 grades.",
+         "tab:guideregret", star=True, colspec="lrlrrrrrrrr", size="\\footnotesize",
+         head_pre=("& & \\multicolumn{3}{c}{Best in hindsight} & \\multicolumn{3}{c}{Guide default} & "
+                   "\\multicolumn{3}{c}{Cheapest model} \\\\ \\cmidrule(lr){3-5}\\cmidrule(lr){6-8}\\cmidrule(lr){9-11}"))
+    g_lo, g_hi = dft.regret.min(), dft.regret.max(); c_lo, c_hi = chp.regret.min(), chp.regret.max()
+    g_x = dft["best_eur/1000"] / dft["guide_eur/1000"]
+    c_x = dft["guide_eur/1000"] / chp["guide_eur/1000"]
+    print(f"  guide (Section framework): default gives up {g_lo:.3f}-{g_hi:.3f} at up to {g_x.max():.0f}x lower cost "
+          f"than the best; the cheapest gives up {c_lo:.3f}-{c_hi:.3f} and is {c_x.min():.0f}-{c_x.max():.0f}x cheaper than the default")
+    short_prem = [v for k, v in prem_by.items() if k[1] == "short_answer"]
+    R_SHORT = f"{int(round(min(short_prem)))}--{int(round(max(short_prem)))}"
+
     fw = pd.DataFrame([
-        {"Scenario": "Grading short answers", "Recommended": "Reasoning off; the cheapest model",
-         "Trade-off in the rule": f"the reasoning gain is small and rarely significant (significant for Qwen on Mohler and SemEval, none after correcting for multiple comparisons), and reasoning off is {R_OVERALL}$\\times$ cheaper"},
+        {"Scenario": "Choosing the model", "Recommended": "The strongest model that does not collapse to zero, with reasoning off (here GLM-5.1, for both tasks)",
+         "Trade-off in the rule": f"on the five datasets it stayed {g_lo:.3f} to {g_hi:.3f} QWK below the best configuration in hindsight, at up to {g_x.max():.0f} times lower cost; the cheapest model gave up {c_lo:.3f} to {c_hi:.3f} for a further cost saving (Table~\\ref{{tab:guideregret}})"},
+        {"Scenario": "Grading short answers", "Recommended": "Reasoning off",
+         "Trade-off in the rule": f"the reasoning gain is small and none survives correction for multiple comparisons (before correction it is significant only for Qwen on Mohler and SemEval), while reasoning on uses {R_SHORT} times the output tokens"},
         {"Scenario": "Grading code, the baseline collapses to zero", "Recommended": "Reasoning on, or switch to a discriminating model",
          "Trade-off in the rule": f"reasoning recovers the discrimination the collapsed baseline lost (Qwen ${qc_v:+.3f}$ QWK on PT-CS code), but at about {qwen_code_prem}$\\times$ the tokens and worse run-to-run consistency, so switching model is often the better fix"},
         {"Scenario": "Grading code, the baseline does not collapse", "Recommended": "Reasoning off; on only if local validation justifies it",
@@ -457,33 +501,9 @@ def main() -> int:
     ])
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
 
-    # --- T6: how well the guide does (C10, 2026-10-15). Per dataset, the guide's default (reasoning off;
-    #     short answers: the cheapest model, DeepSeek-V4-Flash; code: the strongest model that does not
-    #     collapse, GLM-5.1) against the best configuration in hindsight, all on the items every
-    #     configuration graded (the reasoning samples). Engine: bloco_c.c10. ---
-    from experiments.analysis import bloco_c
-    bloco_c.GUIDE = {"short_answer": ["deepseek-v4-flash"], "code": ["glm-5.1"]}
-    reg = bloco_c.c10(df)
-    names = {"qwen3.5": "Qwen3.5", "glm-5.1": "GLM-5.1", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1"}
-    lbl = {"mohler:short": "Mohler", "semeval:short": "SemEval", "ptcs:short": "PT-CS short",
-           "riayn:code": "RIAYN", "ptcs:code": "PT-CS code"}
-    cfg = lambda c: f"{names[c.split('|')[0]]}, reasoning {c.split('|')[1]}"
-    order = ["mohler:short", "semeval:short", "ptcs:short", "riayn:code", "ptcs:code"]
-    reg = reg.set_index("dataset").loc[order].reset_index()
-    rt = pd.DataFrame([{
-        "Dataset": lbl[r.dataset], "N": int(r.N_common),
-        "Best in hindsight": cfg(r.best), "QWK": f"{r.best_qwk:.3f}", "\\euro/1000": f"{r['best_eur/1000']:.2f}",
-        "Guide default": cfg(r.guide), "QWK ": f"{r.guide_qwk:.3f}", "\\euro/1000 ": f"{r['guide_eur/1000']:.2f}",
-        "Given up": f"{r.regret:.3f}"} for _, r in reg.iterrows()])
-    _tex(rt, "tab_guide_regret.tex",
-         "How the guide's default compares with the best configuration in hindsight, per dataset. The default "
-         "is reasoning off with guidance, one question per call, holistic scoring, and the cheapest model on "
-         "short answers or the strongest model that does not collapse on code. Every configuration is scored "
-         "on the same N items, those that all of them graded (the reasoning samples); Given up is the QWK "
-         "the default leaves on the table, and costs are euros per 1000 grades.",
-         "tab:guideregret", star=True, colspec="lrlrrlrrr", size="\\footnotesize")
     fw["Trade-off in the rule"] = fw["Trade-off in the rule"].map(lambda s: s[0].upper() + s[1:] if s else s)
     fw["Scenario"] = "\\raggedright " + fw["Scenario"]   # left-align (ragged right), not justified
+    fw["Recommended"] = "\\raggedright " + fw["Recommended"]
     _tex(fw, "tab_framework.tex",
          "The configuration guide. Each row pairs a grading scenario "
          "with a recommended setting and the trade-off behind it.",

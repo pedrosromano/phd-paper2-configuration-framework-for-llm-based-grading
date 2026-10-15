@@ -60,6 +60,10 @@ whole study and the Results structure):
   **did not reproduce**; corrected 2026-06-11, see §11 and `tab_ranking_transfer`). Where public and PT-CS
   readings diverge, the two explanations (real-context difference vs residual gold limits) remain
   non-separable — both point to the same prescription: validate locally with a trusted gold.
+  - **Current paper reading (2026-10-15, after bloco C; supersedes the numbers above):** GPT-5.1 now grades
+    the same items as the open models, so all **eight configurations** are ranked. Code: public vs PT-CS
+    order correlates at **ρ=0.81 (p=.015)**; short answers **ρ=0.36 (p=.39)**, only the ends hold (Qwen on
+    first, DeepSeek on last on both sides). Regenerate: `audit_pct_baselines.rq6_transfer`.
 
 **The deliverable is a framework, not a leaderboard.** The headline output is a **compact, empirically-grounded
 decision guide** — a table / set of rules mapping task characteristics (domain, rubric availability, budget) to
@@ -283,6 +287,8 @@ rationale: `experiments/model_roster.md`. This supersedes the inherited/stale ro
   strongest open coder 2026 — confirm a clean OFF at 3.4). Each graded reasoning **OFF vs ON** — three open
   vendors isolate reasoning from vendor.
 - **Paid frontier anchor (closed, exactly one):** **GPT-5.1** (`reasoning_effort` none/high; €150 ceiling).
+  **Since bloco C (C5, 2026-10-15) it is no longer an "anchor" in the paper:** it grades the same items as
+  the open models at k=5 and is ranked and counted like them (RQ1 has 20 model-dataset combinations).
 - **RQ4 breadth** is covered by these four families (3 open + closed), 3 with a clean toggle. **Kimi K2.6 was
   CUT** (2026-06-08): priciest, no clean toggle, breadth already served — gold-plating vs minimal-effort. The
   cost range $0.14/1M (V4-Flash) → $10/1M-out (GPT-5.1) gives the cost–quality axis.
@@ -1066,5 +1072,12 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   deleted; never discard complete June experiments.
 - ✅ **Guide default rule changed (D13, user 2026-10-15):** both tasks: reasoning off with the strongest model
   that does not collapse to zeros (GLM-5.1 here), not "the cheapest model" on short answers (C10 regret).
+  **Written into the paper (2026-10-15):** guide section, new row "Choosing the model" in `tab_framework`,
+  `tab_guide_regret` (Table 5: best in hindsight vs GLM-5.1 off vs the cheapest model off, DeepSeek-V4-Flash;
+  default gives up 0.000–0.077 at up to 30× lower cost, the cheapest 0.073–0.131 at a further ~10× saving),
+  RQ4 short-answer paragraph, Discussion, Conclusion and abstract. Engine: `bloco_c.c10` with
+  `GUIDE = {"short_answer"|"code": ["glm-5.1", "cheapest"]}` ("cheapest" resolved per dataset).
+- ✅ **Temperature-0 variation re-based again (2026-10-15):** with GPT-5.1 at full coverage the reasoning-off
+  range is **9–60%** (was 9–56%); Threats updated (`audit_pct_baselines.temp0_variation`).
 - ✅ **No run-period distinction in the paper (D12, user 2026-10-15):** no June/October, no "extensions", no
   reproduction-check sentence, no GLM-drift sentence; costs reported for all experiments together.

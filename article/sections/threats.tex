@@ -1,21 +1,15 @@
-%% sections/threats.tex -- Phase 7.1. Register: CLAUDE.md S9.2. REWRITTEN per PHASES 7.1: the old
-%% "two-teacher consensus, human-validated" wording is the S2.3 over-claim and must not reappear.
-%% Groups: gold/data (reliability, criterion limit, inflation-as-documented-not-supported),
-%% measurement/reproducibility, scope of the claims, data/code availability.
-%% COI statement REMOVED from the paper + dropped as a CLAUDE.md non-negotiable (user decision 2026-06-17):
-%% collecting one's own dataset is not per se a conflict; any required COI disclosure is handled at submission.
-%% Trimmed + bold run-in labels removed 2026-06-16 (rebalance vs the expanded framework section).
-%% Summarised 2026-06-17 to 3 paragraphs; PT-CS para LEADS WITH CONTAINMENT.
-%% Rewritten 2026-10-15 (B2, user-ratified): PT-CS = the 379 teacher-validated answers; no strata, no
-%% 'requalification', no 'uneven reliability'. Kept: selection effect, no inter-rater ceiling, AI-seeded
-%% proposal. Dropped: the grade-inflation sentence (its proxy did not support inflation; S9.2 caveat filter).
+%% sections/threats.tex -- Register: CLAUDE.md S9.2 (limitations once, here; lead with containment).
+%% PT-CS = the 379 teacher-validated answers (B2, 2026-10-15): no strata, no 'requalification', no
+%% 'uneven reliability'. Kept: selection effect, no inter-rater ceiling, AI-seeded proposal; scope and
+%% conversation rest on PT-CS alone (advisor p3). Temperature-0 range: audit_pct_baselines.temp0_variation.
 
 \section{Threats to Validity}
 \label{sec:threats}
 
 The guidance rests on the three public datasets, whose reference grades are independent of the
 authors. PT-CS serves as the transfer test and as the only source of multi-question exams, for grading
-scope, criterion decomposition, and the conversation sub-study. Three properties of PT-CS bound what it
+scope and the conversation sub-study, which therefore rest on it alone: none of the public datasets
+links answers into complete exams. Three properties of PT-CS bound what it
 can show. Its answers are those whose AI-proposed grade the teachers changed, and such answers may differ
 in difficulty from typical ones, so absolute PT-CS levels need not represent the whole deployment. The
 grades are a joint teacher decision with no per-teacher record, so no human agreement ceiling can be
@@ -24,16 +18,16 @@ inflated if that model resembled one we test; keeping only answers whose grade t
 limits this influence.
 
 The results are conditional on the served backends, so the transferable claim is the configuration
-guidance, not the absolute scores. Temperature 0 is not deterministic: with reasoning off, 9 to 56\% of
-items received different grades across repetitions, depending on the model and dataset. Reasoning cost is comparable only within a backend, not
-across them. The reasoning benefit is established on the tractable items only, since the non-random
-truncation exclusion drops the longest-reasoning cases.
+guidance, not the absolute scores. Temperature 0 is not deterministic: with reasoning off, 9 to 60\% of
+items received different grades across repetitions, depending on the model and dataset. Reasoning token counts
+come from each provider's own accounting, so they are best compared within a model. The reasoning comparison uses only the items whose reasoning fit within the
+output limit, and the excluded items were harder than average, so the reasoning benefit is established
+for the tractable items only.
 
 The guidance was established on the model families tested, with reasoning isolated within family, and is
 keyed on observable properties rather than model identity, so its reach to other models is by design rather
 than proof. Across all experiments, code evidence is narrower than short-answer evidence, resting on two
-Java-centric datasets, so we draw the code conclusions more cautiously. GPT-5.1 is a reference point, not an
-inference target: it graded small subsets and corroborates rather than ranks. The guidance contrast bundles
+Java-centric datasets, so we draw the code conclusions more cautiously. The guidance contrast bundles
 two different interventions, a rubric for code and a reference answer for short answers, which we report
 separately rather than as one combined effect. The expensive factors were varied one at a time rather than
 fully crossed, so interactions between them, such as reasoning with decomposition, are unmeasured.
