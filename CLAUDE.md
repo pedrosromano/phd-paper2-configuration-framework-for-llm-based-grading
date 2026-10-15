@@ -25,7 +25,8 @@ should you use?*
   TLT framing below. *History:* the paper was written for **TLT** (primary) / **ToE** (fallback); §1.1 and
   §9.1 keep that framing as background, and the TLT build is in git history (commit 7ec38b5).
 - **Advisor review (Daniel Fernandes, 2026-07-01, 79 PDF comments)** is being addressed on branch
-  `revisao-access`; the triage (simple / decisions / core) was agreed with the user on 2026-10-15.
+  `revisao-access`. **READ `article/review/REVISAO_DF_ESTADO.md` FIRST**: all decisions (D1–D15), the
+  status of every advisor comment, the bloco C results, and the ordered list of what is left to do.
 - Arc across the thesis: **Map (SLR) → Analyse (this) → Build (GradeGenie)**.
 
 ### 1.2 Research questions & the deliverable's form
@@ -1063,3 +1064,7 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   20 of the same 80 exams (seeded prefix), so RQ5 reports Qwen + DeepSeek (80 exams, k=5) and GLM-5.1
   (first 20 exams, k=3, June), stated in Method and caption. Only half-finished October GLM runs were
   deleted; never discard complete June experiments.
+- ✅ **Guide default rule changed (D13, user 2026-10-15):** both tasks: reasoning off with the strongest model
+  that does not collapse to zeros (GLM-5.1 here), not "the cheapest model" on short answers (C10 regret).
+- ✅ **No run-period distinction in the paper (D12, user 2026-10-15):** no June/October, no "extensions", no
+  reproduction-check sentence, no GLM-drift sentence; costs reported for all experiments together.
