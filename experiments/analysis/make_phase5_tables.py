@@ -456,6 +456,32 @@ def main() -> int:
          "Trade-off in the rule": f"a shared, accumulating conversation lowered grades slightly ({min(st_d):.3f} to {max(st_d):.3f} of the scale) and answer order moved individual grades by about {np.mean(or_a):.2f} (three models, up to 80 exams)"},
     ])
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
+
+    # --- T6: how well the guide does (C10, 2026-10-15). Per dataset, the guide's default (reasoning off;
+    #     short answers: the cheapest model, DeepSeek-V4-Flash; code: the strongest model that does not
+    #     collapse, GLM-5.1) against the best configuration in hindsight, all on the items every
+    #     configuration graded (the reasoning samples). Engine: bloco_c.c10. ---
+    from experiments.analysis import bloco_c
+    bloco_c.GUIDE = {"short_answer": ["deepseek-v4-flash"], "code": ["glm-5.1"]}
+    reg = bloco_c.c10(df)
+    names = {"qwen3.5": "Qwen3.5", "glm-5.1": "GLM-5.1", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1"}
+    lbl = {"mohler:short": "Mohler", "semeval:short": "SemEval", "ptcs:short": "PT-CS short",
+           "riayn:code": "RIAYN", "ptcs:code": "PT-CS code"}
+    cfg = lambda c: f"{names[c.split('|')[0]]}, reasoning {c.split('|')[1]}"
+    order = ["mohler:short", "semeval:short", "ptcs:short", "riayn:code", "ptcs:code"]
+    reg = reg.set_index("dataset").loc[order].reset_index()
+    rt = pd.DataFrame([{
+        "Dataset": lbl[r.dataset], "N": int(r.N_common),
+        "Best in hindsight": cfg(r.best), "QWK": f"{r.best_qwk:.3f}", "\\euro/1000": f"{r['best_eur/1000']:.2f}",
+        "Guide default": cfg(r.guide), "QWK ": f"{r.guide_qwk:.3f}", "\\euro/1000 ": f"{r['guide_eur/1000']:.2f}",
+        "Given up": f"{r.regret:.3f}"} for _, r in reg.iterrows()])
+    _tex(rt, "tab_guide_regret.tex",
+         "How the guide's default compares with the best configuration in hindsight, per dataset. The default "
+         "is reasoning off with guidance, one question per call, holistic scoring, and the cheapest model on "
+         "short answers or the strongest model that does not collapse on code. Every configuration is scored "
+         "on the same N items, those that all of them graded (the reasoning samples); Given up is the QWK "
+         "the default leaves on the table, and costs are euros per 1000 grades.",
+         "tab:guideregret", star=True, colspec="lrlrrlrrr", size="\\footnotesize")
     fw["Trade-off in the rule"] = fw["Trade-off in the rule"].map(lambda s: s[0].upper() + s[1:] if s else s)
     fw["Scenario"] = "\\raggedright " + fw["Scenario"]   # left-align (ragged right), not justified
     _tex(fw, "tab_framework.tex",

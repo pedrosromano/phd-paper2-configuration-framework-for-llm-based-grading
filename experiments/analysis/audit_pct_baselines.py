@@ -163,6 +163,21 @@ def zero_collapse():
           f"  | teacher zeros on the same {len(gold)} items: {100 * (gold < 1e-9).mean():.0f}%")
 
 
+def zero_rates():
+    """RQ1 / guide (2026-10-15): share of exact-zero grades per model with reasoning off on code (with
+    guidance, one question per call, holistic; PT-CS = validated answers), against the teachers' share on
+    the same items. Backs the 'collapse' reading: the graders far above the teachers are the ones reasoning
+    helps on code."""
+    df = phase5.load_main()
+    d = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question") & (df.decomposition == "holistic")
+           & (df.domain == "code") & (df.reasoning == "off")]
+    d = d[(d.dataset != "ptcs") | d.item_id.isin(_INTERV)]
+    print("\n=== Zero rates with reasoning off on code (Section IV-A / guide) ===")
+    for (ds, m), g in d.groupby(["dataset", "model"]):
+        gold = g.groupby("item_id").gold_norm.first()
+        print(f"  {ds:6} {m:18} model zeros {100 * (g.pred_norm < 1e-9).mean():4.0f}%   teachers {100 * (gold < 1e-9).mean():3.0f}%")
+
+
 def overflow():
     """RQ1 overflow exclusion (Section IV-A): reasoning-on runs whose output never parsed because the
     reasoning overflowed the token ceiling, with PT-CS restricted to its validated answers (the paper's
@@ -190,6 +205,65 @@ def temp0_variation():
         pct = [100 * g.groupby("item_id").pred_norm.agg(lambda x: x.nunique() > 1).mean()
                for _, g in d[d.reasoning == r].groupby(["dataset", "domain", "model"])]
         print(f"  reasoning {r}: {min(pct):.0f}% to {max(pct):.0f}% across {len(pct)} model-dataset combinations")
+
+
+def cost_by_period():
+    """Section IV-D cost paragraph (2026-10-15): re-priced spend (June 2026 provider rates, phase5.prepare)
+    by month and provider, whole-exam deduplicated; June = the main matrix, October = the bloco C arms.
+    The a-priori estimate (EUR 16.7: DeepInfra 11.25, OpenAI 5.45) is compared with the June matrix."""
+    d = phase5.dedupe_call_groups(phase5.load_main())
+    d["month"] = d.ts.astype(str).str[:7]
+    d["prov"] = np.where(d.model == "gpt-5.1", "openai", "deepinfra")
+    print("\n=== Cost by period, re-priced (Section IV-D) ===")
+    print(d.groupby(["month", "prov"]).cost_eur.sum().round(2).to_string())
+    j = d[d.month == "2026-06"]
+    oa, di = j[j.prov == "openai"].cost_eur.sum(), j[j.prov == "deepinfra"].cost_eur.sum()
+    print(f"  June matrix EUR {oa + di:.2f} -> estimate 16.7 was {(oa + di) / 16.7:.1f}x low "
+          f"(OpenAI {oa / 5.45:.1f}x, DeepInfra {di / 11.25:.1f}x); all analysed runs EUR {d.cost_eur.sum():.2f}")
+
+
+def rq4_winners():
+    """Section IV-D (2026-10-15): per-dataset QWK per configuration on the Fig. per-dataset basis (with
+    guidance, one question per call, holistic; item means; PT-CS = validated answers), the per-dataset
+    winner, and each configuration's mean QWK over the three public datasets."""
+    df = phase5.load_main()
+    base = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
+    base = base[(base.dataset != "ptcs") | base.item_id.isin(_INTERV)]
+    rows = []
+    for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]:
+        for r in ["off", "on"]:
+            g = base[(base.model == m) & (base.reasoning == r)]
+            q = {ds: _qwk_items(g[g.dataset == ds])[0] for ds in ["mohler", "semeval", "riayn"]}
+            rows.append({"cfg": f"{m}|{r}", **{k: round(v, 3) for k, v in q.items()},
+                         "public_mean": round(float(np.mean(list(q.values()))), 3)})
+    t = pd.DataFrame(rows)
+    print("\n=== RQ4 per-dataset QWK and winners (Section IV-D) ===")
+    print(t.to_string(index=False))
+    for ds in ["mohler", "semeval", "riayn"]:
+        w = t.sort_values(ds, ascending=False).iloc[0]
+        print(f"  winner {ds}: {w.cfg} {w[ds]:.3f}")
+    print(f"  public mean range: {t.public_mean.min():.3f} to {t.public_mean.max():.3f}")
+
+
+def rq6_transfer():
+    """Section IV-F (2026-10-15): public vs PT-CS QWK per configuration and the rank correlation, computed
+    with the transfer figure's own functions (phase6), so the prose quotes exactly what the figure shows."""
+    from scipy.stats import spearmanr
+    import experiments.figures.phase6 as P
+    full = phase5.load_main()
+    base = full[(full.context_level == "with_guidance") & (full.scope == "question_by_question") & (full.decomposition == "holistic")]
+    print("\n=== RQ6 transfer (Section IV-F) ===")
+    for title, pub, dom in [("short", ["mohler", "semeval"], "short_answer"), ("code", ["riayn"], "code")]:
+        rows = []
+        for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]:
+            for r in ["off", "on"]:
+                g = base[(base.model == m) & (base.reasoning == r)]
+                rows.append((f"{m}|{r}", float(np.nanmean([P._qwk(P._itemmeans(g[g.dataset == ds])) for ds in pub])),
+                             P._qwk(P._itemmeans(g[(g.dataset == "ptcs") & (g.domain == dom) & g.item_id.isin(P._INTERV)]))))
+        sp = spearmanr([r[1] for r in rows], [r[2] for r in rows])
+        print(f"  {title}: rho={sp.statistic:.2f}  p={sp.pvalue:.3f}")
+        for n, a_, b_ in sorted(rows, key=lambda t: -t[1]):
+            print(f"    {n:22} public {a_:.3f}  PT-CS {b_:.3f}")
 
 
 def rq4():
@@ -221,8 +295,12 @@ def main() -> int:
     rq3()
     rq3_cost()
     zero_collapse()
+    zero_rates()
     overflow()
     temp0_variation()
+    cost_by_period()
+    rq4_winners()
+    rq6_transfer()
     rq4()
     print("\nPaper cross-check (Phase 7): RQ1 Mohler +11%, SemEval +18%, RIAYN +45%, PT-CS-verified "
           "code +23%, PT-CS-verified short Qwen +12% (ns), RIAYN GPT +32% (GLM/GPT PT-CS short ns on verified). "

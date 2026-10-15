@@ -15,8 +15,8 @@ cost. The paragraphs below draw the findings out along these lines and then take
 choosing a configuration.
 
 Reasoning was the clearest conditional effect. Extended thinking improved agreement with teacher grades
-in only a minority of model-dataset combinations, and it always came with a high price. It multiplied output tokens by
-between 10 and 925 times, with the premium itself depending on the domain, and in most of them it lowered
+in only a minority of model-dataset combinations, five of twenty and two after correcting for multiple
+comparisons, and it always came with a high price. It multiplied output tokens by between 9 and 925 times, with the premium itself depending on the domain, and in most of them it lowered
 run-to-run consistency, so the same answer scored itself less alike across repetitions. That consistency
 loss is only partly mechanical: longer outputs give a non-deterministic backend more room to diverge, but
 the link between an answer's length and its grade variability was moderate and uneven, so part of the
@@ -28,32 +28,32 @@ reasoning restored the discrimination the baseline had lost. This is why the adv
 reasoning is keyed to an observable behaviour, whether the baseline collapses, rather than to a model's
 name, a choice that also lets it outlast the next model release.
 
-Evaluation guidance was the cheapest reliable improvement we found, raising agreement by 0.12 to 0.24 QWK
-across the public datasets. The same benefit held on the deployment data,
-where the rubric helped the code grader about as much as on the public code. Providing it is the one
-configuration change in the study that reliably improved agreement.
+Evaluation guidance was the cheapest reliable improvement we found. It raised agreement in 11 of 12
+model-dataset combinations across three model families, by 0.10 to 0.26 QWK, and the benefit held on the
+deployment data as on the public data. Providing it is the one configuration change in the study that
+reliably improved agreement, and the only one whose benefit did not depend on the model.
 
 How the grade was requested mattered far less. Grading a whole exam in one pass rather than question by
 question, and scoring a rubric criterion by criterion rather than holistically, did not improve agreement
-with the final grade, and neither saved enough to matter: grading the whole exam at once cut the cost per
-question by only 3\%, and scoring criterion by criterion doubled it. The simple shape, one question per
-call with one holistic score, is therefore the default. A whole exam here is about four questions; we did
-not test larger sets. The way the grading session is run had a small effect of a different kind. Grading
-every answer inside one conversation that accumulated across the exam biased grades slightly downward
-relative to giving each answer a clean conversation, and the order in which answers were presented added
-variation with no consistent direction. Clean, question-by-question grading was thus both the least
-biased and the most reproducible regime, which recommends it on fairness grounds.
+with the final grade, and for one model each they made it worse. Neither saved money either: grading
+the whole exam at once cost more per question, not less, and scoring criterion by criterion doubled the
+cost. The simple shape, one question per call with one holistic score, is therefore the default. A whole
+exam here is about four questions; we did not test larger sets. The way the grading session is run had a
+small effect of a different kind. Grading every answer inside one conversation that accumulated across
+the exam pulled grades slightly down relative to giving each answer a clean conversation, and the order
+in which answers were presented moved individual grades by about a tenth of the scale, in a direction
+that depended on the model. Clean, question-by-question grading avoids both, which recommends it on
+fairness grounds.
 
-Among the LLM models and configurations we tested, none graded best everywhere. On short answers the configurations clustered
-within about 0.07 QWK of one another, so the choice is nearly free and is best made on cost; on code they
-spread far more widely, about 0.26 QWK, and there the configuration is worth optimising. Across both
-tasks the open models with reasoning off were the efficient choice, GLM-5.1 most of all, while the closed
-frontier model never justified its much higher cost. The ranking learned on the public datasets carried
-over at the top: the configuration that ranked first on public data also ranked first in deployment.
-Below the top, the deployment samples were too small to tell the close-ranked configurations
-apart, so their relative order remained statistically indeterminate. The natural choice is therefore the
-configuration that ranks highest on public data: it is both the strongest grader there and the
-configuration whose lead carried over to deployment.
+Among the models and configurations we tested, none graded best everywhere. On short answers the
+configurations clustered within 0.04 QWK of one another, so the choice is nearly free and is best made on
+cost; on code they spread far more widely, about 0.26 QWK, and there the configuration is worth
+optimising. Across both tasks the open models with reasoning off were the efficient choice, GLM-5.1 most
+of all, while the closed frontier model was never the efficient choice for its much higher cost. The
+ranking learned on the public datasets carried over at the top in both domains, and on code it carried
+over as a whole; on short answers, where the public data barely separate the configurations, the order
+below the top did not. The natural choice is therefore the configuration that ranks highest on public
+data, with local confirmation where the public ranking is close.
 
 Taken together, these results argue for a structured set of conditional choices rather than a single
 recommended grader. The deciding factors recurred throughout the study: the task, the model's observable

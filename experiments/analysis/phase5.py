@@ -223,6 +223,7 @@ def conversation_stats(cv: pd.DataFrame) -> dict:
         po = sh.pivot_table(index=["item_id", "run_index"], columns="order_id", values="pred_norm", aggfunc="first").dropna()
         if {"natural", "inverse"}.issubset(po.columns) and len(po) >= 8:
             rec["order_abs"] = round(float((po["natural"] - po["inverse"]).abs().mean()), 3)
+            rec["order_signed"] = round(float((po["natural"] - po["inverse"]).mean()), 3)   # average shift
             rec["order_p"] = round(float(stats.wilcoxon(po["natural"], po["inverse"]).pvalue), 4)
         out[m] = rec
     return out

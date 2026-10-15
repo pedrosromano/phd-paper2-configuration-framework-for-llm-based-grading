@@ -34,8 +34,9 @@ answer's position.
 
 Model family and reasoning are crossed in full: every family grades every dataset with reasoning off
 and on. Evaluation guidance, scope, and decomposition are each varied one at a time from a baseline
-configuration on a single model, Qwen3.5 (Section~\ref{sec:models}), which keeps the number of runs
-affordable (Section~\ref{sec:harness}).
+configuration, with reasoning off, on two or three of the families: guidance on Qwen3.5,
+DeepSeek-V4-Flash, and GPT-5.1, and scope and decomposition on Qwen3.5 and DeepSeek-V4-Flash. Varying
+them one at a time keeps the number of runs affordable (Section~\ref{sec:harness}).
 
 \begin{table}[!t]
 \centering
@@ -50,7 +51,7 @@ Model family & four families & all datasets \\
 Reasoning & off, on & all datasets \\
 Evaluation guidance & none, with guidance$^{a}$ & all datasets \\
 Scope & per question, whole exam$^{b}$ & PT-CS only \\
-Decomposition & holistic, per criterion$^{c}$ & PT-CS only \\
+Decomposition & holistic, per criterion$^{c}$ & PT-CS, RIAYN \\
 Conversation state & clean, shared history & PT-CS sub-study \\
 \hline
 \end{tabular}
@@ -63,8 +64,9 @@ criterion, summed.}
 \end{table}
 
 Two applicability rules keep the design honest. First, scope and decomposition exist only where the
-data support them: PT-CS is the only dataset with multi-question exams and per-criterion
-rubrics, so those two dimensions run on PT-CS alone. Second, guidance means different material in the
+data support them. Scope needs complete multi-question exams, which only PT-CS has, so it runs on PT-CS
+alone; decomposition needs rubrics with separately scored criteria, which PT-CS and RIAYN both have.
+Second, guidance means different material in the
 two domains: a question-specific rubric for the code datasets (PT-CS, RIAYN) and a reference answer
 for the short-answer datasets (Mohler, SemEval). The guidance effect is therefore two related
 interventions, not one, and we never pool the two. PT-CS has no reference
@@ -119,16 +121,20 @@ toggle, so the reasoning contrast holds the model fixed and flips only its think
 \emph{GLM-5.1}~\cite{glm5_2026} (\texttt{zai-org/GLM-5.1}), all run via the DeepInfra inference
 application programming interface (API) with \texttt{enable\_thinking} off or on. The fourth,
 \emph{GPT-5.1}~\cite{openai_gpt51_2025} (via OpenAI, \texttt{reasoning\_effort} mapped to
-\texttt{none} or \texttt{high}), is a closed frontier anchor. Its price per grade is one to two orders
-of magnitude above the open models', so it grades small subsets of each dataset: enough to situate
-the open models against a frontier reference, too few to rank it among them. Qwen3.5 with reasoning off, with guidance, question-by-question, and holistic
-scoring is the internal baseline configuration against which the dimension contrasts are framed.
+\texttt{none} or \texttt{high}), is the closed frontier model; it grades the same items as the open
+models. Qwen3.5 with reasoning off, with guidance, question-by-question, and holistic scoring is the
+internal baseline configuration against which the dimension contrasts are framed.
 
 All calls use temperature 0, the setting that makes a model's output as repeatable as the backend
 allows, so that the repeated runs measure the variation that remains rather than deliberate sampling
 noise. Output is capped at 4096 tokens with reasoning off and at 32\,768 tokens with reasoning on.
-Every run logs the provider, served model identifier, sampling parameters,
-prompt hash, and timestamp (main matrix executed June 2026). We log these because absolute scores are conditional on the full serving setup, not just the prompt
+Every run logs the provider, served model identifier, sampling parameters, prompt hash, and timestamp.
+The main matrix ran in June 2026. The extensions (guidance on more models, decomposition on RIAYN, the
+larger scope and conversation samples, and GPT-5.1 on every item) ran in October 2026 on Qwen3.5,
+DeepSeek-V4-Flash, and GPT-5.1, after we checked that these models still graded as in June: re-running
+25 June prompts per model returned the same grade for 24, 23, and 21 of them, within the run-to-run
+variation of the original runs. GLM-5.1 did not take part in the October runs, because its reasoning could
+no longer be switched off at the provider. We log these details because absolute scores are conditional on the full serving setup, not just the prompt
 and sampling we control: the served quantization, the inference software, and the hardware differ
 across providers and cannot be matched exactly, so a different setup can yield different absolute
 scores. The transferable claim is the configuration guidance (which configuration beats which), not
@@ -144,8 +150,8 @@ score per question for whole-exam calls and a per-criterion breakdown for criter
 deterministic parser extracts the grade and records whether extraction succeeded. We define the
 \emph{extractable rate} $\pi$ as the fraction of runs whose output yields a parseable grade;
 unparseable output is logged and excluded, never coerced to a zero score, because silent coercion
-fabricates strictness. Each measurement is repeated $k=5$ times per item and configuration ($k=3$ for
-the closed anchor), and results are cached by item, configuration hash, and repetition index, so reruns
+fabricates strictness. Each measurement is repeated $k=5$ times per item and configuration, and results
+are cached by item, configuration hash, and repetition index, so reruns
 never re-bill completed calls. Whole-exam calls grade many questions in one
 API call, so token and cost are counted once per call, not once per question.
 
@@ -154,15 +160,15 @@ We call the full set of model, configuration, and dataset combinations that were
 model grades the full public and PT-CS datasets (2273 Mohler, 149 RIAYN, 295 PT-CS code, and 84
 PT-CS short-answer items) and the 800-item SemEval sample, all at $k=5$. Reasoning on is the most
 expensive setting, because reasoning traces run long, so it uses fixed random samples: 175 items per
-public dataset, and 67 code and 32 short-answer items on PT-CS. The whole-exam arm grades 60 complete
-exams from the deployment (252 questions, 77 of them in PT-CS), and the anchor grades 60-item subsets of
-each public dataset, plus 25 code and 11 short-answer PT-CS items, at $k=3$. The conversation sub-study
-grades 20 complete exams in two fixed answer orders (the exam's own order and its reverse) on two models (Qwen3.5 and GLM-5.1) at
-$k=3$, with everything else frozen at the baseline configuration. We did not run every combination.
-Model family and reasoning are fully crossed: each of the four families grades with reasoning off and
-on. The other dimension contrasts (evaluation guidance, scope, and decomposition) are secondary to
-the reasoning question, so each was varied on its own from the baseline configuration, on the baseline
-model (Qwen3.5), rather than crossed with every family, which would multiply the matrix. We therefore
+public dataset, and 67 code and 32 short-answer items on PT-CS. The whole-exam arm grades the 88
+complete exams that contain a validated code answer, covering all 295 PT-CS code questions. The
+conversation sub-study grades 80 complete exams in two fixed answer orders (the exam's own order and its
+reverse) with Qwen3.5 and DeepSeek-V4-Flash, and the first 20 of those exams with GLM-5.1 at $k=3$, with
+everything else frozen at the baseline configuration. We did not run every combination. Model family
+and reasoning are fully crossed: each of the four families grades with reasoning off and on. The other
+dimension contrasts (evaluation guidance, scope, and decomposition) are secondary to the reasoning
+question, so each was varied on its own from the baseline configuration, with reasoning off, on two or
+three families rather than crossed with every setting, which would multiply the matrix. We therefore
 report each of these effects on its own, not how two of them combine, and we make no claims about
 combined effects.
 
@@ -187,8 +193,10 @@ computed on the mean of each item's $k$ repetitions.
 Alongside QWK we report mean absolute error (MAE) on the normalised score, the average grading error
 as a fraction of the scale, and Spearman rank correlation. Consistency is the mean within-item
 standard deviation across the $k$ repetitions (SD$_k$); it needs no reference, and a lower value means
-more reproducible grading. Cost is measured in output tokens and reported as the reasoning on/off
-premium within each provider, since DeepInfra and OpenAI account for reasoning tokens differently.
+more reproducible grading. The reasoning premium is measured in output tokens, as the on/off ratio
+within each provider, since DeepInfra and OpenAI account for reasoning tokens differently. Costs in euros
+are computed from each call's logged input and output tokens at the per-token rates the providers billed
+in June 2026, ignoring discounts for cached input, so they are a slight upper bound.
 
 SemEval needs its own mapping, because the model emits a continuous score while its gold is binary
 (correct or incorrect). We turn the score into a correct/incorrect label at a fixed 0.5 cutoff, set in
@@ -202,11 +210,15 @@ novelty to our grader.
 
 Every expensive contrast is computed on its paired subset, stated where the result is reported: the
 reasoning contrast pairs the off and on runs on the sampled items (restricted to those whose
-reasoning never overflowed the token ceiling, Section~\ref{sec:rq1}), the scope contrast on the 77
-PT-CS whole-exam questions, and anchor comparisons on the anchor's subsets; $N$ denotes the number of
-items a contrast rests on. Uncertainty is given by
-bootstrap 95\% confidence intervals (CIs) over items (800 resamples, fixed seed), and we call a
-contrast significant when its CI excludes zero. We report effect sizes with CIs rather than $p$-values,
-and apply no multiple-comparison correction; instead of family-wise claims we enumerate which
-model-dataset combinations reach significance. The conversation sub-study uses paired Wilcoxon signed-rank tests, the standard
-nonparametric test for paired differences.
+reasoning never overflowed the token ceiling, Section~\ref{sec:rq1}) and the scope contrast on the 295
+PT-CS code questions of the whole-exam arm; $N$ denotes the number of items a contrast rests on.
+Uncertainty is given by bootstrap 95\% confidence intervals (CIs) over items (800 resamples, fixed seed),
+and we call a contrast significant when its CI excludes zero. We report effect sizes with CIs and, because
+each research question involves several comparisons, we also apply Holm's correction for multiple
+comparisons within each family of contrasts (reasoning, guidance, scope and decomposition), using
+bootstrap $p$-values, and report which results survive it. A non-significant contrast does not show that
+two settings are equivalent, so where equivalence matters we test it directly: two settings count as
+equivalent when the 90\% CI of their difference lies inside $\pm0.05$ QWK, a margin we fixed before the
+October runs as too small to change any recommendation (a two one-sided test, TOST). The conversation
+sub-study uses paired Wilcoxon signed-rank tests, the standard nonparametric test for paired
+differences.
