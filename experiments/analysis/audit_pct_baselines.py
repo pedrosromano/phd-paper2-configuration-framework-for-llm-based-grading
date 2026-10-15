@@ -102,10 +102,11 @@ def rq3():
     """RQ3: baseline QWK (q-by-q, holistic) and each contrast as % of it (Section IV-C)."""
     df = phase5.load_main()
     q = df[(df.model == "qwen3.5") & (df.reasoning == "off")]
-    we = set(df[df.scope == "whole_exam"].item_id)
+    WQ = (df.scope == "whole_exam") & (df.model == "qwen3.5")    # C3 adds GLM whole-exam rows: keep the Qwen contrast
+    we = set(df[WQ].item_id)
     sc = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.decomposition == "holistic")]
     dd = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.scope == "question_by_question")]
-    rows = [("scope qbq->whole_exam", sc[(sc.scope == "question_by_question") & sc.item_id.isin(we)], df[df.scope == "whole_exam"]),
+    rows = [("scope qbq->whole_exam", sc[(sc.scope == "question_by_question") & sc.item_id.isin(we)], df[WQ]),
             ("decomp holistic->criterion", dd[dd.decomposition == "holistic"], dd[dd.decomposition == "criterion"])]
     print("\n=== RQ3: contrast as % of question-by-question holistic baseline (Section IV-C) ===")
     print(f"{'contrast':28} {'stratum':9} {'baseQWK':>8} {'dQWK':>7} {'%base':>6} {'N':>5}")
@@ -124,7 +125,7 @@ def rq3_cost():
     (Qwen3.5 off, with guidance, holistic). Whole-exam cost is deduplicated by call_group (one call
     covers several questions). Backs the framework's 'per question by default' choice."""
     df = phase5.load_main()
-    we = df[df.scope == "whole_exam"]
+    we = df[(df.scope == "whole_exam") & (df.model == "qwen3.5")]   # Qwen only (C3 adds GLM)
     items = set(we.item_id)
     calls = phase5.dedupe_call_groups(we).copy()
     qb = df[(df.model == "qwen3.5") & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.domain == "code")

@@ -221,6 +221,116 @@ def c10(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+# --------------------------------------------------------------------------- per-step conclusions
+# Short, factual read-outs computed from the run data the moment each C step finishes; the launcher
+# (experiments/run/bloco_c_run.py) stores them for the live monitor. Written in Portuguese for the
+# author. They are a first read, not paper text.
+NAMES = {"qwen3.5": "Qwen3.5", "glm-5.1": "GLM-5.1", "deepseek-v4-flash": "DeepSeek", "gpt-5.1": "GPT-5.1"}
+DSN = {"mohler": "Mohler", "semeval": "SemEval", "riayn": "RIAYN", "ptcs": "PT-CS"}
+
+
+def _contrast(A: pd.DataFrame, B: pd.DataFrame) -> dict | None:
+    _, sA = _qwk_items(A); _, sB = _qwk_items(B)
+    if isinstance(sA, float) or isinstance(sB, float):
+        return None
+    ds = _boot(sA, sB)
+    return _summ("", ds, len(set(sA.index) & set(sB.index))) if ds is not None else None
+
+
+def _fmt(r: dict | None) -> str:
+    if not r or "dQWK" not in r:
+        return "sem dados suficientes"
+    lo, hi = r["ci95"]
+    sig = "significativo" if r["sig95"] else "não significativo"
+    eq = "; equivalente a zero (±0.05)" if r["equivalent"] else ""
+    return f"ΔQWK {r['dQWK']:+.3f} [{lo:+.2f}, {hi:+.2f}], N={r['N']}, {sig}{eq}"
+
+
+def conclude_c1(df: pd.DataFrame) -> list[str]:
+    d = _paper(df)
+    q = d[(d.reasoning == "off") & (d.scope == "question_by_question") & (d.decomposition == "holistic")]
+    out = []
+    for ds, dom in [("mohler", "short_answer"), ("semeval", "short_answer"), ("riayn", "code"), ("ptcs", "code")]:
+        parts = []
+        for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash"]:
+            c = q[(q.model == m) & (q.dataset == ds) & (q.domain == dom)]
+            r = _contrast(c[c.context_level == "none"], c[c.context_level == "with_guidance"])
+            parts.append(f"{NAMES[m]} {r['dQWK']:+.3f}{'*' if r and r.get('sig95') else ''}" if r and "dQWK" in r else f"{NAMES[m]} –")
+        out.append(f"{DSN[ds]}: guidance {' · '.join(parts)}")
+    out.append("* = significativo (IC 95% exclui zero). Ganho de QWK ao acrescentar rubrica/resposta de referência.")
+    return out
+
+
+def conclude_c2(df: pd.DataFrame) -> list[str]:
+    d = _paper(df)
+    out = []
+    for ds in ["riayn", "ptcs"]:
+        for m in ["qwen3.5", "glm-5.1"]:
+            dd = d[(d.model == m) & (d.reasoning == "off") & (d.dataset == ds) & (d.domain == "code")
+                   & (d.context_level == "with_guidance") & (d.scope == "question_by_question")]
+            r = _contrast(dd[dd.decomposition == "holistic"], dd[dd.decomposition == "criterion"])
+            out.append(f"{DSN[ds]} {NAMES[m]}: critério a critério vs holístico, {_fmt(r)}")
+    return out
+
+
+def conclude_c3(df: pd.DataFrame) -> list[str]:
+    d = _paper(df)
+    out = []
+    for m in ["qwen3.5", "glm-5.1"]:
+        w = d[(d.scope == "whole_exam") & (d.model == m)]
+        if w.empty:
+            continue
+        qb = d[(d.model == m) & (d.reasoning == "off") & (d.dataset == "ptcs") & (d.domain == "code")
+               & (d.context_level == "with_guidance") & (d.scope == "question_by_question")
+               & (d.decomposition == "holistic") & d.item_id.isin(set(w.item_id))]
+        out.append(f"{NAMES[m]}: exame inteiro vs pergunta a pergunta, {_fmt(_contrast(qb, w))}")
+    return out
+
+
+def conclude_c4() -> list[str]:
+    cv = phase5.load_conversation()
+    st = phase5.conversation_stats(cv)
+    n_ex = cv.submission_id.nunique() if "submission_id" in cv else None
+    out = [f"{n_ex} exames, k={cv.run_index.nunique()}"]
+    for m, r in st.items():
+        out.append(f"{NAMES.get(m, m)}: conversa partilhada baixa a nota em {r.get('state_delta', float('nan')):+.3f} "
+                   f"(Wilcoxon p={r.get('state_p', float('nan')):.4f}); ordem inversa muda a nota em média "
+                   f"{r.get('order_abs', float('nan')):.3f} (p sinal={r.get('order_p', float('nan')):.3f})")
+    return out
+
+
+def conclude_c5_off(df: pd.DataFrame) -> list[str]:
+    d = _paper(df)
+    d = d[(d.reasoning == "off") & (d.context_level == "with_guidance") & (d.scope == "question_by_question")
+          & (d.decomposition == "holistic")]
+    out = []
+    for (ds, dom), g in d.groupby(["dataset", "domain"]):
+        qs = {m: _qwk_items(h)[0] for m, h in g.groupby("model")}
+        rank = sorted(qs, key=qs.get, reverse=True)
+        out.append(f"{DSN[ds]} {dom[:5]}: GPT-5.1 {qs.get('gpt-5.1', float('nan')):.3f}, posição {rank.index('gpt-5.1') + 1}/4 "
+                   f"(melhor: {NAMES[rank[0]]} {qs[rank[0]]:.3f})")
+    return out
+
+
+def conclude_c5_on(df: pd.DataFrame) -> list[str]:
+    d = _paper(df)
+    rp = phase5.reasoning_paired(d[d.model == "gpt-5.1"])
+    base = rp[(rp.context_level == "with_guidance") & (rp.scope == "question_by_question") & (rp.decomposition == "holistic")]
+    out = []
+    for (ds, dom), g in base.groupby(["dataset", "domain"]):
+        o, n = g[g.reasoning == "off"], g[g.reasoning == "on"]
+        k = n.run_index.nunique(); ppi = n[n.parse_ok].groupby("item_id").size()
+        clean = set(ppi[ppi == k].index) if n.parse_ok.mean() < 1 else set(n.item_id.unique())
+        r = _contrast(o[o.item_id.isin(clean)], n[n.item_id.isin(clean)])
+        prem = pd.to_numeric(n.completion_tokens, errors="coerce").mean() / max(pd.to_numeric(o.completion_tokens, errors="coerce").mean(), 1)
+        out.append(f"{DSN[ds]} {dom[:5]}: reasoning no GPT-5.1, {_fmt(r)}; {prem:.0f}× tokens")
+    return out
+
+
+CONCLUDE = {"c1": conclude_c1, "c2": conclude_c2, "c3": conclude_c3, "c4": lambda df: conclude_c4(),
+            "c5_off": conclude_c5_off, "c5_on": conclude_c5_on}
+
+
 def main(argv: list[str]) -> int:
     df = phase5.load_main()
     which = argv or ["c7", "c8", "c9", "c10"]

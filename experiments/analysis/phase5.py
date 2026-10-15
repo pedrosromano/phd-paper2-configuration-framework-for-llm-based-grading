@@ -87,6 +87,7 @@ def reasoning_paired(df: pd.DataFrame) -> pd.DataFrame:
 def scope_paired(df: pd.DataFrame) -> pd.DataFrame:
     """Restrict the scope contrast to the 252 questions that have a whole-exam cell, on both
     sides (whole_exam and question_by_question), same model/etc. (RQ3)."""
+    # NB (2026-10-15): C3 adds GLM-5.1 whole-exam rows; callers comparing one model must filter by model
     we_items = set(df[df["scope"] == "whole_exam"]["item_id"])
     code = df[(df["dataset"] == "ptcs") & (df["domain"] == "code") & df["item_id"].isin(we_items)]
     return code[code["scope"].isin(["whole_exam", "question_by_question"])]

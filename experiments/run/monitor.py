@@ -36,7 +36,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 RUNS_DIR = REPO_ROOT / "data" / "processed" / "runs"
 RUNS_FILE = RUNS_DIR / "runs.jsonl"
 PRICING = REPO_ROOT / "experiments" / "configs" / "pricing.yaml"
-_PROG = re.compile(r"([\d,]+)/([\d,]+).*?π=([\d.]+)")          # "8,340/13,635  π=0.951"
+_PROG = re.compile(r"([\d,]+)/([\d,]+).*?(?:π|pi)=([\d.]+)")   # "8,340/13,635  π=0.951" (matrix) or "pi=" (runners)
+BLOCO_C = RUNS_DIR / "_bloco_c_status.json"                      # written by experiments.run.bloco_c_run
 _SPEND = re.compile(r"DeepInfra €([\d.]+) \| OpenAI €([\d.]+)")
 _ARMS = re.compile(r"arms=(\[[^\]]*\])")
 
@@ -121,7 +122,7 @@ class State:
         with self.lock:
             self.tail()
             name, lines = self._newest_log()
-            live = subprocess.run(["pgrep", "-f", "experiments.run.matrix run"],
+            live = subprocess.run(["pgrep", "-f", "experiments.run.(matrix run|whole_exam_runner|conversation_runner|bloco_c_run)"],
                                   capture_output=True).returncode == 0
             # active-arm progress from the log's latest "done/total π=" line
             done = total = None
@@ -182,6 +183,7 @@ _PAGE = """<!doctype html><meta charset=utf-8><title>experiment monitor</title>
  <div class=bar><div class=fill id=fill></div></div>
  <div class=s id=prog></div></div>
 <div class=grid id=cards></div>
+<div id=blococ></div>
 <pre id=tail></pre>
 <script>
 const C=(k,v,s)=>`<div class=card><div class=k>${k}</div><div class=v>${v??'–'}</div><div class=s>${s||''}</div></div>`;
@@ -206,6 +208,16 @@ async function tick(){
   C('infra stalls',d.stalls,'>120s'),
  ].join('');
  document.getElementById('tail').textContent=(d.tail||[]).join('\\n');
+ let b2; try{b2=await (await fetch('/bloco_c.json')).json()}catch(e){b2=null}
+ const el=document.getElementById('blococ');
+ if(!b2||!b2.steps){el.innerHTML='';return}
+ const col={pending:'#30363d',running:'#1f6feb',analysing:'#8957e5',failed:'#da3633'};
+ el.innerHTML='<h1 style="margin-top:16px">Bloco C <span class=muted>· atualizado '+(b2.updated||'')+'</span></h1>'+
+  b2.steps.map(s=>{const c=col[s.state]||'#1f6f3f';
+   const t=(s.started?'início '+s.started.slice(11,16):'')+(s.minutes!=null?' · '+s.minutes+' min':'');
+   const body=(s.conclusion||[]).map(x=>'<div>• '+x+'</div>').join('')+(s.error?'<div class=warn>'+s.error+'</div>':'');
+   return `<div class=card style="margin:8px 0"><span class=badge style="background:${c};color:#fff">${s.state}</span>
+    <b> ${s.title}</b> <span class=s>${t}</span><div style="margin-top:6px">${body}</div></div>`}).join('');
 }
 tick(); setInterval(tick,4000);
 </script>"""
@@ -215,6 +227,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):                              # GET-only; no write routes exist
         if self.path.startswith("/status"):
             body = json.dumps(_STATE.snapshot()).encode()
+            ctype = "application/json"
+        elif self.path.startswith("/bloco_c"):
+            body = BLOCO_C.read_bytes() if BLOCO_C.exists() else b"{}"
             ctype = "application/json"
         else:
             body = _PAGE.encode()

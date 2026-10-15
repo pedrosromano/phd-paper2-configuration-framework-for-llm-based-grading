@@ -201,11 +201,12 @@ def fig_rq3(full):
     the prose. Qwen3.5, reasoning off. dQWK<0 means the alternative scored worse than the baseline."""
     from experiments.analysis.make_phase5_tables import _qwk_items as _qi, _boot_ci as _bci
     q = full[(full.model == "qwen3.5") & (full.reasoning == "off")]
-    we = set(full[full.scope == "whole_exam"].item_id)
+    WQ = (full.scope == "whole_exam") & (full.model == "qwen3.5")   # Qwen only (C3 adds GLM)
+    we = set(full[WQ].item_id)
     sc = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.decomposition == "holistic")]
     dd = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.scope == "question_by_question")]
     groups = [("scope\n(whole exam\nvs q-by-q)", sc[(sc.scope == "question_by_question") & sc.item_id.isin(we)],
-               full[full.scope == "whole_exam"]),
+               full[WQ]),
               ("decomposition\n(criterion\nvs holistic)", dd[dd.decomposition == "holistic"], dd[dd.decomposition == "criterion"])]
 
     def contrast(A, B, sub=None):

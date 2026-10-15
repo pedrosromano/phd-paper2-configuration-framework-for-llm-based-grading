@@ -226,7 +226,8 @@ def main() -> int:
         return {"Contrast": label, "N": n, "dQWK": f"{md:+.3f}", "95\\% CI": f"[{lo:+.2f},{hi:+.2f}]",
                 "Sig": "yes" if (lo > 0 or hi < 0) else "no", "dQWK-V [CI] (N$_V$)": ver_cell}
     q = df[(df.model == "qwen3.5") & (df.reasoning == "off")]   # decomposition kept (needed below)
-    we = set(df[df.scope == "whole_exam"].item_id)
+    WQ = (df.scope == "whole_exam") & (df.model == "qwen3.5")    # C3 adds GLM whole-exam rows: keep the Qwen contrast
+    we = set(df[WQ].item_id)
     drows = []
     ctx_by = {}     # captured for the framework guidance row (§11: context arm = Qwen3.5 only)
     for ds, dom, gt in [("mohler", "short_answer", "ref"), ("semeval", "short_answer", "ref"),
@@ -239,7 +240,7 @@ def main() -> int:
             drows.append(r); ctx_by[ds] = r
     sc = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.decomposition == "holistic")]
     scope_row = contrast_row(sc[(sc.scope == "question_by_question") & sc.item_id.isin(we)],
-                             df[df.scope == "whole_exam"], "scope ptcs:code qbq$\\to$whole-exam",
+                             df[WQ], "scope ptcs:code qbq$\\to$whole-exam",
                              verified=interv)
     drows.append(scope_row)
     dd = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.scope == "question_by_question")]
@@ -335,8 +336,8 @@ def main() -> int:
     R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "10--925", "94--192", "2.5--5"   # composite; verified by the test
     # scope cost per question: whole exam in one call vs one call per question, on the 252 whole-exam
     # questions (whole-exam cost deduplicated by call_group); backs the 'one question per call' row
-    we_items = set(df[df.scope == "whole_exam"].item_id)
-    we_calls = phase5.dedupe_call_groups(df[df.scope == "whole_exam"])
+    we_items = set(df[WQ].item_id)
+    we_calls = phase5.dedupe_call_groups(df[WQ])
     qb_calls = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance")
                  & (q.scope == "question_by_question") & (q.decomposition == "holistic") & q.item_id.isin(we_items)]
     eur_per_q = lambda d: pd.to_numeric(d.cost_eur, errors="coerce").sum() / d.run_index.nunique() / len(we_items)
