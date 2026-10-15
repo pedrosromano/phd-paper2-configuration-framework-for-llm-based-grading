@@ -19,7 +19,7 @@
 \usepackage{pgf}        % figures are matplotlib .pgf, composed natively
 \def\mathdefault#1{#1}  % matplotlib pgf math tick labels (e.g. 10^2) without mpl's preamble
 \usepackage{eurosym}    % \euro in Method/Results cost reporting
-\usepackage{tikz}       % ORCID logo is a tikz \pic; framework decision diagram
+\usepackage{tikz}       % ORCID logo is a tikz \pic; configuration guide diagram
 % Float tuning: many floats over few text pages; let tables interleave with their sections.
 \setcounter{topnumber}{4}\setcounter{dbltopnumber}{3}\setcounter{totalnumber}{8}
 \renewcommand{\topfraction}{0.95}\renewcommand{\dbltopfraction}{0.95}
@@ -29,14 +29,14 @@
 \usepackage{stfloats}
 % hyperref: clickable \href (ORCID), \cite, \ref, \url. The class loads it only in JTEHM mode.
 \usepackage[hidelinks]{hyperref}
-\hypersetup{pdftitle={A Configuration Framework for LLM-Based Grading in Computer Science},
+\hypersetup{pdftitle={Configuring LLM-Based Grading in Computer Science: An Empirical Study of Reasoning, Guidance, Scope, and Cost},
   pdfauthor={Pedro S. Romano, Daniel F. S. Fernandes, Pedro J. A. Sebastiao}}
 
 % --- ORCID icon (coauthor request) ---
 % scalerel.sty is absent from this BasicTeX install; \orcidicon scales the logo with \resizebox
 % (graphicx) to 1em, the visual equivalent of scaling it to the height of a `|'.
 \usetikzlibrary{svg.path}
-\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc}  % framework decision diagram
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc}  % configuration guide diagram
 \definecolor{orcidlogocol}{HTML}{A6CE39}
 \tikzset{
   orcidlogo/.pic={
@@ -56,7 +56,7 @@
 \history{Date of publication xxxx 00, 0000, date of current version xxxx 00, 0000.}
 \doi{10.1109/ACCESS.2026.0000000}
 
-\title{A Configuration Framework for LLM-Based Grading in Computer Science}
+\title{Configuring LLM-Based Grading in Computer Science: An Empirical Study of Reasoning, Guidance, Scope, and Cost}
 
 \author{\uppercase{Pedro S. Romano}\authorrefmark{1}~\orcidicon{0009-0002-2566-851X},
 \uppercase{Daniel F. S. Fernandes}\authorrefmark{1,2}~\orcidicon{0000-0002-1356-9349}, AND
@@ -66,8 +66,8 @@
 \address[2]{Instituto de Telecomunica\c{c}\~oes, 1049-001 Lisbon, Portugal}
 
 \markboth
-{Romano \headeretal: A Configuration Framework for LLM-Based Grading in Computer Science}
-{Romano \headeretal: A Configuration Framework for LLM-Based Grading in Computer Science}
+{Romano \headeretal: Configuring LLM-Based Grading in Computer Science}
+{Romano \headeretal: Configuring LLM-Based Grading in Computer Science}
 
 \corresp{Corresponding author: Pedro S. Romano (e-mail: Pedro\_Romano@iscte-iul.pt).}
 
@@ -84,17 +84,17 @@ model families, and every measurement is repeated, so its effect on cost and on 
 consistency is measured alongside quality. Reasoning raised agreement with teacher grades in only
 five of twenty model-dataset combinations, at 10 to 925 times the output tokens, and it reduced
 consistency in sixteen of the twenty. Evaluation guidance, measured on one model, lifted quadratic
-weighted kappa (QWK) by 0.12 to 0.24 on the public datasets and by 0.146 on the teacher-reviewed
+weighted kappa (QWK) by 0.12 to 0.24 on the public datasets and by 0.146 on the
 deployment data. Configuration rankings
 transferred to the deployment, where the best public configuration held up but the
-verified samples were too small to order the rest. We turn these
-comparisons into a decision guide and configuration framework that maps a grading task to a recommended configuration, its cost,
-and the conditions under which the choice holds.
+deployment samples were too small to order the rest. We turn these comparisons into a configuration
+guide that maps a grading task to a recommended configuration, its cost, and the conditions under which
+the choice holds.
 \end{abstract}
 
 \begin{keywords}
 Automated grading, large language models, learning analytics, computer science education,
-short-answer grading, code assessment, configuration framework.
+short-answer grading, code assessment, configuration guidelines.
 \end{keywords}
 
 \titlepgskip=-21pt

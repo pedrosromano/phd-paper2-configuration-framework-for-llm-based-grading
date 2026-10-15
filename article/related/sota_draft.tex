@@ -72,8 +72,8 @@ conclusions are stated more tentatively than the short-answer ones.
 We use two established public short-answer corpora, the Mohler dataset of graded computer-science
 answers~\cite{mohler_text_2009,mohler_learning_2011} and the SemEval-2013 Task~7 SciEntsBank/Beetle
 sets~\cite{dzikovska_semeval_2013}, together with one public code corpus, Rubric Is All You Need
-(RIAYN)~\cite{pathak_rubric_2025}. Transfer is then tested on PT-CS, our own Portuguese university
-deployment dataset (Section~\ref{sec:datasets}).
+(RIAYN)~\cite{pathak_rubric_2025}. Transfer is then tested on PT-CS, our own deployment dataset
+(Section~\ref{sec:datasets}).
 Reported numbers are usually quadratic weighted kappa (QWK), an ordinal-agreement score that runs from
 0 at chance to 1 at perfect agreement and is defined fully in Section~\ref{sec:metrics}.
 Table~\ref{tab:published-baselines} situates our datasets within the published landscape: it gathers
@@ -90,15 +90,14 @@ extractable-rate ($\pi$) metric and our refusal to coerce unparseable output to 
 benchmarks for LLM short-answer scoring are also beginning to appear~\cite{lai_sasbench_2026}, but none yet
 isolates the configuration axes we study.
 
-\subsection{From Model Rankings to a Configuration Framework}
+\subsection{From Model Rankings to Configuration Guidance}
 A growing body of work compares LLMs as graders: large side-by-side studies of programming
 submissions~\cite{jukiewicz_comparison_2026}, deployed course evaluations~\cite{policar_automated_2025}, and
 multi-model frameworks emphasising transparency and reproducibility~\cite{anghel_graderassist_2025}.
 Where these studies compare which model grades best, we ask which configuration a grading task calls
-for. Our contribution is a
-\emph{configuration framework}: an empirically
-grounded decision guide mapping task characteristics (domain, rubric availability, budget) to a recommended
-grader configuration and its cost.
+for. Our contribution is a \emph{configuration guide}: an empirically grounded mapping from task
+characteristics (domain, rubric availability, budget) to a recommended grader configuration and its
+cost.
 
 % [ToE] If the venue becomes IEEE Transactions on Education, re-foreground the pedagogical contribution:
 % lead with instructor workload, assessment validity, fairness, and the computing-education context;

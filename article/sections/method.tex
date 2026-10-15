@@ -15,7 +15,7 @@ harness that drives every model through one interface (Section~\ref{sec:harness}
 statistical protocol applied throughout (Section~\ref{sec:metrics}). Grading and scoring are identical across every model and configuration,
 so that the comparisons the study draws are like-for-like.
 
-\subsection{Design Space}
+\subsection{Configuration Dimensions}
 \label{sec:design}
 
 The study crosses six configuration dimensions under one grading protocol
@@ -63,7 +63,7 @@ criterion, summed.}
 \end{table}
 
 Two applicability rules keep the design honest. First, scope and decomposition exist only where the
-data support them: PT-CS is the only dataset with multi-question submissions and per-criterion
+data support them: PT-CS is the only dataset with multi-question exams and per-criterion
 rubrics, so those two dimensions run on PT-CS alone. Second, guidance means different material in the
 two domains: a question-specific rubric for the code datasets (PT-CS, RIAYN) and a reference answer
 for the short-answer datasets (Mohler, SemEval). The guidance effect is therefore two related
@@ -75,7 +75,7 @@ solutions, and we did not synthesise any, to avoid introducing a confound.
 
 We develop every comparison on three public datasets and reserve PT-CS, our deployment dataset, for
 transfer validation and for the experiments only it can support, which need its multi-question
-submissions and rubric criteria.
+exams and rubric criteria.
 Throughout, the \emph{gold} grade is the human grade that a model's score is compared against.
 \emph{Mohler}~\cite{mohler_text_2009,mohler_learning_2011} provides 2273 CS short answers over 80
 questions, each graded 0 to 5 by two teachers (we use their mean). The two annotators themselves agree
@@ -92,33 +92,22 @@ comparator. Published results situate our numbers but are not the success criter
 (Table~\ref{tab:published-baselines}): they come from different models, prompts, and protocols, so
 all conclusions here rest on our own like-for-like contrasts.
 
-\emph{PT-CS} is an export of a real Portuguese university grading deployment: 737 Java code answers
-and 437 theory answers, in Portuguese, with question-specific rubrics and no reference solutions.
-Each question carries its own weight in the exam, between 1 and 12 points, so all scores are
-normalised to a common scale before any analysis (Section~\ref{sec:metrics}). The export was pseudonymised at
-ingest: all direct identifiers were dropped and every platform-generated comment was stripped, so no
-model output from the platform reaches the graders we test. The platform seeds each grade with an artificial-intelligence (AI)
-suggestion that teachers can review and correct, and the final grade is a two-teacher consensus with
-no per-teacher records, so no inter-rater agreement is recoverable.
+\emph{PT-CS} is our deployment dataset, built from a real AI-assisted grading platform used in
+Portugal. On this platform an artificial-intelligence (AI) model proposes a grade for each answer,
+criterion by criterion, and two teachers review the proposal and set the final grade jointly. PT-CS
+contains the 379 answers whose grade the teachers validated in this way, which the records show because
+the final grade departs from the proposed total: 295 Java code answers and 84 theory short answers, in
+Portuguese, from 97 exams, each with a question-specific rubric and no reference solution. Each question
+carries its own weight in the exam, between 1 and 12 points, so all scores are normalised to a common
+scale before any analysis (Section~\ref{sec:metrics}). The data were pseudonymised: all direct
+identifiers were removed, and every comment the platform had generated was stripped, so no model output
+from the platform reaches the graders we test. The final grade is a joint decision with no per-teacher
+record, so inter-rater agreement cannot be computed.
 
-The reliability of the PT-CS gold is limited and uneven, and we treat that as a design input rather
-than a footnote. Not all grades were teacher-reviewed; some may be unreviewed AI output. We therefore
-stratify the 1184 graded responses by an auditable criterion: a response is \emph{intervened} when
-its final grade differs from the sum of its per-criterion scores, which is direct evidence that a human
-moved the grade. Table~\ref{tab:strata} reports the strata: 382 responses (32.3\%) are intervened, 393
-(33.2\%) match the sum exactly (suspected unreviewed), and 409 (34.5\%) have no per-criterion record at
-all. We promote the intervened stratum to a curated transfer set in its own right,
-\emph{PT-CS-verified} (295 code and 84 short-answer items in the analysed configurations), and exclude the rest
-from transfer claims by this declared criterion. The criterion detects intervention, not correctness:
-an exact-sum grade may still be a teacher who reviewed and agreed, so the stratum is a conservative
-proxy for review evidence, not a validation guarantee.
-
-\input{tables/tab_ptcs_strata}
-
-Because the PT-CS gold is of uneven reliability, every PT-CS agreement result we report uses
-PT-CS-verified, the teacher-reviewed (intervened) subset defined above; the unreliable strata are
-excluded by that declared criterion. The conversation sub-study (Section~\ref{sec:rq5}) needs no
-stratum: it measures model behaviour and does not depend on the reference grades at all.
+Two experiments need complete exams rather than single answers: whole-exam grading (scope) and the
+conversation sub-study. Both grade complete exams from the same deployment. The scope contrast is scored
+only on the exam questions that belong to PT-CS, and the conversation sub-study compares the model's
+grades with one another, never with a teacher's, so it needs no validated grade (Section~\ref{sec:rq5}).
 
 \subsection{Models and Backends}
 \label{sec:models}
@@ -131,7 +120,7 @@ toggle, so the reasoning contrast holds the model fixed and flips only its think
 application programming interface (API) with \texttt{enable\_thinking} off or on. The fourth,
 \emph{GPT-5.1}~\cite{openai_gpt51_2025} (via OpenAI, \texttt{reasoning\_effort} mapped to
 \texttt{none} or \texttt{high}), is a closed frontier anchor. Its price per grade is one to two orders
-of magnitude above the open models', so it grades 60-item subsets of each dataset: enough to situate
+of magnitude above the open models', so it grades small subsets of each dataset: enough to situate
 the open models against a frontier reference, too few to rank it among them. Qwen3.5 with reasoning off, with guidance, question-by-question, and holistic
 scoring is the internal baseline configuration against which the dimension contrasts are framed.
 
@@ -162,12 +151,13 @@ API call, so token and cost are counted once per call, not once per question.
 
 We call the full set of model, configuration, and dataset combinations that were run the
 \emph{experiment matrix}, and it balances statistical power against cost. With reasoning off, every
-model grades the full public and PT-CS datasets (2273 Mohler, 149 RIAYN, 737 PT-CS code, 437 PT-CS
-theory items) and the 800-item SemEval sample, all at $k=5$. Reasoning on is the most expensive
-setting, because reasoning traces run long, so it uses a fixed sample of 175 items per dataset and
-domain. The whole-exam arm grades 60 PT-CS submissions
-(252 questions), and the anchor grades 60-item subsets at $k=3$. The conversation sub-study runs 20
-submissions in two fixed answer orders (natural and inverse) on two models (Qwen3.5 and GLM-5.1) at
+model grades the full public and PT-CS datasets (2273 Mohler, 149 RIAYN, 295 PT-CS code, and 84
+PT-CS short-answer items) and the 800-item SemEval sample, all at $k=5$. Reasoning on is the most
+expensive setting, because reasoning traces run long, so it uses fixed random samples: 175 items per
+public dataset, and 67 code and 32 short-answer items on PT-CS. The whole-exam arm grades 60 complete
+exams from the deployment (252 questions, 77 of them in PT-CS), and the anchor grades 60-item subsets of
+each public dataset, plus 25 code and 11 short-answer PT-CS items, at $k=3$. The conversation sub-study
+grades 20 complete exams in two fixed answer orders (the exam's own order and its reverse) on two models (Qwen3.5 and GLM-5.1) at
 $k=3$, with everything else frozen at the baseline configuration. We did not run every combination.
 Model family and reasoning are fully crossed: each of the four families grades with reasoning off and
 on. The other dimension contrasts (evaluation guidance, scope, and decomposition) are secondary to
@@ -198,9 +188,7 @@ Alongside QWK we report mean absolute error (MAE) on the normalised score, the a
 as a fraction of the scale, and Spearman rank correlation. Consistency is the mean within-item
 standard deviation across the $k$ repetitions (SD$_k$); it needs no reference, and a lower value means
 more reproducible grading. Cost is measured in output tokens and reported as the reasoning on/off
-premium within each provider, since DeepInfra and OpenAI account for reasoning tokens differently. We also
-track the signed model-minus-gold deviation, an item-level leniency measure used in
-Section~\ref{sec:threats}.
+premium within each provider, since DeepInfra and OpenAI account for reasoning tokens differently.
 
 SemEval needs its own mapping, because the model emits a continuous score while its gold is binary
 (correct or incorrect). We turn the score into a correct/incorrect label at a fixed 0.5 cutoff, set in
@@ -213,9 +201,9 @@ systems relative to a training set, and our prompted models have none, so the la
 novelty to our grader.
 
 Every expensive contrast is computed on its paired subset, stated where the result is reported: the
-reasoning contrast pairs the off and on runs on the 175 sampled items (restricted to those whose
-reasoning never overflowed the token ceiling, Section~\ref{sec:rq1}), the scope contrast on the 252
-whole-exam questions, and anchor comparisons on the anchor's 60-item subsets; $N$ denotes the number of
+reasoning contrast pairs the off and on runs on the sampled items (restricted to those whose
+reasoning never overflowed the token ceiling, Section~\ref{sec:rq1}), the scope contrast on the 77
+PT-CS whole-exam questions, and anchor comparisons on the anchor's subsets; $N$ denotes the number of
 items a contrast rests on. Uncertainty is given by
 bootstrap 95\% confidence intervals (CIs) over items (800 resamples, fixed seed), and we call a
 contrast significant when its CI excludes zero. We report effect sizes with CIs rather than $p$-values,

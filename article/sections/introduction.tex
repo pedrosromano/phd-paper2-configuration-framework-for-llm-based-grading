@@ -30,8 +30,8 @@ Guidance, scope, decomposition, and conversation state have each been touched as
 (Section~\ref{sec:related}), never crossed under one protocol. What is missing is the practical
 synthesis: for a given CS assessment task, which configuration should be used, and what does it cost?
 
-This paper studies these configuration choices systematically and delivers the synthesis as a decision
-guide. We cross six design dimensions: extended reasoning (on or off), evaluation guidance (none
+This paper studies these configuration choices systematically and delivers the synthesis as a
+configuration guide. We cross six configuration dimensions: extended reasoning (on or off), evaluation guidance (none
 versus a rubric or reference answer), grading scope (whole exam versus question by question), rubric
 decomposition (holistic versus criterion by criterion), model family, and conversation state (a clean
 conversation per answer versus shared history). Three open-weight model families (Qwen3.5,
@@ -41,8 +41,8 @@ serves as a reference point. The study runs on four datasets in two domains. Thr
 validity: the Mohler~\cite{mohler_text_2009,mohler_learning_2011} and
 SemEval-2013 Task~7~\cite{dzikovska_semeval_2013} corpora of graded computer-science short answers,
 and the Rubric Is All You Need corpus of rubric-graded Java code~\cite{pathak_rubric_2025}. The
-fourth, PT-CS, comes from a real Portuguese university grading deployment and was built by the
-authors; we use it to test whether the public-dataset guidance transfers to a deployment context.
+fourth, PT-CS, was built by the authors from a real deployment of an AI-assisted grading platform in
+Portugal; we use it to test whether the public-dataset guidance transfers to a deployment context.
 
 Six research questions structure the study:
 \begin{itemize}
@@ -60,23 +60,22 @@ Six research questions structure the study:
         Portuguese deployment context?
 \end{itemize}
 
-This synthesis takes the form of a framework, not a leaderboard. Rather than crowning one best grader,
-we build a decision guide that maps the characteristics of a grading task, its domain, its rubric, its
-budget, and the reliability of the reference grades available, to a recommended configuration, the
-cost that choice implies, and the conditions under which it applies. Section~\ref{sec:results} reports
+Rather than crowning one best grader, the study builds a configuration guide that maps the
+characteristics of a grading task, its domain, its rubric, its budget, and the reliability of the
+reference grades available, to a recommended configuration, the cost that choice implies, and the
+conditions under which it applies. Section~\ref{sec:results} reports
 the controlled comparisons behind the guide, and Section~\ref{sec:framework} presents it.
 
-The contribution is threefold. First, a configuration decision guide for LLM grading in CS, keyed by
+The contribution is threefold. First, a configuration guide for LLM grading in CS, keyed by
 observable task and model behaviour rather than by model identity. Second, the first
 grading-specific, within-family isolation of the reasoning effect, measured jointly on agreement,
-consistency, and cost. Third, a strategy for deployment grades of uneven reliability: an auditable
-criterion that isolates a teacher-reviewed subset, so the deployment conclusions rest on a reference we
-can trust.
+consistency, and cost. Third, PT-CS, a dataset of 379 teacher-validated answers from a real
+deployment, on which we test how far guidance derived from public data carries into practice.
 
 The paper is organised as follows. Section~\ref{sec:related} positions the study in the
-learning-analytics and LLM-grading literature. Section~\ref{sec:method} describes the design space,
-datasets, grading harness, and experimental protocol. Section~\ref{sec:results} reports the
+learning-analytics and LLM-grading literature. Section~\ref{sec:method} describes the configuration
+dimensions, datasets, grading harness, and experimental protocol. Section~\ref{sec:results} reports the
 experiments and their results by research question. Section~\ref{sec:discussion} discusses the
-cross-cutting findings and Section~\ref{sec:framework} presents the configuration framework.
+cross-cutting findings and Section~\ref{sec:framework} presents the configuration guide.
 Section~\ref{sec:threats} states the threats to validity, and Section~\ref{sec:conclusion} draws the
 study's conclusions and outlines future work.

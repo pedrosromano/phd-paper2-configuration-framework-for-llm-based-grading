@@ -180,8 +180,8 @@ def main() -> int:
     #     (rq1_cells); PT-CS rows on the verified stratum; significant gains in bold. ---
     cells = rq1_cells(df, interv)
     dsorder = [("mohler", "short_answer", "Mohler"), ("semeval", "short_answer", "SemEval"),
-               ("riayn", "code", "RIAYN"), ("ptcs", "code", "PT-CS-verified code"),
-               ("ptcs", "short_answer", "PT-CS-verified short")]
+               ("riayn", "code", "RIAYN"), ("ptcs", "code", "PT-CS code"),
+               ("ptcs", "short_answer", "PT-CS short")]
     mname = {"qwen3.5": "Qwen3.5", "glm-5.1": "GLM-5.1", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1"}
     sgn = lambda x, d: (f"{x:+.{d}f}").replace("-", "$-$")
     vrows = []
@@ -206,7 +206,7 @@ def main() -> int:
          "as a percentage of the reasoning-off QWK; both use the items whose reasoning never exceeded the "
          "output-token limit, whose number is N. Tokens is how many times more output tokens reasoning used, "
          "and SD is the mean within-item standard deviation across repetitions (lower is more consistent); "
-         "both use all paired items. PT-CS rows use the verified subset.",
+         "both use all paired items.",
          "tab:rq1values", star=True, colspec="llrrrrrrr", size="\\footnotesize")
 
     # --- T2: dimension contrasts (context per dataset, scope, decomposition).
@@ -280,7 +280,7 @@ def main() -> int:
 
     # --- T4b / T4d REMOVED (2026-06-15): the two RQ6 transfer tables (tab_transfer_verified,
     #     tab_ranking_transfer) were replaced by a single slopegraph, fig_rq6_transfer (phase6.py
-    #     6.8): one line per config across {public mean, PT-CS-verified short, PT-CS-verified code},
+    #     6.8): one line per config across {public mean, PT-CS-verified short, PT-CS code},
     #     so the "top transfers, below-top ranking is indeterminate" message reads at a glance instead
     #     of from two dense table* grids. The figure uses the SAME basis (K=5 item means, with-guidance
     #     / q-by-q / holistic; verified = intervened stratum) and the same per-dataset public-mean
@@ -345,25 +345,25 @@ def main() -> int:
         {"Scenario": "Grading short answers", "Recommended": "Reasoning off; the cheapest model",
          "Trade-off in the rule": f"the reasoning gain is small and only sometimes significant (Qwen on Mohler and SemEval, not the other models), and reasoning off is {R_OVERALL}$\\times$ cheaper"},
         {"Scenario": "Grading code, the baseline collapses to zero", "Recommended": "Reasoning on, or switch to a discriminating model",
-         "Trade-off in the rule": f"reasoning recovers the discrimination the collapsed baseline lost (Qwen ${qc_v:+.3f}$ QWK on PT-CS-verified code), but at about {qwen_code_prem}$\\times$ the tokens and worse run-to-run consistency, so switching model is often the better fix"},
+         "Trade-off in the rule": f"reasoning recovers the discrimination the collapsed baseline lost (Qwen ${qc_v:+.3f}$ QWK on PT-CS code), but at about {qwen_code_prem}$\\times$ the tokens and worse run-to-run consistency, so switching model is often the better fix"},
         {"Scenario": "Grading code, the baseline does not collapse", "Recommended": "Reasoning off; on only if local validation justifies it",
          "Trade-off in the rule": f"without the collapse the reasoning gain is inconsistent and not predictable in advance, so off is the safe default, saving cost (about {R_DISCRIM_CODE}$\\times$ the tokens) and keeping consistency"},
         {"Scenario": "Consistency or fairness is critical", "Recommended": "Reasoning off",
          "Trade-off in the rule": "reasoning on is less reproducible, partly a length effect and partly reasoning itself"},
         {"Scenario": "A rubric or reference answer is available", "Recommended": "Supply it as guidance (rubric for code, reference answer for short answers)",
-         "Trade-off in the rule": f"guidance was the one change that reliably raised agreement: it helped across datasets (RIAYN ${riayn_ctx:+.3f}$ QWK, PT-CS-verified code ${ptcs_ctx_ver:+.3f}$), at the cost of only the extra prompt tokens"},
+         "Trade-off in the rule": f"guidance was the one change that reliably raised agreement: it helped across datasets (RIAYN ${riayn_ctx:+.3f}$ QWK, PT-CS code ${ptcs_ctx_ver:+.3f}$), at the cost of only the extra prompt tokens"},
         {"Scenario": "The rubric has several criteria", "Recommended": "Holistic scoring (one overall score)",
-         "Trade-off in the rule": f"on PT-CS-verified code, scoring criterion by criterion did not reliably change agreement (${decomp_ver:+.3f}$ QWK, not significant) at a higher token cost"},
+         "Trade-off in the rule": f"on PT-CS code, scoring criterion by criterion did not reliably change agreement (${decomp_ver:+.3f}$ QWK, not significant) at a higher token cost"},
         {"Scenario": "The exam has several questions", "Recommended": "Grade one question per call",
-         "Trade-off in the rule": f"on PT-CS-verified code, grading the whole exam in one call did not improve agreement (question-by-question to whole-exam ${scope_ver:+.3f}$ QWK, not significant) and cut the cost per question by only {scope_saving:.0f}\\%"},
+         "Trade-off in the rule": f"on PT-CS code, grading the whole exam in one call did not improve agreement (question-by-question to whole-exam ${scope_ver:+.3f}$ QWK, not significant) and cut the cost per question by only {scope_saving:.0f}\\%"},
         {"Scenario": "Grading many answers in sequence", "Recommended": "Fresh conversation per question; no history carried across the exam",
-         "Trade-off in the rule": "a shared, accumulating conversation made grading stricter and answer order added noise (a 20-submission sub-study)"},
+         "Trade-off in the rule": "a shared, accumulating conversation made grading stricter and answer order added noise (a 20-exam sub-study)"},
     ])
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
     fw["Trade-off in the rule"] = fw["Trade-off in the rule"].map(lambda s: s[0].upper() + s[1:] if s else s)
     fw["Scenario"] = "\\raggedright " + fw["Scenario"]   # left-align (ragged right), not justified
     _tex(fw, "tab_framework.tex",
-         "The configuration decision guide. Each row pairs a grading scenario "
+         "The configuration guide. Each row pairs a grading scenario "
          "with a recommended setting and the trade-off behind it.",
          "tab:framework", star=True, colspec="p{2.8cm}p{4.2cm}p{9.2cm}", rowsep="3pt", rowrule=True)
     print("done.")

@@ -118,6 +118,14 @@ These are not features; they gate submission. Keep them visible and track them a
    over, the mid-ranking does not — see §1.2 RQ6, corrected 2026-06-11). The framework rests on
    the public datasets and does not depend on PT-CS gold; the conversation sub-study measures model behaviour
    and is gold-independent.
+   **Paper presentation (B2, user-ratified 2026-10-15): the paper's PT-CS IS the curated set** — "379
+   teacher-validated answers (295 code, 84 short) from 97 exams", defined once in Method by the criterion
+   (the final grade departs from the AI-proposed total). The internal history (1184-response export, the
+   exact-sum/no-criteria strata, "requalification course", "uneven reliability", the name "PT-CS-verified")
+   stays OUT of the paper. Kept in Threats: the selection effect, no inter-rater ceiling, the AI-seeded
+   proposal. Whole-exam and conversation runs grade complete deployment exams and say so in one clause. This
+   §2.2 analysis remains the internal record; the honesty rule now means: state the criterion, never imply
+   the 379 were validated by a separate process.
 3. **No circularity.** Data used to *evaluate* configurations in Article 2 must stay conceptually separate
    from the GradeGenie *system* evaluated in Article 3. Do not validate an improved GradeGenie against
    grades a previous GradeGenie helped produce.
@@ -976,6 +984,17 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ⬜ **Ethics / GDPR statement (B4)** — user 2026-10-15: deferred ("non-identifying data"; revisit before
   submission). NB: pseudonymised data is still personal data under the GDPR, and Access may ask for an
   ethics statement; the §2.1 gate still applies to publication.
-- ⬜ **"Framework" wording (B1) and PT-CS presentation (B2)** — pending the user's answer to the proposals
-  of 2026-10-15 (title without "framework"; PT-CS = the curated dataset, selection criterion stated once,
-  one-sentence threat). Do not rename until ratified.
+- ✅ **"Framework" wording (B1, user 2026-10-15).** The advisor disliked "framework" (reads as AI prose;
+  suggests software to an engineering readership). Title is now *Configuring LLM-Based Grading in Computer
+  Science: An Empirical Study of Reasoning, Guidance, Scope, and Cost*; the deliverable is the
+  **configuration guide** (Section "The Configuration Guide"; keyword "configuration guidelines"). Do not
+  reintroduce "framework" for our deliverable (other people's software frameworks may keep the word).
+- ✅ **PT-CS presentation (B2, user 2026-10-15)** — see §2.2 "Paper presentation". Generators and figures
+  label it "PT-CS" (no "verified"); the strata table is still generated for audit but not in the paper.
+- ✅ **Grade-inflation threat dropped from the paper (2026-10-15).** Its quantitative proxy never supported
+  inflation (see the inflation item above); under the §9.2 caveat filter and B2 it no longer earns a
+  sentence. The Method sentence on the signed deviation went with it.
+- ✅ **Temperature-0 variation re-based (2026-10-15).** Threats said "10 to 43% of items still vary" with a
+  dangling reference to the Discussion and no engine source. Recomputed by
+  `audit_pct_baselines.temp0_variation` on the paper basis (with guidance, one question per call, holistic,
+  PT-CS validated): **9–56% with reasoning off** (18–46% on). Prose updated.

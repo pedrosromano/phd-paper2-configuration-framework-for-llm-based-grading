@@ -162,6 +162,35 @@ def zero_collapse():
           f"  | teacher zeros on the same {len(gold)} items: {100 * (gold < 1e-9).mean():.0f}%")
 
 
+def overflow():
+    """RQ1 overflow exclusion (Section IV-A): reasoning-on runs whose output never parsed because the
+    reasoning overflowed the token ceiling, with PT-CS restricted to its validated answers (the paper's
+    PT-CS). Prints run rows, distinct items, and items per dataset; set full=True for the whole export."""
+    df = phase5.load_main()
+    rp = phase5.reasoning_paired(df)
+    on = rp[(rp.reasoning == "on") & (rp.context_level == "with_guidance")
+            & (rp.scope == "question_by_question") & (rp.decomposition == "holistic") & ~rp.parse_ok]
+    print("\n=== RQ1 overflow exclusion (Section IV-A) ===")
+    for name, d in [("whole export", on), ("paper PT-CS", on[(on.dataset != "ptcs") | on.item_id.isin(_INTERV)])]:
+        print(f"  {name:12} rows={len(d)} items={d.item_id.nunique()} models={sorted(d.model.unique())} "
+              f"per dataset={d.groupby('dataset').item_id.nunique().to_dict()}")
+
+
+def temp0_variation():
+    """Threats (Section VII): share of items whose grade differs across the k repetitions at temperature 0,
+    per (dataset, domain, model, reasoning), with guidance, one question per call, holistic; PT-CS = its
+    validated answers. The paper quotes the reasoning-off range."""
+    df = phase5.load_main()
+    d = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question")
+           & (df.decomposition == "holistic") & df.pred_norm.notna()]
+    d = d[(d.dataset != "ptcs") | d.item_id.isin(_INTERV)]
+    print("\n=== Temperature-0 variation: % of items whose grade varies across repetitions (Section VII) ===")
+    for r in ["off", "on"]:
+        pct = [100 * g.groupby("item_id").pred_norm.agg(lambda x: x.nunique() > 1).mean()
+               for _, g in d[d.reasoning == r].groupby(["dataset", "domain", "model"])]
+        print(f"  reasoning {r}: {min(pct):.0f}% to {max(pct):.0f}% across {len(pct)} model-dataset combinations")
+
+
 def rq4():
     """RQ4 cost-quality BY TASK (Section IV-D, Fig. agreement-vs-cost, 2 panels): per-task QWK spread
     across the eight configs, and per-config QWK + euro cost per 1000 grades for short-answer
@@ -191,6 +220,8 @@ def main() -> int:
     rq3()
     rq3_cost()
     zero_collapse()
+    overflow()
+    temp0_variation()
     rq4()
     print("\nPaper cross-check (Phase 7): RQ1 Mohler +11%, SemEval +18%, RIAYN +45%, PT-CS-verified "
           "code +23%, PT-CS-verified short Qwen +12% (ns), RIAYN GPT +32% (GLM/GPT PT-CS short ns on verified). "

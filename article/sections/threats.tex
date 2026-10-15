@@ -5,30 +5,27 @@
 %% COI statement REMOVED from the paper + dropped as a CLAUDE.md non-negotiable (user decision 2026-06-17):
 %% collecting one's own dataset is not per se a conflict; any required COI disclosure is handled at submission.
 %% Trimmed + bold run-in labels removed 2026-06-16 (rebalance vs the expanded framework section).
-%% Summarised 2026-06-17 to 3 paragraphs; PT-CS para now LEADS WITH CONTAINMENT (framework rests on the
-%% public datasets; PT-CS only for transfer + the PT-CS-only experiments; verified stratum; conversation
-%% gold-independent) so the gold limits do not read as undermining the article.
-%% Inflation-proxy digits regenerate via phase5.signed_deviation on the declared baseline cell.
+%% Summarised 2026-06-17 to 3 paragraphs; PT-CS para LEADS WITH CONTAINMENT.
+%% Rewritten 2026-10-15 (B2, user-ratified): PT-CS = the 379 teacher-validated answers; no strata, no
+%% 'requalification', no 'uneven reliability'. Kept: selection effect, no inter-rater ceiling, AI-seeded
+%% proposal. Dropped: the grade-inflation sentence (its proxy did not support inflation; S9.2 caveat filter).
 
 \section{Threats to Validity}
 \label{sec:threats}
 
-The PT-CS dataset was collected by the authors of this article and carries real limits: its grades come
-from a mix of sources of uneven reliability (a requalification course below university level, not every
-grade teacher-reviewed), the curation criterion shows intervention rather than correctness, no per-teacher scores
-allow an inter-rater check, and an AI-seeded suggestion could inflate agreement if its model resembled one
-we test. These limitations keep this
-dataset from reaching the paper's conclusions. The framework rests on the three public datasets, whose
-references are independent of PT-CS. PT-CS enters only where nothing else can serve, as the transfer test
-and in the experiments that need its multi-question submissions: grading scope, criterion decomposition,
-and the conversation sub-study. There, every agreement result uses the teacher-reviewed
-verified stratum (Section~\ref{sec:datasets}), and the conversation sub-study measures model behaviour
-without depending on the gold at all. A lenient course
-standard could also inflate the grades, but the model-minus-gold deviation does not clearly bear this out.
+The guidance rests on the three public datasets, whose reference grades are independent of the
+authors. PT-CS serves as the transfer test and as the only source of multi-question exams, for grading
+scope, criterion decomposition, and the conversation sub-study. Three properties of PT-CS bound what it
+can show. Its answers are those whose AI-proposed grade the teachers changed, and such answers may differ
+in difficulty from typical ones, so absolute PT-CS levels need not represent the whole deployment. The
+grades are a joint teacher decision with no per-teacher record, so no human agreement ceiling can be
+computed. And because the platform's initial proposals came from an AI model, agreement could be
+inflated if that model resembled one we test; keeping only answers whose grade the teachers changed
+limits this influence.
 
 The results are conditional on the served backends, so the transferable claim is the configuration
-guidance, not the absolute scores. Temperature 0 is not deterministic: 10 to 43\% of items still vary
-across repetitions (Section~\ref{sec:discussion}). Reasoning cost is comparable only within a backend, not
+guidance, not the absolute scores. Temperature 0 is not deterministic: with reasoning off, 9 to 56\% of
+items received different grades across repetitions, depending on the model and dataset. Reasoning cost is comparable only within a backend, not
 across them. The reasoning benefit is established on the tractable items only, since the non-random
 truncation exclusion drops the longest-reasoning cases.
 

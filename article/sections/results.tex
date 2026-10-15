@@ -2,23 +2,21 @@
 %% the auto-generated tables in article/tables/ or the figures in article/figures/ (verify, don't
 %% recall). Fences: enumerate RQ1 cells (never "significant across all datasets"); scope qbq vs
 %% whole-exam = "not significant, not equivalence" (no TOST); RQ2 scoped to Qwen3.5; RQ6 anchor =
-%% corroboration only, never winner; PT-CS = verified stratum throughout (unreliable strata excluded by
-%% the declared criterion; conversation sub-study is gold-independent).
+%% corroboration only, never winner; PT-CS = the 379 teacher-validated answers (B2, 2026-10-15: no
+%% strata or 'verified' wording in the paper; the conversation sub-study uses complete deployment exams).
 
 \section{Results}
 \label{sec:results}
 
-All tables and figures in this section report values computed from the experimental runs. Following
-Section~\ref{sec:datasets}, every PT-CS agreement result uses the teacher-reviewed verified stratum;
-the conversation sub-study (Section~\ref{sec:rq5}) is gold-independent and uses all its submissions.
+All tables and figures in this section report values computed from the experimental runs.
 
 \subsection{RQ1: Reasoning}
 \label{sec:rq1}
 
 Reasoning is evaluated on the paired sampled items, restricted to the \emph{tractable} items: those
 whose reasoning runs never overflowed the 32\,768-token output ceiling, so a clean on-score exists.
-The overflow exclusion removes 337 run rows (222 distinct items: 91 SemEval, 65 Mohler, 49 PT-CS, 17
-RIAYN), all from Qwen with reasoning on; of the 49 PT-CS items, 13 fall in the verified subset. The
+The overflow exclusion removes 293 run rows (186 distinct items: 91 SemEval, 65 Mohler, 17 RIAYN, 13
+PT-CS), all from Qwen with reasoning on. The
 extractable rate $\pi$ is 1.0 everywhere else. Because
 the overflowing items are the ones provoking the longest reasoning, the excluded items are not
 random, and every claim in this subsection holds for the tractable items only.
@@ -34,8 +32,8 @@ random, and every claim in this subsection holds for the tractable items only.
 \caption{The reasoning trade-off on one plane. Each point is one model on one dataset. The horizontal
 axis is the change in agreement with the teacher grades when reasoning is turned on (QWK on minus
 off), so points to the right gained agreement. The vertical axis is the change in run-to-run
-consistency (within-item SD, off minus on), so points below zero became less consistent. PT-CS points
-use PT-CS-verified; Table~\ref{tab:rq1values} lists the values.}
+consistency (within-item SD, off minus on), so points below zero became less consistent.
+Table~\ref{tab:rq1values} lists the values.}
 \label{fig:rq1trade}
 \end{figure}
 
@@ -47,8 +45,8 @@ use PT-CS-verified; Table~\ref{tab:rq1values} lists the values.}
 dataset. (a) Agreement change (QWK on minus off); above zero, reasoning improved agreement with the
 teacher grades. (b) Change in run-to-run consistency (within-item SD, off minus on); below zero,
 reasoning made the grader less consistent. (c) How many times more output tokens reasoning used, on a
-log scale because the ratios range from about 10 to over 900. PT-CS bars use PT-CS-verified;
-Table~\ref{tab:rq1values} lists the values.}
+log scale because the ratios range from about 10 to over 900. Table~\ref{tab:rq1values} lists the
+values.}
 \label{fig:rq1}
 \end{figure*}
 
@@ -59,13 +57,13 @@ Fig.~\ref{fig:rq1trade} the points spread widely along the horizontal agreement 
 change in QWK from reasoning off to on). Table~\ref{tab:rq1values} gives every value. Reasoning
 helped Qwen3.5 significantly on four of its five datasets (each percentage is the gain relative to
 the reasoning-off QWK): Mohler ($\Delta$QWK $+0.071$, $+11$\%), SemEval ($+0.098$, $+18$\%), RIAYN
-($+0.250$, $+45$\%), and PT-CS-verified code ($+0.113$, $+23$\%, on 61 items). Its PT-CS-verified
+($+0.250$, $+45$\%), and PT-CS code ($+0.113$, $+23$\%, on 61 items). Its PT-CS
 short-answer gain ($+0.092$, $+12$\%, $N=25$) is not significant. The only other significant gain is
 GPT-5.1 on RIAYN ($+0.192$, $+32$\%). Everywhere else the contrast is not significant, including every
-Mohler and SemEval result of the other three models and every PT-CS-verified result of GLM-5.1,
+Mohler and SemEval result of the other three models and every PT-CS result of GLM-5.1,
 DeepSeek-V4-Flash, and GPT-5.1. A non-significant result means no gain was detected, not that reasoning
 is equivalent to no reasoning: we ran no equivalence test, and several intervals are wide, especially
-on PT-CS-verified, where the comparisons rest on 11 to 67 items (Section~\ref{sec:datasets}).
+on PT-CS, where the comparisons rest on 11 to 67 items (Section~\ref{sec:datasets}).
 
 Reasoning's gains come at a price, and Fig.~\ref{fig:rq1trade} already shows the dominant pattern:
 most points sit below the horizontal axis, so consistency falls even where agreement rises.
@@ -77,13 +75,13 @@ First, tokens: reasoning multiplied completion tokens by 10 to 925 times, and th
 domain-conditional even within one model. GPT-5.1 costs roughly 10 to 37 times as much on short
 answers but 94 to 170 times on code; Qwen3.5, whose traces are the longest, costs 666 to 925 times
 as much (Fig.~\ref{fig:rq1}c). A single overall span hides exactly the conditionality this study is about, so
-the framework quotes the premium per domain. Second, consistency: the within-item SD across
+the guide quotes the premium per domain. Second, consistency: the within-item SD across
 repetitions rises from off to on in 16 of the 20 model-dataset combinations (it falls in four: GLM-5.1 and GPT-5.1 on
-PT-CS-verified code, GPT-5.1 on PT-CS-verified short answers, and GPT-5.1 on RIAYN), all at temperature 0 (Fig.~\ref{fig:rq1}b). Reasoning therefore trades
+PT-CS code, GPT-5.1 on PT-CS short answers, and GPT-5.1 on RIAYN), all at temperature 0 (Fig.~\ref{fig:rq1}b). Reasoning therefore trades
 reproducibility for agreement even when the agreement gain itself is not significant;
 Section~\ref{sec:discussion} unpacks how much of that loss is mechanical.
 
-One code-specific failure shapes how the code results must be read. On PT-CS-verified code, Qwen3.5
+One code-specific failure shapes how the code results must be read. On PT-CS code, Qwen3.5
 with reasoning off gives a score of exactly zero to 47\% of the answers, although the teachers gave
 none of the same answers a zero. We call this behaviour the \emph{zero-collapse}: answers that
 deserve partial credit receive the same score as an empty answer, so the grader can no longer tell
@@ -94,7 +92,7 @@ Reasoning repairs the collapse for Qwen (the zero fraction falls to 24\%, and th
 follows), so that gain is best read as repairing a broken
 baseline, not as evidence that reasoning helps code grading in general. Away from the collapse the
 code gains are inconsistent: significant for GPT-5.1 on RIAYN, but not for GLM or DeepSeek on either
-code dataset, nor for GPT-5.1 on PT-CS-verified code. The framework (Section~\ref{sec:framework}) therefore
+code dataset, nor for GPT-5.1 on PT-CS code. The configuration guide (Section~\ref{sec:framework}) therefore
 keys its code guidance on baseline behaviour rather than model identity.
 
 Overall, reasoning emerges from RQ1 as a conditional trade rather than a default upgrade. It improved
@@ -111,7 +109,7 @@ turning reasoning on rarely pays for itself.
 \input{figures/fig_rq2_guidance.pgf}
 \caption{Evaluation-guidance benefit per dataset: the change in agreement ($\Delta$QWK, K=5, with 95\%
 confidence intervals) when the reference answer or rubric is added on top of the question and student
-answer. Qwen3.5, reasoning off. PT-CS code is PT-CS-verified.}
+answer. Qwen3.5, reasoning off.}
 \label{fig:rq2}
 \end{figure}
 
@@ -120,12 +118,12 @@ as a secondary axis it was measured on the baseline model (Qwen3.5) only, not cr
 family (Section~\ref{sec:design}), so every claim here is scoped to it (Fig.~\ref{fig:rq2}). Adding
 the reference answer raises agreement by
 $+0.162$ QWK on Mohler ($+34$\%, each percentage relative to the no-guidance QWK) and $+0.238$ on
-SemEval ($+67$\%); adding the rubric raises it by $+0.123$ on RIAYN ($+29$\%). On PT-CS-verified
-code, the 295 items with evidence of teacher review, the rubric is worth $+0.146$ ($+46$\%, CI
+SemEval ($+67$\%); adding the rubric raises it by $+0.123$ on RIAYN ($+29$\%). On the 295 PT-CS
+code answers, the rubric is worth $+0.146$ ($+46$\%, CI
 $[+0.10,+0.20]$), in line with RIAYN. All four gains are significant.
 
 Overall, evaluation guidance is a low-cost and reliable gain, lifting
-agreement by 0.12 to 0.24 QWK across the public datasets and PT-CS-verified code, roughly a third to
+agreement by 0.12 to 0.24 QWK across the public datasets and PT-CS code, roughly a third to
 two-thirds above the no-guidance baseline. For the model we tested, the practical reading is simple:
 add a trustworthy rubric or reference answer whenever one exists.
 
@@ -137,12 +135,12 @@ call or one question at a time; decomposition is whether each answer gets a sing
 is scored criterion by criterion. In both, the model is shown the same
 criteria; criterion-by-criterion scoring simply asks it to score each criterion separately and sum them,
 instead of giving one holistic score. We compare each shape against the baseline, which scores
-one question at a time with a single holistic score, on PT-CS-verified code (Fig.~\ref{fig:rq3}).
+one question at a time with a single holistic score, on PT-CS code (Fig.~\ref{fig:rq3}).
 
 \begin{figure}[!ht]
 \centering
 \input{figures/fig_rq3_scope_decomp.pgf}
-\caption{Scope and decomposition contrasts on PT-CS-verified code ($\Delta$QWK, K=5, with 95\% confidence
+\caption{Scope and decomposition contrasts on PT-CS code ($\Delta$QWK, K=5, with 95\% confidence
 intervals): the change in agreement from grading question by question to grading the whole exam in one
 call, and from holistic to criterion-by-criterion scoring. Below zero means the alternative scored
 worse than the baseline. Qwen3.5, reasoning off.}
@@ -152,7 +150,7 @@ worse than the baseline. Qwen3.5, reasoning off.}
 PT-CS exams are short, about four questions each (median four, range one to six), so the whole-exam
 call grades roughly four answers in one pass. The useful question is whether the shape changes the
 grade and, where it barely does, which shape costs less. These changes start from a modest baseline: question-by-question
-holistic grading reaches QWK between 0.35 and 0.47 on the verified stratum, so even a small absolute
+holistic grading reaches QWK between 0.35 and 0.47 on PT-CS code, so even a small absolute
 change is a noticeable share of it. Grading a whole exam in one call instead of question by question
 changes agreement by $-0.060$ QWK, about 17\% of that baseline (CI $[-0.13,+0.01]$, $N=77$), not
 significant. Scoring criterion by criterion instead of holistically changes it by $-0.022$ QWK, about
@@ -190,7 +188,7 @@ reference samples and does not outperform the open models, so we leave it unrank
 \centering
 \input{figures/fig3_per_dataset_config.pgf}
 \caption{Agreement (QWK, K=5, item means, bootstrap CIs) by model and reasoning mode, per dataset,
-with guidance and one question per call. PT-CS is PT-CS-verified ($N=379$ items); the GPT-5.1 bars
+with guidance and one question per call. PT-CS has $N=379$ items; the GPT-5.1 bars
 rest on 60-item subsets and serve as a reference, not as a ranked competitor.}
 \label{fig:perdataset}
 \end{figure}
@@ -247,8 +245,8 @@ reasoning off by default, on the cost argument that holds on every task. Reasoni
 on code, and conditionally: it gives the study's best cell (GLM 0.803) but that gain is not
 significant, and across families the code benefit was significant only where it repaired a collapsed
 baseline (Qwen) or on isolated cells (Section~\ref{sec:rq1}). So turn it on for code when a model
-collapses or local validation shows it pays. The next section builds exactly this into the framework,
-where cost sits alongside agreement and consistency as a first-class axis.
+collapses or local validation shows it pays. The configuration guide (Section~\ref{sec:framework})
+builds exactly this rule in, with cost alongside agreement and consistency as a first-class axis.
 
 \subsection{RQ5: Conversation State}
 \label{sec:rq5}
@@ -257,21 +255,19 @@ Grades can be shaped not only by how each answer is scored, but by how the whole
 run. This sub-study varies whether each of a student's answers is graded in its own clean
 conversation or inside one shared conversation that accumulates across that student's exam. Within
 the shared conversation it also varies the order in which the answers are presented: the exam's own
-question order, or the reverse. It uses PT-CS code,
-the only dataset with multi-question submissions, because the public datasets are independent single
-items with no exam to share a conversation across or to reorder. The sample is 20 submissions graded
-by two models, Qwen3.5 and GLM-5.1, with everything else held at the baseline configuration. Unlike
-the other PT-CS analyses, this one uses the full set rather than the verified stratum: it compares the
-model's grades against one another across session conditions, never against the human grade, so the
-gold's reliability does not enter and restricting to the verified subset would only shrink the sample,
-with no added reliability.
+question order, or the reverse. It needs complete multi-question exams, which only the deployment
+provides: the public datasets are independent single items with no exam to share a conversation across
+or to reorder. The sample is 20 complete code exams from the deployment, graded by two models, Qwen3.5
+and GLM-5.1, with everything else held at the baseline configuration. Because the sub-study compares the
+model's grades with one another across session conditions, never with a teacher's grade, it does not
+need validated grades.
 
 \begin{figure}[!ht]
 \centering
 \input{figures/fig5_conversation.pgf}
 \caption{Mean grade under the two conversation states, per model: each answer graded in its own
-clean conversation, or all of a student's answers graded in one shared conversation. PT-CS code,
-20 exams, $k=3$, baseline configuration.}
+clean conversation, or all of a student's answers graded in one shared conversation. Code exams from
+the deployment, 20 exams, $k=3$, baseline configuration.}
 \label{fig:conversation}
 \end{figure}
 
@@ -297,51 +293,51 @@ indicator of the trend; confirming its size needs more exams.
 \centering
 \input{figures/fig_rq6_transfer.pgf}
 \caption{Transfer of the configuration ranking from the public datasets to the deployment context,
-within each domain: (a) public short answers (mean over Mohler and SemEval) against PT-CS-verified
-short answers, (b) public code (RIAYN) against PT-CS-verified code. Each line is one configuration (a model
+within each domain: (a) public short answers (mean over Mohler and SemEval) against PT-CS short
+answers, (b) public code (RIAYN) against PT-CS code. Each line is one configuration (a model
 with reasoning on or off); the vertical axis is agreement with the human grade (QWK, K=5). The public
-ranking is computed from the public datasets only, with PT-CS held out of it. Verified items: short
-answers 84 with reasoning off and 32 with reasoning on; code 295 and 67. The GPT-5.1 anchor is drawn thin and grey because its verified cells
-rest on 11 to 25 items, so it is directional corroboration only, never ranked.}
+ranking is computed from the public datasets only, with PT-CS held out of it. PT-CS items: short
+answers 84 with reasoning off and 32 with reasoning on; code 295 and 67. The GPT-5.1 anchor is drawn
+thin and grey because its PT-CS results rest on 11 to 25 items, so it is directional corroboration only,
+never ranked.}
 \label{fig:transfer}
 \end{figure}
 
 The sixth and final research question is whether the configuration guidance found on the public datasets
-carries over to a real deployment context. PT-CS, an export of a live Portuguese university grading
-platform, is that context; its grades are of uneven reliability, so the comparison uses the
-teacher-reviewed verified stratum, at reduced and declared N (Section~\ref{sec:threats}). PT-CS has
+carries over to a real deployment context. PT-CS, with its 379 teacher-validated answers from a live
+AI-assisted grading platform, is that context. PT-CS has
 already appeared in the earlier questions, but at the level of a single factor, asking whether reasoning,
 guidance, or scope behaves on it as on the public data. The question here is asked once and at the level
 of the whole configuration ranking: if you pick the configuration that ranks best on the public datasets,
 is it the one that ranks best in deployment? Two choices keep the comparison clean. The public ranking is
 computed from the public datasets alone, with PT-CS held out of it, so this is a genuine
 out-of-public-sample check, not a re-reading of data that drove the ranking. And the comparison is made
-within domain, public short answers against verified short answers and public code against verified code,
+within domain, public short answers against PT-CS short answers and public code against PT-CS code,
 so short and code are never averaged together (Fig.~\ref{fig:transfer}).
 
 The ranking points the same way in both contexts. Across the six open configurations, the public and deployment orderings
 correlate at Spearman $\rho=0.77$ on code and $\rho=0.66$ on short answers, where 1 would be an identical
 order and 0 an unrelated one; in Fig.~\ref{fig:transfer} the lines mostly keep their vertical order, and
 the few crossings are local swaps. The evidence is firmest on code, where the public datasets spread the
-graders over 0.26 QWK and so impose a real order: GLM-5.1 is the best code grader on both the public and
-the verified data, and Qwen3.5 with reasoning off, held down by its zero-collapse (Section~\ref{sec:rq1}),
+graders over 0.26 QWK and so impose a real order: GLM-5.1 is the best code grader on both the public data and
+PT-CS, and Qwen3.5 with reasoning off, held down by its zero-collapse (Section~\ref{sec:rq1}),
 is the worst on both. On short answers the same positive correlation rests on a weaker base, because the
 public datasets separate the six configurations by only 0.04 QWK, so the preserved order is one among
 near-ties; even so, the extremes hold, with Qwen3.5 reasoning on top and DeepSeek reasoning on last on
 both sides. The finest within-family ordering does not carry over, for example whether reasoning on or off
-is GLM's best code cell, which flips between the two (0.803 to 0.633 on, 0.726 to 0.672 off, within
-sampling noise at the verified N of 67 to 295). Absolute levels shift between contexts too, up on the
-verified short answers and down on the verified code, but transfer concerns the ordering, not the level.
-The GPT-5.1 anchor sits apart in both panels: its verified cells rest on 11 to 25 items, so it is
+is GLM's best code configuration, which flips between the two (0.803 to 0.633 on, 0.726 to 0.672 off,
+within sampling noise at the PT-CS sample sizes of 67 to 295). Absolute levels shift between contexts
+too, up on PT-CS short answers and down on PT-CS code, but transfer concerns the ordering, not the level.
+The GPT-5.1 anchor sits apart in both panels: its PT-CS results rest on 11 to 25 items, so it is
 directional corroboration only, never ranked.
 
-Overall, the configuration ranking transfers in the sense that matters for a decision guide: the best
+Overall, the configuration ranking transfers in the sense that matters for a configuration guide: the best
 public configuration is also at the top in deployment. The match is exact on short answers, where the
 very same configuration leads on both sides (Qwen3.5 with reasoning on), and close on code, where the
 same model family leads (GLM-5.1) and its reasoning-on and reasoning-off variants score too near each
 other to separate. Below the top, the order points the same way, but with only six configurations the
 rank correlations do not reach statistical significance, and close competitors fall within sampling
-noise at the verified $N$, so the order below the top is not established. The practical reading follows
+noise at these sample sizes, so the order below the top is not established. The practical reading follows
 directly (Section~\ref{sec:cost}): a configuration chosen on the public data is a strong, transferable
 default.
 

@@ -29,7 +29,7 @@ reasoning is keyed to an observable behaviour, whether the baseline collapses, r
 name, a choice that also lets it outlast the next model release.
 
 Evaluation guidance was the cheapest reliable improvement we found, raising agreement by 0.12 to 0.24 QWK
-across the public datasets. The same benefit held on the teacher-reviewed subset of the deployment data,
+across the public datasets. The same benefit held on the deployment data,
 where the rubric helped the code grader about as much as on the public code. Providing it is the one
 configuration change in the study that reliably improved agreement.
 
@@ -50,7 +50,7 @@ spread far more widely, about 0.26 QWK, and there the configuration is worth opt
 tasks the open models with reasoning off were the efficient choice, GLM-5.1 most of all, while the closed
 frontier model never justified its much higher cost. The ranking learned on the public datasets carried
 over at the top: the configuration that ranked first on public data also ranked first in deployment.
-Below the top, the verified deployment samples were too small to tell the close-ranked configurations
+Below the top, the deployment samples were too small to tell the close-ranked configurations
 apart, so their relative order remained statistically indeterminate. The natural choice is therefore the
 configuration that ranks highest on public data: it is both the strongest grader there and the
 configuration whose lead carried over to deployment.
@@ -62,5 +62,5 @@ that matter, consistency and cost, are routinely left unreported in other studie
 reasoning here, so reporting agreement alone would have hidden half of what a practitioner needs to
 decide. Because the
 choices turn on observable behaviour rather than on model identity, they also do not expire with each new
-release. We therefore express the contribution not as a leaderboard but as a decision guide: a small set
+release. We therefore express the contribution as a configuration guide: a small set
 of task-keyed priors, each carrying its own trade-off. The next section presents it.

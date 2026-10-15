@@ -5,13 +5,13 @@
 
 An instructor adopting an LLM grader faces several choices, not one, and prior studies addressed them
 only in fragments, with some left unstudied. We aggregated those fragments, verified them for computer-science
-grading under one controlled protocol, and condensed the result into a decision guide. Three results carry the weight. Reasoning is a
+grading under one controlled protocol, and condensed the result into a configuration guide. Three results carry the weight. Reasoning is a
 conditional trade, not an upgrade: it bought agreement in a minority of model-dataset combinations, always
 at a large, domain-conditional token premium and almost always at a consistency cost. Its one
 reliably explained success was repairing a grader whose baseline had collapsed to zero on code.
 Evaluation guidance is the cheapest reliable lever for the model we tested it on. And the configuration that ranked best on the
-public data also led in deployment, so it makes a strong default, even though the verified samples were
-too small to confirm the order below the top. Together these define the framework's stance: the right
+public data also led in deployment, so it makes a strong default, even though the deployment samples were
+too small to confirm the order below the top. Together these define the guide's stance: the right
 configuration depends on the task, not on a single best grader, and by keying every prior to observable
 properties rather than to model identity, we built the guidance to outlast the models we tested.
 
@@ -20,7 +20,7 @@ Two gaps now arise in our design. Few-shot guidance, adding a few already-graded
 as examples, was held out; the strong effect of the studied guidance makes it worth testing, but only with a
 principled rule for choosing the examples. And a
 fine-tuning arm remains open: fine-tuning is already competitive for grading~\cite{cong_memorization_2026},
-but it has not been placed in this framework, comparing a fine-tuned grader against its base model on
+but it has not yet been placed in a guide of this kind, comparing a fine-tuned grader against its base model on
 agreement, consistency, and cost together. Three more follow from the
 literature. Code evidence rests on two Java-centric datasets because human-rubric-graded code corpora are
 scarce~\cite{havare_ai-based_2025,pathak_rubric_2025}, so widening it to other languages and paradigms,

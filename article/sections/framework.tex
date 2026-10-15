@@ -3,7 +3,7 @@
 %% artifact. Centre = tab_framework; "validate locally" governs the per-axis priors. The cross-cutting
 %% findings that justify the rows are discussed in Section~\ref{sec:discussion}.
 
-\section{The Configuration Framework}
+\section{The Configuration Guide}
 \label{sec:framework}
 
 \begin{figure*}[b]
@@ -82,13 +82,12 @@ off by default and turns on only to rescue a grader that collapses to zero on co
 
 \input{tables/tab_framework}
 
-The study's deliverable is a configuration framework for LLM-based grading: a compact decision guide
-that, for a given grading task, says which configuration to use and why. It is a small set of priors, one
-per design axis, each giving a recommended default, the trade-off that justifies it, and the condition
+The study's deliverable is a configuration guide for LLM-based grading: for a given grading task, it
+says which configuration to use and why. It is a small set of priors, one per configuration choice, each
+giving a recommended default, the trade-off that justifies it, and the condition
 that would call for a different choice. Table~\ref{tab:framework} sets out the priors with their
 evidence, and Fig.~\ref{fig:frameworkdiagram} shows how it grades an exam. They are starting points
-backed by the controlled comparisons of Section~\ref{sec:results}, not universal laws. We take them axis
-by axis.
+backed by the controlled comparisons of Section~\ref{sec:results}. We take them one choice at a time.
 
 Reasoning is the axis that most repays care, and its default is off. On short answers the gain is small
 while the token cost runs up to 925 times higher, so off is the clear choice. On code reasoning does

@@ -125,8 +125,8 @@ def fig_panels(rc):
     One bar per model in each dataset group; read a vertical slice = one cell across all
     three metrics: agreement change, consistency change, token cost. Deterministic (no boot)."""
     order = [("mohler", "short_answer", "Mohler"), ("semeval", "short_answer", "SemEval"),
-             ("riayn", "code", "RIAYN"), ("ptcs", "code", "PT-CS-ver. code"),
-             ("ptcs", "short_answer", "PT-CS-ver. short")]
+             ("riayn", "code", "RIAYN"), ("ptcs", "code", "PT-CS code"),
+             ("ptcs", "short_answer", "PT-CS short")]
     models = list(MARK)  # qwen3.5, glm-5.1, deepseek-v4-flash, gpt-5.1
     lbl = [t[2] for t in order]
     x = np.arange(len(order)); w = 0.2
@@ -171,7 +171,7 @@ def fig_rq2(full):
     specs = [("mohler", "short_answer", "Mohler", None, "short_answer"),
              ("semeval", "short_answer", "SemEval", None, "short_answer"),
              ("riayn", "code", "RIAYN", None, "code"),
-             ("ptcs", "code", "PT-CS-ver.\ncode", _INTERV, "code")]
+             ("ptcs", "code", "PT-CS\ncode", _INTERV, "code")]
     labels, mds, los, his, cols, hatches = [], [], [], [], [], []
     for ds, dom, lbl, sub, dmn in specs:
         c = q[(q.dataset == ds) & (q.domain == dom)]
@@ -305,7 +305,7 @@ def fig_rq6_transfer(full):
         rho = spearmanr(pub_open, ver_open).statistic               # rank transfer over the 6 open configs
         ax.text(0.5, 0.03, f"rank $\\rho={rho:.2f}$", transform=ax.transAxes, ha="center", va="bottom",
                 fontsize=6.5, bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#bbb", lw=0.4))
-        ax.set_xticks([0, 1]); ax.set_xticklabels(["public", "PT-CS\nverified"])
+        ax.set_xticks([0, 1]); ax.set_xticklabels(["public", "PT-CS"])
         ax.set_xlim(-0.3, 1.3); ax.set_title(title, loc="left", fontsize=7); ax.set_box_aspect(1)
     axes[0].set_ylabel("agreement (QWK, K=5)")
     mh = [plt.Line2D([], [], color=MCOL[m], marker=MARK[m], ls="-", mec=MCOL[m], label=m.split("-")[0])
@@ -336,9 +336,8 @@ def fig3(df):
             ax.bar(pos, qs, w, color=MCOL[m], alpha=0.55 if rs == "off" else 1.0, edgecolor="k", lw=0.3,
                    hatch="" if rs == "off" else "//", label=f"{m.split('-')[0]}$|${rs}")
             ax.errorbar(pos, qs, yerr=[los, his], fmt="none", ecolor="k", elinewidth=0.5, capsize=1.2)
-    ax.set_xticks(x); ax.set_xticklabels([d if d != "ptcs" else "ptcs*" for d in dsets]); ax.set_ylabel("agreement (QWK, K=5)")
+    ax.set_xticks(x); ax.set_xticklabels([{"mohler": "Mohler", "semeval": "SemEval", "riayn": "RIAYN", "ptcs": "PT-CS"}[d] for d in dsets]); ax.set_ylabel("agreement (QWK, K=5)")
     ax.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.13), framealpha=0.9)
-    ax.text(0.99, 0.97, f"*PT-CS verified, N={_ptcs_n(base)}", transform=ax.transAxes, ha="right", va="top", fontsize=5, color="#555")
     _save(fig, "fig3_per_dataset_config")
 
 
@@ -352,10 +351,9 @@ def fig4(df):
         sd = [base[(base.dataset == d) & (base.reasoning == rs)].groupby("item_id").pred_norm.std().dropna().mean() for d in dsets]
         ax.bar(x + (j - 0.5) * w, sd, w, label=f"reasoning {rs}", color="#888" if rs == "off" else "#c0392b",
                edgecolor="k", lw=0.3, alpha=0.85)
-    ax.set_xticks(x); ax.set_xticklabels([d if d != "ptcs" else "ptcs*" for d in dsets])
+    ax.set_xticks(x); ax.set_xticklabels([{"mohler": "Mohler", "semeval": "SemEval", "riayn": "RIAYN", "ptcs": "PT-CS"}[d] for d in dsets])
     ax.set_ylabel("within-item SD across $k$\n(lower = more consistent)")
     ax.legend(framealpha=0.9)
-    ax.text(0.99, 0.97, f"*PT-CS verified, N={_ptcs_n(base)}", transform=ax.transAxes, ha="right", va="top", fontsize=5, color="#555")
     _save(fig, "fig4_consistency")
 
 
