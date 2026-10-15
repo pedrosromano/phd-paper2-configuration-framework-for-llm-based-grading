@@ -222,6 +222,23 @@ def fig_rq3(full):
     _save(fig, "fig_rq3_scope_decomp")
 
 
+def _common_items(full):
+    """Items graded (with a parseable grade) by all eight configurations, model x reasoning, within each
+    (dataset, domain), on the paper basis: with guidance, one question per call, holistic, PT-CS validated.
+    The RQ4 and RQ6 figures compare configurations on these items only, the same rule as the guide's regret
+    table (bloco_c.c10), so reasoning-off and reasoning-on configurations are never scored on different
+    items (audit 2026-10-16: mixing all items with the reasoning samples had shifted levels by up to 0.10)."""
+    b = full[(full.context_level == "with_guidance") & (full.scope == "question_by_question")
+             & (full.decomposition == "holistic") & full.pred_norm.notna()]
+    b = b[(b.dataset != "ptcs") | b.item_id.isin(_INTERV)]
+    keep = set()
+    for _, g in b.groupby(["dataset", "domain"]):
+        sets = [set(h.item_id) for _, h in g.groupby(["model", "reasoning"])]
+        if len(sets) == 8:
+            keep |= set.intersection(*sets)
+    return keep
+
+
 def fig_rq4_cost(full):
     """RQ4 cost-quality BY TASK: QWK vs euro cost per 1000 grades (log), one point per model x
     reasoning, in two panels (short-answer = Mohler+SemEval; code = RIAYN), shared y so the
@@ -230,7 +247,8 @@ def fig_rq4_cost(full):
     from experiments.analysis.make_phase5_tables import _qwk_items as _qi
     base = full[(full.context_level == "with_guidance") & (full.scope == "question_by_question")
                 & (full.decomposition == "holistic") & full.dataset.isin(["mohler", "semeval", "riayn"])].copy()
-    base["ce"] = pd.to_numeric(base.get("cost_eur"), errors="coerce")
+    base["ce"] = pd.to_numeric(base.get("cost_eur"), errors="coerce")   # cost per grade: all graded calls
+    common = _common_items(full)                                         # QWK: items all configs graded
     models = ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]
     mk = {"off": "o", "on": "s"}
     fig, axes = plt.subplots(2, 1, figsize=(COL, COL * 1.05), sharey=True, sharex=True)
@@ -240,7 +258,7 @@ def fig_rq4_cost(full):
         for m in models:
             for rs in ["off", "on"]:
                 cell = sub[(sub.model == m) & (sub.reasoning == rs)]
-                qs = [_qi(cell[cell.dataset == d])[0] for d in dsets]
+                qs = [_qi(cell[(cell.dataset == d) & cell.item_id.isin(common)])[0] for d in dsets]
                 qs = [q for q in qs if q == q]
                 if not qs:
                     continue
@@ -273,11 +291,14 @@ def fig_rq6_transfer(full):
     base = full[(full.context_level == "with_guidance") & (full.scope == "question_by_question")
                 & (full.decomposition == "holistic")]
 
+    common = _common_items(full)
+
     def q_pub(g, dsets):
-        return float(np.nanmean([_qwk(_itemmeans(g[g.dataset == ds])) for ds in dsets]))
+        return float(np.nanmean([_qwk(_itemmeans(g[(g.dataset == ds) & g.item_id.isin(common)])) for ds in dsets]))
 
     def q_ver(g, dom):
-        return _qwk(_itemmeans(g[(g.dataset == "ptcs") & (g.domain == dom) & g.item_id.isin(_INTERV)]))
+        return _qwk(_itemmeans(g[(g.dataset == "ptcs") & (g.domain == dom) & g.item_id.isin(_INTERV)
+                                 & g.item_id.isin(common)]))
 
     from scipy.stats import spearmanr
     panels = [("(a) short answers", ["mohler", "semeval"], "short_answer"), ("(b) code", ["riayn"], "code")]
@@ -311,6 +332,7 @@ def fig3(df):
     # x 4 models x off/on), so it runs tall to keep the bars and CIs legible. (A full-width variant
     # was tried but always drifted to the next page, away from RQ4 -- §11 / git.)
     base = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
+    base = base[base.item_id.isin(_common_items(df))]     # items every configuration graded (as RQ6, Table V)
     dsets = ["mohler", "semeval", "riayn", "ptcs"]; models = list(MARK)
     fig, ax = plt.subplots(figsize=(COL, COL * 1.0))
     x = np.arange(len(dsets)); w = 0.1

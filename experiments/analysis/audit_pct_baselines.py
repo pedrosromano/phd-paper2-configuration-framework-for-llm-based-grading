@@ -279,6 +279,8 @@ def rq4_winners():
     df = phase5.load_main()
     base = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
     base = base[(base.dataset != "ptcs") | base.item_id.isin(_INTERV)]
+    import experiments.figures.phase6 as P
+    base = base[base.item_id.isin(P._common_items(df))]   # items all eight configurations graded (2026-10-16)
     rows = []
     for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]:
         for r in ["off", "on"]:
@@ -302,6 +304,7 @@ def rq6_transfer():
     import experiments.figures.phase6 as P
     full = phase5.load_main()
     base = full[(full.context_level == "with_guidance") & (full.scope == "question_by_question") & (full.decomposition == "holistic")]
+    base = base[base.item_id.isin(P._common_items(full))]    # items all eight configurations graded (2026-10-16)
     print("\n=== RQ6 transfer (Section IV-F) ===")
     for title, pub, dom in [("short", ["mohler", "semeval"], "short_answer"), ("code", ["riayn"], "code")]:
         rows = []
@@ -324,6 +327,8 @@ def rq4():
     df["ce"] = pd.to_numeric(df.get("cost_eur"), errors="coerce")
     base = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question")
               & (df.decomposition == "holistic") & df.dataset.isin(["mohler", "semeval", "riayn"])]
+    import experiments.figures.phase6 as P
+    common = P._common_items(df)          # QWK on items all eight configurations graded; cost on all calls
     models = ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]
     for task, dsets in [("short-answer (Mohler+SemEval)", ["mohler", "semeval"]), ("code (RIAYN)", ["riayn"])]:
         sub = base[base.dataset.isin(dsets)]
@@ -332,7 +337,7 @@ def rq4():
         for m in models:
             for rs in ["off", "on"]:
                 cell = sub[(sub.model == m) & (sub.reasoning == rs)]
-                qs = [_qwk_items(cell[cell.dataset == d])[0] for d in dsets]
+                qs = [_qwk_items(cell[(cell.dataset == d) & cell.item_id.isin(common)])[0] for d in dsets]
                 qs = [q for q in qs if q == q]
                 q = np.mean(qs); allq.append(q)
                 print(f"  {m:18}|{rs:3}  QWK={q:.3f}  EUR/1000={cell.ce.mean() * 1000:.3f}")

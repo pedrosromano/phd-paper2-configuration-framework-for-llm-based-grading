@@ -9,49 +9,53 @@
 Read together, the six questions point to one practical message: the expensive settings rarely paid,
 and the cheapest change almost always did. Turning reasoning on, paying for the closed frontier model,
 grading a whole exam in one call, and scoring a rubric criterion by criterion cost more or saved little,
-and none of them reliably brought the grades closer to the teachers'. Supplying a rubric or a reference answer cost
-only a few extra prompt tokens and raised agreement in nearly every case. The paragraphs below interpret
-each part of this message and what it implies for choosing a configuration.
+and none of them reliably brought the grades closer to the teachers'. Supplying a rubric or a reference
+answer cost 1.2 to 1.8 times as much per grade and raised agreement in nearly every case. The paragraphs
+below interpret each part of this message and what it implies for choosing a configuration.
 
-Reasoning is the expensive setting that most often disappointed. It improved agreement in at most five
-of twenty model-dataset combinations, two after correcting for multiple comparisons, while multiplying
-output tokens by 9 to 925 times and making grades less consistent across repetitions in most
+Reasoning is the expensive setting that most often disappointed. It improved agreement significantly in
+five of twenty model-dataset combinations, two after correcting for multiple comparisons, while
+multiplying output tokens by 9 to 925 times and making grades less consistent across repetitions in most
 combinations. The consistency loss is only partly mechanical: longer outputs give a non-deterministic
 backend more room to diverge, but length explained the variability only moderately and unevenly
-(Section~\ref{sec:rq1}), so part of the loss behaves like a property of reasoning itself. The largest
-gains, 0.23 to 0.25 QWK on RIAYN for GPT-5.1 and Qwen3.5, came for the two models that, with reasoning
-off, scored too many partially correct answers as zero. Reasoning therefore helped most where a grader
-had collapsed, and the guide ties it to that behaviour, which anyone can check, rather than to a
-model's name.
+(Section~\ref{sec:rq1}), so part of the loss behaves like a property of reasoning itself. Consistency is
+not the same as quality either: the most reproducible grader with reasoning off, Qwen3.5, was also the one
+that collapsed. The largest reasoning gains, 0.23 to 0.25 QWK on RIAYN for GPT-5.1 and Qwen3.5, came for
+the two models that, with reasoning off, scored too many partially correct answers as zero. The zero rate
+is therefore the most useful diagnostic the study produced: measured with reasoning off on a set of
+teacher-graded answers, it picked out both the weakest code graders and the only ones that reasoning
+helped. The guide ties its code advice to that behaviour, which anyone can check, rather than to a model's
+name.
 
 Evaluation guidance is the opposite case, the cheapest change and the most reliable one. It raised
 agreement significantly in 13 of 15 model-dataset combinations across three model families, by 0.10 to
-0.34 QWK, and by as much on the deployment data as on the public data. No other change in the study came close to
-this ratio of benefit to cost.
+0.34 QWK, and by as much on the deployment data as on the public data. On the public short answers the
+reference answer added 0.095 to 0.256, more than the whole spread between the eight model and reasoning
+configurations on the same task (0.074), and at a small fraction of what reasoning cost.
 
 The shape of the request mattered less, and the simple shape won. Grading a whole exam in one call and
 scoring criterion by criterion brought no significant gain, each made agreement significantly worse for
-one model, and neither saved much: the whole exam changed the cost per question by $-6$ to $+7$\%, and criterion
-scoring cost 1.3 to 3.1 times as much. More
-structure and more context in a single call did not make the grader more accurate. The grading session
-had a small effect of a different kind: a shared conversation pulled grades slightly down, and answer
-order moved individual grades by about a tenth of the scale, in a direction that depended on the model.
-A student's grade should not depend on where an answer fell in a session, so grading each answer in a clean
-conversation is also the fairer choice.
+one model, and neither saved much: the whole exam changed the cost per question by $-6$ to $+7$\%, and
+criterion scoring cost 1.3 to 3.1 times as much. More structure and more context in a single call did not
+make the grader more accurate. The grading session had a small effect of a different kind: a shared
+conversation pulled grades slightly down, and answer order moved individual grades by 8 to 10\% of the
+question's marks, in a direction that depended on the model. A student's grade should not depend on where
+an answer fell in a session, so grading each answer in a clean conversation is also the fairer choice.
 
-Model choice mattered on code and hardly at all on short answers. On short answers the eight
-configurations fell within 0.04 QWK of one another; on code they spread over 0.26, largely according to
-whether a model collapsed to zero. GLM-5.1 with reasoning off was the efficient grader on both tasks,
-and the closed frontier model did not repay its higher cost on the public data. Absolute levels should
-be read against the agreement between humans: on Mohler the two teachers agreed with each other at 0.49
-QWK, while the models agreed with each teacher at 0.33 to 0.80, so agreement near 0.6 is not a weak
-result there.
-The ranking of configurations learned on public data carried over to the deployment, as a whole on code
-and at the top on short answers, so a configuration chosen on public data is a sound start, to be
-confirmed locally where the public ranking is close.
+Model choice mattered far more on code than on short answers. On short answers the eight configurations
+fell within 0.074 QWK of one another; on code they spread over 0.259, largely according to whether a model
+collapsed to zero. GLM-5.1 with reasoning off was the best of the four models on both tasks, and the closed
+frontier model did not repay its higher cost on the public data. Absolute levels should be read against
+the agreement between humans: on Mohler the models' agreement with each teacher (0.39 to 0.75) brackets
+the two teachers' agreement with each other (0.49), so the remaining disagreement between model and
+teacher is of the size that separates two human graders. In the deployment, the effects held while the
+fine ranking did not: guidance helped as much, the collapsing model again graded code worst, and GLM-5.1
+again led code grading, but configurations a few hundredths of QWK apart changed places. A configuration
+chosen on public data is therefore a sound start, and the choice between close configurations belongs to
+a local check.
 
 Taken together, the results support a short default with a few checked exceptions. Consistency and cost
 both moved against reasoning, so a comparison on agreement alone would have hidden half of what a
-practitioner needs to decide. Because the exceptions turn on behaviour a user can check, such as whether
-a model collapses to zero, the same checks apply to models we did not test. The next section turns these
-findings into the configuration guide.
+practitioner needs to decide. Because the exceptions turn on behaviour a user can check, such as whether a
+model collapses to zero, the same checks can be run on models we did not test. The next section turns
+these findings into the configuration guide.

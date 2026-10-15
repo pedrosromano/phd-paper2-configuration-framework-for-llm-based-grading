@@ -7,15 +7,16 @@
 An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them
 only in fragments. We tested them together for computer-science grading under one controlled protocol
 and condensed the result into a configuration guide. The central finding is that the expensive settings
-rarely paid and the cheapest change almost always did. Reasoning raised agreement in at most five of
+rarely paid and the cheapest change almost always did. Reasoning raised agreement significantly in five of
 twenty model-dataset combinations, two after correcting for multiple comparisons, while multiplying
 output tokens by up to 925 and usually making grades less consistent; its clearest gains came on code,
-for models that scored too many partially correct answers as zero. Evaluation guidance, at the cost of a
-few prompt tokens, raised agreement significantly in thirteen of fifteen combinations across three model
+for models that scored many partially correct answers as zero, the zero-collapse, which a zero-rate
+check on teacher-graded answers detects. Evaluation guidance, for 1.2 to 1.8 times the cost per grade,
+raised agreement significantly in thirteen of fifteen combinations across three model
 families. Grading a whole exam in one call and scoring criterion by criterion brought no significant
-gain and saved little or nothing, and the closed frontier model did not repay its price on the public data. The ranking
-of configurations on public data carried over to a real deployment on code, and at the top on short
-answers. The guide's default follows directly: the strongest model that does not collapse to zero, with
+gain and saved little or nothing, and the closed frontier model did not repay its price on the public data. In a real
+deployment these effects held, while the fine ranking of close configurations did not, which is why the
+guide confirms that choice locally. The guide's default follows directly: the strongest model that does not collapse to zero, with
 reasoning off, guidance, one question per call, holistic scoring, and a clean conversation. It stayed within 0.08 QWK of
 the best configuration on every dataset at up to 30 times lower cost. Because every rule is keyed to
 behaviour a user can check rather than to model identity, the same checks can be run on models we did
@@ -35,3 +36,7 @@ single Portuguese deployment, so testing the rules across more institutions and 
 would establish how far they carry. And the zero-collapse we found on code, where a grader scores many
 partially correct answers as zero, is not, to our knowledge, described in the grading literature; it
 deserves study in its own right, both to detect it and to prevent it without paying for reasoning.
+
+For the instructor the introduction began with, the answer is a short routine: check candidate models for
+zero-collapse, supply the rubric or reference answer, and grade one question per call with reasoning off,
+for under one euro per thousand grades.

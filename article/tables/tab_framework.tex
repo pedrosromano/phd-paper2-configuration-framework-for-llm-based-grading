@@ -5,7 +5,11 @@
 \hline
 Scenario & Recommended & Trade-off in the rule \\
 \hline
-\raggedright Choosing the model & \raggedright The strongest model that does not collapse to zero, with reasoning off (here GLM-5.1, for both tasks) & On the five datasets it stayed 0.000 to 0.077 QWK below the best configuration in hindsight, at up to 30 times lower cost; the cheapest model gave up 0.073 to 0.131 for a further cost saving (Table~\ref{tab:guideregret}) \\[3pt]
+\raggedright Choosing the model & \raggedright The strongest model that does not collapse to zero, with reasoning off (here GLM-5.1, for both tasks) & On the five datasets it stayed 0.000 to 0.077 QWK below the best configuration in hindsight, at up to 30 times lower cost, the smallest worst-case shortfall of any reasoning-off configuration (0.077, against 0.131 to 0.259; Table~\ref{tab:guideregret}) \\[3pt]
+\hline
+\raggedright The budget is tight & \raggedright The cheapest model, with reasoning off (here DeepSeek-V4-Flash) & About 10 times cheaper than the default, but it gave up 0.073 to 0.131 QWK against the best configuration \\[3pt]
+\hline
+\raggedright Agreement matters more than cost & \raggedright The default model with reasoning on (here GLM-5.1) & The most robust configuration: at most 0.055 QWK below the best on every dataset, at 5 to 7 times the default's cost \\[3pt]
 \hline
 \raggedright Grading short answers & \raggedright Reasoning off & The reasoning gain is small and none survives correction for multiple comparisons (before correction it is significant only for Qwen3.5 on Mohler and SemEval), while reasoning on uses 9--925 times the output tokens \\[3pt]
 \hline

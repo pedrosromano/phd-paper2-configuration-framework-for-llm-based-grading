@@ -60,10 +60,14 @@ whole study and the Results structure):
   **did not reproduce**; corrected 2026-06-11, see §11 and `tab_ranking_transfer`). Where public and PT-CS
   readings diverge, the two explanations (real-context difference vs residual gold limits) remain
   non-separable — both point to the same prescription: validate locally with a trusted gold.
-  - **Current paper reading (2026-10-15, after bloco C; supersedes the numbers above):** GPT-5.1 now grades
-    the same items as the open models, so all **eight configurations** are ranked. Code: public vs PT-CS
-    order correlates at **ρ=0.81 (p=.015)**; short answers **ρ=0.36 (p=.39)**, only the ends hold (Qwen on
-    first, DeepSeek on last on both sides). Regenerate: `audit_pct_baselines.rq6_transfer`.
+  - **Current paper reading (2026-10-16; supersedes the numbers above AND the 2026-10-15 ρ=0.81 reading):**
+    all eight configurations are compared **on the items every configuration graded** (`phase6._common_items`,
+    same rule as Table V / `bloco_c.c10`). Mixing all items for reasoning-off with the reasoning samples for
+    reasoning-on had shifted levels by up to 0.10 and made RQ4 contradict RQ1 (found by the final review).
+    On common items: code **ρ=0.64 (p=.09, ns)**, GLM-5.1 first and collapsing Qwen3.5|off last on both
+    sides; short answers **ρ=0.21 (p=.61)**, order does not transfer (GPT-5.1|off first on the 32 PT-CS
+    short items, sixth on public). Paper message: **the effects and the failure mode transfer, the fine
+    ranking does not** → the guide confirms close choices locally. Regenerate: `audit_pct_baselines.rq6_transfer`.
 
 **The deliverable is a framework, not a leaderboard.** The headline output is a **compact, empirically-grounded
 decision guide** — a table / set of rules mapping task characteristics (domain, rubric availability, budget) to
@@ -1090,6 +1094,19 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   run is unparsed, so π is "above 0.999", not 1.0. (6) DeepSeek scope CI is [−0.07, +0.03]. (7) Writing
   rule §9.2 applied: no QWK percentages anywhere (Table III "Change" column removed). (8) Fig. 1 (RQ1
   scatter) dropped from the paper as redundant with Fig. 2(a,b) and Table III; the generator still writes it.
+- ✅ **Conclusion-strength review (2026-10-16).** RQ4/RQ6 re-based on common items (see §1.2 RQ6): short-answer
+  spread **0.074** (not 0.04), code 0.259; reasoning on raises public short-answer agreement by 0.014–0.062
+  at 3–200× cost; GLM-5.1|off is the best reasoning-off grader on BOTH tasks (0.585 short, 0.726 code), which
+  strengthens D13. Guide gains a **budget ladder** (`bloco_c.regret_all`): GLM-5.1|off has the smallest
+  worst-case shortfall of any reasoning-off config (0.077 vs 0.131–0.259); GLM-5.1|on is the most robust
+  config overall (≤0.055) at 4.9–7.0× the default's cost; the cheapest (DeepSeek|off) gives up 0.073–0.131.
+  New Results findings: Qwen3.5|off is the most reproducible grader on 4/5 datasets yet the one that
+  collapses (consistency ≠ quality); the two collapsing models (Qwen, GPT off) are the two weakest code
+  graders and own all significant code reasoning gains → the zero rate is the study's key diagnostic.
+  Collapse is defined relative to the other candidates (16–17% vs 9% on RIAYN; 32–49% vs 13% on PT-CS).
+  Human ceiling now on one basis (reasoning off, all 2273 Mohler answers): models vs each teacher 0.39–0.75
+  bracket teacher–teacher 0.49. Guidance costs 1.2–1.8× per grade. Abstract leads with "the cheapest change
+  was the most effective" and names zero-collapse.
 - ✅ **Temperature-0 variation re-based again (2026-10-15):** with GPT-5.1 at full coverage the reasoning-off
   range is **9–60%** (was 9–56%); Threats updated (`audit_pct_baselines.temp0_variation`).
 - ✅ **No run-period distinction in the paper (D12, user 2026-10-15):** no June/October, no "extensions", no

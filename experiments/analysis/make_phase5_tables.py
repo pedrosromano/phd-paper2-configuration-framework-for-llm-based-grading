@@ -489,12 +489,25 @@ def main() -> int:
     c_x = dft["guide_eur/1000"] / chp["guide_eur/1000"]
     print(f"  guide (Section framework): default gives up {g_lo:.3f}-{g_hi:.3f} at up to {g_x.max():.0f}x lower cost "
           f"than the best; the cheapest gives up {c_lo:.3f}-{c_hi:.3f} and is {c_x.min():.0f}-{c_x.max():.0f}x cheaper than the default")
+    # budget ladder (2026-10-16): worst-case shortfall of every configuration on the Table V items
+    ra = bloco_c.regret_all(df)
+    worst = ra.groupby(["model", "reasoning"]).regret.max()
+    off_worst = worst.xs("off", level="reasoning").drop("glm-5.1")
+    glm_on_worst = worst[("glm-5.1", "on")]
+    _gl = ra[ra.model == "glm-5.1"].pivot_table(index="set", columns="reasoning", values="eur")
+    glm_on_x = (_gl["on"] / _gl["off"])
+    print(f"  budget ladder: GLM-5.1 off worst {worst[('glm-5.1', 'off')]:.3f} vs other off {off_worst.min():.3f}-{off_worst.max():.3f}; "
+          f"GLM-5.1 on worst {glm_on_worst:.3f} (smallest of all: {worst.idxmin()}) at {glm_on_x.min():.1f}-{glm_on_x.max():.1f}x the default's cost")
     short_prem = [v for k, v in prem_by.items() if k[1] == "short_answer"]
     R_SHORT = f"{int(round(min(short_prem)))}--{int(round(max(short_prem)))}"
 
     fw = pd.DataFrame([
         {"Scenario": "Choosing the model", "Recommended": "The strongest model that does not collapse to zero, with reasoning off (here GLM-5.1, for both tasks)",
-         "Trade-off in the rule": f"on the five datasets it stayed {g_lo:.3f} to {g_hi:.3f} QWK below the best configuration in hindsight, at up to {g_x.max():.0f} times lower cost; the cheapest model gave up {c_lo:.3f} to {c_hi:.3f} for a further cost saving (Table~\\ref{{tab:guideregret}})"},
+         "Trade-off in the rule": f"on the five datasets it stayed {g_lo:.3f} to {g_hi:.3f} QWK below the best configuration in hindsight, at up to {g_x.max():.0f} times lower cost, the smallest worst-case shortfall of any reasoning-off configuration ({worst[('glm-5.1', 'off')]:.3f}, against {off_worst.min():.3f} to {off_worst.max():.3f}; Table~\\ref{{tab:guideregret}})"},
+        {"Scenario": "The budget is tight", "Recommended": f"The cheapest model, with reasoning off (here {cheapest})",
+         "Trade-off in the rule": f"about {c_x.min():.0f} times cheaper than the default, but it gave up {c_lo:.3f} to {c_hi:.3f} QWK against the best configuration"},
+        {"Scenario": "Agreement matters more than cost", "Recommended": "The default model with reasoning on (here GLM-5.1)",
+         "Trade-off in the rule": f"the most robust configuration: at most {glm_on_worst:.3f} QWK below the best on every dataset, at {glm_on_x.min():.0f} to {glm_on_x.max():.0f} times the default's cost"},
         {"Scenario": "Grading short answers", "Recommended": "Reasoning off",
          "Trade-off in the rule": f"the reasoning gain is small and none survives correction for multiple comparisons (before correction it is significant only for Qwen3.5 on Mohler and SemEval), while reasoning on uses {R_SHORT} times the output tokens"},
         {"Scenario": "Grading code with a model that gives too many zeros", "Recommended": "Switch to a model that does not collapse, or turn reasoning on",

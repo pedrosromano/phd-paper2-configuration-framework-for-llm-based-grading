@@ -83,19 +83,19 @@
 Instructors adopting graders based on large language models (LLMs) must answer several configuration
 questions. Should the model reason before scoring? What guidance should it receive? Should an exam be
 graded in one call or question by question? Which configuration is worth its cost? We study these
-choices for computer science assessment, varying extended reasoning, evaluation guidance,
-grading scope, rubric decomposition, model family, and conversation state under one protocol, on four
-datasets covering short answers and code. Reasoning is switched on and off within each of four model
-families, three open-weight and one closed, and every measurement is repeated, so cost and run-to-run
-consistency are measured alongside quality. Reasoning raised agreement with teacher grades
-in at most five of twenty model-dataset combinations, two after correcting for multiple comparisons, at
-9 to 925 times the output tokens, and it reduced consistency in seventeen of the twenty. Evaluation
-guidance raised quadratic weighted kappa (QWK) significantly in thirteen of fifteen combinations across
-three model families, by 0.10 to 0.34. Grading a whole exam in one call and scoring criterion by criterion
-brought no significant gain. Configuration rankings on public code data carried over to a real deployment; on
-short answers, where configurations differed by at most 0.04 QWK, only the first and last places did. We turn these comparisons into a configuration guide that maps a grading task to a
-recommended configuration and its cost; its default stayed within 0.08 QWK of the best configuration on
-every dataset, at up to 30 times lower cost.
+choices for computer science assessment, varying extended reasoning, evaluation guidance, grading scope,
+rubric decomposition, model family, and conversation state under one protocol, on four datasets covering
+short answers and code. Reasoning is switched on and off within each of four model families, and every
+measurement is repeated, so consistency and cost are measured alongside agreement. The cheapest change
+was the most effective: adding a rubric or reference answer raised quadratic weighted kappa (QWK)
+significantly in thirteen of fifteen combinations, by 0.10 to 0.34. Reasoning raised agreement
+significantly in five of twenty combinations, two after correcting for multiple comparisons, at 9 to 925
+times the output tokens, and reduced consistency in seventeen. Its large code gains came only for models
+that scored many partially correct answers as zero, a failure we call zero-collapse. Grading a whole exam
+in one call and scoring criterion by criterion brought no significant gain. In a real deployment these
+effects carried over, while the fine ranking of configurations did not. We turn the comparisons into a
+configuration guide that maps a grading task to a recommended configuration and its cost; its default
+stayed within 0.08 QWK of the best configuration on every dataset, at up to 30 times lower cost.
 \end{abstract}
 
 \begin{keywords}

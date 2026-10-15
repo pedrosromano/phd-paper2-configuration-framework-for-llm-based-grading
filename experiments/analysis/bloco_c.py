@@ -225,6 +225,28 @@ def c10(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def regret_all(df: pd.DataFrame) -> pd.DataFrame:
+    """Every configuration's regret per dataset (same items and rule as c10), for the guide's budget ladder
+    (2026-10-16): worst-case and mean shortfall from the best configuration, and cost per 1000 grades."""
+    d = _paper(df)
+    d = d[(d.context_level == "with_guidance") & (d.scope == "question_by_question") & (d.decomposition == "holistic")]
+    cost = phase5.dedupe_call_groups(d).assign(ce=lambda x: pd.to_numeric(x.cost_eur, errors="coerce"))
+    rows = []
+    for (ds, dom), g in d.groupby(["dataset", "domain"]):
+        ok = g[g.pred_norm.notna()]
+        n_by = ok.groupby(["model", "reasoning"]).item_id.nunique()
+        n_on = n_by.xs("on", level="reasoning").max()
+        keep = [ix for ix, n in n_by.items() if n >= 0.9 * n_on]
+        common = set.intersection(*[set(ok[(ok.model == m) & (ok.reasoning == r)].item_id) for m, r in keep])
+        for m, r in keep:
+            q, _ = _qwk_items(g[(g.model == m) & (g.reasoning == r) & g.item_id.isin(common)])
+            e = cost[(cost.dataset == ds) & (cost.domain == dom) & (cost.model == m) & (cost.reasoning == r)].ce.mean() * 1000
+            rows.append({"set": f"{ds}:{dom[:5]}", "model": m, "reasoning": r, "qwk": q, "eur": e})
+    t = pd.DataFrame(rows)
+    t["regret"] = t.groupby("set").qwk.transform("max") - t.qwk
+    return t
+
+
 # --------------------------------------------------------------------------- per-step conclusions
 # Short, factual read-outs computed from the run data the moment each C step finishes; the launcher
 # (experiments/run/bloco_c_run.py) stores them for the live monitor. Written in Portuguese for the
