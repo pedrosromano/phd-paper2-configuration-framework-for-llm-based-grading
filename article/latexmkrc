@@ -1,0 +1,6 @@
+# Vendored IEEE Access template (class, fonts, maps, logos) lives in access-template/.
+ensure_path('TEXINPUTS', './access-template//');
+ensure_path('TFMFONTS', './access-template//');
+ensure_path('T1FONTS', './access-template//');
+ensure_path('TEXFONTMAPS', './access-template//');
+ensure_path('ENCFONTS', './access-template//');

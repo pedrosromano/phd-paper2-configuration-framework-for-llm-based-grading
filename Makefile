@@ -45,7 +45,7 @@ analyse-pipeline: ## Phase 5 (aux) — coverage matrix + exploratory pipeline pr
 figures: ## Phase 6 — generate figures -> article/figures (.pgf needs latex on PATH, §9)
 	$(PYTHON) -m experiments.figures
 
-paper: ## Phase 7 — compile the article (latexmk + IEEEtran)
+paper: ## Phase 7 — compile the article (latexmk + ieeeaccess template, article/latexmkrc)
 	eval "$$(/usr/libexec/path_helper)"; cd article && \
 		latexmk -pdf -synctex=1 -interaction=nonstopmode main.tex
 
