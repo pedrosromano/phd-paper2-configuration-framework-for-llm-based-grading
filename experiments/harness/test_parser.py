@@ -93,3 +93,12 @@ def test_nested_braces_do_not_raise():
     out, ok = parse_output('Analysis: {{"criterion": "x"}, {"score": 1}} then {"total": 3}',
                            "question_by_question", "criterion")
     assert ok and out["score"] == 3
+
+
+def test_whole_exam_answers_after_quoted_code():
+    """GLM whole-exam (2026-10-15): Java quoted in the analysis swallowed the final answers object."""
+    from experiments.harness.parser import parse_output
+    raw = ('Q59: the loop `while (x < 3) { if (s.equals("a)) {` never closes. has an empty statement '
+           '`{"answers": [{"question_id": "59", "score": 0.5}, {"question_id": "60", "score": 1.5}]}')
+    out, ok = parse_output(raw, "whole_exam", "holistic")
+    assert ok and [a["question_id"] for a in out["answers"]] == ["59", "60"]

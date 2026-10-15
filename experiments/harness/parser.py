@@ -94,6 +94,20 @@ def _first_json(text: str) -> dict | None:
     return None
 
 
+def _keyed_json(text: str, key: str) -> dict | None:
+    """Last JSON object that STARTS with the given key, scanned from its own opening brace. Used when the
+    general scan fails because code quoted in the model's analysis (unbalanced braces or quotes in Java
+    snippets) swallows the final answer object (GLM whole-exam, 2026-10-15)."""
+    t = re.sub(r"```(?:json)?", "", _strip_thinking(text or ""))
+    for m in reversed(list(re.finditer(r'\{\s*["\']' + key + r'["\']', t))):
+        for cand in _iter_json_objects(t[m.start():]):
+            obj = _loads_lenient(cand)
+            if isinstance(obj, dict):
+                return obj
+            break                                       # only the object starting at this brace
+    return None
+
+
 def _num(v):
     try:
         return float(v)
@@ -123,6 +137,9 @@ def parse_output(raw: str, scope: str, decomposition: str) -> tuple[dict, bool]:
 
     if scope == "whole_exam":
         answers = obj.get("answers") if isinstance(obj, dict) else None
+        if not (isinstance(answers, list) and answers):           # fallback: the final {"answers": ...}
+            kobj = _keyed_json(raw or "", "answers")
+            answers = kobj.get("answers") if isinstance(kobj, dict) else None
         if isinstance(answers, list) and answers:
             out["answers"] = answers
             return out, True

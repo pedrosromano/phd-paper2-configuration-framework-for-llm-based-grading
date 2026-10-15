@@ -38,6 +38,9 @@ def main(argv=None) -> int:
     ap.add_argument("--concurrency", type=int, default=8)
     ap.add_argument("--limit", type=int, default=None, help="cap submissions (writer validation)")
     ap.add_argument("--model", default="qwen3.5", help="grader model (C3 adds glm-5.1)")
+    ap.add_argument("--max-tokens", type=int, default=4096,
+                    help="output cap; GLM-5.1 writes a long analysis before the JSON on whole exams and "
+                         "truncated at 4096 (C3, 2026-10-15), so its cell runs at 32768")
     ap.add_argument("--exams", choices=["sample", "validated"], default="sample",
                     help="sample = the seeded 60-exam prefix (4.7); validated = every exam holding at least "
                          "one teacher-validated code answer (C3, 2026-10-15)")
@@ -60,7 +63,7 @@ def main(argv=None) -> int:
         subs = subs[: (args.limit or n_subs)]
 
     cfg0 = Config("ptcs", "code", args.model, reasoning="off", context_level="with_guidance",
-                  scope="whole_exam", decomposition="holistic", k=k)
+                  scope="whole_exam", decomposition="holistic", k=k, max_tokens=args.max_tokens)
     st = store.RunStore(RUNS_FILE)
     guard = CostGuard()
     chash = cfg0.config_hash

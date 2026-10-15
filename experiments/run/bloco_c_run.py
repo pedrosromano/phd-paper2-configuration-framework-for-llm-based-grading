@@ -29,7 +29,9 @@ STEPS = [
      [[PY, "-m", "experiments.run.matrix", "run", "--arm", "c2_decomposition"]]),
     ("c3", "C3 · Exame inteiro numa chamada, 88 exames (Qwen + GLM)",
      [[PY, "-m", "experiments.run.whole_exam_runner", "--model", "qwen3.5", "--exams", "validated"],
-      [PY, "-m", "experiments.run.whole_exam_runner", "--model", "glm-5.1", "--exams", "validated"]]),
+      # GLM-5.1 truncated at 4096 on whole exams (long analysis before the JSON): its cell runs at 32768
+      [PY, "-m", "experiments.run.whole_exam_runner", "--model", "glm-5.1", "--exams", "validated",
+       "--max-tokens", "32768", "--concurrency", "16"]]),
     ("c1", "C1 · Guidance no GLM-5.1 e no DeepSeek (4 datasets)",
      [[PY, "-m", "experiments.run.matrix", "run", "--arm", "c1_context_roster"]]),
     ("c4", "C4 · Conversa limpa vs partilhada, 80 exames, k=5",
@@ -46,9 +48,12 @@ def _now() -> str:
 
 
 def _load() -> dict:
-    if STATUS.exists():
-        return json.loads(STATUS.read_text())
-    return {"steps": [{"id": i, "title": t, "state": "pending"} for i, t, _ in STEPS]}
+    st = json.loads(STATUS.read_text()) if STATUS.exists() else {"steps": []}
+    have = {s["id"] for s in st["steps"]}
+    for i, t, _ in STEPS:                              # steps added after a first launch
+        if i not in have:
+            st["steps"].append({"id": i, "title": t, "state": "pending"})
+    return st
 
 
 def _save(st: dict) -> None:
