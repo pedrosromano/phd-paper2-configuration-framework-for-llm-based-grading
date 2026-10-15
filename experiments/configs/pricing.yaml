@@ -1,8 +1,10 @@
 # Paid-model pricing + budget config for the cost guard (Phase 0.4).
 #
-# Prices are provider LIST prices in USD per 1,000,000 tokens. They are APPROXIMATE
-# (knowledge cutoff Jan 2026) and MUST be re-verified before any paid run — the smoke
-# test logs ACTUAL usage, so reconcile real cost against these. Edit this file, not code.
+# Prices are USD per 1,000,000 tokens. DeepInfra prices were corrected on 2026-10-15 to the rates the
+# provider actually billed in June 2026 (GET /payment/usage, per-model input/output rates); the older
+# values here were below the real ones, so every logged cost_eur under-counted. Analyses re-price each run
+# from its logged tokens at these rates (phase5.prepare); cached-token discounts are ignored, so costs
+# are a slight upper bound. GPT-5.1 matches OpenAI's public list price. Edit this file, not code.
 #
 # Budget is enforced in EUR (CLAUDE.md §4/§8 hard ceiling). USD prices are converted with
 # eur_per_usd below.
@@ -89,8 +91,8 @@ models:
   # (enable_thinking) for Qwen/DeepSeek/GLM; the config schema maps D2 off/on accordingly.
   deepseek-v4-flash:               # 284B/13B MoE — RQ1 toggle + cheap cost-floor
     model_id: deepseek-ai/DeepSeek-V4-Flash
-    input_per_1m_usd: 0.14
-    output_per_1m_usd: 0.28
+    input_per_1m_usd: 0.10              # June 2026 billed rate (was 0.14)
+    output_per_1m_usd: 0.20             # June 2026 billed rate (was 0.28)
     provider: deepinfra
     api: openai_compatible
     base_url: https://api.deepinfra.com/v1/openai
@@ -100,8 +102,8 @@ models:
     note: VERIFY id/price; toggle via chat_template_kwargs.enable_thinking.
   qwen3.5:                         # RQ1 primary toggle (Apache-2.0); MoE 35B/3B-active (efficient, realistic)
     model_id: Qwen/Qwen3.5-35B-A3B     # confirmed on DeepInfra (alt: -397B-A17B flagship, -27B, -9B)
-    input_per_1m_usd: 0.20
-    output_per_1m_usd: 0.60
+    input_per_1m_usd: 0.14              # June 2026 billed rate (was 0.20)
+    output_per_1m_usd: 1.00             # June 2026 billed rate (was 0.60)
     provider: deepinfra
     api: openai_compatible
     base_url: https://api.deepinfra.com/v1/openai
@@ -111,8 +113,8 @@ models:
     note: VERIFY id/price/variant.
   glm-5.1:                         # RQ1 toggle + strongest open coder
     model_id: zai-org/GLM-5.1          # confirmed live at 3.4 (2026-06-08, §11)
-    input_per_1m_usd: 0.40
-    output_per_1m_usd: 0.60
+    input_per_1m_usd: 1.05              # June 2026 billed rate (was 0.40)
+    output_per_1m_usd: 3.50             # June 2026 billed rate (was 0.60)
     provider: deepinfra
     api: openai_compatible
     base_url: https://api.deepinfra.com/v1/openai

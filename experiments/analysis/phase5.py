@@ -48,6 +48,20 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame:
     d["pred_norm"] = d["pred"] / mx
     d["gold_norm"] = pd.to_numeric(d["gold_score"], errors="coerce") / mx
     d["n_clamped_low"] = (sc < -1e-9).fillna(False)        # how many were negative (penalty criteria)
+    # Cost RE-PRICED from the logged tokens at the real per-token rates in pricing.yaml (provider-billed,
+    # June 2026; 2026-10-15). The cost_eur logged at run time used older, lower prices; it is kept as
+    # cost_eur_logged for audit. Every euro figure in the paper reads this column.
+    if {"prompt_tokens", "completion_tokens", "model"}.issubset(d.columns):
+        from experiments.harness.cost_guard import load_pricing
+        pr = load_pricing()
+        models, eur = pr.get("models", {}), float(pr["eur_per_usd"])
+        pin = d["model"].map(lambda m: models.get(m, {}).get("input_per_1m_usd"))
+        pout = d["model"].map(lambda m: models.get(m, {}).get("output_per_1m_usd"))
+        tin = pd.to_numeric(d["prompt_tokens"], errors="coerce")
+        tout = pd.to_numeric(d["completion_tokens"], errors="coerce")
+        if "cost_eur" in d.columns:
+            d["cost_eur_logged"] = d["cost_eur"]
+        d["cost_eur"] = (tin * pd.to_numeric(pin) + tout * pd.to_numeric(pout)) / 1e6 * eur
     return d
 
 
