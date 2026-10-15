@@ -1056,5 +1056,10 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   **C7** Mohler graders agree QWK 0.491; models 0.73–0.80 vs grader A, 0.23–0.41 vs grader B. **C8** fixed
   0.5 cut is within 0.024 accuracy of the best cut for every model. **C10** guide default regret: short
   answers 0.07–0.09 QWK below the best config (which costs 8–148× more); code with GLM-5.1 off 0.000 (PT-CS)
-  / 0.077 (RIAYN) below the best; DeepSeek as the code pick loses 0.08–0.13. **Pending user decisions:**
-  Holm presentation in RQ1/abstract; whether the June GLM 20-exam conversation data stays in RQ5.
+  / 0.077 (RIAYN) below the best; DeepSeek as the code pick loses 0.08–0.13. **Decisions (user 2026-10-15):** (1) RQ1 keeps per-combination 95% CIs as the
+  primary reading, the RQ1 table adds a "survives Holm" column, abstract says "in at most five of twenty
+  combinations, two after correcting for multiple comparisons". (2) The June GLM-5.1 conversation data
+  STAYS in RQ5: it is complete and internally valid (both arms run in June on GLM-5.1) and covers the first
+  20 of the same 80 exams (seeded prefix), so RQ5 reports Qwen + DeepSeek (80 exams, k=5) and GLM-5.1
+  (first 20 exams, k=3, June), stated in Method and caption. Only half-finished October GLM runs were
+  deleted; never discard complete June experiments.
