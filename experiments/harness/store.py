@@ -11,6 +11,7 @@ dimensions and the GradeResult (score/parse_ok/tokens/latency/raw never discarde
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 from datetime import datetime, timezone
@@ -74,9 +75,13 @@ class RunStore:
 
     def append(self, row: dict) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        # default=str: a stray non-JSON value in a parsed field must never kill a run
+        line = json.dumps(row, ensure_ascii=False, default=str) + "\n"
         with self.path.open("a", encoding="utf-8") as f:
-            # default=str: a stray non-JSON value in a parsed field must never kill a run
-            f.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
+            fcntl.flock(f, fcntl.LOCK_EX)      # parallel runners (2026-10-15): whole rows, never interleaved
+            f.write(line)
+            f.flush()
+            fcntl.flock(f, fcntl.LOCK_UN)
         k = (row["item_id"], row["config_hash"], row["run_index"])
         self._keys.add(k)
         self._index[k] = row

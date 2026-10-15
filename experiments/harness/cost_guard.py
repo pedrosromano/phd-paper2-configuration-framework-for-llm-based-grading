@@ -17,6 +17,7 @@ CLI:
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import sys
 import threading
@@ -85,18 +86,37 @@ class CostGuard:
         return self.ceiling_for(provider) - self.spent_for(provider)
 
     # ---- ledger persistence -------------------------------------------------
+    # Since 2026-10-15 new spend goes to an APPEND-ONLY journal (one JSON line per paid call, written under
+    # an exclusive file lock) next to the frozen base ledger. Rewriting the whole base ledger on every call
+    # was slow (120k+ entries) and let two processes overwrite each other's entries; the journal makes
+    # parallel runners (DeepInfra and OpenAI queues at once) safe. Totals = base ledger + journal.
+    @property
+    def journal_path(self) -> Path:
+        return self.ledger_path.with_name(self.ledger_path.stem + "_journal.jsonl")
+
     def _load_ledger(self) -> dict:
         if self.ledger_path.exists():
             data = json.loads(self.ledger_path.read_text())
             data.setdefault("entries", [])
             data.setdefault("total_spent_eur", 0.0)
             data["ceiling_eur"] = self.ceiling_eur  # keep in sync with config
-            return data
-        return {"ceiling_eur": self.ceiling_eur, "total_spent_eur": 0.0, "entries": []}
+        else:
+            data = {"ceiling_eur": self.ceiling_eur, "total_spent_eur": 0.0, "entries": []}
+        if self.journal_path.exists():
+            for line in self.journal_path.read_text().splitlines():
+                if line.strip():
+                    e = json.loads(line)
+                    data["entries"].append(e)
+                    data["total_spent_eur"] = round(float(data["total_spent_eur"]) + e["cost_eur"], 6)
+        return data
 
-    def _save_ledger(self) -> None:
-        self.ledger_path.parent.mkdir(parents=True, exist_ok=True)
-        self.ledger_path.write_text(json.dumps(self._ledger, indent=2))
+    def _append_journal(self, entry: dict) -> None:
+        self.journal_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.journal_path.open("a", encoding="utf-8") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)                     # cross-process: one line at a time
+            f.write(json.dumps(entry) + "\n")
+            f.flush()
+            fcntl.flock(f, fcntl.LOCK_UN)
 
     # ---- pricing ------------------------------------------------------------
     def _model_price(self, model: str) -> dict:
@@ -171,19 +191,20 @@ class CostGuard:
         cost = self.cost_eur(model, input_tokens, output_tokens)
         m = dict(meta or {})
         m.setdefault("provider", self.provider_of(model))
+        entry = {
+            "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "model": model,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "cost_eur": round(cost, 6),
+            "meta": m,
+        }
         with self._lock:
-            self._ledger["entries"].append({
-                "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                "model": model,
-                "input_tokens": input_tokens,
-                "output_tokens": output_tokens,
-                "cost_eur": round(cost, 6),
-                "meta": m,
-            })
+            self._ledger["entries"].append(entry)
             self._ledger["total_spent_eur"] = round(
                 float(self._ledger["total_spent_eur"]) + cost, 6
             )
-            self._save_ledger()
+            self._append_journal(entry)
         return cost
 
     # ---- reporting ----------------------------------------------------------

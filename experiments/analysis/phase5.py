@@ -295,7 +295,8 @@ def cost_summary(df: pd.DataFrame | None = None) -> dict:
     vs DeepInfra (open roster). A-priori estimate was €16.7 (§11 4.1) → real matrix ≈2.2×
     (OpenAI 1.9×, DeepInfra 2.3×): real reasoning completion tokens exceeded the assumed output
     lengths — report as an operational budgeting finding, not just an estimation error."""
-    led = json.loads((REPO_ROOT / "data" / "processed" / "_spend.json").read_text())
+    from experiments.harness.cost_guard import CostGuard
+    led = CostGuard()._ledger              # base _spend.json + the append-only journal (since 2026-10-15)
     d = dedupe_call_groups(load_main() if df is None else df)
     ce = pd.to_numeric(d.cost_eur, errors="coerce")
     per_model = d.assign(ce=ce).groupby("model").ce.sum().round(2).to_dict()

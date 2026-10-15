@@ -144,6 +144,18 @@ class State:
             rate = len(recent) / 300 if recent else 0.0          # rows/sec
             remaining = (total - done) if (total and done is not None) else None
             eta = (remaining / rate) if (remaining and rate > 0) else None
+            # per-step progress for the bloco C queues (two may run in parallel since 2026-10-15)
+            steps_prog = {}
+            for lp in RUNS_DIR.glob("bloco_c_*.log"):
+                last = None
+                for l in lp.read_text(errors="replace").splitlines():
+                    p = _PROG.search(l)
+                    if p:
+                        last = [int(p.group(1).replace(",", "")), int(p.group(2).replace(",", ""))]
+                    if l.startswith("$ "):                     # a new command inside the step resets
+                        last = None
+                if last:
+                    steps_prog[lp.stem.replace("bloco_c_", "")] = last
             lat = sorted(self.recent_lat)
             pi_live = (sum(self.recent_ok) / len(self.recent_ok)) if self.recent_ok else None
             return {
@@ -158,7 +170,7 @@ class State:
                 "lat_med": round(lat[len(lat) // 2], 1) if lat else None,
                 "lat_p95": round(lat[int(len(lat) * 0.95)], 1) if lat else None,
                 "cost": {k: round(v, 2) for k, v in self.cost.items()}, "ceil": self.ceil,
-                "tail": lines[-10:],
+                "tail": lines[-10:], "steps_prog": steps_prog,
             }
 
 
@@ -219,17 +231,22 @@ async function tick(){
   let tT=0,dT=0,tC=0,dC=0;
   for(const id of plan.order){const p=plan[id], s=b2.steps.find(x=>x.id==id), w=p.todo*p.spc; tT+=w; tC+=p.todo;
    let f=0; if(s&&(s.state.startsWith('done')||s.state=='analysing'))f=1;
-   else if(s&&s.state=='running'&&d.total)f=Math.min(1,d.done/d.total);
+   else if(s&&s.state=='running'&&d.steps_prog&&d.steps_prog[id])f=Math.min(1,d.steps_prog[id][0]/d.steps_prog[id][1]);
    dT+=f*w; dC+=f*p.todo;}
   const pt=100*dT/tT, pc=100*dC/tC;
+  let rem=tT-dT;                                   // parallel queues: the longest queue sets the finish time
+  if(plan.queues){rem=Math.max(...plan.queues.map(q=>q.reduce((a,id)=>{const p=plan[id], s=b2.steps.find(x=>x.id==id), w=p.todo*p.spc;
+    let f=0; if(s&&(s.state.startsWith('done')||s.state=='analysing'))f=1; else if(s&&s.state=='running'&&d.steps_prog&&d.steps_prog[id])f=Math.min(1,d.steps_prog[id][0]/d.steps_prog[id][1]);
+    return a+(1-f)*w},0)))}
   document.getElementById('globalcard').style.display='block';
   document.getElementById('gfill').style.width=pt.toFixed(1)+'%';
-  document.getElementById('gprog').textContent=`${pt.toFixed(0)}% do tempo estimado · ${pc.toFixed(0)}% das chamadas (${Math.round(dC).toLocaleString()}/${tC.toLocaleString()}) · faltam ~${hms(tT-dT)}`;
+  document.getElementById('gprog').textContent=`${pt.toFixed(0)}% do tempo estimado · ${pc.toFixed(0)}% das chamadas (${Math.round(dC).toLocaleString()}/${tC.toLocaleString()}) · faltam ~${hms(rem)}`;
  }
  const col={pending:'#30363d',running:'#1f6feb',analysing:'#8957e5',failed:'#da3633'};
  el.innerHTML='<h1 style="margin-top:16px">Bloco C <span class=muted>· atualizado '+(b2.updated||'')+'</span></h1>'+
   b2.steps.map(s=>{const c=col[s.state]||'#1f6f3f';
-   const t=(s.started?'início '+s.started.slice(11,16):'')+(s.minutes!=null?' · '+s.minutes+' min':'');
+   const pr=(s.state=='running'&&d.steps_prog&&d.steps_prog[s.id])?` · ${d.steps_prog[s.id][0].toLocaleString()}/${d.steps_prog[s.id][1].toLocaleString()}`:'';
+   const t=(s.started?'início '+s.started.slice(11,16):'')+(s.minutes!=null?' · '+s.minutes+' min':'')+pr;
    const body=(s.conclusion||[]).map(x=>'<div>• '+x+'</div>').join('')+(s.error?'<div class=warn>'+s.error+'</div>':'');
    return `<div class=card style="margin:8px 0"><span class=badge style="background:${c};color:#fff">${s.state}</span>
     <b> ${s.title}</b> <span class=s>${t}</span><div style="margin-top:6px">${body}</div></div>`}).join('');
