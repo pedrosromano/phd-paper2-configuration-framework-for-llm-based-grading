@@ -6,29 +6,29 @@
 \section{Threats to Validity}
 \label{sec:threats}
 
-The guidance rests on the three public datasets, whose reference grades are independent of the
-authors. PT-CS serves as the transfer test and as the only source of multi-question exams, for grading
-scope and the conversation sub-study, which therefore rest on it alone: none of the public datasets
-links answers into complete exams, and the PT-CS exams are short, so the scope result holds for exams of
-a few questions. Three properties of PT-CS bound what it
-can show. Its answers are those whose AI-proposed grade the teachers changed, and such answers may differ
-in difficulty from typical ones, so absolute PT-CS levels need not represent the whole deployment. The
-grades are a joint teacher decision with no per-teacher record, so no human agreement ceiling can be
-computed. And because the platform's initial proposals came from an AI model, agreement could be
+The guide's rules rest on the three public datasets, whose human grades are independent of the
+authors. PT-CS is the transfer test and the only source of complete exams, so grading scope and the
+conversation sub-study rest on it alone; none of the public datasets links answers into exams. The
+PT-CS exams are short, so the scope result holds for exams of a few questions. Three further properties
+of PT-CS bound what it can show. Its answers are those whose AI-proposed grade the teachers changed, and
+such answers may differ in difficulty from typical ones, so absolute PT-CS levels need not represent the
+whole deployment. The grades are a joint teacher decision with no per-teacher record, so no agreement
+ceiling between teachers can be computed on PT-CS. And because the platform's initial proposals came from an AI model, agreement could be
 inflated if that model resembled one we test; keeping only answers whose grade the teachers changed
 limits this influence.
 
-The results are conditional on the served backends, so the transferable claim is the configuration
-guidance, not the absolute scores. Temperature 0 is not deterministic: with reasoning off, 9 to 60\% of
-items received different grades across repetitions, depending on the model and dataset. Reasoning token counts
-come from each provider's own accounting, so they are best compared within a model. The reasoning comparison uses only the items whose reasoning fit within the
-output limit, and the excluded items were harder than average, so the reasoning benefit is established
-for the tractable items only.
+The results are conditional on the served backends, whose quantisation, inference software, and
+hardware differ across providers, so the transferable claim is the ranking of configurations rather
+than the absolute scores; temperature 0 does not make grading deterministic either
+(Section~\ref{sec:rq1}). Reasoning token counts come from each provider's own accounting, so they are
+best compared within a model. The reasoning comparison uses only the items whose reasoning fit within the
+output limit, and the excluded items were the ones that provoked the longest reasoning, so the reasoning
+benefit is established for the tractable items only.
 
-The guidance was established on the model families tested, with reasoning isolated within family, and is
-keyed on observable properties rather than model identity, so its reach to other models is by design rather
-than proof. Across all experiments, code evidence is narrower than short-answer evidence, resting on two
+The guide was built on the four model families tested and is keyed to behaviour a user can check
+rather than to model identity; it can be applied to other models, but we have not tested it on them.
+Across all experiments, code evidence is narrower than short-answer evidence, resting on two
 Java-centric datasets, so we draw the code conclusions more cautiously. The guidance contrast bundles
-two different interventions, a rubric for code and a reference answer for short answers, which we report
-separately rather than as one combined effect. The expensive factors were varied one at a time rather than
-fully crossed, so interactions between them, such as reasoning with decomposition, are unmeasured.
+two different interventions, a rubric (PT-CS, RIAYN) and a reference answer (Mohler, SemEval), which we
+report separately rather than as one combined effect. The expensive factors were varied one at a time
+rather than fully crossed, so interactions between them, such as reasoning with decomposition, are unmeasured.

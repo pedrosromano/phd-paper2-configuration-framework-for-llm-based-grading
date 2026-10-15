@@ -98,6 +98,25 @@ def rq2():
         print(f"{ds:8} {dom[:5]:5} {qnone:8.3f} {md:+7.3f} {_pct(md, qnone):+5.0f}% {n:5d}{extra}")
 
 
+def rq2_consistency():
+    """RQ2 consistency (Section IV-B, 2026-10-15): within-item SD across the k repetitions without and with
+    guidance, per model x dataset (reasoning off, one question per call, holistic; PT-CS validated, code and
+    short answers apart). The paper quotes how many rise and the largest change."""
+    df = phase5.load_main()
+    q = df[((df.dataset != "ptcs") | df.item_id.isin(_INTERV)) & (df.reasoning == "off")
+           & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
+    ch = []
+    for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]:
+        for ds, dom in [("mohler", "short_answer"), ("semeval", "short_answer"), ("riayn", "code"),
+                        ("ptcs", "code"), ("ptcs", "short_answer")]:
+            c = q[(q.model == m) & (q.dataset == ds) & (q.domain == dom)]
+            sd = [c[c.context_level == l].groupby("item_id").pred_norm.std().mean() for l in ["none", "with_guidance"]]
+            ch.append(sd[1] - sd[0])
+    ch = np.array(ch)
+    print("\n=== RQ2 consistency: SD with guidance minus without (Section IV-B) ===")
+    print(f"  SD rises in {int((ch > 0).sum())} of {len(ch)}; changes {ch.min():+.3f} to {ch.max():+.3f}")
+
+
 def rq3():
     """RQ3: baseline QWK (q-by-q, holistic) and each contrast as % of it (Section IV-C)."""
     df = phase5.load_main()
@@ -207,6 +226,16 @@ def temp0_variation():
         print(f"  reasoning {r}: {min(pct):.0f}% to {max(pct):.0f}% across {len(pct)} model-dataset combinations")
 
 
+def sd_length():
+    """RQ1 consistency paragraph (Section IV-A): Spearman between an item's output length and its grade
+    variability across repetitions, per (dataset, model), reasoning off and on pooled (phase5 basis), with
+    PT-CS restricted to its validated answers. The paper quotes the median and the range."""
+    df = phase5.load_main()
+    t = phase5.sd_length_spearman(df[(df.dataset != "ptcs") | df.item_id.isin(_INTERV)])
+    print("\n=== Length vs grade variability, Spearman per model-dataset (Section IV-A) ===")
+    print(f"  median {t.spearman.median():.2f}, range {t.spearman.min():.2f} to {t.spearman.max():.2f} over {len(t)}")
+
+
 def cost_by_period():
     """Section IV-D cost paragraph (2026-10-15): re-priced spend (June 2026 provider rates, phase5.prepare)
     by month and provider, whole-exam deduplicated; June = the main matrix, October = the bloco C arms.
@@ -292,12 +321,14 @@ def rq4():
 def main() -> int:
     rq1()
     rq2()
+    rq2_consistency()
     rq3()
     rq3_cost()
     zero_collapse()
     zero_rates()
     overflow()
     temp0_variation()
+    sd_length()
     cost_by_period()
     rq4_winners()
     rq6_transfer()

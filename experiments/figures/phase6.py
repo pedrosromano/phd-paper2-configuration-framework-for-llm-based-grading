@@ -190,7 +190,8 @@ def fig_rq2(full):
     """RQ2 evaluation-guidance benefit (dQWK none -> with guidance, 95% CI) per dataset and model
     (Qwen3.5, DeepSeek-V4-Flash, GPT-5.1; reasoning off). PT-CS = validated answers."""
     dc = _dims(full); g = dc[dc.family == "guidance"]
-    groups = [("mohler", "Mohler"), ("semeval", "SemEval"), ("riayn", "RIAYN"), ("ptcs", "PT-CS\ncode")]
+    groups = [("mohler", "Mohler"), ("semeval", "SemEval"), ("ptcs-short", "PT-CS\nshort"), ("riayn", "RIAYN"),
+              ("ptcs", "PT-CS\ncode")]
     models = ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]
     get = lambda grp, m: (lambda r: r.iloc[0].to_dict() if len(r) else None)(g[(g.dataset == grp[0]) & (g.model == m)])
     fig, ax = plt.subplots(figsize=(COL, COL * 0.72))
@@ -324,7 +325,8 @@ def fig3(df):
                    hatch="" if rs == "off" else "//", label=f"{MNAME[m]} {rs}")
             ax.errorbar(pos, qs, yerr=[los, his], fmt="none", ecolor="k", elinewidth=0.5, capsize=1.2)
     ax.set_xticks(x); ax.set_xticklabels([{"mohler": "Mohler", "semeval": "SemEval", "riayn": "RIAYN", "ptcs": "PT-CS"}[d] for d in dsets]); ax.set_ylabel("agreement (QWK, K=5)")
-    ax.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.13), framealpha=0.9)
+    ax.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.13), framealpha=0.9, fontsize=5,
+              columnspacing=0.8, handlelength=1.6)
     _save(fig, "fig3_per_dataset_config")
 
 

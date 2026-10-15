@@ -87,7 +87,9 @@ def _contrast(A, B) -> dict:
 def dim_contrasts(df: pd.DataFrame, interv: set) -> pd.DataFrame:
     """Bloco C contrasts on the paper basis (PT-CS = validated answers), reasoning off, one source for the
     RQ2/RQ3 figures, the framework rows and the prose (2026-10-15). Families (Holm within each):
-      guidance  none -> with guidance, per model x dataset (Qwen3.5, DeepSeek-V4-Flash, GPT-5.1)
+      guidance  none -> with guidance, per model x dataset (Qwen3.5, DeepSeek-V4-Flash, GPT-5.1); PT-CS
+                appears twice, code ("ptcs") and short answers ("ptcs-short", added 2026-10-15: the
+                runs existed but the contrast had been left out)
       decomp    holistic -> criterion, per model x code dataset (Qwen3.5, DeepSeek-V4-Flash)
       scope     question by question -> whole exam, per model (Qwen3.5, DeepSeek-V4-Flash), the
                 exam questions that belong to PT-CS"""
@@ -95,11 +97,12 @@ def dim_contrasts(df: pd.DataFrame, interv: set) -> pd.DataFrame:
     rows = []
     q = d[(d.scope == "question_by_question") & (d.decomposition == "holistic")]
     for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]:
-        for ds, dom in [("mohler", "short_answer"), ("semeval", "short_answer"), ("riayn", "code"), ("ptcs", "code")]:
+        for ds, dom, key in [("mohler", "short_answer", "mohler"), ("semeval", "short_answer", "semeval"),
+                             ("riayn", "code", "riayn"), ("ptcs", "code", "ptcs"), ("ptcs", "short_answer", "ptcs-short")]:
             c = q[(q.model == m) & (q.dataset == ds) & (q.domain == dom)]
             r = _contrast(c[c.context_level == "none"], c[c.context_level == "with_guidance"])
             if r:
-                rows.append({"family": "guidance", "model": m, "dataset": ds, **r})
+                rows.append({"family": "guidance", "model": m, "dataset": key, **r})
     g = d[(d.context_level == "with_guidance") & (d.scope == "question_by_question") & (d.domain == "code")]
     for m in ["qwen3.5", "deepseek-v4-flash"]:
         for ds in ["riayn", "ptcs"]:
@@ -277,20 +280,18 @@ def main() -> int:
             vrows.append({"Dataset": first + lbl if j == 0 else "", "Model": mname[m], "N": int(c.N),
                           "QWK off": f"{c.QWK_off:.3f}",
                           "$\\Delta$QWK": f"\\textbf{{{dq}}}" if c.sig else dq,
-                          "95\\% CI": f"[{sgn(c.lo, 2)}, {sgn(c.hi, 2)}]",
-                          "Change": sgn(c.pct, 0) + "\\%",
+                          "95\\% CI": f"[{sgn(c.lo, 3)}, {sgn(c.hi, 3)}]",
                           "Holm": "yes" if c.sig_holm else "",
                           "Tokens": f"{c.prem_x:.0f}$\\times$",
                           "SD off $\\to$ on": f"{c.SDk_off:.3f} $\\to$ {c.SDk_on:.3f}"})
     _tex(pd.DataFrame(vrows), "tab_rq1_values.tex",
-         "Reasoning off versus on, per model and dataset. $\\Delta$QWK is the change in agreement (QWK on "
-         "minus off; bold when its 95\\% bootstrap confidence interval excludes zero), and Change expresses it "
-         "as a percentage of the reasoning-off QWK; both use the items whose reasoning never exceeded the "
-         "output-token limit, whose number is N. Holm marks the gains that stay significant after Holm's "
+         "Reasoning off versus on, per model and dataset. $\\Delta$QWK is QWK with reasoning on minus QWK "
+         "off, on the N items whose reasoning stayed within the output-token limit; bold marks a 95\\% "
+         "bootstrap confidence interval that excludes zero. Holm marks the gains that stay significant after Holm's "
          "correction for the 20 comparisons. Tokens is how many times more output tokens reasoning used, "
          "and SD is the mean within-item standard deviation across repetitions (lower is more consistent); "
          "both use all paired items.",
-         "tab:rq1values", star=True, colspec="llrrrrrcrr", size="\\footnotesize")
+         "tab:rq1values", star=True, colspec="llrrrrcrr", size="\\footnotesize")
 
     # --- T2: dimension contrasts (context per dataset, scope, decomposition).
     #     Hybrid PT-CS rule (§11 2026-06-11): PT-CS contrasts get a verified robustness column. ---
@@ -482,23 +483,23 @@ def main() -> int:
         {"Scenario": "Choosing the model", "Recommended": "The strongest model that does not collapse to zero, with reasoning off (here GLM-5.1, for both tasks)",
          "Trade-off in the rule": f"on the five datasets it stayed {g_lo:.3f} to {g_hi:.3f} QWK below the best configuration in hindsight, at up to {g_x.max():.0f} times lower cost; the cheapest model gave up {c_lo:.3f} to {c_hi:.3f} for a further cost saving (Table~\\ref{{tab:guideregret}})"},
         {"Scenario": "Grading short answers", "Recommended": "Reasoning off",
-         "Trade-off in the rule": f"the reasoning gain is small and none survives correction for multiple comparisons (before correction it is significant only for Qwen on Mohler and SemEval), while reasoning on uses {R_SHORT} times the output tokens"},
-        {"Scenario": "Grading code, the baseline collapses to zero", "Recommended": "Reasoning on, or switch to a discriminating model",
-         "Trade-off in the rule": f"reasoning recovers the discrimination the collapsed baseline lost (Qwen ${qc_v:+.3f}$ QWK on PT-CS code), but at {q_prem_lo:.0f} to {q_prem_hi:.0f} times the output tokens and worse run-to-run consistency, so switching model is often the better fix"},
-        {"Scenario": "Grading code, the baseline does not collapse", "Recommended": "Reasoning off; on only if local validation justifies it",
-         "Trade-off in the rule": f"without the collapse the reasoning gain is inconsistent and not predictable in advance, so off is the safe default, saving cost (about {R_DISCRIM_CODE}$\\times$ the tokens) and keeping consistency"},
+         "Trade-off in the rule": f"the reasoning gain is small and none survives correction for multiple comparisons (before correction it is significant only for Qwen3.5 on Mohler and SemEval), while reasoning on uses {R_SHORT} times the output tokens"},
+        {"Scenario": "Grading code with a model that gives too many zeros", "Recommended": "Switch to a model that does not collapse, or turn reasoning on",
+         "Trade-off in the rule": f"reasoning roughly halved Qwen3.5's zeros and raised its PT-CS code agreement by ${qc_v:+.3f}$ QWK, but at {q_prem_lo:.0f} to {q_prem_hi:.0f} times the output tokens and with worse run-to-run consistency, so switching model is the cheaper fix"},
+        {"Scenario": "Grading code with a model that does not collapse", "Recommended": "Reasoning off; on only if local validation justifies it",
+         "Trade-off in the rule": f"for GLM-5.1 and DeepSeek-V4-Flash the reasoning gain on code varied in sign and was never significant, so off is the safe default, saving {R_DISCRIM_CODE} times the output tokens and keeping consistency"},
         {"Scenario": "Consistency or fairness is critical", "Recommended": "Reasoning off",
          "Trade-off in the rule": "reasoning on is less reproducible, partly a length effect and partly reasoning itself"},
-        {"Scenario": "A rubric or reference answer is available", "Recommended": "Supply it as guidance (rubric for code, reference answer for short answers)",
-         "Trade-off in the rule": f"guidance was the one change that reliably raised agreement: it helped in {len(g_ok)} of {len(gd)} model-dataset combinations across three model families (${g_ok.dQWK.min():+.3f}$ to ${g_ok.dQWK.max():+.3f}$ QWK), at the cost of only the extra prompt tokens"},
+        {"Scenario": "A rubric or reference answer is available", "Recommended": "Supply it as evaluation guidance",
+         "Trade-off in the rule": f"guidance was the one change that reliably raised agreement: it helped significantly in {len(g_ok)} of {len(gd)} model-dataset combinations across three model families (${g_ok.dQWK.min():+.3f}$ to ${g_ok.dQWK.max():+.3f}$ QWK), at the cost of only the extra prompt tokens"},
         {"Scenario": "The rubric has several criteria", "Recommended": "Holistic scoring (one overall score)",
-         "Trade-off in the rule": f"across two models and two code datasets, scoring criterion by criterion never improved agreement (${dd_.dQWK.min():+.3f}$ to ${dd_.dQWK.max():+.3f}$ QWK, worse in {['no', 'one', 'two', 'three', 'four'][int((dd_.hi < 0).sum())]} case{'s' if int((dd_.hi < 0).sum()) != 1 else ''}) at about {dec_ratio:.0f} times the cost per answer"},
+         "Trade-off in the rule": f"across two models and two code datasets, scoring criterion by criterion never improved agreement significantly (${dd_.dQWK.min():+.3f}$ to ${dd_.dQWK.max():+.3f}$ QWK, significantly worse in {['no', 'one', 'two', 'three', 'four'][int((dd_.hi < 0).sum())]} case{'s' if int((dd_.hi < 0).sum()) != 1 else ''}) at about {dec_ratio:.0f} times the cost per answer"},
         {"Scenario": "The exam has several questions", "Recommended": "Grade one question per call",
-         "Trade-off in the rule": f"on PT-CS code, grading the whole exam in one call never improved agreement (Qwen ${sc_.loc['qwen3.5','dQWK']:+.3f}$ QWK, significant; DeepSeek ${sc_.loc['deepseek-v4-flash','dQWK']:+.3f}$) and "
+         "Trade-off in the rule": f"on PT-CS code, grading the whole exam in one call never improved agreement (Qwen3.5 ${sc_.loc['qwen3.5','dQWK']:+.3f}$ QWK, significant; DeepSeek-V4-Flash ${sc_.loc['deepseek-v4-flash','dQWK']:+.3f}$) and "
          + (f"cut the cost per question by only {scope_saving:.0f}\\%" if scope_saving > 0
             else f"even cost {abs(scope_saving):.0f}\\% more per question")},
-        {"Scenario": "Grading many answers in sequence", "Recommended": "Fresh conversation per question; no history carried across the exam",
-         "Trade-off in the rule": f"a shared, accumulating conversation lowered grades slightly ({min(st_d):.3f} to {max(st_d):.3f} of the scale) and answer order moved individual grades by about {np.mean(or_a):.2f} (three models, up to 80 exams)"},
+        {"Scenario": "Grading many answers in sequence", "Recommended": "A clean conversation per answer; no history carried across the exam",
+         "Trade-off in the rule": f"a shared, accumulating conversation lowered grades slightly ({min(st_d):.3f} to {max(st_d):.3f} of the scale) and answer order moved individual grades by {min(or_a):.2f} to {max(or_a):.2f} of the scale (three models, up to 80 exams)"},
     ])
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
 

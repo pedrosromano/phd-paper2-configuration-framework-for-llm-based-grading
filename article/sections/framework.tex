@@ -27,9 +27,9 @@
 \node[data, text width=22mm, below=1.8mm of ans] (rub) {a rubric};
 \node[data, text width=22mm, below=1.8mm of rub] (ref) {a reference answer};
 \coordinate (gmid) at ($(rub.west)!0.5!(ref.west)$);
-\node[dec] (cs) at ([xshift=-16mm]gmid) {code or\\short?};
-\draw[arr] (cs.east) to[out=35,in=180] node[edgelbl,above,pos=0.55,yshift=0.6mm,inner sep=0.6pt]{code} (rub.west);
-\draw[arr] (cs.east) to[out=-35,in=180] node[edgelbl,below,pos=0.55,yshift=-0.6mm,inner sep=0.6pt]{short} (ref.west);
+\node[dec] (cs) at ([xshift=-16mm]gmid) {which one\\exists?};
+\draw[arr] (cs.east) to[out=35,in=180] (rub.west);
+\draw[arr] (cs.east) to[out=-35,in=180] (ref.west);
 \node[draw=black!45, dotted, rounded corners=2pt, inner sep=2.2mm, fit=(q)(ans)(rub)(ref)] (ctx) {};
 \node[font=\scriptsize\itshape, black!55, below=0.9mm of ctx] (ctxlbl) {prompt context};
 \node[bc, fill=none, fit=(cs)(ctx)(ctxlbl)] (block) {};
@@ -53,9 +53,9 @@
 \draw[arr] (block.east) -- (llm.west);
 % reasoning is the one conditional setting of the call -> a decision above it,
 % with the two outcomes placed below the diamond so they do not overlap the block
-\node[dec, above=20mm of llm, xshift=9mm] (rdec) {code grader\\collapses to 0?};
+\node[dec, above=20mm of llm, xshift=9mm] (rdec) {model\\collapses to 0?};
 \node[data, below left=5mm and 6mm of rdec] (roff) {reasoning off\\\tiny(default)};
-\node[data, below right=5mm and 6mm of rdec] (ron) {reasoning on};
+\node[data, below right=5mm and 6mm of rdec] (ron) {switch model,\\or reasoning on};
 \draw[arr] (rdec) -- node[edgelbl,left,pos=0.45]{no} (roff.north);
 \draw[arr] (rdec) -- node[edgelbl,right,pos=0.45]{yes} (ron.north);
 \draw[arr] (roff.south) -- (llm.north);
@@ -73,27 +73,30 @@
 }
 \caption{How the recommended configuration grades an exam. Each question is graded in its own call
 (the stack stands for the remaining questions, graded the same way). The call carries the input data
-shown dashed: the question, the student answer, and the matching guidance, a rubric for code or a
-reference answer for short answers. The model returns one holistic score, in a clean conversation, and
-the process repeats until every question is graded. Reasoning is the one conditional setting: it stays
-off by default and turns on only to rescue a grader that collapses to zero on code.}
+shown dashed: the question, the student answer, and the evaluation guidance that exists for it, a
+rubric or a reference answer. The model returns one holistic score, in a clean conversation, and the
+process repeats until every question is graded. Reasoning is the one conditional setting: it stays off
+unless the model collapses to zero and cannot be replaced.}
 \label{fig:frameworkdiagram}
 \end{figure*}
 
 \input{tables/tab_framework}
 
 The study's deliverable is a configuration guide for LLM-based grading: for a given grading task, it
-says which configuration to use and why. It is a small set of priors, one per configuration choice, each
+says which configuration to use and why. It is a small set of rules, one per configuration choice, each
 giving a recommended default, the trade-off that justifies it, and the condition that would call for a
-different choice. Table~\ref{tab:framework} sets out the priors with their evidence, and
+different choice. Table~\ref{tab:framework} sets out the rules with their evidence, and
 Fig.~\ref{fig:frameworkdiagram} shows how the recommended configuration grades an exam. They are
 starting points backed by the controlled comparisons of Section~\ref{sec:results}. We take them one
 choice at a time.
 
 The first choice is the model, and the guide's default is the strongest model that does not collapse to
-zero, used with reasoning off on both tasks. Collapse is the property to check first, because a
-collapsing model gives a score of exactly zero to many answers that teachers credit
-(Section~\ref{sec:rq1}). In this study the default is GLM-5.1, the best code grader with reasoning off
+zero, used with reasoning off on both tasks. A model collapses when it scores far more answers as
+exactly zero than the teachers do (Section~\ref{sec:rq1}): with reasoning off, Qwen3.5 and GPT-5.1 scored
+16 to 49\% of the code answers as zero, against the teachers' 2 to 5\%, while GLM-5.1 and
+DeepSeek-V4-Flash stayed at 9 to 13\%. Collapse is therefore the property to check first, on a small set
+of teacher-graded answers; among the models that pass, the strongest is the one that agrees best with
+those grades. In this study the default is GLM-5.1, the best code grader with reasoning off
 and near the top on short answers (Section~\ref{sec:cost}). On short answers the four models with
 reasoning off agreed with the teachers almost equally, within 0.02 QWK of each other on the public
 datasets, so one model chosen for its behaviour on code serves both tasks.
@@ -101,7 +104,8 @@ datasets, so one model chosen for its behaviour on code serves both tasks.
 \input{tables/tab_guide_regret}
 
 Table~\ref{tab:guideregret} tests this default against the best configuration found in hindsight on each
-dataset, with every configuration scored on the same items. The default gave up between 0.000 and 0.077
+dataset, with every configuration scored on the same items, which is why its values differ slightly from
+those of Section~\ref{sec:results}. The default gave up between 0.000 and 0.077
 QWK, less than a third of the 0.26 spread between configurations on code, and cost up to 30 times less
 than the best configuration. The cheapest model, DeepSeek-V4-Flash with reasoning off, cost about ten
 times less again but gave up 0.073 to 0.131, so it suits a budget that can absorb that loss.
@@ -111,15 +115,15 @@ multiple comparisons, while it multiplied the output tokens by up to 925 and mad
 across repetitions in most combinations. On code the gain depended on the model. For the two models that
 discriminate, GLM-5.1 and DeepSeek-V4-Flash, reasoning changed agreement by $-0.048$ to $+0.076$, with no
 change significant, at 109 to 192 times the output tokens. Reasoning earned its keep only where a model
-gave too many zeros: it restored much of the discrimination Qwen3.5 had lost, and it lifted GPT-5.1,
-which also overused zero on code, by 0.228 on RIAYN. Even there, switching to a model that does not
-collapse is the cheaper fix.
+gave too many zeros: it roughly halved Qwen3.5's zeros on PT-CS code, and it lifted GPT-5.1, which also
+overused zero, by 0.228 on RIAYN. Even there, switching to a model that does not collapse is the cheaper
+fix.
 
-The other choices resolve into simpler priors. Evaluation guidance was the one change that reliably
+The other choices resolve into simpler rules. Evaluation guidance was the one change that reliably
 helped, so a trustworthy rubric or reference answer should be supplied whenever one exists. Grading the
 whole exam in one call never improved agreement and cost 7\% more per question, so each question is
-graded in its own call. Scoring a rubric criterion by criterion never improved agreement with the final
-grade and cost about twice as much, so holistic scoring is the default. The grading session should be
+graded in its own call. Scoring a rubric criterion by criterion brought no significant gain and cost about
+twice as much, so holistic scoring is the default. The grading session should be
 kept clean, each answer scored on its own, because a shared conversation that accumulated across the
 exam lowered grades slightly and answer order moved individual grades.
 

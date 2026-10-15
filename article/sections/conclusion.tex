@@ -5,32 +5,33 @@
 \label{sec:conclusion}
 
 An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them
-only in fragments, with some left unstudied. We brought those fragments together, tested them for
-computer-science grading under one controlled protocol, and condensed the result into a configuration
-guide. Four results carry the weight. Reasoning is a conditional trade: it raised agreement in at most
-five of twenty model-dataset combinations, two after correcting for multiple comparisons, always at a
-large token premium and usually at a cost in consistency, and its dependable success was repairing a
-grader that collapsed to zero on code. Evaluation guidance is the cheapest reliable lever: it raised
-agreement in eleven of twelve combinations across three model families. The shape of the request
-matters less than its content: grading a whole exam in one call and scoring criterion by criterion never
-improved agreement and cost the same or more. And the ranking of configurations on public data carried
-over to a real deployment on code, and at the top on short answers. Together these define the guide's
-default, the strongest model that does not collapse, with reasoning off, guidance, and one question per
-call, which stayed within 0.08 QWK of the best configuration on every dataset at a fraction of its cost.
-Because every prior is keyed to behaviour a user can check rather than to model identity, the same
-checks apply to models we did not test.
+only in fragments. We tested them together for computer-science grading under one controlled protocol
+and condensed the result into a configuration guide. The central finding is that the expensive settings
+rarely paid and the cheapest change almost always did. Reasoning raised agreement in at most five of
+twenty model-dataset combinations, two after correcting for multiple comparisons, while multiplying
+output tokens by up to 925 and usually making grades less consistent; its clearest gains came on code,
+for models that scored too many partially correct answers as zero. Evaluation guidance, at the cost of a
+few prompt tokens, raised agreement significantly in thirteen of fifteen combinations across three model
+families. Grading a whole exam in one call and scoring criterion by criterion brought no significant
+gain and cost more, and the closed frontier model did not repay its price on the public data. The ranking
+of configurations on public data carried over to a real deployment on code, and at the top on short
+answers. The guide's default follows directly: the strongest model that does not collapse to zero, with
+reasoning off, guidance, one question per call, holistic scoring, and a clean conversation. It stayed within 0.08 QWK of
+the best configuration on every dataset at up to 30 times lower cost. Because every rule is keyed to
+behaviour a user can check rather than to model identity, the same checks can be run on models we did
+not test.
 
 Future work follows from the gaps this study declares and from what the literature has yet to settle.
 Two gaps arise in our design. Few-shot guidance, adding a few already-graded answers to the prompt as
 examples, was held out; the strong effect of the studied guidance makes it worth testing, but only with
-a principled rule for choosing the examples. And a fine-tuning arm remains open: fine-tuning is already
-competitive for grading~\cite{cong_memorization_2026}, but it has not yet been placed in a guide of this
-kind, comparing a fine-tuned grader against its base model on agreement, consistency, and cost together.
-Three more follow from the literature. Code evidence rests on two Java-centric datasets because
-human-rubric-graded code corpora are scarce~\cite{havare_ai-based_2025,pathak_rubric_2025}, so widening
-it to other languages and paradigms, and contributing such data, is the clearest way to firm up the code
-conclusions. Transfer was shown in a single Portuguese deployment, so testing the priors across more
-institutions and student populations would establish how far they carry. And the low-end score collapse
-we found on code, where a grader floors much of the scale at zero, is not described in the grading
-literature and deserves study in its own right, both to detect it and to prevent it without paying for
-reasoning.
+a principled rule for choosing the examples. And a fine-tuning arm remains open: fine-tuned models can
+match or exceed earlier supervised graders~\cite{cong_memorization_2026}, but fine-tuning has not yet
+been placed in a guide of this kind, comparing a fine-tuned grader against its base model on agreement,
+consistency, and cost together. Three more follow from the literature. Code evidence rests on two
+Java-centric datasets because code corpora graded with human rubrics are
+scarce~\cite{havare_ai-based_2025,pathak_rubric_2025}, so widening it to other languages and paradigms,
+and contributing such data, is the clearest way to firm up the code conclusions. Transfer was shown in a
+single Portuguese deployment, so testing the rules across more institutions and student populations
+would establish how far they carry. And the zero-collapse we found on code, where a grader scores many
+partially correct answers as zero, is not, to our knowledge, described in the grading literature; it
+deserves study in its own right, both to detect it and to prevent it without paying for reasoning.

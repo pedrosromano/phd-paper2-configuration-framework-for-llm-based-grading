@@ -26,17 +26,18 @@ verbose, redundant computation~\cite{sui_stop_2025}, and no peer-reviewed study 
 rubric-bounded educational grading. Model comparisons exist for programming and course
 deployments~\cite{jukiewicz_comparison_2026,policar_automated_2025}, but they rank systems under one
 fixed prompt configuration, so they cannot say how the ranking moves when the configuration does.
-Guidance, scope, decomposition, and conversation state have each been touched as point solutions
-(Section~\ref{sec:related}), never crossed under one protocol. What is missing is the practical
+Evaluation guidance has been studied for code grading~\cite{pathak_rubric_2025}, but, to our knowledge,
+no study compares guidance, grading scope, rubric decomposition, and conversation state under one
+protocol (Section~\ref{sec:related}). What is missing is the practical
 synthesis: for a given CS assessment task, which configuration should be used, and what does it cost?
 
 This paper studies these configuration choices systematically and delivers the synthesis as a
-configuration guide. We cross six configuration dimensions: extended reasoning (on or off), evaluation guidance (none
+configuration guide. We vary six configuration dimensions under one protocol: extended reasoning (on or off), evaluation guidance (none
 versus a rubric or reference answer), grading scope (whole exam versus question by question), rubric
 decomposition (holistic versus criterion by criterion), model family, and conversation state (a clean
-conversation per answer versus shared history). Four model families, three open-weight (Qwen3.5,
-DeepSeek-V4-Flash, GLM-5.1) and one closed frontier model (GPT-5.1), expose a within-family reasoning
-toggle, so the reasoning effect is isolated from model identity, a confound in prior comparisons. The study runs on four datasets in two domains. Three are public, so the results can be checked
+conversation per answer versus shared history). Each of the four model families, three open-weight
+(Qwen3.5, DeepSeek-V4-Flash, GLM-5.1) and one closed frontier model (GPT-5.1), lets reasoning be switched
+on or off within the same model, which separates the reasoning effect from model identity. The study runs on four datasets in two domains. Three are public, so the results can be checked
 beyond our own students: the Mohler corpus of graded computer-science short
 answers~\cite{mohler_text_2009,mohler_learning_2011}, the SemEval-2013 Task~7 corpus of graded science
 short answers~\cite{dzikovska_semeval_2013}, and the Rubric Is All You Need corpus of rubric-graded
@@ -56,7 +57,7 @@ Six research questions structure the study:
         cost-quality trade-off between open-weight and closed frontier models?
   \item \textbf{RQ5.} Does conversation state (clean versus shared history) affect consistency and
         fairness?
-  \item \textbf{RQ6.} Does the configuration guidance found on public datasets transfer to a real
+  \item \textbf{RQ6.} Does the ranking of configurations found on public datasets transfer to a real
         Portuguese deployment context?
 \end{itemize}
 
