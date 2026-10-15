@@ -30,11 +30,11 @@ def _qwk_items(d):
     return cohen_kappa_score(go, po, weights="quadratic", labels=list(range(K + 1))), s
 
 
-def _boot_ci(sA, sB, nb=800):
-    """Bootstrap dQWK = QWK(B)-QWK(A) over common items (item means already computed)."""
+def _boot_dist(sA, sB, nb=800):
+    """Bootstrap distribution of dQWK = QWK(B)-QWK(A) over common items (item means already computed)."""
     items = sorted(set(sA.index) & set(sB.index))
     if len(items) < 8:
-        return (np.nan, np.nan, np.nan)
+        return None
     rng = np.random.default_rng(SEED)
     a = sA.loc[items]; b = sB.loc[items]
     pa, ga, pb = a.p.to_numpy(), a.g.to_numpy(), b.p.to_numpy()
@@ -42,8 +42,84 @@ def _boot_ci(sA, sB, nb=800):
         return cohen_kappa_score((g * K).round().clip(0, K).astype(int),
                                  (p * K).round().clip(0, K).astype(int),
                                  weights="quadratic", labels=list(range(K + 1)))
-    ds = [q(pb[i], ga[i]) - q(pa[i], ga[i]) for i in (rng.integers(0, len(items), len(items)) for _ in range(nb))]
-    return tuple(np.percentile(ds, [2.5, 50, 97.5]))
+    return np.array([q(pb[i], ga[i]) - q(pa[i], ga[i])
+                     for i in (rng.integers(0, len(items), len(items)) for _ in range(nb))])
+
+
+def _boot_ci(sA, sB, nb=800):
+    """Bootstrap dQWK = QWK(B)-QWK(A) over common items: (2.5%, median, 97.5%)."""
+    ds = _boot_dist(sA, sB, nb)
+    return (np.nan, np.nan, np.nan) if ds is None else tuple(np.percentile(ds, [2.5, 50, 97.5]))
+
+
+def _p_boot(ds) -> float:
+    """Two-sided bootstrap p for dQWK = 0 (floor 1/nb)."""
+    return float(max(2 * min((ds <= 0).mean(), (ds >= 0).mean()), 1 / len(ds)))
+
+
+def _holm(ps: list[float]) -> list[float]:
+    """Holm-adjusted p-values, in the input order."""
+    order = sorted(range(len(ps)), key=lambda i: ps[i])
+    adj, running = [0.0] * len(ps), 0.0
+    for rank, i in enumerate(order):
+        running = max(running, min(1.0, (len(ps) - rank) * ps[i]))
+        adj[i] = running
+    return adj
+
+
+MARGIN = 0.05            # pre-registered equivalence margin (QWK), user 2026-10-15 (CLAUDE.md §11)
+
+
+def _contrast(A, B) -> dict:
+    """dQWK B vs A with bootstrap CI, p, N and TOST equivalence at +/-MARGIN (90% CI inside the margin)."""
+    _, sA = _qwk_items(A); _, sB = _qwk_items(B)
+    if isinstance(sA, float) or isinstance(sB, float) or len(sA) < 8 or len(sB) < 8:
+        return {}
+    ds = _boot_dist(sA, sB)
+    if ds is None:
+        return {}
+    lo, md, hi = np.percentile(ds, [2.5, 50, 97.5]); lo90, hi90 = np.percentile(ds, [5, 95])
+    return {"dQWK": md, "lo": lo, "hi": hi, "N": len(set(sA.index) & set(sB.index)), "p": _p_boot(ds),
+            "sig": bool(lo > 0 or hi < 0), "equiv": bool(-MARGIN < lo90 and hi90 < MARGIN),
+            "QWK_A": _qwk_items(A[A.item_id.isin(set(sA.index) & set(sB.index))])[0]}
+
+
+def dim_contrasts(df: pd.DataFrame, interv: set) -> pd.DataFrame:
+    """Bloco C contrasts on the paper basis (PT-CS = validated answers), reasoning off, one source for the
+    RQ2/RQ3 figures, the framework rows and the prose (2026-10-15). Families (Holm within each):
+      guidance  none -> with guidance, per model x dataset (Qwen3.5, DeepSeek-V4-Flash, GPT-5.1)
+      decomp    holistic -> criterion, per model x code dataset (Qwen3.5, DeepSeek-V4-Flash)
+      scope     question by question -> whole exam, per model (Qwen3.5, DeepSeek-V4-Flash), the
+                exam questions that belong to PT-CS"""
+    d = df[((df.dataset != "ptcs") | df.item_id.isin(interv)) & (df.reasoning == "off")]
+    rows = []
+    q = d[(d.scope == "question_by_question") & (d.decomposition == "holistic")]
+    for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]:
+        for ds, dom in [("mohler", "short_answer"), ("semeval", "short_answer"), ("riayn", "code"), ("ptcs", "code")]:
+            c = q[(q.model == m) & (q.dataset == ds) & (q.domain == dom)]
+            r = _contrast(c[c.context_level == "none"], c[c.context_level == "with_guidance"])
+            if r:
+                rows.append({"family": "guidance", "model": m, "dataset": ds, **r})
+    g = d[(d.context_level == "with_guidance") & (d.scope == "question_by_question") & (d.domain == "code")]
+    for m in ["qwen3.5", "deepseek-v4-flash"]:
+        for ds in ["riayn", "ptcs"]:
+            c = g[(g.model == m) & (g.dataset == ds)]
+            r = _contrast(c[c.decomposition == "holistic"], c[c.decomposition == "criterion"])
+            if r:
+                rows.append({"family": "decomp", "model": m, "dataset": ds, **r})
+    for m in ["qwen3.5", "deepseek-v4-flash"]:
+        w = d[(d.scope == "whole_exam") & (d.model == m)]
+        qb = d[(d.model == m) & (d.dataset == "ptcs") & (d.domain == "code") & (d.context_level == "with_guidance")
+               & (d.scope == "question_by_question") & (d.decomposition == "holistic") & d.item_id.isin(set(w.item_id))]
+        r = _contrast(qb, w)
+        if r:
+            rows.append({"family": "scope", "model": m, "dataset": "ptcs", **r})
+    out = pd.DataFrame(rows)
+    out["p_holm"] = np.nan
+    for fam, idx in out.groupby("family").groups.items():
+        out.loc[idx, "p_holm"] = _holm(list(out.loc[idx, "p"]))
+    out["sig_holm"] = out.p_holm < 0.05
+    return out
 
 
 def rq1_cells(df: pd.DataFrame, interv: set) -> pd.DataFrame:
@@ -67,15 +143,19 @@ def rq1_cells(df: pd.DataFrame, interv: set) -> pd.DataFrame:
         k = n.run_index.nunique(); ppi = n[n.parse_ok].groupby("item_id").size()
         clean = set(ppi[ppi == k].index) if n.parse_ok.mean() < 1 else set(n.item_id.unique())
         qoff, sA = _qwk_items(o[o.item_id.isin(clean)]); _, sB = _qwk_items(n[n.item_id.isin(clean)])
-        lo, md, hi = _boot_ci(sA, sB)
+        dist = _boot_dist(sA, sB)
+        lo, md, hi = np.percentile(dist, [2.5, 50, 97.5])
         prem = (pd.to_numeric(n.completion_tokens, errors="coerce").mean()
                 / max(pd.to_numeric(o.completion_tokens, errors="coerce").mean(), 1))
         r = rc.loc[(ds, dom, m)]
         rows.append({"dataset": ds, "domain": dom, "model": m, "N": len(clean), "QWK_off": qoff,
                      "dQWK": md, "lo": lo, "hi": hi, "pct": 100 * md / qoff if qoff else np.nan,
-                     "sig": bool(lo > 0 or hi < 0), "prem_x": prem,
+                     "sig": bool(lo > 0 or hi < 0), "prem_x": prem, "p": _p_boot(dist),
                      "SDk_off": r.SDk_off, "SDk_on": r.SDk_on})
-    return pd.DataFrame(rows)
+    out = pd.DataFrame(rows)
+    out["p_holm"] = _holm(list(out.p))                  # Holm across all model x dataset combinations
+    out["sig_holm"] = out.p_holm < 0.05
+    return out
 
 
 def _tex(df, path, caption, label, star=False, colspec=None, size="\\small", placement=None,
@@ -198,16 +278,18 @@ def main() -> int:
                           "$\\Delta$QWK": f"\\textbf{{{dq}}}" if c.sig else dq,
                           "95\\% CI": f"[{sgn(c.lo, 2)}, {sgn(c.hi, 2)}]",
                           "Change": sgn(c.pct, 0) + "\\%",
+                          "Holm": "yes" if c.sig_holm else "",
                           "Tokens": f"{c.prem_x:.0f}$\\times$",
                           "SD off $\\to$ on": f"{c.SDk_off:.3f} $\\to$ {c.SDk_on:.3f}"})
     _tex(pd.DataFrame(vrows), "tab_rq1_values.tex",
          "Reasoning off versus on, per model and dataset. $\\Delta$QWK is the change in agreement (QWK on "
          "minus off; bold when its 95\\% bootstrap confidence interval excludes zero), and Change expresses it "
          "as a percentage of the reasoning-off QWK; both use the items whose reasoning never exceeded the "
-         "output-token limit, whose number is N. Tokens is how many times more output tokens reasoning used, "
+         "output-token limit, whose number is N. Holm marks the gains that stay significant after Holm's "
+         "correction for the 20 comparisons. Tokens is how many times more output tokens reasoning used, "
          "and SD is the mean within-item standard deviation across repetitions (lower is more consistent); "
          "both use all paired items.",
-         "tab:rq1values", star=True, colspec="llrrrrrrr", size="\\footnotesize")
+         "tab:rq1values", star=True, colspec="llrrrrrcrr", size="\\footnotesize")
 
     # --- T2: dimension contrasts (context per dataset, scope, decomposition).
     #     Hybrid PT-CS rule (§11 2026-06-11): PT-CS contrasts get a verified robustness column. ---
@@ -333,7 +415,7 @@ def main() -> int:
     # guidance + scope literals, derived from the T2 engine contrasts (not hand-typed)
     riayn_ctx = float(ctx_by["riayn"]["dQWK"]); ptcs_ctx_full = float(ctx_by["ptcs"]["dQWK"])
     ptcs_ctx_ver = float(ctx_by["ptcs"]["dQWK-V [CI] (N$_V$)"].split()[0]); scope_ver = float(scope_row["dQWK-V [CI] (N$_V$)"].split()[0])
-    R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "10--925", "94--192", "2.5--5"   # composite; verified by the test
+    R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "9--925", "109--211", "2.5--5"   # composite; verified by the test
     # scope cost per question: whole exam in one call vs one call per question, on the 252 whole-exam
     # questions (whole-exam cost deduplicated by call_group); backs the 'one question per call' row
     we_items = set(df[WQ].item_id)
@@ -342,9 +424,20 @@ def main() -> int:
                  & (q.scope == "question_by_question") & (q.decomposition == "holistic") & q.item_id.isin(we_items)]
     eur_per_q = lambda d: pd.to_numeric(d.cost_eur, errors="coerce").sum() / d.run_index.nunique() / len(we_items)
     scope_saving = 100 * (1 - eur_per_q(we_calls) / eur_per_q(qb_calls))
+    # bloco C literals, derived from the engine (dim_contrasts, conversation_stats), never typed by hand
+    dc = dim_contrasts(df, interv)
+    gd = dc[dc.family == "guidance"]; dd_ = dc[dc.family == "decomp"]; sc_ = dc[dc.family == "scope"].set_index("model")
+    g_ok = gd[gd.sig_holm]
+    cvs = phase5.conversation_stats(phase5.load_conversation())
+    st_d = [v["state_delta"] for v in cvs.values() if "state_delta" in v]
+    or_a = [v["order_abs"] for v in cvs.values() if "order_abs" in v]
+    dcost = df[(df.reasoning == "off") & (df.context_level == "with_guidance") & (df.scope == "question_by_question")
+               & (df.domain == "code") & df.model.isin(["qwen3.5", "deepseek-v4-flash"]) & df.dataset.isin(["riayn", "ptcs"])]
+    _cc = dcost.groupby(["model", "dataset", "decomposition"]).cost_eur.mean().unstack()
+    dec_ratio = float((_cc["criterion"] / _cc["holistic"]).mean())   # criterion vs holistic cost per answer
     fw = pd.DataFrame([
         {"Scenario": "Grading short answers", "Recommended": "Reasoning off; the cheapest model",
-         "Trade-off in the rule": f"the reasoning gain is small and only sometimes significant (Qwen on Mohler and SemEval, not the other models), and reasoning off is {R_OVERALL}$\\times$ cheaper"},
+         "Trade-off in the rule": f"the reasoning gain is small and rarely significant (significant for Qwen on Mohler and SemEval, none after correcting for multiple comparisons), and reasoning off is {R_OVERALL}$\\times$ cheaper"},
         {"Scenario": "Grading code, the baseline collapses to zero", "Recommended": "Reasoning on, or switch to a discriminating model",
          "Trade-off in the rule": f"reasoning recovers the discrimination the collapsed baseline lost (Qwen ${qc_v:+.3f}$ QWK on PT-CS code), but at about {qwen_code_prem}$\\times$ the tokens and worse run-to-run consistency, so switching model is often the better fix"},
         {"Scenario": "Grading code, the baseline does not collapse", "Recommended": "Reasoning off; on only if local validation justifies it",
@@ -352,13 +445,15 @@ def main() -> int:
         {"Scenario": "Consistency or fairness is critical", "Recommended": "Reasoning off",
          "Trade-off in the rule": "reasoning on is less reproducible, partly a length effect and partly reasoning itself"},
         {"Scenario": "A rubric or reference answer is available", "Recommended": "Supply it as guidance (rubric for code, reference answer for short answers)",
-         "Trade-off in the rule": f"guidance was the one change that reliably raised agreement: it helped across datasets (RIAYN ${riayn_ctx:+.3f}$ QWK, PT-CS code ${ptcs_ctx_ver:+.3f}$), at the cost of only the extra prompt tokens"},
+         "Trade-off in the rule": f"guidance was the one change that reliably raised agreement: it helped in {len(g_ok)} of {len(gd)} model-dataset combinations across three model families (${g_ok.dQWK.min():+.3f}$ to ${g_ok.dQWK.max():+.3f}$ QWK), at the cost of only the extra prompt tokens"},
         {"Scenario": "The rubric has several criteria", "Recommended": "Holistic scoring (one overall score)",
-         "Trade-off in the rule": f"on PT-CS code, scoring criterion by criterion did not reliably change agreement (${decomp_ver:+.3f}$ QWK, not significant) at a higher token cost"},
+         "Trade-off in the rule": f"across two models and two code datasets, scoring criterion by criterion never improved agreement (${dd_.dQWK.min():+.3f}$ to ${dd_.dQWK.max():+.3f}$ QWK, worse in {['no', 'one', 'two', 'three', 'four'][int((dd_.hi < 0).sum())]} case{'s' if int((dd_.hi < 0).sum()) != 1 else ''}) at about {dec_ratio:.0f} times the cost per answer"},
         {"Scenario": "The exam has several questions", "Recommended": "Grade one question per call",
-         "Trade-off in the rule": f"on PT-CS code, grading the whole exam in one call did not improve agreement (question-by-question to whole-exam ${scope_ver:+.3f}$ QWK, not significant) and cut the cost per question by only {scope_saving:.0f}\\%"},
+         "Trade-off in the rule": f"on PT-CS code, grading the whole exam in one call never improved agreement (Qwen ${sc_.loc['qwen3.5','dQWK']:+.3f}$ QWK, significant; DeepSeek ${sc_.loc['deepseek-v4-flash','dQWK']:+.3f}$) and "
+         + (f"cut the cost per question by only {scope_saving:.0f}\\%" if scope_saving > 0
+            else f"even cost {abs(scope_saving):.0f}\\% more per question")},
         {"Scenario": "Grading many answers in sequence", "Recommended": "Fresh conversation per question; no history carried across the exam",
-         "Trade-off in the rule": "a shared, accumulating conversation made grading stricter and answer order added noise (a 20-exam sub-study)"},
+         "Trade-off in the rule": f"a shared, accumulating conversation lowered grades slightly ({min(st_d):.3f} to {max(st_d):.3f} of the scale) and answer order moved individual grades by about {np.mean(or_a):.2f} (three models, up to 80 exams)"},
     ])
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
     fw["Trade-off in the rule"] = fw["Trade-off in the rule"].map(lambda s: s[0].upper() + s[1:] if s else s)
