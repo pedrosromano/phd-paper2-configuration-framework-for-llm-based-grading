@@ -144,21 +144,22 @@ def rq3_cost():
     (Qwen3.5 off, with guidance, holistic). Whole-exam cost is deduplicated by call_group (one call
     covers several questions). Backs the framework's 'per question by default' choice."""
     df = phase5.load_main()
-    we = df[(df.scope == "whole_exam") & (df.model == "qwen3.5")]   # Qwen only (C3 adds GLM)
-    items = set(we.item_id)
-    calls = phase5.dedupe_call_groups(we).copy()
-    qb = df[(df.model == "qwen3.5") & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.domain == "code")
-            & (df.context_level == "with_guidance") & (df.scope == "question_by_question")
-            & (df.decomposition == "holistic") & df.item_id.isin(items)].copy()
     print("\n=== RQ3 scope cost per question (Section IV-C / framework) ===")
-    for name, d in [("whole exam", calls), ("per question", qb)]:
-        k = d.run_index.nunique()
-        tot = {c: pd.to_numeric(d[c], errors="coerce").sum() / k / len(items)
-               for c in ["prompt_tokens", "completion_tokens", "cost_eur"]}
-        print(f"  {name:12} calls/run={len(d) / k:6.0f}  in={tot['prompt_tokens']:.0f}  "
-              f"out={tot['completion_tokens']:.0f}  EUR/question={tot['cost_eur']:.6f}")
-    eur = lambda d: pd.to_numeric(d.cost_eur, errors="coerce").sum() / d.run_index.nunique() / len(items)
-    print(f"  -> whole exam saves {100 * (1 - eur(calls) / eur(qb)):.1f}% of the cost per question")
+    for m in ["qwen3.5", "deepseek-v4-flash"]:              # each model on its own whole-exam questions
+        we = df[(df.scope == "whole_exam") & (df.model == m)]
+        items = set(we.item_id)
+        calls = phase5.dedupe_call_groups(we).copy()
+        qb = df[(df.model == m) & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.domain == "code")
+                & (df.context_level == "with_guidance") & (df.scope == "question_by_question")
+                & (df.decomposition == "holistic") & df.item_id.isin(items)].copy()
+        for name, d in [("whole exam", calls), ("per question", qb)]:
+            k = d.run_index.nunique()
+            tot = {c: pd.to_numeric(d[c], errors="coerce").sum() / k / len(items)
+                   for c in ["prompt_tokens", "completion_tokens", "cost_eur"]}
+            print(f"  {m:18} {name:12} in={tot['prompt_tokens']:.0f}  out={tot['completion_tokens']:.0f}  "
+                  f"EUR/question={tot['cost_eur']:.6f}")
+        eur = lambda d: pd.to_numeric(d.cost_eur, errors="coerce").sum() / d.run_index.nunique() / len(items)
+        print(f"  {m:18} -> whole exam changes the cost per question by {100 * (eur(calls) / eur(qb) - 1):+.1f}%")
     dd = df[(df.model == "qwen3.5") & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.domain == "code")
             & (df.context_level == "with_guidance") & (df.scope == "question_by_question")]
     for dec, g in dd.groupby("decomposition"):
@@ -226,6 +227,24 @@ def temp0_variation():
         print(f"  reasoning {r}: {min(pct):.0f}% to {max(pct):.0f}% across {len(pct)} model-dataset combinations")
 
 
+def k_sensitivity():
+    """Method, QWK binning (2026-10-15): the largest change in a baseline-configuration QWK (reasoning off,
+    with guidance, one question per call, holistic; every model x dataset, PT-CS validated) when the ordinal
+    scale is K=4 or K=6 instead of K=5."""
+    from sklearn.metrics import cohen_kappa_score
+    df = phase5.load_main()
+    b = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question") & (df.decomposition == "holistic")
+           & (df.reasoning == "off") & df.pred_norm.notna()]
+    b = b[(b.dataset != "ptcs") | b.item_id.isin(_INTERV)]
+    mx = 0.0
+    for _, g in b.groupby(["dataset", "domain", "model"]):
+        s = g.groupby("item_id").agg(p=("pred_norm", "mean"), g=("gold_norm", "mean"))
+        q = {K: cohen_kappa_score((s.g * K).round().clip(0, K).astype(int), (s.p * K).round().clip(0, K).astype(int),
+                                  weights="quadratic", labels=list(range(K + 1))) for K in (4, 5, 6)}
+        mx = max(mx, abs(q[4] - q[5]), abs(q[6] - q[5]))
+    print(f"\n=== QWK binning sensitivity (Section III-E) ===\n  largest baseline change with K=4 or K=6: {mx:.3f}")
+
+
 def sd_length():
     """RQ1 consistency paragraph (Section IV-A): Spearman between an item's output length and its grade
     variability across repetitions, per (dataset, model), reasoning off and on pooled (phase5 basis), with
@@ -240,7 +259,9 @@ def cost_by_period():
     """Section IV-D cost paragraph (2026-10-15): re-priced spend (June 2026 provider rates, phase5.prepare)
     by month and provider, whole-exam deduplicated; June = the main matrix, October = the bloco C arms.
     The a-priori estimate (EUR 16.7: DeepInfra 11.25, OpenAI 5.45) is compared with the June matrix."""
-    d = phase5.dedupe_call_groups(phase5.load_main())
+    # all analysed runs: the main store (whole exam counted once per call) plus the conversation sub-study,
+    # which the a-priori estimate also included (matrix.estimate prices the conversation cells); 2026-10-15
+    d = pd.concat([phase5.dedupe_call_groups(phase5.load_main()), phase5.load_conversation()], ignore_index=True)
     d["month"] = d.ts.astype(str).str[:7]
     d["prov"] = np.where(d.model == "gpt-5.1", "openai", "deepinfra")
     print("\n=== Cost by period, re-priced (Section IV-D) ===")
@@ -328,6 +349,7 @@ def main() -> int:
     zero_rates()
     overflow()
     temp0_variation()
+    k_sensitivity()
     sd_length()
     cost_by_period()
     rq4_winners()

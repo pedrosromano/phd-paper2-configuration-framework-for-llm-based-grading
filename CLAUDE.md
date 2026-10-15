@@ -1077,6 +1077,19 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   default gives up 0.000–0.077 at up to 30× lower cost, the cheapest 0.073–0.131 at a further ~10× saving),
   RQ4 short-answer paragraph, Discussion, Conclusion and abstract. Engine: `bloco_c.c10` with
   `GUIDE = {"short_answer"|"code": ["glm-5.1", "cheapest"]}` ("cheapest" resolved per dataset).
+- ✅ **Final audit corrections (2026-10-15, four-check review requested by the user).** (1) **PT-CS short
+  answers added to the guidance contrast**: the runs existed (none vs with guidance, Qwen/DeepSeek/GPT) but
+  `dim_contrasts` had left them out. Guidance is now significant in **13 of 15** combinations after Holm
+  (+0.095 to +0.335); exceptions GPT|RIAYN −0.005 and DeepSeek|PT-CS short +0.112 ns (N=84). RQ2 now also
+  reports consistency: SD rises in 10 of 15, by at most 0.028 (`audit_pct_baselines.rq2_consistency`).
+  (2) **Costs include the conversation sub-study** (€2.76, all DeepInfra; the a-priori estimate priced it
+  too): all experiments **€103.9** (OpenAI 50.4, DeepInfra 53.4); planned comparisons **€61.0** vs €16.7
+  (**3.7×**; OpenAI 1.9×, DeepInfra 4.5×). (3) **K sensitivity** across all 20 baseline cells is **0.05**
+  (was 0.033 on the old Qwen-only basis; `audit_pct_baselines.k_sensitivity`). (4) **Criterion scoring
+  costs 1.3–3.1× holistic** per answer (DeepSeek 1.3–1.6, Qwen 2.9–3.1), not "about 2×". (5) One GLM-off
+  run is unparsed, so π is "above 0.999", not 1.0. (6) DeepSeek scope CI is [−0.07, +0.03]. (7) Writing
+  rule §9.2 applied: no QWK percentages anywhere (Table III "Change" column removed). (8) Fig. 1 (RQ1
+  scatter) dropped from the paper as redundant with Fig. 2(a,b) and Table III; the generator still writes it.
 - ✅ **Temperature-0 variation re-based again (2026-10-15):** with GPT-5.1 at full coverage the reasoning-off
   range is **9–60%** (was 9–56%); Threats updated (`audit_pct_baselines.temp0_variation`).
 - ✅ **No run-period distinction in the paper (D12, user 2026-10-15):** no June/October, no "extensions", no

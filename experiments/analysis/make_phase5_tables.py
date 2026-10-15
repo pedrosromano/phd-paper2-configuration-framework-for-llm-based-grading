@@ -194,7 +194,7 @@ def _assert_framework_ranges(prem_by, sdk_by, r_overall, r_discrim_code, r_qwen_
     has drifted from the data. Runs as part of `make analyse` (make_phase5_tables.main)."""
     def fmt(lo, hi):                       # render an integer range the way the table does
         return f"{int(round(lo))}--{int(round(hi))}"
-    discrim = [prem_by[k] for k in prem_by if k[1] == "code" and k[2] != "qwen3.5"]   # GLM/DeepSeek/GPT on code
+    discrim = [prem_by[k] for k in prem_by if k[1] == "code" and k[2] in ("glm-5.1", "deepseek-v4-flash")]   # the two models that do not collapse
     overall = list(prem_by.values())
     qsdk = [on / off for (ds, dom, m), (off, on) in sdk_by.items()
             if dom == "code" and m == "qwen3.5" and off]                              # Qwen-code SDk on/off
@@ -418,7 +418,7 @@ def main() -> int:
     # guidance + scope literals, derived from the T2 engine contrasts (not hand-typed)
     riayn_ctx = float(ctx_by["riayn"]["dQWK"]); ptcs_ctx_full = float(ctx_by["ptcs"]["dQWK"])
     ptcs_ctx_ver = float(ctx_by["ptcs"]["dQWK-V [CI] (N$_V$)"].split()[0]); scope_ver = float(scope_row["dQWK-V [CI] (N$_V$)"].split()[0])
-    R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "9--925", "109--211", "2.5--5"   # composite; verified by the test
+    R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "9--925", "109--192", "2.5--5"   # composite; verified by the test
     # scope cost per question: whole exam in one call vs one call per question, on the 252 whole-exam
     # questions (whole-exam cost deduplicated by call_group); backs the 'one question per call' row
     we_items = set(df[WQ].item_id)
@@ -427,6 +427,18 @@ def main() -> int:
                  & (q.scope == "question_by_question") & (q.decomposition == "holistic") & q.item_id.isin(we_items)]
     eur_per_q = lambda d: pd.to_numeric(d.cost_eur, errors="coerce").sum() / d.run_index.nunique() / len(we_items)
     scope_saving = 100 * (1 - eur_per_q(we_calls) / eur_per_q(qb_calls))
+    # per model (2026-10-15 audit: the Qwen-only figure had been stated for both models): whole-exam cost
+    # per question relative to one call per question, on each model's own whole-exam questions
+    scope_cost = {}
+    for m in ["qwen3.5", "deepseek-v4-flash"]:
+        w_m = df[(df.scope == "whole_exam") & (df.model == m)]; it_m = set(w_m.item_id)
+        q_m = df[(df.model == m) & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.domain == "code")
+                 & (df.context_level == "with_guidance") & (df.scope == "question_by_question")
+                 & (df.decomposition == "holistic") & df.item_id.isin(it_m)]
+        e = lambda d: pd.to_numeric(d.cost_eur, errors="coerce").sum() / d.run_index.nunique() / len(it_m)
+        scope_cost[m] = 100 * (e(phase5.dedupe_call_groups(w_m)) / e(q_m) - 1)
+    print("  scope cost per question, whole exam vs one call per question (%):",
+          {k: round(v, 1) for k, v in scope_cost.items()})
     # bloco C literals, derived from the engine (dim_contrasts, conversation_stats), never typed by hand
     dc = dim_contrasts(df, interv)
     gd = dc[dc.family == "guidance"]; dd_ = dc[dc.family == "decomp"]; sc_ = dc[dc.family == "scope"].set_index("model")
@@ -438,6 +450,7 @@ def main() -> int:
                & (df.domain == "code") & df.model.isin(["qwen3.5", "deepseek-v4-flash"]) & df.dataset.isin(["riayn", "ptcs"])]
     _cc = dcost.groupby(["model", "dataset", "decomposition"]).cost_eur.mean().unstack()
     dec_ratio = float((_cc["criterion"] / _cc["holistic"]).mean())   # criterion vs holistic cost per answer
+    dec_lo, dec_hi = float((_cc["criterion"] / _cc["holistic"]).min()), float((_cc["criterion"] / _cc["holistic"]).max())
     # --- T6: how well the guide does (C10, 2026-10-15; D13). Per dataset, the guide's default (reasoning
     #     off with the strongest model that does not collapse to zeros, GLM-5.1, on both tasks) and the
     #     budget alternative (the cheapest model with reasoning off) against the best configuration in
@@ -493,11 +506,11 @@ def main() -> int:
         {"Scenario": "A rubric or reference answer is available", "Recommended": "Supply it as evaluation guidance",
          "Trade-off in the rule": f"guidance was the one change that reliably raised agreement: it helped significantly in {len(g_ok)} of {len(gd)} model-dataset combinations across three model families (${g_ok.dQWK.min():+.3f}$ to ${g_ok.dQWK.max():+.3f}$ QWK), at the cost of only the extra prompt tokens"},
         {"Scenario": "The rubric has several criteria", "Recommended": "Holistic scoring (one overall score)",
-         "Trade-off in the rule": f"across two models and two code datasets, scoring criterion by criterion never improved agreement significantly (${dd_.dQWK.min():+.3f}$ to ${dd_.dQWK.max():+.3f}$ QWK, significantly worse in {['no', 'one', 'two', 'three', 'four'][int((dd_.hi < 0).sum())]} case{'s' if int((dd_.hi < 0).sum()) != 1 else ''}) at about {dec_ratio:.0f} times the cost per answer"},
+         "Trade-off in the rule": f"across two models and two code datasets, scoring criterion by criterion never improved agreement significantly (${dd_.dQWK.min():+.3f}$ to ${dd_.dQWK.max():+.3f}$ QWK, significantly worse in {['no', 'one', 'two', 'three', 'four'][int((dd_.hi < 0).sum())]} case{'s' if int((dd_.hi < 0).sum()) != 1 else ''}) at {dec_lo:.1f} to {dec_hi:.1f} times the cost per answer"},
         {"Scenario": "The exam has several questions", "Recommended": "Grade one question per call",
          "Trade-off in the rule": f"on PT-CS code, grading the whole exam in one call never improved agreement (Qwen3.5 ${sc_.loc['qwen3.5','dQWK']:+.3f}$ QWK, significant; DeepSeek-V4-Flash ${sc_.loc['deepseek-v4-flash','dQWK']:+.3f}$) and "
-         + (f"cut the cost per question by only {scope_saving:.0f}\\%" if scope_saving > 0
-            else f"even cost {abs(scope_saving):.0f}\\% more per question")},
+         + f"saved little or nothing (${scope_cost['qwen3.5']:+.0f}$\\% cost per question for Qwen3.5, "
+           f"${scope_cost['deepseek-v4-flash']:+.0f}$\\% for DeepSeek-V4-Flash)"},
         {"Scenario": "Grading many answers in sequence", "Recommended": "A clean conversation per answer; no history carried across the exam",
          "Trade-off in the rule": f"a shared, accumulating conversation lowered grades slightly ({min(st_d):.3f} to {max(st_d):.3f} of the scale) and answer order moved individual grades by {min(or_a):.2f} to {max(or_a):.2f} of the scale (three models, up to 80 exams)"},
     ])

@@ -58,13 +58,12 @@ and the spread of its grades was moderate (median 0.46 over the model-dataset co
 from 0.08 for GPT-5.1 on Mohler to 0.76 for GLM-5.1 on RIAYN.
 
 One code-specific failure shapes how the code results must be read. On PT-CS code, Qwen3.5 with
-reasoning off scores 47\% of the answers as exactly zero, although the teachers gave none of the same
-answers a zero. We call this behaviour the \emph{zero-collapse}: answers that deserve partial credit
+reasoning off scores 49\% of the answers as exactly zero, against 2\% for the teachers. We call this behaviour the \emph{zero-collapse}: answers that deserve partial credit
 receive the same score as an empty answer, so the grader can no longer tell weak answers apart. A grader
 that instead spreads its scores across the scale, as the teachers do, we call \emph{discriminating}. The
 zeros are genuine, parseable scores, and they recur whether the exam is graded whole or one question at
-a time. Reasoning roughly halved Qwen3.5's zeros on PT-CS code (to 24\%), which is where its $+0.113$
-gain comes from. GPT-5.1 shows a milder form of the same behaviour: with reasoning off it scores 32\% of
+a time. On the 67 items graded both ways, reasoning roughly halved Qwen3.5's zeros (from 47\% to 24\%), and
+its $+0.113$ gain came with that drop. GPT-5.1 shows a milder form of the same behaviour: with reasoning off it scores 32\% of
 the PT-CS code answers and 17\% of RIAYN's as zero, against 2\% and 5\% for the teachers, and Qwen3.5
 does the same on RIAYN (16\%). The two significant RIAYN gains belong to these two models, although
 GPT-5.1's gain on PT-CS code ($+0.061$) is not significant. GLM-5.1 and DeepSeek-V4-Flash, which score 9
@@ -134,7 +133,7 @@ than the baseline. Dashed lines mark the $\pm0.05$ equivalence margin. Reasoning
 
 Across the 295 PT-CS code questions, grading the whole exam in one call lowered agreement for Qwen3.5 by
 0.091 QWK (CI $[-0.13,-0.05]$), from 0.468 with one question per call, and the loss remains significant
-after Holm's correction. For DeepSeek-V4-Flash the change was $-0.024$ (CI $[-0.08,+0.03]$), not
+after Holm's correction. For DeepSeek-V4-Flash the change was $-0.024$ (CI $[-0.07,+0.03]$), not
 significant. Scoring criterion by criterion brought no significant gain either: the four changes run
 from $-0.072$ (DeepSeek-V4-Flash on PT-CS code, significant after correction) to $+0.029$ (Qwen3.5 on
 RIAYN, not significant). None of the six intervals fits inside the $\pm0.05$ margin, so the data do not
@@ -143,10 +142,11 @@ did significantly worse.
 
 Cost does not favour the alternatives either. Per question, grading the whole exam in one call cost
 Qwen3.5 7\% more than one call per question, because the joint answer carries more output tokens, and
-scoring criterion by criterion cost about twice as much per answer as a single holistic score.
+saved DeepSeek-V4-Flash only 6\%; scoring criterion by criterion cost 1.3 to 3.1 times as much per answer as a single holistic score,
+because the per-criterion breakdown lengthens the output.
 
 Overall, the baseline shape held its ground: no alternative beat one question per call with a single
-holistic score on agreement, and the baseline was also the cheaper shape. Question-by-question, holistic
+holistic score on agreement, and the alternatives saved little or nothing. Question-by-question, holistic
 grading is therefore the default.
 
 \subsection{RQ4: Models and Cost}
@@ -179,8 +179,8 @@ teacher and 0.33 to 0.41 with the second. Model-teacher agreement is thus of the
 agreement between the two teachers, and one teacher sits much closer to the models than the other.
 
 As a complement to QWK, which treats SemEval's binary label as the two ends of the scale, we report
-accuracy and AUROC. Across all SemEval items, with reasoning off, the models label answers correctly 0.76
-to 0.79 of the time, with AUROC 0.83 to 0.85, so they separate correct from incorrect answers well above
+accuracy and AUROC. Over the 800 SemEval items and their repetitions, with reasoning off, the models label
+answers correctly 0.76 to 0.79 of the time, with AUROC 0.83 to 0.85, so they separate correct from incorrect answers well above
 chance. The fixed 0.5 cutoff does not flatter these figures: for every model it is within 0.024 accuracy
 of the best cutoff between 0.30 and 0.70.
 
@@ -208,26 +208,26 @@ sit within 0.02 of each other, so on short answers the choice of model matters l
 (Fig.~\ref{fig:costquality}b), configurations with reasoning on tended to score higher: on RIAYN
 reasoning lifted agreement for every family, significantly for two of the four (Section~\ref{sec:rq1}).
 GLM-5.1 leads at 0.726 with reasoning off (\euro{}0.95) and 0.803 with reasoning on (\euro{}6.4). For
-Qwen3.5 the code gain (0.544 to 0.754) comes mostly from fewer zeros. The closed frontier model is never
+Qwen3.5 the code gain (0.544 to 0.754) came with fewer zeros (16\% to 9\% of the answers). The closed frontier model is never
 the efficient choice: GPT-5.1 sits mid-pack on short answers (0.609 with reasoning off, at about 20 times
 DeepSeek-V4-Flash's cost), and on code it reaches 0.791 only with reasoning, at \euro{}30 per thousand
 grades, the most expensive configuration in the study and still below GLM-5.1 with reasoning.
 
 Cost also carries an operational lesson. All the experiments together (whole-exam cost counted once per
-call) cost \euro{}101.1 at the providers' billed rates: \euro{}50.4 on OpenAI and \euro{}50.7 on
+call) cost \euro{}103.9 at the providers' billed rates: \euro{}50.4 on OpenAI and \euro{}53.4 on
 DeepInfra. Before the runs, we estimated the cost of the comparisons planned at the outset by pricing
 every planned call at list price, using typical input and output lengths from pilot runs; that estimate
-was \euro{}16.7, while those comparisons cost \euro{}59.8, 3.6 times more. On OpenAI, where the budgeted
+was \euro{}16.7, while those comparisons cost \euro{}61.0, 3.7 times more. On OpenAI, where the budgeted
 price was right, the estimate was 1.9 times too low only because reasoning traces ran longer than the
 pilots; the first reasoning runs even had to be repeated with the output limit raised eightfold (4096 to
-32\,768 tokens). On DeepInfra it was 4.4 times too low, because the prices we budgeted were also below
+32\,768 tokens). On DeepInfra it was 4.5 times too low, because the prices we budgeted were also below
 those the provider billed. Practitioners budgeting a reasoning-on grading arm should price it at the
 provider's current billed rates and expect output several times longer than a pilot suggests.
 
 Overall, GLM-5.1 is the efficient all-rounder: with reasoning off it is already the best code grader
 (0.726) and near the top on short answers (0.619), both at under one euro per thousand grades. Reasoning
 off is the dependable default, because reasoning raised cost on every task while raising agreement only
-on some. Reasoning earned its keep only on code, and conditionally: it gives the study's best
+on some. Reasoning earned its keep only on code, and conditionally: it gives the best code
 configuration (GLM-5.1, 0.803), but that gain is not significant, and across families the code benefit
 was significant only for the two models that gave too many zeros (Section~\ref{sec:rq1}). The
 configuration guide (Section~\ref{sec:framework}) builds this rule in and tests its default against the
@@ -308,7 +308,8 @@ is last on both. On short answers the order does not carry over beyond its ends 
 The public datasets separate the eight configurations by only 0.04 QWK, so most of the public order is a
 set of near-ties, and the middle reshuffles on PT-CS; the extremes hold, with Qwen3.5 with reasoning on
 first and DeepSeek-V4-Flash with reasoning on last on both sides. Absolute levels shift between contexts
-too, up on PT-CS short answers and down on PT-CS code, but transfer concerns the ordering, not the level.
+too, up on PT-CS short answers and mostly down on PT-CS code, but transfer concerns the ordering, not
+the level.
 
 Overall, the configuration ranking transfers in the sense that matters most for a configuration guide:
 the best public choice is also at or near the top in deployment, on short answers (Qwen3.5 with reasoning

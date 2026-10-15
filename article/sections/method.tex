@@ -76,12 +76,11 @@ the \emph{human grade} is the grade a model's score is compared against. Because
 and short answers, which are graded differently, we analyse its two parts separately, so per-dataset
 results cover five sets: Mohler, SemEval, RIAYN, PT-CS code, and PT-CS short answers.
 
-\emph{Mohler}~\cite{mohler_text_2009,mohler_learning_2011} provides 2273 CS short answers over 80
+\emph{Mohler}~\cite{mohler_text_2009,mohler_learning_2011} provides 2273 CS short answers over 81
 questions, each graded 0 to 5 by two teachers; we use their mean. \emph{SemEval-2013
 Task~7}~\cite{dzikovska_semeval_2013} (SciEntsBank and Beetle) provides science short answers whose
 human grade is a binary label, correct or incorrect. SemEval is far larger than our other corpora, so we
-subsample it: we draw 800 items by a fixed-seed sample that preserves the dataset's question and domain
-proportions. The other datasets are graded in full. \emph{Rubric Is All You
+subsample it: a fixed-seed random sample of 800 items, covering 228 of its 252 questions. The other datasets are graded in full. \emph{Rubric Is All You
 Need} (RIAYN)~\cite{pathak_rubric_2025} provides 149 data-structures-and-algorithms submissions over 25
 problems, all but one in Java. Its question-specific rubrics mark each step of one or more accepted
 solution paths, and two graders scored each submission in consensus.
@@ -138,9 +137,9 @@ The amount of grading balances statistical power against cost. With reasoning of
 the full public and PT-CS datasets (2273 Mohler, 149 RIAYN, 295 PT-CS code, and 84 PT-CS short-answer
 items) and the 800-item SemEval sample, all at $k=5$. Reasoning on is the most expensive setting,
 because reasoning traces run long, so it uses fixed random samples: 175 items on Mohler and SemEval, all
-149 on RIAYN, and 67 code and 32 short-answer items on PT-CS. The whole-exam arm grades the 88 complete
-exams that contain a validated code answer, covering all 295 PT-CS code questions; these exams are
-short, about four questions each (one to six). The conversation sub-study grades 80 complete exams in
+149 on RIAYN, and 67 code and 32 short-answer items on PT-CS. The whole-exam arm grades complete exams,
+including the 88 that contain a validated code answer and cover all 295 PT-CS code questions; these
+exams are short, about four questions each (one to six). The conversation sub-study grades 80 complete exams in
 two fixed answer orders (the exam's own order and its reverse) with Qwen3.5 and DeepSeek-V4-Flash, and
 the first 20 of those exams with GLM-5.1 at $k=3$.
 
@@ -160,7 +159,7 @@ produces a continuous score. We therefore average each item's $k$ repetitions, r
 ordered levels from 0 to 5, the resolution of Mohler's native grades, and compute QWK on these levels
 (we write $K{=}5$ for this scale). Using the same scale for every dataset makes the QWK values
 comparable. We fixed $K$ in advance, and recomputing with $K{=}4$ or $K{=}6$ changes no baseline QWK by
-more than 0.033, so the choice does not drive the results.
+more than 0.05.
 
 Consistency is the mean within-item standard deviation across the $k$ repetitions (SD$_k$); it needs no
 human grade, and a lower value means more reproducible grading. The reasoning premium is the ratio of
@@ -182,8 +181,8 @@ Every expensive contrast is computed on its paired items, stated where the resul
 denotes the number of items a contrast rests on. The reasoning contrast pairs the off and on runs on the
 sampled items and keeps the \emph{tractable} ones, whose reasoning stayed within the 32\,768-token limit,
 so that every reasoning-on grade is complete. The limit cut off 293 graded runs on 186 items (91 SemEval,
-65 Mohler, 17 RIAYN, 13 PT-CS), all from Qwen3.5 with reasoning on; every other run returned a parseable
-grade, an extractable rate of 1.0. The scope contrast uses the 295 PT-CS code questions of the
+65 Mohler, 17 RIAYN, 13 PT-CS), all from Qwen3.5 with reasoning on; all but three of the other runs in the
+study returned a parseable grade, an extractable rate above 0.999. The scope contrast uses the 295 PT-CS code questions of the
 whole-exam arm. Uncertainty is given by bootstrap 95\% confidence intervals (CIs) over items (800
 resamples, fixed seed), and we call a contrast significant when its CI excludes zero. Because each
 research question involves several comparisons, we also apply Holm's correction, which tightens the

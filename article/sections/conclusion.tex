@@ -13,7 +13,7 @@ output tokens by up to 925 and usually making grades less consistent; its cleare
 for models that scored too many partially correct answers as zero. Evaluation guidance, at the cost of a
 few prompt tokens, raised agreement significantly in thirteen of fifteen combinations across three model
 families. Grading a whole exam in one call and scoring criterion by criterion brought no significant
-gain and cost more, and the closed frontier model did not repay its price on the public data. The ranking
+gain and saved little or nothing, and the closed frontier model did not repay its price on the public data. The ranking
 of configurations on public data carried over to a real deployment on code, and at the top on short
 answers. The guide's default follows directly: the strongest model that does not collapse to zero, with
 reasoning off, guidance, one question per call, holistic scoring, and a clean conversation. It stayed within 0.08 QWK of

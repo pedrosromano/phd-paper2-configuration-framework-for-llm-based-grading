@@ -11,15 +11,15 @@ Scenario & Recommended & Trade-off in the rule \\
 \hline
 \raggedright Grading code with a model that gives too many zeros & \raggedright Switch to a model that does not collapse, or turn reasoning on & Reasoning roughly halved Qwen3.5's zeros and raised its PT-CS code agreement by $+0.113$ QWK, but at 714 to 844 times the output tokens and with worse run-to-run consistency, so switching model is the cheaper fix \\[3pt]
 \hline
-\raggedright Grading code with a model that does not collapse & \raggedright Reasoning off; on only if local validation justifies it & For GLM-5.1 and DeepSeek-V4-Flash the reasoning gain on code varied in sign and was never significant, so off is the safe default, saving 109--211 times the output tokens and keeping consistency \\[3pt]
+\raggedright Grading code with a model that does not collapse & \raggedright Reasoning off; on only if local validation justifies it & For GLM-5.1 and DeepSeek-V4-Flash the reasoning gain on code varied in sign and was never significant, so off is the safe default, saving 109--192 times the output tokens and keeping consistency \\[3pt]
 \hline
 \raggedright Consistency or fairness is critical & \raggedright Reasoning off & Reasoning on is less reproducible, partly a length effect and partly reasoning itself \\[3pt]
 \hline
 \raggedright A rubric or reference answer is available & \raggedright Supply it as evaluation guidance & Guidance was the one change that reliably raised agreement: it helped significantly in 13 of 15 model-dataset combinations across three model families ($+0.095$ to $+0.335$ QWK), at the cost of only the extra prompt tokens \\[3pt]
 \hline
-\raggedright The rubric has several criteria & \raggedright Holistic scoring (one overall score) & Across two models and two code datasets, scoring criterion by criterion never improved agreement significantly ($-0.072$ to $+0.029$ QWK, significantly worse in one case) at about 2 times the cost per answer \\[3pt]
+\raggedright The rubric has several criteria & \raggedright Holistic scoring (one overall score) & Across two models and two code datasets, scoring criterion by criterion never improved agreement significantly ($-0.072$ to $+0.029$ QWK, significantly worse in one case) at 1.3 to 3.1 times the cost per answer \\[3pt]
 \hline
-\raggedright The exam has several questions & \raggedright Grade one question per call & On PT-CS code, grading the whole exam in one call never improved agreement (Qwen3.5 $-0.091$ QWK, significant; DeepSeek-V4-Flash $-0.024$) and even cost 7\% more per question \\[3pt]
+\raggedright The exam has several questions & \raggedright Grade one question per call & On PT-CS code, grading the whole exam in one call never improved agreement (Qwen3.5 $-0.091$ QWK, significant; DeepSeek-V4-Flash $-0.024$) and saved little or nothing ($+7$\% cost per question for Qwen3.5, $-6$\% for DeepSeek-V4-Flash) \\[3pt]
 \hline
 \raggedright Grading many answers in sequence & \raggedright A clean conversation per answer; no history carried across the exam & A shared, accumulating conversation lowered grades slightly (0.010 to 0.027 of the scale) and answer order moved individual grades by 0.08 to 0.10 of the scale (three models, up to 80 exams) \\[3pt]
 \hline

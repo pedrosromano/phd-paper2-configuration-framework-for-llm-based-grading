@@ -148,7 +148,7 @@ def c9(df: pd.DataFrame) -> dict[str, pd.DataFrame]:
         fams["RQ1 reasoning"].append(_summ(f"{ds}:{dom[:5]} {m}", _boot(sA, sB), len(clean)))
     q = d[(d.reasoning == "off") & (d.scope == "question_by_question") & (d.decomposition == "holistic")]
     for m in MODELS:
-        for ds, dom in [("mohler", "short_answer"), ("semeval", "short_answer"), ("riayn", "code"), ("ptcs", "code")]:
+        for ds, dom in [("mohler", "short_answer"), ("semeval", "short_answer"), ("riayn", "code"), ("ptcs", "code"), ("ptcs", "short_answer")]:
             c = q[(q.model == m) & (q.dataset == ds) & (q.domain == dom)]
             A, B = c[c.context_level == "none"], c[c.context_level == "with_guidance"]
             if A.empty or B.empty:
