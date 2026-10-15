@@ -1023,3 +1023,21 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   20 RQ1 combinations only Qwen|RIAYN stays significant (Qwen Mohler/SemEval/PT-CS code and GPT|RIAYN do not).
   RQ2 guidance survives Holm on all four datasets. No TOST equivalence at ±0.05 yet for scope (N=77) or
   decomposition. Re-run `bloco_c c9` after the C arms; do not change RQ1 prose until the user decides.
+- 🔧 **C3 GLM whole-exam re-run at max_tokens 32768 (2026-10-15).** At 4096 GLM-5.1 wrote a long analysis
+  before the JSON: 240 question rows truncated (finish_reason=length) and in 67 completed outputs quoted Java
+  swallowed the final {"answers": ...}. The cell now runs at 32768 (new config_hash). **TODO when the C
+  arms finish (no run live):** (1) archive the superseded GLM whole-exam max_tokens=4096 rows out of
+  runs.jsonl (as archive_superseded did for the 4096 reasoning arm), so analyses never mix the two;
+  (2) offline re-parse of stored failed rows with the fixed parser (no API calls; whole-exam keyed
+  fallback); (3) regrade any "transient (retries exhausted)" error rows. Qwen whole-exam stays at 4096
+  (π=1.0, never truncated).
+- ⚠️ **GLM-5.1 BACKEND DRIFT (found 2026-10-15) — GLM left the C arms.** DeepInfra no longer honours
+  enable_thinking=false for zai-org/GLM-5.1 (no alternative toggle works: thinking.type=disabled,
+  reasoning_effort=none, none). Drift check re-running 25 June prompts per model: Qwen3.5 24/25 same grade
+  (7→7 output tokens), DeepSeek-V4-Flash 23/25 (7→7; slower, ~11 s/call), GPT-5.1 21/25 (15→15), **GLM-5.1
+  15/25 (10→1223 tokens)**. The 4006 October GLM rows (C1 partial, C2, C3) were archived out of runs.jsonl
+  (`experiments/run/archive_glm_drift.py`, backup kept). **Replacements:** C1 guidance on DeepSeek + GPT-5.1
+  (RQ2 on Qwen/DeepSeek/GPT); C2 decomposition and C3 whole-exam on DeepSeek; C4 conversation on Qwen +
+  DeepSeek (80 exams, k=5). June GLM results (RQ1/RQ4/RQ6) stay valid as dated measurements. **For the
+  paper:** a concrete instance of the backend-conditional threat and of why the guide is keyed on
+  observable behaviour + local validation (a model the guide names can stop offering a reasoning-off mode).

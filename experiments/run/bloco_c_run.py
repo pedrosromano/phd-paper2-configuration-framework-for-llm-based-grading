@@ -25,17 +25,21 @@ PY = sys.executable
 
 # (id, title shown in the monitor, commands run in sequence)
 STEPS = [
-    ("c2", "C2 · Decomposição critério a critério (RIAYN + GLM no PT-CS)",
-     [[PY, "-m", "experiments.run.matrix", "run", "--arm", "c2_decomposition"]]),
-    ("c3", "C3 · Exame inteiro numa chamada, 88 exames (Qwen + GLM)",
+    ("c2", "C2 · Decomposição critério a critério (RIAYN + PT-CS, Qwen + DeepSeek)",
+     [[PY, "-m", "experiments.run.matrix", "run", "--arm", "c2_decomposition", "--concurrency", "48"]]),
+    # GLM-5.1 replaced by DeepSeek-V4-Flash (C2-C4) and GPT-5.1 (C1) on 2026-10-15: DeepInfra no longer
+    # disables GLM's reasoning, so its October "off" cells are not the June condition (archive_glm_drift.py).
+    ("c3", "C3 · Exame inteiro numa chamada, 88 exames (Qwen + DeepSeek)",
      [[PY, "-m", "experiments.run.whole_exam_runner", "--model", "qwen3.5", "--exams", "validated"],
-      # GLM-5.1 truncated at 4096 on whole exams (long analysis before the JSON): its cell runs at 32768
-      [PY, "-m", "experiments.run.whole_exam_runner", "--model", "glm-5.1", "--exams", "validated",
-       "--max-tokens", "32768", "--concurrency", "16"]]),
-    ("c1", "C1 · Guidance no GLM-5.1 e no DeepSeek (4 datasets)",
-     [[PY, "-m", "experiments.run.matrix", "run", "--arm", "c1_context_roster"]]),
-    ("c4", "C4 · Conversa limpa vs partilhada, 80 exames, k=5",
-     [[PY, "-m", "experiments.run.conversation_runner"]]),
+      [PY, "-m", "experiments.run.whole_exam_runner", "--model", "deepseek-v4-flash", "--exams", "validated",
+       "--concurrency", "24"]]),
+    ("c1", "C1 · Guidance no DeepSeek e no GPT-5.1 (4 datasets)",
+     # 48x on DeepInfra: DeepSeek latency ~11 s/call on 2026-10-15; throughput scales with concurrency
+     [[PY, "-m", "experiments.run.matrix", "run", "--arm", "c1_context_roster", "--concurrency", "48"],
+      [PY, "-m", "experiments.run.matrix", "run", "--arm", "c1_context_gpt", "--concurrency", "16"]]),
+    ("c4", "C4 · Conversa limpa vs partilhada, 80 exames, k=5 (Qwen + DeepSeek)",
+     [[PY, "-m", "experiments.run.conversation_runner", "--models", "qwen3.5,deepseek-v4-flash",
+       "--concurrency", "16"]]),
     ("c5_off", "C5 · GPT-5.1 sem reasoning, cobertura completa (k=5)",
      [[PY, "-m", "experiments.run.matrix", "run", "--arm", "c5_anchor_full_off"]]),
     ("c5_on", "C5 · GPT-5.1 com reasoning, mesmas amostras dos abertos (k=5)",

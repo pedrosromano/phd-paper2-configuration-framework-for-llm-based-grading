@@ -252,7 +252,7 @@ def conclude_c1(df: pd.DataFrame) -> list[str]:
     out = []
     for ds, dom in [("mohler", "short_answer"), ("semeval", "short_answer"), ("riayn", "code"), ("ptcs", "code")]:
         parts = []
-        for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash"]:
+        for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]:
             c = q[(q.model == m) & (q.dataset == ds) & (q.domain == dom)]
             r = _contrast(c[c.context_level == "none"], c[c.context_level == "with_guidance"])
             parts.append(f"{NAMES[m]} {r['dQWK']:+.3f}{'*' if r and r.get('sig95') else ''}" if r and "dQWK" in r else f"{NAMES[m]} –")
@@ -265,7 +265,7 @@ def conclude_c2(df: pd.DataFrame) -> list[str]:
     d = _paper(df)
     out = []
     for ds in ["riayn", "ptcs"]:
-        for m in ["qwen3.5", "glm-5.1"]:
+        for m in ["qwen3.5", "deepseek-v4-flash"]:
             dd = d[(d.model == m) & (d.reasoning == "off") & (d.dataset == ds) & (d.domain == "code")
                    & (d.context_level == "with_guidance") & (d.scope == "question_by_question")]
             r = _contrast(dd[dd.decomposition == "holistic"], dd[dd.decomposition == "criterion"])
@@ -276,7 +276,7 @@ def conclude_c2(df: pd.DataFrame) -> list[str]:
 def conclude_c3(df: pd.DataFrame) -> list[str]:
     d = _paper(df)
     out = []
-    for m in ["qwen3.5", "glm-5.1"]:
+    for m in ["qwen3.5", "deepseek-v4-flash"]:
         w = d[(d.scope == "whole_exam") & (d.model == m)]
         if w.empty:
             continue

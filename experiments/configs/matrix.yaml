@@ -161,8 +161,11 @@ arms:
   # --- Bloco C (advisor review, user-approved 2026-10-15). k=5 throughout; k and run_index are not
   #     in config_hash, so earlier runs 0..k-1 of the same cells are reused. item_filter
   #     ptcs_validated restricts PT-CS to the teacher-validated answers the paper analyses. ---
-  - name: c1_context_roster        # C1: guidance none vs with on GLM-5.1 and DeepSeek (RQ2 beyond one model)
-    model: [glm-5.1, deepseek-v4-flash]
+  # GLM-5.1 left C1-C4 on 2026-10-15: DeepInfra no longer disables its reasoning, so October GLM "off"
+  # cells are not the June condition (drift check; experiments/run/archive_glm_drift.py). DeepSeek-V4-Flash,
+  # Qwen3.5 and GPT-5.1 re-ran June prompts unchanged and replace it.
+  - name: c1_context_roster        # C1: guidance none vs with on DeepSeek (RQ2 beyond one model)
+    model: deepseek-v4-flash
     reasoning: off
     context_level: [none, with_guidance]
     scope: question_by_question
@@ -172,8 +175,19 @@ arms:
     k: 5
     item_filter: ptcs_validated
 
-  - name: c2_decomposition         # C2: holistic vs criterion on RIAYN (public code) + GLM on PT-CS
-    model: [qwen3.5, glm-5.1]
+  - name: c1_context_gpt           # C1: guidance none vs with on GPT-5.1 (third family; OpenAI, 16x)
+    model: gpt-5.1
+    reasoning: off
+    context_level: [none, with_guidance]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 5
+    item_filter: ptcs_validated
+
+  - name: c2_decomposition         # C2: holistic vs criterion on RIAYN (public code) and PT-CS, Qwen + DeepSeek
+    model: [qwen3.5, deepseek-v4-flash]
     reasoning: off
     context_level: with_guidance
     scope: question_by_question

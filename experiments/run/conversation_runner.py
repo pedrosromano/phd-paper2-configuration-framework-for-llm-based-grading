@@ -62,7 +62,11 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--concurrency", type=int, default=8)
     ap.add_argument("--limit", type=int, default=None, help="cap submissions (validation)")
+    ap.add_argument("--models", default=",".join(MODELS),
+                    help="comma-separated; C4 (2026-10-15) uses qwen3.5,deepseek-v4-flash because GLM-5.1's "
+                         "reasoning can no longer be disabled on DeepInfra")
     args = ap.parse_args(argv)
+    models = [m.strip() for m in args.models.split(",") if m.strip()]
 
     spec = yaml.safe_load(MATRIX.read_text())
     n_subs = int(spec["sampling"]["conversation_submissions"])
@@ -91,7 +95,7 @@ def main(argv=None) -> int:
     done = {"sessions": 0, "rows": 0, "ok": 0}
 
     # one work unit = one session (model, submission, k, conversation_state, order)
-    units = [(m, sid, ri, cs, od) for m in MODELS for sid in subs
+    units = [(m, sid, ri, cs, od) for m in models for sid in subs
              for ri in range(k) for (cs, od) in PASSES]
 
     def write(row):
@@ -132,7 +136,7 @@ def main(argv=None) -> int:
                       f"pi={done['ok']/max(done['rows'],1):.3f} | DeepInfra €{guard.spent_for('deepinfra'):.2f}",
                       flush=True)
 
-    print(f"conversation sub-study: {len(MODELS)} models x {len(subs)} subs x k={k} x "
+    print(f"conversation sub-study: {len(models)} models x {len(subs)} subs x k={k} x "
           f"{len(PASSES)} passes = {len(units)} sessions @ {args.concurrency}x\n")
     with ThreadPoolExecutor(max_workers=args.concurrency) as ex:
         futs = [ex.submit(run_session, *u) for u in units]
