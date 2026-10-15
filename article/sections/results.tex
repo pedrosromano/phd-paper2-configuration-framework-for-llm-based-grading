@@ -223,7 +223,7 @@ reasoning and model choice earn their keep.
 (a) short answers (mean QWK over Mohler and SemEval), (b) code (RIAYN). The horizontal axis is the
 cost of 1000 grades in euros, on a log scale because costs span more than three orders of magnitude.
 Points up and to the left are better. Cost is computed from the logged tokens at the providers'
-June 2026 per-token rates.}
+billed per-token rates.}
 \label{fig:costquality}
 \end{figure}
 
@@ -252,16 +252,17 @@ on for code when a model collapses or local validation shows it pays. The config
 (Section~\ref{sec:framework}) builds exactly this rule in, with cost alongside agreement and consistency
 as a first-class axis.
 
-Cost also carries an operational lesson. The June experiment matrix (whole-exam cost counted once per
-call) cost \euro{}59.8 at the providers' billed rates: \euro{}10.2 on OpenAI and \euro{}49.6 on
-DeepInfra; the October extensions added \euro{}41.3. Before the June runs we estimated the matrix by
-pricing every planned call at list price, using typical input and output lengths from pilot runs; that
-estimate was \euro{}16.7, 3.6 times too low. On OpenAI, where the budgeted price was right, the estimate
-was 1.9 times too low only because reasoning traces ran longer than the pilots; the first reasoning runs
-even had to be repeated with the output ceiling raised eightfold (4096 to 32\,768 tokens). On DeepInfra
-it was 4.4 times too low, because per-token prices below those the provider billed compounded the same
-effect. Practitioners budgeting a reasoning-on grading arm should price it at the provider's current
-billed rates and expect output several times longer than a pilot suggests.
+Cost also carries an operational lesson. All the experiments together (whole-exam cost counted once per
+call) cost \euro{}101.1 at the providers' billed rates: \euro{}50.4 on OpenAI and \euro{}50.7 on
+DeepInfra. Before running the core experiment matrix, the set of comparisons planned at the outset, we estimated its
+cost by pricing every planned call at list price, using typical input and output lengths from pilot runs;
+that estimate was \euro{}16.7, while the core matrix cost \euro{}59.8, 3.6 times more. On OpenAI, where the
+budgeted price was right, the estimate was 1.9 times too low only because reasoning traces ran longer
+than the pilots; the first reasoning runs even had to be repeated with the output ceiling raised eightfold
+(4096 to 32\,768 tokens). On DeepInfra it was 4.4 times too low, because per-token prices below those the
+provider billed compounded the same effect. Practitioners budgeting a reasoning-on grading arm should
+price it at the provider's current billed rates and expect output several times longer than a pilot
+suggests.
 
 \subsection{RQ5: Conversation State}
 \label{sec:rq5}

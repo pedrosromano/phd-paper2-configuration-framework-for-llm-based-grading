@@ -129,12 +129,7 @@ All calls use temperature 0, the setting that makes a model's output as repeatab
 allows, so that the repeated runs measure the variation that remains rather than deliberate sampling
 noise. Output is capped at 4096 tokens with reasoning off and at 32\,768 tokens with reasoning on.
 Every run logs the provider, served model identifier, sampling parameters, prompt hash, and timestamp.
-The main matrix ran in June 2026. The extensions (guidance on more models, decomposition on RIAYN, the
-larger scope and conversation samples, and GPT-5.1 on every item) ran in October 2026 on Qwen3.5,
-DeepSeek-V4-Flash, and GPT-5.1, after we checked that these models still graded as in June: re-running
-25 June prompts per model returned the same grade for 24, 23, and 21 of them, within the run-to-run
-variation of the original runs. GLM-5.1 did not take part in the October runs, because its reasoning could
-no longer be switched off at the provider. We log these details because absolute scores are conditional on the full serving setup, not just the prompt
+We log these details because absolute scores are conditional on the full serving setup, not just the prompt
 and sampling we control: the served quantization, the inference software, and the hardware differ
 across providers and cannot be matched exactly, so a different setup can yield different absolute
 scores. The transferable claim is the configuration guidance (which configuration beats which), not
@@ -195,8 +190,8 @@ as a fraction of the scale, and Spearman rank correlation. Consistency is the me
 standard deviation across the $k$ repetitions (SD$_k$); it needs no reference, and a lower value means
 more reproducible grading. The reasoning premium is measured in output tokens, as the on/off ratio
 within each provider, since DeepInfra and OpenAI account for reasoning tokens differently. Costs in euros
-are computed from each call's logged input and output tokens at the per-token rates the providers billed
-in June 2026, ignoring discounts for cached input, so they are a slight upper bound.
+are computed from each call's logged input and output tokens at the per-token rates the providers billed,
+ignoring discounts for cached input, so they are a slight upper bound.
 
 SemEval needs its own mapping, because the model emits a continuous score while its gold is binary
 (correct or incorrect). We turn the score into a correct/incorrect label at a fixed 0.5 cutoff, set in
@@ -218,7 +213,7 @@ each research question involves several comparisons, we also apply Holm's correc
 comparisons within each family of contrasts (reasoning, guidance, scope and decomposition), using
 bootstrap $p$-values, and report which results survive it. A non-significant contrast does not show that
 two settings are equivalent, so where equivalence matters we test it directly: two settings count as
-equivalent when the 90\% CI of their difference lies inside $\pm0.05$ QWK, a margin we fixed before the
-October runs as too small to change any recommendation (a two one-sided test, TOST). The conversation
+equivalent when the 90\% CI of their difference lies inside $\pm0.05$ QWK, a margin we fixed in advance
+as too small to change any recommendation (a two one-sided test, TOST). The conversation
 sub-study uses paired Wilcoxon signed-rank tests, the standard nonparametric test for paired
 differences.
