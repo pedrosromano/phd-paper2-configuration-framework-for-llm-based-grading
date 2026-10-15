@@ -95,7 +95,7 @@ accepted solution paths, graded by two graders in consensus; it is our public co
 all conclusions here rest on our own like-for-like contrasts.
 
 \emph{PT-CS} is our deployment dataset, built from a real AI-assisted grading platform used in
-Portugal. On this platform an artificial-intelligence (AI) model proposes a grade for each answer,
+Portugal. On this platform an AI model proposes a grade for each answer,
 criterion by criterion, and two teachers review the proposal and set the final grade jointly. PT-CS
 contains the 379 answers whose grade the teachers validated in this way, which the records show because
 the final grade departs from the proposed total: 295 Java code answers and 84 theory short answers, in
@@ -156,7 +156,8 @@ model grades the full public and PT-CS datasets (2273 Mohler, 149 RIAYN, 295 PT-
 PT-CS short-answer items) and the 800-item SemEval sample, all at $k=5$. Reasoning on is the most
 expensive setting, because reasoning traces run long, so it uses fixed random samples: 175 items per
 public dataset, and 67 code and 32 short-answer items on PT-CS. The whole-exam arm grades the 88
-complete exams that contain a validated code answer, covering all 295 PT-CS code questions. The
+complete exams that contain a validated code answer, covering all 295 PT-CS code questions; these exams
+are short, about four questions each (one to six). The
 conversation sub-study grades 80 complete exams in two fixed answer orders (the exam's own order and its
 reverse) with Qwen3.5 and DeepSeek-V4-Flash, and the first 20 of those exams with GLM-5.1 at $k=3$, with
 everything else frozen at the baseline configuration. We did not run every combination. Model family

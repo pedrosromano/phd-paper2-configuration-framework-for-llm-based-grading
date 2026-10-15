@@ -9,7 +9,7 @@ Scenario & Recommended & Trade-off in the rule \\
 \hline
 \raggedright Grading short answers & \raggedright Reasoning off & The reasoning gain is small and none survives correction for multiple comparisons (before correction it is significant only for Qwen on Mohler and SemEval), while reasoning on uses 9--925 times the output tokens \\[3pt]
 \hline
-\raggedright Grading code, the baseline collapses to zero & \raggedright Reasoning on, or switch to a discriminating model & Reasoning recovers the discrimination the collapsed baseline lost (Qwen $+0.113$ QWK on PT-CS code), but at about 800$\times$ the tokens and worse run-to-run consistency, so switching model is often the better fix \\[3pt]
+\raggedright Grading code, the baseline collapses to zero & \raggedright Reasoning on, or switch to a discriminating model & Reasoning recovers the discrimination the collapsed baseline lost (Qwen $+0.113$ QWK on PT-CS code), but at 714 to 844 times the output tokens and worse run-to-run consistency, so switching model is often the better fix \\[3pt]
 \hline
 \raggedright Grading code, the baseline does not collapse & \raggedright Reasoning off; on only if local validation justifies it & Without the collapse the reasoning gain is inconsistent and not predictable in advance, so off is the safe default, saving cost (about 109--211$\times$ the tokens) and keeping consistency \\[3pt]
 \hline

@@ -410,6 +410,7 @@ def main() -> int:
     #     why the mother rule is "validate locally". Simple literals are DERIVED from the engine
     #     (decomp_full/_ver, the Qwen-code premium, the Qwen-code dQWK); composite ranges stay
     #     literal but are guarded by _assert_framework_ranges below (🟡-3). ---
+    q_prem_lo, q_prem_hi = sorted([prem_by[("ptcs", "code", "qwen3.5")], prem_by[("riayn", "code", "qwen3.5")]])
     qwen_code_prem = int(round(np.mean([prem_by[("ptcs", "code", "qwen3.5")],
                                         prem_by[("riayn", "code", "qwen3.5")]]) / 50.0) * 50)
     qc_full = dqwk_by[("ptcs", "code", "qwen3.5")][0]; qc_v, qc_vn = dqwk_by[("ptcs", "code", "qwen3.5", "V")]
@@ -483,7 +484,7 @@ def main() -> int:
         {"Scenario": "Grading short answers", "Recommended": "Reasoning off",
          "Trade-off in the rule": f"the reasoning gain is small and none survives correction for multiple comparisons (before correction it is significant only for Qwen on Mohler and SemEval), while reasoning on uses {R_SHORT} times the output tokens"},
         {"Scenario": "Grading code, the baseline collapses to zero", "Recommended": "Reasoning on, or switch to a discriminating model",
-         "Trade-off in the rule": f"reasoning recovers the discrimination the collapsed baseline lost (Qwen ${qc_v:+.3f}$ QWK on PT-CS code), but at about {qwen_code_prem}$\\times$ the tokens and worse run-to-run consistency, so switching model is often the better fix"},
+         "Trade-off in the rule": f"reasoning recovers the discrimination the collapsed baseline lost (Qwen ${qc_v:+.3f}$ QWK on PT-CS code), but at {q_prem_lo:.0f} to {q_prem_hi:.0f} times the output tokens and worse run-to-run consistency, so switching model is often the better fix"},
         {"Scenario": "Grading code, the baseline does not collapse", "Recommended": "Reasoning off; on only if local validation justifies it",
          "Trade-off in the rule": f"without the collapse the reasoning gain is inconsistent and not predictable in advance, so off is the safe default, saving cost (about {R_DISCRIM_CODE}$\\times$ the tokens) and keeping consistency"},
         {"Scenario": "Consistency or fairness is critical", "Recommended": "Reasoning off",

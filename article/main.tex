@@ -15,6 +15,10 @@
 \usepackage[table]{xcolor}
 \usepackage{array,amsmath,amssymb}
 \usepackage{booktabs}     % \cmidrule for grouped column heads (tab_guide_regret)
+% Captions switch math to the class's Formata version, whose T1 encoding has no Greek, so $\Delta$ came
+% out as an accent there. Take the upright Delta from Computer Modern (OT1), as body math already does.
+\DeclareSymbolFont{UpGreek}{OT1}{cmr}{m}{n}
+\DeclareMathSymbol{\Delta}{\mathalpha}{UpGreek}{"01}
 \usepackage{url}
 \usepackage{graphicx}
 \usepackage{pgf}        % figures are matplotlib .pgf, composed natively

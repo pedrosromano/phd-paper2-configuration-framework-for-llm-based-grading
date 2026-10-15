@@ -60,10 +60,11 @@ def main() -> int:
     A(r"\centering")
     A(r"\caption{Published results as external context, grouped into the datasets we use and other "
       r"grading studies. They come from different models, prompts, and protocols, so they situate "
-      r"our work but are \textbf{not} its success criterion. Abbreviations: MAE, mean absolute error; "
+      r"our work but are not its success criterion. Abbreviations: MAE, mean absolute error; "
       r"FT, fine-tuned; LoRA, low-rank adaptation; BERT, RoBERTa, and XLNet, pretrained transformer text "
       r"encoders; EME, the ensemble grader of~\cite{pathak_rubric_2025}; QS, question-specific; ICC, intraclass correlation "
-      r"coefficient; $\kappa$ (binned), Cohen's kappa after grouping scores into five bins.}")
+      r"coefficient; $\kappa$ (binned), Cohen's kappa after grouping scores into five bins; Macro-F1, the F1 "
+      r"score averaged over the label classes; 2-way and 3-way, SemEval label sets with two or three classes.}")
     A(r"\label{tab:published-baselines}")
     A(r"\footnotesize")
     A(r"\setlength{\tabcolsep}{4pt}")

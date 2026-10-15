@@ -10,7 +10,7 @@
 Automated grading is a long-standing concern of the learning-analytics and educational-data-mining
 communities~\cite{putnikovic_embeddings_2023,ferreira_mello_automatic_2025}. There, it is valued less
 as a stand-alone scoring engine than as an assessment tool that must be reliable, transparent,
-and fair before it can scale formative or summative feedback~\cite{arz_von_straussenburg_enabling_2025,li_am_2023}.
+and fair before it can be used at scale for feedback or for grades that count~\cite{arz_von_straussenburg_enabling_2025,li_am_2023}.
 Reliability in this sense has several faces (agreement with teachers, scoring error, and run-to-run
 consistency), and the evidence reviewed below shows that a strong result on one does not guarantee the
 others. Here we focus on what the most recent evidence implies for which configuration a grader
@@ -19,10 +19,10 @@ should use, the question this paper addresses.
 \subsection{LLMs as Graders: Capable but Inconsistent}
 Prompted LLMs now match or approach human raters on well-specified short-answer and essay
 tasks~\cite{aminah_evaluating_2025,sessler_canai_2025,henkel_roars_2025}, yet their reliability is the
-recurring caveat. Agreement is strong but depends on the model and the prompt: consistency varies sharply
-between systems, with open-source models spanning an intraclass correlation (ICC), the standard
-repeated-measurement consistency index, from 0.29 to 0.83 on the same
-task~\cite{moazzez_assessing_2024}. Repeated scoring also drifts over time~\cite{pack_large_2024}, and
+recurring caveat. Agreement is strong but depends on the model and the prompt, and consistency varies sharply
+between systems: four LLMs grading the same algorithm answers with one rubric ranged from 0.29 to 0.83
+in intraclass correlation (ICC), the standard index of agreement between repeated
+measurements~\cite{moazzez_assessing_2024}. Repeated scoring also drifts over time~\cite{pack_large_2024}, and
 minimally-prompted grading can stay within one rubric point of teachers yet still show low exact
 agreement with them~\cite{tate_can_2024}. Two design levers recur as decisive. First, \emph{evaluation
 guidance}: clearer, more explicit rubrics raise consistency~\cite{garcia-huertes_leveraging_2024}, and

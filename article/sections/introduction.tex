@@ -14,7 +14,7 @@ no teaching team can match~\cite{sessler_canai_2025,henkel_roars_2025}. The risk
 documented. Grading errors distort how students revise their work~\cite{li_am_2023}, repeated scoring
 of the same answer is unstable~\cite{pack_large_2024,moazzez_assessing_2024}, and agreement with
 teachers varies sharply between models and prompts~\cite{tate_can_2024}. An instructor who adopts an
-LLM grader is therefore not making one decision but several: whether the model should reason at length
+LLM grader therefore makes several decisions at once: whether the model should reason at length
 before scoring, what evaluation guidance to place in the context, whether to grade a whole exam in one
 call or question by question, whether to score a rubric criterion by criterion or holistically, and
 which model family to run or pay for.
@@ -36,12 +36,13 @@ versus a rubric or reference answer), grading scope (whole exam versus question 
 decomposition (holistic versus criterion by criterion), model family, and conversation state (a clean
 conversation per answer versus shared history). Four model families, three open-weight (Qwen3.5,
 DeepSeek-V4-Flash, GLM-5.1) and one closed frontier model (GPT-5.1), expose a within-family reasoning
-toggle, so the reasoning effect is isolated from model identity, a confound in prior comparisons. The study runs on four datasets in two domains. Three are public and give cross-population external
-validity: the Mohler~\cite{mohler_text_2009,mohler_learning_2011} and
-SemEval-2013 Task~7~\cite{dzikovska_semeval_2013} corpora of graded computer-science short answers,
-and the Rubric Is All You Need corpus of rubric-graded Java code~\cite{pathak_rubric_2025}. The
-fourth, PT-CS, was built by the authors from a real deployment of an AI-assisted grading platform in
-Portugal; we use it to test whether the public-dataset guidance transfers to a deployment context.
+toggle, so the reasoning effect is isolated from model identity, a confound in prior comparisons. The study runs on four datasets in two domains. Three are public, so the results can be checked
+beyond our own students: the Mohler corpus of graded computer-science short
+answers~\cite{mohler_text_2009,mohler_learning_2011}, the SemEval-2013 Task~7 corpus of graded science
+short answers~\cite{dzikovska_semeval_2013}, and the Rubric Is All You Need corpus of rubric-graded
+Java code~\cite{pathak_rubric_2025}. The fourth, PT-CS, was built by the authors from a real deployment
+of a grading platform in Portugal on which an artificial-intelligence (AI) model proposes grades for
+teachers to review; we use it to test whether the public-dataset guidance transfers to a deployment context.
 
 Six research questions structure the study:
 \begin{itemize}
@@ -60,9 +61,9 @@ Six research questions structure the study:
 \end{itemize}
 
 Rather than crowning one best grader, the study builds a configuration guide that maps the
-characteristics of a grading task, its domain, its rubric, its budget, and the reliability of the
-reference grades available, to a recommended configuration, the cost that choice implies, and the
-conditions under which it applies. Section~\ref{sec:results} reports
+characteristics of a grading task (its domain, whether a rubric or reference answer exists, and its
+budget) to a recommended configuration, the cost that choice implies, and the conditions under which it
+applies. Section~\ref{sec:results} reports
 the controlled comparisons behind the guide, and Section~\ref{sec:framework} presents it.
 
 The contribution is threefold. First, a configuration guide for LLM grading in CS, keyed by

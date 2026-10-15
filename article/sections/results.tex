@@ -29,7 +29,7 @@ random, and every claim in this subsection holds for the tractable items only.
 \begin{figure}[!b]
 \centering
 \input{figures/fig1_rq1_twodim.pgf}
-\caption{The reasoning trade-off on one plane. Each point is one model on one dataset. The horizontal
+\caption{Reasoning on versus off, agreement and consistency together. Each point is one model on one dataset. The horizontal
 axis is the change in agreement with the teacher grades when reasoning is turned on (QWK on minus
 off), so points to the right gained agreement. The vertical axis is the change in run-to-run
 consistency (within-item SD, off minus on), so points below zero became less consistent.
@@ -111,9 +111,9 @@ turning reasoning on rarely pays for itself.
 \begin{figure}[t]
 \centering
 \input{figures/fig_rq2_guidance.pgf}
-\caption{Evaluation-guidance benefit per dataset and model: the change in agreement ($\Delta$QWK, K=5,
-with 95\% confidence intervals) when the reference answer or rubric is added on top of the question and
-student answer. Reasoning off.}
+\caption{Change in agreement ($\Delta$QWK, K=5, with 95\% confidence intervals) when evaluation guidance,
+the reference answer or rubric, is added to the question and student answer, per dataset and model.
+Reasoning off.}
 \label{fig:rq2}
 \end{figure}
 
@@ -155,8 +155,7 @@ than the baseline. Dashed lines mark the $\pm0.05$ equivalence margin. Reasoning
 \label{fig:rq3}
 \end{figure}
 
-PT-CS exams are short, about four questions each (median four, range one to six), so the whole-exam
-call grades roughly four answers in one pass. Across the 295 PT-CS code questions, grading the whole
+Across the 295 PT-CS code questions, grading the whole
 exam in one call lowered agreement for Qwen3.5 by $0.091$ QWK (CI $[-0.13,-0.05]$), about a fifth of
 its question-by-question level of 0.468, and the loss remains significant after Holm's correction. For
 DeepSeek-V4-Flash the change was $-0.024$ (CI $[-0.08,+0.03]$), not significant. Scoring criterion by
@@ -190,8 +189,9 @@ on (0.803).
 \centering
 \input{figures/fig3_per_dataset_config.pgf}
 \caption{Agreement (QWK, K=5, item means, bootstrap CIs) by model and reasoning mode, per dataset,
-with guidance and one question per call. Reasoning-on bars use the reasoning samples (175 items per
-public dataset); PT-CS has 379 validated answers.}
+with guidance and one question per call. PT-CS pools its 295 code and 84 short answers. Reasoning-on
+bars use the reasoning samples: 175 items per public dataset, and 67 code and 32 short answers on
+PT-CS.}
 \label{fig:perdataset}
 \end{figure}
 
@@ -230,8 +230,8 @@ billed per-token rates.}
 Second, cost separates the configurations far more than agreement, and how that plays out depends on
 the task (Fig.~\ref{fig:costquality}). On short answers cost spans more than two orders of magnitude
 (\euro{}0.02 to \euro{}6.3 per thousand grades) for almost no change in agreement, so reasoning off is
-the efficient pick: in Fig.~\ref{fig:costquality}a, the four models with reasoning off reach 0.60 to
-0.62 at \euro{}0.02 to \euro{}0.34, while the best short-answer configuration, Qwen3.5 with reasoning on,
+the efficient pick: in Fig.~\ref{fig:costquality}a, the four models with reasoning off (circles) reach
+0.60 to 0.62 at \euro{}0.02 to \euro{}0.34, while the best short-answer configuration, Qwen3.5 with reasoning on,
 adds about 0.01 at about 200 times the cost of Qwen3.5 with reasoning off. Because the models with
 reasoning off sit within 0.02 of each other, the choice of model matters little on short answers. On
 code (Fig.~\ref{fig:costquality}b) the spread tracks effort, and reasoning is what buys it: on RIAYN it
@@ -255,13 +255,13 @@ on each dataset.
 
 Cost also carries an operational lesson. All the experiments together (whole-exam cost counted once per
 call) cost \euro{}101.1 at the providers' billed rates: \euro{}50.4 on OpenAI and \euro{}50.7 on
-DeepInfra. Before running the core experiment matrix, the set of comparisons planned at the outset, we estimated its
-cost by pricing every planned call at list price, using typical input and output lengths from pilot runs;
-that estimate was \euro{}16.7, while the core matrix cost \euro{}59.8, 3.6 times more. On OpenAI, where the
+DeepInfra. Before the runs, we estimated the cost of the comparisons planned at the outset by pricing
+every planned call at list price, using typical input and output lengths from pilot runs; that estimate
+was \euro{}16.7, while those comparisons cost \euro{}59.8, 3.6 times more. On OpenAI, where the
 budgeted price was right, the estimate was 1.9 times too low only because reasoning traces ran longer
 than the pilots; the first reasoning runs even had to be repeated with the output ceiling raised eightfold
-(4096 to 32\,768 tokens). On DeepInfra it was 4.4 times too low, because per-token prices below those the
-provider billed compounded the same effect. Practitioners budgeting a reasoning-on grading arm should
+(4096 to 32\,768 tokens). On DeepInfra it was 4.4 times too low, because the prices we budgeted were also below those the
+provider billed. Practitioners budgeting a reasoning-on grading arm should
 price it at the provider's current billed rates and expect output several times longer than a pilot
 suggests.
 
@@ -327,8 +327,8 @@ to a real deployment context. PT-CS, with its 379 teacher-validated answers from
 AI-assisted grading platform, is that context. PT-CS has
 already appeared in the earlier questions, but at the level of a single factor, asking whether reasoning,
 guidance, or scope behaves on it as on the public data. The question here is asked once and at the level
-of the whole configuration ranking: if you pick the configuration that ranks best on the public datasets,
-is it the one that ranks best in deployment? Two choices keep the comparison clean. The public ranking is
+of the whole configuration ranking: does the configuration that ranks best on the public datasets also
+rank best in deployment? Two choices keep the comparison clean. The public ranking is
 computed from the public datasets alone, with PT-CS held out of it, so this is a genuine
 out-of-public-sample check, not a re-reading of data that drove the ranking. And the comparison is made
 within domain, public short answers against PT-CS short answers and public code against PT-CS code,

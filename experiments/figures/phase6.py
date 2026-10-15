@@ -102,10 +102,11 @@ def fig1(rc):
                    c=COLOR[r.domain], edgecolor="k", lw=0.3, alpha=0.85)
     ax.set_xlabel("agreement change ($\\Delta$QWK): reasoning helps $\\to$")
     ax.set_ylabel("consistency change\n(below 0 = less consistent)")
-    h1 = [plt.Line2D([], [], marker=m, color="grey", ls="", mec="k", mew=0.3, label=k) for k, m in MARK.items()]
+    h1 = [plt.Line2D([], [], marker=m, color="grey", ls="", mec="k", mew=0.3, label=MNAME.get(k, k)) for k, m in MARK.items()]
     # label: "short_answer" -> "short answer" (a raw _ breaks LaTeX text mode in the .pgf; 7.4 fix)
     h2 = [plt.Line2D([], [], marker="o", color=c, ls="", mec="k", mew=0.3, label=d.replace("_", " ")) for d, c in COLOR.items()]
-    ax.legend(handles=h1 + h2, loc="upper left", ncol=2, framealpha=0.9)
+    # legend below the plot, so no point is hidden behind it (advisor comment, p6)
+    ax.legend(handles=h1 + h2, loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=3, framealpha=0.9)
     _save(fig, "fig1_rq1_twodim")
 
 
@@ -146,7 +147,7 @@ def fig_panels(rc):
             vals = [cell(ds, dom, m, "SDk_off") - cell(ds, dom, m, "SDk_on") if col == "dSD"
                     else cell(ds, dom, m, col) for ds, dom, _ in order]
             ax.bar(x + (i - 1.5) * w, vals, w, color=MCOL[m], edgecolor="k", lw=0.3,
-                   alpha=0.9, label=m.split("-")[0])
+                   alpha=0.9, label=MNAME[m])
         ax.set_xticks(x); ax.set_xticklabels(lbl, rotation=30, ha="right")
         ax.set_ylabel(ttl)
         ax.set_title(f"({letter})", loc="left", fontsize=7.5)
@@ -167,7 +168,7 @@ def _dims(full):
     return dim_contrasts(full, _INTERV)
 
 
-MNAME = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek", "gpt-5.1": "GPT-5.1", "glm-5.1": "GLM-5.1"}
+MNAME = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1", "glm-5.1": "GLM-5.1"}
 
 
 def _grouped(ax, groups, models, get):
@@ -196,7 +197,7 @@ def fig_rq2(full):
     _grouped(ax, groups, models, get)
     ax.set_xticklabels([lbl for _, lbl in groups])
     ax.set_ylabel("agreement gain ($\\Delta$QWK)\nwith guidance vs none")
-    ax.legend(loc="upper right", framealpha=0.9, ncol=3)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.17), framealpha=0.9, ncol=3)
     _save(fig, "fig_rq2_guidance")
 
 
@@ -216,7 +217,7 @@ def fig_rq3(full):
         ax.axhline(y, color="#777", lw=0.6, ls="--")
     ax.set_xticklabels([lbl for _, _, lbl in groups])
     ax.set_ylabel("agreement change ($\\Delta$QWK)\n(below 0 = worse than baseline)")
-    ax.legend(loc="lower left", framealpha=0.9, ncol=2)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.27), framealpha=0.9, ncol=2)
     _save(fig, "fig_rq3_scope_decomp")
 
 
@@ -249,8 +250,8 @@ def fig_rq4_cost(full):
         ax.set_xticks([0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30])
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
         ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
-    axes[1].set_xlabel("cost of 1000 grades (EUR, log scale)")
-    h1 = [plt.Line2D([], [], marker="o", color=MCOL[m], ls="", mec="k", mew=0.4, label=m.split("-")[0])
+    axes[1].set_xlabel("cost of 1000 grades (euros, log scale)")
+    h1 = [plt.Line2D([], [], marker="o", color=MCOL[m], ls="", mec="k", mew=0.4, label=MNAME[m])
           for m in models]
     h2 = [plt.Line2D([], [], marker=mk[r], color="grey", ls="", mec="k", mew=0.4, label=f"reasoning {r}")
           for r in ["off", "on"]]
@@ -290,7 +291,7 @@ def fig_rq6_transfer(full):
                 ax.plot([0, 1], ys, color=MCOL[m], ls="-" if r == "on" else "--", lw=1.4, marker=MARK[m],
                         ms=4.5, mfc=(MCOL[m] if r == "on" else "w"), mec=MCOL[m], mew=0.8, alpha=0.95)
         rho = spearmanr(pub_all, ver_all).statistic                 # rank transfer over the 8 configurations
-        ax.text(0.5, 0.03, f"rank $\\rho={rho:.2f}$", transform=ax.transAxes, ha="center", va="bottom",
+        ax.text(0.04, 0.03, f"rank $\\rho={rho:.2f}$", transform=ax.transAxes, ha="left", va="bottom",
                 fontsize=6.5, bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#bbb", lw=0.4))
         ax.set_xticks([0, 1]); ax.set_xticklabels(["public", "PT-CS"])
         ax.set_xlim(-0.3, 1.3); ax.set_title(title, loc="left", fontsize=7); ax.set_box_aspect(1)
@@ -320,7 +321,7 @@ def fig3(df):
                 qs.append(q); los.append(q - lo if q == q else 0); his.append(hi - q if q == q else 0)
             pos = x + (i * 2 + j - 3.5) * w
             ax.bar(pos, qs, w, color=MCOL[m], alpha=0.55 if rs == "off" else 1.0, edgecolor="k", lw=0.3,
-                   hatch="" if rs == "off" else "//", label=f"{m.split('-')[0]}$|${rs}")
+                   hatch="" if rs == "off" else "//", label=f"{MNAME[m]} {rs}")
             ax.errorbar(pos, qs, yerr=[los, his], fmt="none", ecolor="k", elinewidth=0.5, capsize=1.2)
     ax.set_xticks(x); ax.set_xticklabels([{"mohler": "Mohler", "semeval": "SemEval", "riayn": "RIAYN", "ptcs": "PT-CS"}[d] for d in dsets]); ax.set_ylabel("agreement (QWK, K=5)")
     ax.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.13), framealpha=0.9)
@@ -353,7 +354,7 @@ def fig5(df):
     cv = phase5.load_conversation()
     cv = cv[cv.pred_norm.notna()]
     mods = ["qwen3.5", "deepseek-v4-flash", "glm-5.1"]
-    lab = {"qwen3.5": "Qwen", "deepseek-v4-flash": "DeepSeek", "glm-5.1": "GLM (20 ex.)"}
+    lab = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "glm-5.1": "GLM-5.1 (20 exams)"}
     rng = np.random.default_rng(20260610)
 
     def boot(v):
