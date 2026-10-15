@@ -998,9 +998,9 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   dangling reference to the Discussion and no engine source. Recomputed by
   `audit_pct_baselines.temp0_variation` on the paper basis (with guidance, one question per call, holistic,
   PT-CS validated): **9–56% with reasoning off** (18–46% on). Prose updated.
-- ✅ **Bloco C approved (user 2026-10-15): C1–C5 + C7–C10; C6 deferred.** C1 guidance on GLM-5.1 +
-  DeepSeek; C2 criterion decomposition on RIAYN (+ GLM on PT-CS); C3 whole-exam on all 88 exams with
-  validated code answers (Qwen + GLM); C4 conversation scaled up at k=5; C5 GPT-5.1 at full open-model
+- ✅ **Bloco C approved (user 2026-10-15): C1–C5 + C7–C10; C6 deferred.** C1 guidance on DeepSeek +
+  GPT-5.1; C2 criterion decomposition on RIAYN and PT-CS (Qwen + DeepSeek); C3 whole-exam on all 88 exams
+  with validated code answers (Qwen + DeepSeek); C4 conversation scaled to 80 exams at k=5 (Qwen + DeepSeek); C5 GPT-5.1 at full open-model
   coverage (k=5); C7 Mohler human ceiling; C8 SemEval cut-off sensitivity; C9 Holm + TOST; C10 regret of
   the guide vs the best configuration in hindsight. **C6 (a model released after June 2026) is NOT run**:
   the study is meant to be of its time; revisit its benefit only after C is done and report to the user.
