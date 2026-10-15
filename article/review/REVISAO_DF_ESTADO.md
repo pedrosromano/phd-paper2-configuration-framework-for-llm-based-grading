@@ -97,3 +97,27 @@ question" reescritas (§9.2).
 - Artigo: `make paper` (ou `cd article && latexmk -pdf main.tex`).
 - Corridas: `experiments/run/bloco_c_run.py` (estado em `data/processed/runs/_bloco_c_status.json`), monitor `python -m experiments.run.monitor` (http://127.0.0.1:8765), vigilante de custos `experiments/run/cost_watchdog.py`.
 - Preços: `experiments/configs/pricing.yaml` (preços reais faturados); faturação DeepInfra: `GET https://api.deepinfra.com/payment/usage?from=YYYY.MM`.
+
+---
+
+## 6. Revisão final em quatro verificações (2026-10-15/16, pedida pelo Pedro; cada uma em duas passagens)
+
+1. **Comentários do Daniel**: 73/79 tratados, 3 obsoletos, 3 parciais corrigidos (legenda da Fig. 1 sobre dados,
+   tom do parágrafo "Two design decisions" que tinha voltado na Discussão/Conclusão; o GLM k=3 fica declarado).
+   Também: Δ partido nas legendas (fonte da classe), legendas por cima dos dados (Figs. 1, 3, 4), nomes dos
+   modelos uniformes, siglas da Tabela 1, SemEval descrito como ciência (não CS).
+2. **Regras de escrita (§9.2)**: sem percentagens de QWK (coluna "Change" da Tabela 3 removida); Método,
+   Resultados e Ameaças sem repetições; "guidance" só para a evaluation guidance; "cross" → "vary";
+   desenho do diagrama ("which one exists?", "switch model, or reasoning on"); citações ajustadas ao que as
+   fontes dizem (Moazzez, Aminah, Havare). Fig. 1 (dispersão do RQ1) retirada por ser redundante.
+3. **Dados**: PT-CS curto acrescentado ao contraste de guidance (**13/15**, 0.10–0.34); custos incluem a
+   conversa (**€103.9**; planeado €61.0 vs €16.7, 3.7×); custo do exame inteiro por modelo (+7% Qwen, −6%
+   DeepSeek); K=4/6 muda até 0.05; critério custa 1.3–3.1×; prémio dos modelos que não colapsam 109–192×;
+   amostra SemEval aleatória (228/252 perguntas); Mohler 81 perguntas; π > 0.999 (3 corridas sem nota).
+4. **Força das conclusões**: RQ4/RQ6 passam a comparar todas as configurações nos **mesmos itens** (antes
+   misturava todos os itens sem reasoning com as amostras com reasoning e contradizia o RQ1). Resultado:
+   spread curtas **0.074**, código 0.259; GLM-5.1 off é o melhor sem reasoning nas duas tarefas; **RQ6: os
+   efeitos transferem, a ordem fina não** (código ρ=0.64 ns, curtas ρ=0.21). Novos achados: a taxa de zeros
+   é o diagnóstico-chave (os dois modelos que colapsam são os piores no código e os únicos onde o reasoning
+   ajuda); consistência ≠ qualidade (o Qwen off é o mais reprodutível e o que colapsa). Guia com escada de
+   orçamento (barato / defeito / qualidade). Abstract abre com "the cheapest change was the most effective".
