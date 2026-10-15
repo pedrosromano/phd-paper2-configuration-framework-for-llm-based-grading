@@ -161,71 +161,62 @@ def fig_panels(rc):
     _save(fig, "fig_rq1_panels")
 
 
-def fig_rq2(full):
-    """6.x -- RQ2 evaluation-guidance benefit (dQWK, none -> with guidance) per dataset, with
-    bootstrap CIs. Reuses the table generator's _qwk_items/_boot_ci (same SEED) so the bars match
-    the prose numbers exactly. Qwen3.5, reasoning off, q-by-q, holistic. PT-CS = verified stratum only."""
-    from experiments.analysis.make_phase5_tables import _qwk_items as _qi, _boot_ci as _bci
-    q = full[(full.model == "qwen3.5") & (full.reasoning == "off")
-             & (full.scope == "question_by_question") & (full.decomposition == "holistic")]
-    specs = [("mohler", "short_answer", "Mohler", None, "short_answer"),
-             ("semeval", "short_answer", "SemEval", None, "short_answer"),
-             ("riayn", "code", "RIAYN", None, "code"),
-             ("ptcs", "code", "PT-CS\ncode", _INTERV, "code")]
-    labels, mds, los, his, cols, hatches = [], [], [], [], [], []
-    for ds, dom, lbl, sub, dmn in specs:
-        c = q[(q.dataset == ds) & (q.domain == dom)]
-        A = c[c.context_level == "none"]; B = c[c.context_level == "with_guidance"]
-        if sub is not None:
-            A = A[A.item_id.isin(sub)]; B = B[B.item_id.isin(sub)]
-        _, sA = _qi(A); _, sB = _qi(B)
-        lo, md, hi = _bci(sA, sB)
-        labels.append(lbl); mds.append(md); los.append(md - lo); his.append(hi - md)
-        cols.append(COLOR[dmn]); hatches.append("")
-    fig, ax = plt.subplots(figsize=(COL, COL * 0.82))
-    x = np.arange(len(labels))
-    ax.bar(x, mds, 0.62, color=cols, edgecolor="k", lw=0.3, alpha=0.9, hatch=hatches)
-    ax.errorbar(x, mds, yerr=[los, his], fmt="none", ecolor="k", elinewidth=0.6, capsize=2)
+def _dims(full):
+    """Bloco C contrasts from the table generator (one source for tables, figures and prose)."""
+    from experiments.analysis.make_phase5_tables import dim_contrasts
+    return dim_contrasts(full, _INTERV)
+
+
+MNAME = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek", "gpt-5.1": "GPT-5.1", "glm-5.1": "GLM-5.1"}
+
+
+def _grouped(ax, groups, models, get):
+    """Grouped bars with 95% CI: one group per x label, one bar per model."""
+    x = np.arange(len(groups)); w = 0.8 / len(models)
+    for i, m in enumerate(models):
+        vals = [get(g, m) for g in groups]
+        md = [v["dQWK"] if v else np.nan for v in vals]
+        lo = [v["dQWK"] - v["lo"] if v else 0 for v in vals]
+        hi = [v["hi"] - v["dQWK"] if v else 0 for v in vals]
+        pos = x + (i - (len(models) - 1) / 2) * w
+        ax.bar(pos, md, w, color=MCOL[m], edgecolor="k", lw=0.3, alpha=0.9, label=MNAME[m])
+        ax.errorbar(pos, md, yerr=[lo, hi], fmt="none", ecolor="k", elinewidth=0.6, capsize=1.5)
     ax.axhline(0, color="k", lw=0.6)
-    ax.set_xticks(x); ax.set_xticklabels(labels, rotation=30, ha="right")
+    ax.set_xticks(x)
+
+
+def fig_rq2(full):
+    """RQ2 evaluation-guidance benefit (dQWK none -> with guidance, 95% CI) per dataset and model
+    (Qwen3.5, DeepSeek-V4-Flash, GPT-5.1; reasoning off). PT-CS = validated answers."""
+    dc = _dims(full); g = dc[dc.family == "guidance"]
+    groups = [("mohler", "Mohler"), ("semeval", "SemEval"), ("riayn", "RIAYN"), ("ptcs", "PT-CS\ncode")]
+    models = ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]
+    get = lambda grp, m: (lambda r: r.iloc[0].to_dict() if len(r) else None)(g[(g.dataset == grp[0]) & (g.model == m)])
+    fig, ax = plt.subplots(figsize=(COL, COL * 0.72))
+    _grouped(ax, groups, models, get)
+    ax.set_xticklabels([lbl for _, lbl in groups])
     ax.set_ylabel("agreement gain ($\\Delta$QWK)\nwith guidance vs none")
-    h = [plt.Line2D([], [], marker="s", color=c, ls="", mec="k", mew=0.3, label=d.replace("_", " "))
-         for d, c in COLOR.items()]
-    ax.legend(handles=h, loc="upper right", framealpha=0.9)
+    ax.legend(loc="upper right", framealpha=0.9, ncol=3)
     _save(fig, "fig_rq2_guidance")
 
 
 def fig_rq3(full):
-    """6.x -- RQ3 scope and decomposition contrasts (dQWK, K=5, bootstrap CI), PT-CS-verified code.
-    Same _qwk_items/_boot_ci and subset construction as the table generator, so bars match
-    the prose. Qwen3.5, reasoning off. dQWK<0 means the alternative scored worse than the baseline."""
-    from experiments.analysis.make_phase5_tables import _qwk_items as _qi, _boot_ci as _bci
-    q = full[(full.model == "qwen3.5") & (full.reasoning == "off")]
-    WQ = (full.scope == "whole_exam") & (full.model == "qwen3.5")   # Qwen only (C3 adds GLM)
-    we = set(full[WQ].item_id)
-    sc = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.decomposition == "holistic")]
-    dd = q[(q.dataset == "ptcs") & (q.domain == "code") & (q.context_level == "with_guidance") & (q.scope == "question_by_question")]
-    groups = [("scope\n(whole exam\nvs q-by-q)", sc[(sc.scope == "question_by_question") & sc.item_id.isin(we)],
-               full[WQ]),
-              ("decomposition\n(criterion\nvs holistic)", dd[dd.decomposition == "holistic"], dd[dd.decomposition == "criterion"])]
-
-    def contrast(A, B, sub=None):
-        if sub is not None:
-            A = A[A.item_id.isin(sub)]; B = B[B.item_id.isin(sub)]
-        _, sA = _qi(A); _, sB = _qi(B)
-        return _bci(sA, sB)  # (lo, md, hi)
-
-    fig, ax = plt.subplots(figsize=(COL * 0.72, COL * 0.56))
-    x = np.arange(len(groups))
-    mds, los, his = [], [], []
-    for _, A, B in groups:
-        lo, md, hi = contrast(A, B, _INTERV)   # verified stratum only
-        mds.append(md); los.append(md - lo); his.append(hi - md)
-    ax.bar(x, mds, 0.5, color=COLOR["code"], edgecolor="k", lw=0.3, alpha=0.9)
-    ax.errorbar(x, mds, yerr=[los, his], fmt="none", ecolor="k", elinewidth=0.6, capsize=2)
-    ax.axhline(0, color="k", lw=0.6)
-    ax.set_xticks(x); ax.set_xticklabels([g[0] for g in groups])
+    """RQ3 scope (whole exam vs one question per call, PT-CS code) and decomposition (criterion vs
+    holistic, RIAYN and PT-CS code), dQWK with 95% CI, per model (Qwen3.5, DeepSeek-V4-Flash; reasoning
+    off). Dashed lines: the pre-registered equivalence margin of +/-0.05 QWK."""
+    dc = _dims(full)
+    groups = [("scope", "ptcs", "scope\nPT-CS code"), ("decomp", "riayn", "decomposition\nRIAYN"),
+              ("decomp", "ptcs", "decomposition\nPT-CS code")]
+    models = ["qwen3.5", "deepseek-v4-flash"]
+    get = lambda grp, m: (lambda r: r.iloc[0].to_dict() if len(r) else None)(
+        dc[(dc.family == grp[0]) & (dc.dataset == grp[1]) & (dc.model == m)])
+    fig, ax = plt.subplots(figsize=(COL, COL * 0.62))
+    _grouped(ax, groups, models, get)
+    for y in (-0.05, 0.05):
+        ax.axhline(y, color="#777", lw=0.6, ls="--")
+    ax.set_xticklabels([lbl for _, _, lbl in groups])
     ax.set_ylabel("agreement change ($\\Delta$QWK)\n(below 0 = worse than baseline)")
+    ax.legend(loc="lower left", framealpha=0.9, ncol=2)
     _save(fig, "fig_rq3_scope_decomp")
 
 
@@ -272,8 +263,8 @@ def fig_rq6_transfer(full):
     """6.8 -- RQ6 transfer slopegraph, WITHIN DOMAIN: does the configuration ranking learned on the
     public datasets hold on the PT-CS deployment data, separately for short answers and for code.
     Left panel: public short-answer (mean over Mohler, SemEval) -> PT-CS-verified short answers. Right
-    panel: public code (RIAYN) -> PT-CS-verified code. One line per open config; the GPT-5.1 anchor is
-    thin grey (verified cells rest on 11-25 items, corroboration only). The public ranking uses public
+    panel: public code (RIAYN) -> PT-CS-verified code. One line per configuration; since C5 (2026-10-15)
+    GPT-5.1 covers the same items as the open models and is ranked like them. The public ranking uses public
     data ONLY -- PT-CS is never in it -- so the comparison is a genuine out-of-public-sample check, and
     domain is matched on both sides (no short/code mixing). Built from the run data, K=5 item means,
     with-guidance / question-by-question / holistic; verified = intervened stratum. Single column."""
@@ -290,30 +281,24 @@ def fig_rq6_transfer(full):
     panels = [("(a) short answers", ["mohler", "semeval"], "short_answer"), ("(b) code", ["riayn"], "code")]
     fig, axes = plt.subplots(1, 2, figsize=(COL, COL * 0.62), sharey=True)
     for ax, (title, pub_ds, dom) in zip(axes, panels):
-        pub_open, ver_open = [], []
+        pub_all, ver_all = [], []
         for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]:
             for r in ["off", "on"]:
                 g = base[(base.model == m) & (base.reasoning == r)]
                 ys = [q_pub(g, pub_ds), q_ver(g, dom)]
-                anchor = m == "gpt-5.1"
-                if not anchor:
-                    pub_open.append(ys[0]); ver_open.append(ys[1])
-                ax.plot([0, 1], ys, color="#999" if anchor else MCOL[m], ls="-" if r == "on" else "--",
-                        lw=0.8 if anchor else 1.4, marker=MARK[m], ms=4.5,
-                        mfc=("#999" if anchor else (MCOL[m] if r == "on" else "w")),
-                        mec="#999" if anchor else MCOL[m], mew=0.8,
-                        alpha=0.55 if anchor else 0.95, zorder=1 if anchor else 2)
-        rho = spearmanr(pub_open, ver_open).statistic               # rank transfer over the 6 open configs
+                pub_all.append(ys[0]); ver_all.append(ys[1])
+                ax.plot([0, 1], ys, color=MCOL[m], ls="-" if r == "on" else "--", lw=1.4, marker=MARK[m],
+                        ms=4.5, mfc=(MCOL[m] if r == "on" else "w"), mec=MCOL[m], mew=0.8, alpha=0.95)
+        rho = spearmanr(pub_all, ver_all).statistic                 # rank transfer over the 8 configurations
         ax.text(0.5, 0.03, f"rank $\\rho={rho:.2f}$", transform=ax.transAxes, ha="center", va="bottom",
                 fontsize=6.5, bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#bbb", lw=0.4))
         ax.set_xticks([0, 1]); ax.set_xticklabels(["public", "PT-CS"])
         ax.set_xlim(-0.3, 1.3); ax.set_title(title, loc="left", fontsize=7); ax.set_box_aspect(1)
     axes[0].set_ylabel("agreement (QWK, K=5)")
-    mh = [plt.Line2D([], [], color=MCOL[m], marker=MARK[m], ls="-", mec=MCOL[m], label=m.split("-")[0])
-          for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash"]]
+    mh = [plt.Line2D([], [], color=MCOL[m], marker=MARK[m], ls="-", mec=MCOL[m], label=MNAME[m])
+          for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]]
     rh = [plt.Line2D([], [], color="grey", ls="-", label="reasoning on"),
-          plt.Line2D([], [], color="grey", ls="--", label="reasoning off"),
-          plt.Line2D([], [], color="#999", ls="-", lw=0.8, label="gpt-5.1 anchor (small $N$)")]
+          plt.Line2D([], [], color="grey", ls="--", label="reasoning off")]
     fig.tight_layout()
     fig.legend(handles=mh + rh, loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.01), framealpha=0.9, fontsize=5)
     _save(fig, "fig_rq6_transfer")
@@ -359,20 +344,54 @@ def fig4(df):
 
 
 def fig5(df):
-    """6.6 -- conversation STATE only: mean grade per model, clean vs shared. The order effect is a
-    noise result with no level difference to plot (mean natural == mean inverse), so it is reported in
-    prose, not here. Single panel, single column."""
+    """RQ5 conversation sub-study, two panels with 95% bootstrap CIs over items, per model:
+    (a) shared minus clean conversation (item-mean grade; below 0 = shared history lowers grades);
+    (b) answer order within the shared conversation: the typical size of the change, mean |natural minus
+    inverse| (solid), and the average shift, mean (natural minus inverse) (hatched).
+    Qwen3.5 and DeepSeek-V4-Flash: 80 exams, k=5 (2026-10-15); GLM-5.1: the first 20 of those exams, k=3
+    (June 2026). PT-CS code, baseline configuration; no teacher grades are involved."""
     cv = phase5.load_conversation()
-    mods = sorted(cv.model.unique()); x = np.arange(len(mods)); w = 0.36
-    fig, ax = plt.subplots(figsize=(COL, COL * 0.7))
-    for j, st in enumerate(["clean", "shared"]):
-        means = [cv[(cv.model == m) & (cv.conversation_state == st)].pred_norm.mean() for m in mods]
-        ax.bar(x + (j - 0.5) * w, means, w, label=st, color="#888" if st == "clean" else "#8e44ad",
-               edgecolor="k", lw=0.3, alpha=0.85)
-    ax.set_xticks(x); ax.set_xticklabels([m.split("-")[0] for m in mods]); ax.set_ylabel("mean grade")
-    ax.legend(framealpha=0.9)
+    cv = cv[cv.pred_norm.notna()]
+    mods = ["qwen3.5", "deepseek-v4-flash", "glm-5.1"]
+    lab = {"qwen3.5": "Qwen", "deepseek-v4-flash": "DeepSeek", "glm-5.1": "GLM (20 ex.)"}
+    rng = np.random.default_rng(20260610)
+
+    def boot(v):
+        v = np.asarray(v); b = [v[rng.integers(0, len(v), len(v))].mean() for _ in range(800)]
+        return v.mean(), *np.percentile(b, [2.5, 97.5])
+
+    st, oa, osg = [], [], []
+    for m in mods:
+        d = cv[cv.model == m]
+        pv = d.pivot_table(index="item_id", columns="conversation_state", values="pred_norm", aggfunc="mean").dropna()
+        st.append(boot(pv["shared"] - pv["clean"]))
+        sh = d[d.conversation_state == "shared"]
+        po = sh.pivot_table(index=["item_id", "run_index"], columns="order_id", values="pred_norm", aggfunc="first").dropna()
+        oa.append(boot((po["natural"] - po["inverse"]).abs())); osg.append(boot(po["natural"] - po["inverse"]))
+    fig, axes = plt.subplots(1, 2, figsize=(COL, COL * 0.62), gridspec_kw={"width_ratios": [1, 1.2]})
+    x = np.arange(len(mods))
+
+    def bars(ax, vals, pos, w, **kw):
+        md = [v[0] for v in vals]
+        ax.bar(pos, md, w, edgecolor="k", lw=0.3, **kw)
+        ax.errorbar(pos, md, yerr=[[v[0] - v[1] for v in vals], [v[2] - v[0] for v in vals]],
+                    fmt="none", ecolor="k", elinewidth=0.6, capsize=1.5)
+
+    bars(axes[0], st, x, 0.6, color=[MCOL[m] for m in mods], alpha=0.9)
+    axes[0].axhline(0, color="k", lw=0.6)
+    axes[0].set_ylabel("grade change (fraction of scale)")
+    axes[0].set_title("(a) shared minus clean", loc="left", fontsize=7)
+    bars(axes[1], oa, x - 0.18, 0.34, color=[MCOL[m] for m in mods], alpha=0.9, label="typical size")
+    bars(axes[1], osg, x + 0.18, 0.34, color="white", hatch="////", label="average shift")
+    axes[1].axhline(0, color="k", lw=0.6)
+    axes[1].set_title("(b) answer order", loc="left", fontsize=7)
+    axes[1].set_ylim(-0.03, 0.16)
+    axes[1].legend(loc="upper left", framealpha=0.9, fontsize=5, ncol=2)
+    for ax in axes:
+        ax.set_xticks(x); ax.set_xticklabels([lab[m] for m in mods], rotation=30, ha="right", fontsize=5.5)
     fig.tight_layout()
     _save(fig, "fig5_conversation")
+
 
 
 # fig6 (gold full-vs-verified sensitivity) REMOVED 2026-06-16: the gold-sensitivity subsection, its
