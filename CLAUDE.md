@@ -1037,3 +1037,24 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   provider billed requests for zai-org/GLM-5.1 as zai-org/GLM-5.3 (June billing shows GLM-5.1, so the June
   GLM data are GLM-5.1). Cost watchdog: `experiments/run/cost_watchdog.py` (reads DeepInfra billing,
   stops a queue at a cap; OpenAI read from our journal because the key lacks api.usage.read).
+- ✅ **Bloco C COMPLETE (2026-10-15). Read-outs regenerate via `python -m experiments.analysis.bloco_c` (C7–C10)
+  and the launcher's per-step conclusions (runs/_bloco_c_status.json); no prose-only numbers.** 0 error rows,
+  0 unparsed rows in runs.jsonl for the C arms (1 unparsed DeepSeek row in conversation.jsonl). Spend today:
+  DeepInfra $20.40 provider-billed (of which $18.24 GLM-5.3 before GLM was removed), OpenAI €40.20.
+  Headlines (PT-CS = validated answers): **C1 guidance** helps in 11/12 model×dataset combinations (Qwen,
+  DeepSeek, GPT-5.1 × Mohler/SemEval/RIAYN/PT-CS code), all 11 survive Holm; exception GPT-5.1|RIAYN −0.005.
+  **C2 decomposition** never helps (RIAYN Qwen +0.029, DeepSeek −0.013; PT-CS Qwen −0.022; PT-CS DeepSeek
+  −0.072 sig, survives Holm). **C3 scope** (N=295): Qwen −0.091 sig (survives Holm), DeepSeek −0.024 ns.
+  **C4 conversation** (80 exams, k=5): shared history lowers grades by 0.012 for Qwen (p=.028), 0.010 for
+  DeepSeek (ns) — smaller than the June 20-exam read (Qwen 0.040); order moves grades by 0.081 on average
+  and now shifts the mean slightly in OPPOSITE directions per model (DeepSeek +0.013, Qwen −0.015, both
+  signed-test sig) → the paper's "order is noise, not a systematic bias" must be nuanced. **C5 GPT-5.1**
+  full coverage: off ranks 2nd–3rd of 4 on public data (1st on PT-CS short) — it is NOT "the weakest
+  short-answer grader" (that came from 60-item subsets); reasoning helps it only on RIAYN (+0.228, survives
+  Holm), Mohler +0.006 is equivalent to zero (TOST ±0.05). **C9 RQ1 with Holm (20 combos): 2 survive
+  (Qwen|RIAYN, GPT|RIAYN)**; uncorrected 5. No RQ3 contrast reaches TOST equivalence (CIs too wide).
+  **C7** Mohler graders agree QWK 0.491; models 0.73–0.80 vs grader A, 0.23–0.41 vs grader B. **C8** fixed
+  0.5 cut is within 0.024 accuracy of the best cut for every model. **C10** guide default regret: short
+  answers 0.07–0.09 QWK below the best config (which costs 8–148× more); code with GLM-5.1 off 0.000 (PT-CS)
+  / 0.077 (RIAYN) below the best; DeepSeek as the code pick loses 0.08–0.13. **Pending user decisions:**
+  Holm presentation in RQ1/abstract; whether the June GLM 20-exam conversation data stays in RQ5.
