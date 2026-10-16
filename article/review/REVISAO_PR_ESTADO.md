@@ -3,6 +3,45 @@
 > Fonte: `~/Desktop/artigo_2_access_2026-10-16.pdf` (51 anotações, extraídas com PyMuPDF; numeração #1–#51
 > pela ordem do PDF). Branch `revisao-access`. Regras de escrita: CLAUDE.md §9.2.
 
+## ★ ONDE ESTAMOS (2026-10-16, fim do dia) — ler primeiro na próxima sessão
+
+- **Feito:** as duas passagens de implementação da revisão do Pedro (commits `9257d38` e `cae86c9`, branch
+  `revisao-access`). Todos os 51 comentários foram tratados no texto (secção 2) e as experiências novas
+  estão concluídas (secção 0).
+- **PDF para leitura:** Google Drive do Pedro, "O meu disco" →
+  `artigo_2_access_revisto_2026-10-16.pdf` (14 páginas; https://drive.google.com/file/d/1UwkdygLGlYRimS5QfGZm9mCgjmbDNwpr/view).
+  O PDF anotado do Pedro continua em `~/Desktop/artigo_2_access_2026-10-16.pdf` e **não pode ser
+  apagado**.
+- **Próximo passo, pedido pelo Pedro: uma SEGUNDA PASSAGEM ao artigo** depois da compactação. Verificar:
+  - comentário a comentário (secção 2), se cada um ficou bem resolvido;
+  - as regras de escrita (CLAUDE.md §9.2);
+  - a coerência dos números entre secções, contra os motores `instruction.py`, `guide_eval.py`,
+    `make_phase5_tables.py`, `bloco_c.py` e `audit_pct_baselines.py`;
+  - as conclusões fortes e o guia como receita simples.
+- **Motores novos:**
+  - `experiments/analysis/instruction.py` (RQ6);
+  - `experiments/analysis/guide_eval.py` (Tabela 5, guia aplicado);
+  - `experiments/analysis/make_datasets_table.py` (tabela de datasets);
+  - `experiments/run/batch_runner.py` (Batch API OpenAI e Anthropic);
+  - `experiments/configs/prompts_instruction.yaml`.
+  - Store da experiência: `data/processed/runs/instruction.jsonl`. Contém 60 linhas do GLM no Mohler, de
+    uma corrida abortada, que as análises excluem.
+- **Regras técnicas a lembrar:**
+  - Fallback do RQ1 em `phase5.apply_reasoning_fallback`. SD, zeros e variação a temperatura 0 usam só as
+    notas do próprio modelo.
+  - O estrito do GPT vem do main store (não foi repetido).
+  - O GLM-5.1 do OpenRouter (`glm-5.1-or`) usa o estrito de junho da DeepInfra no PT-CS
+    (`instruction.MAIN_MODEL`).
+  - Sonnet: saída estruturada; Mohler limitado a 800 para o Sonnet e o GLM.
+  - O OpenRouter limita contas novas a cerca de 20 pedidos por minuto.
+- **Pendentes fora do artigo:**
+  - Pedro deve **revogar as chaves** que passaram pelo chat (Anthropic, OpenAI, OpenRouter);
+  - questão ética/RGPD (D6/B4), ainda adiada;
+  - os custos a repor à empresa estão na memória do Claude, não no repo (OpenAI + DeepInfra ≈ €160,6 sem
+    IVA).
+- **Avisos de LaTeX conhecidos:** caixa a mais do template (9,3 pt) e da Fig. 5 (2,9 pt). O resto está
+  limpo.
+
 ## 0. Estado (atualizado 2026-10-16, ~12h)
 
 **Decisões do Pedro (resposta à análise):**

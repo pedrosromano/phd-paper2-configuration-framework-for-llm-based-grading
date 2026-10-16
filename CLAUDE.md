@@ -1113,8 +1113,12 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   range is **9–60%** (was 9–56%); Threats updated (`audit_pct_baselines.temp0_variation`).
 - ✅ **No run-period distinction in the paper (D12, user 2026-10-15):** no June/October, no "extensions", no
   reproduction-check sentence, no GLM-drift sentence; costs reported for all experiments together.
-- 🔧 **Pedro's review of the Access draft (2026-10-16, 51 PDF comments) — IN PROGRESS; read
-  `article/review/REVISAO_PR_ESTADO.md` FIRST (every comment, decision and result).** Decisions (user):
+- 🔧 **Pedro's review of the Access draft (2026-10-16, 51 PDF comments) — implemented (commits 9257d38,
+  cae86c9); NEXT: a SECOND PASS over the whole paper. Read `article/review/REVISAO_PR_ESTADO.md` FIRST
+  (section 'ONDE ESTAMOS': state, files, engines, pending items).** Final results: GPT-5.1 with partial
+  credit +0.076/+0.106 on code (Holm), zeros 32->20% (softens its collapse, not Qwen's); RQ3 now on three
+  models (whole exam never helps; criterion helps only GPT on RIAYN); the recipe (DeepSeek-V4-Flash, partial
+  credit) is first of ten on PT-CS code and second on RIAYN; all experiments EUR 158.7 at standard rates. Decisions (user):
   **(P1)** a grading-instruction experiment (prompt engineering, "simple and cheap") and a guide that is ONE
   simple recipe: no budget ladder, no "confirm locally", no "check collapse first", no leave-one-out test;
   **(P2)** RQ1 keeps every item: a reasoning run that overflowed takes the same model's reasoning-off grade
