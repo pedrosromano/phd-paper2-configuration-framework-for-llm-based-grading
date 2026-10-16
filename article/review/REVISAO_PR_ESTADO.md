@@ -3,21 +3,17 @@
 > Fonte: `~/Desktop/artigo_2_access_2026-10-16.pdf` (51 anotações, extraídas com PyMuPDF; numeração #1–#51
 > pela ordem do PDF). Branch `revisao-access`. Regras de escrita: CLAUDE.md §9.2.
 
-## ★ ONDE ESTAMOS (2026-10-16, fim do dia) — ler primeiro na próxima sessão
+## ★ ONDE ESTAMOS (2026-10-16, noite) — ler primeiro na próxima sessão
 
-- **Feito:** as duas passagens de implementação da revisão do Pedro (commits `9257d38` e `cae86c9`, branch
-  `revisao-access`). Todos os 51 comentários foram tratados no texto (secção 2) e as experiências novas
-  estão concluídas (secção 0).
-- **PDF para leitura:** Google Drive do Pedro, "O meu disco" →
-  `artigo_2_access_revisto_2026-10-16.pdf` (14 páginas; https://drive.google.com/file/d/1UwkdygLGlYRimS5QfGZm9mCgjmbDNwpr/view).
-  O PDF anotado do Pedro continua em `~/Desktop/artigo_2_access_2026-10-16.pdf` e **não pode ser
-  apagado**.
-- **Próximo passo, pedido pelo Pedro: uma SEGUNDA PASSAGEM ao artigo** depois da compactação. Verificar:
-  - comentário a comentário (secção 2), se cada um ficou bem resolvido;
-  - as regras de escrita (CLAUDE.md §9.2);
-  - a coerência dos números entre secções, contra os motores `instruction.py`, `guide_eval.py`,
-    `make_phase5_tables.py`, `bloco_c.py` e `audit_pct_baselines.py`;
-  - as conclusões fortes e o guia como receita simples.
+- **Feito:**
+  - as duas passagens de implementação da revisão do Pedro (commits `9257d38` e `cae86c9`, branch
+    `revisao-access`);
+  - a **segunda passagem** de revisão ao artigo inteiro (secção 5 abaixo).
+  - Todos os 51 comentários estão resolvidos (lista de verificação na secção 5).
+- **PDF para leitura:** Google Drive do Pedro, "O meu disco" → `artigo_2_access_revisto2_2026-10-16.pdf`
+  (15 páginas). A versão anterior, `artigo_2_access_revisto_2026-10-16.pdf`, fica lá também. O PDF anotado
+  do Pedro continua em `~/Desktop/artigo_2_access_2026-10-16.pdf` e **não pode ser apagado**.
+- **Próximo passo:** a leitura do Pedro sobre a segunda passagem.
 - **Motores novos:**
   - `experiments/analysis/instruction.py` (RQ6);
   - `experiments/analysis/guide_eval.py` (Tabela 5, guia aplicado);
@@ -392,3 +388,130 @@ Custo novo total ≈ €30–40, quase todo OpenAI. Já gasto: €103,9; tetos d
 4. Recalcular tudo na base sem exclusões: tabelas, figuras novas com escala 0–1 e auditorias.
 5. Reescrever o RQ1, a secção nova, o guia, a Discussão, as Ameaças, o abstract e a Conclusão.
 6. Atualizar o CLAUDE.md §1.2 e §11, compilar e pôr o PDF no Desktop.
+
+---
+
+## 5. Segunda passagem (2026-10-16, noite)
+
+Leitura do artigo inteiro com os 51 comentários ao lado, verificação das regras do §9.2 e conferência de
+todos os números contra os motores (`guide_eval`, `instruction`, `make_phase5_tables`,
+`audit_pct_baselines`, `bloco_c`). As tabelas regeneradas ficaram iguais às do commit anterior.
+
+**Erros encontrados e corrigidos:**
+- **Temperatura do GPT-5.1 (erro factual).**
+  - O Method dizia "All calls use temperature 0", mas o GPT-5.1 não aceita temperatura e o harness nunca a
+    envia (`adapter_api._build_payload_msgs`), por isso corre com a amostragem de origem.
+  - Correções:
+    - o Method passa a dizer que só os modelos abertos e o Sonnet correm a temperatura 0;
+    - "9 a 60% dos itens variam a temperatura 0" incluía o GPT; para os modelos abertos é **9 a 56%**
+      (`audit_pct_baselines.temp0_variation` separa agora os dois grupos; o GPT dá 29–60%).
+- **Guia:** dizia que pontuar critério a critério "nunca melhorou" a concordância. Melhorou no GPT-5.1 no
+  RIAYN (+0.153, com Holm). Corrigido.
+- **Introdução vs Tabela 5:** a introdução promete comparar o guia em concordância, consistência e custo,
+  mas a Tabela 5 não tinha consistência.
+  - Acrescentado à "Guide in Use":
+    - o SD dentro do item é 0.011–0.029 (o Sonnet, o mais consistente, fica em 0.002–0.006);
+    - zeros no código: 7% no RIAYN e 10% no PT-CS, contra 5% e 2% dos professores e até 49% do Qwen.
+- **RQ6:**
+  - o custo da instrução no código é de 53–60 tokens de entrada e 5–8% do custo (o texto dizia "60
+    tokens, 5–12%");
+  - a justificação só correu no Qwen3.5 e no DeepSeek (texto e nota da Tabela 1 corrigidos);
+  - "only reasoning repaired" passa a "reasoning remained the most effective remedy", porque a
+    justificação também reduziu para metade os zeros do Qwen.
+- **RQ3:** a explicação "porque a resposta conjunta tem mais tokens de saída" não vale para o GPT (o custo
+  extra é de entrada). Retirada.
+- **Referência mal descrita:** Poličar et al. é a correção de trabalhos numa cadeira de bioinformática, não
+  "course evaluations" (introdução e estado da arte).
+- **Introdução:** retirado "each run under one prompt configuration" (afirmação não verificada sobre outros
+  trabalhos, no tom crítico que o Pedro pediu para tirar, #10).
+
+**Melhorias de coerência:**
+- **Claude Sonnet 4.6** passa a aparecer:
+  - na introdução e no início do Method ("five LLMs"), com o motivo no Method (testar a instrução num
+    segundo modelo fechado);
+  - no RQ4: sem reasoning, é o melhor no SemEval (0.634) e no PT-CS curtas (0.791), mas no código fica abaixo
+    do GLM-5.1 a cerca de 4× o custo;
+  - no fecho do RQ4.
+  - Assim, a frase da Discussão sobre o Sonnet tem apoio nos Resultados.
+- **Ligação que faltava, RQ4 → RQ6 → guia:** com crédito parcial, o DeepSeek-V4-Flash iguala o GLM-5.1 (o
+  melhor sem reasoning no estrito) no código, com cerca de 1/10 do custo (PT-CS 0.674 vs 0.672; RIAYN 0.732
+  vs 0.726). Está na RQ6, na Discussão, no guia e na Conclusão, e justifica o modelo da receita.
+- **O guia nomeia o modelo:** "DeepSeek-V4-Flash" no fim do guia e da Conclusão, em vez de "an inexpensive
+  model that grades soundly" (#48: o utilizador não deve ter de investigar).
+- **"Guide in Use":** as comparações nos itens amostrados ficaram exatas:
+  - no código, o melhor fica +0.04 e +0.07 acima, a 14× e 68× o custo;
+  - nas respostas curtas, o melhor fica 0.06–0.12 acima, a 19–53× o custo.
+- **Ameaças:**
+  - a frase de contenção passou a ser exata: todas as escolhas do guia, exceto âmbito e conversa, têm
+    apoio num dataset público;
+  - **frase nova:** o guia foi avaliado nos mesmos datasets de onde saiu, por isso as posições na Tabela 5
+    descrevem uma receita fixa nestes dados e podem mudar em dados novos. Um revisor ia levantar isto.
+- **Resumo:**
+  - âncora do QWK ("where 1 is perfect");
+  - "ranked first and second of ten ... on code";
+  - continua com 250 palavras.
+- **Method:**
+  - regras de aplicabilidade com a conversa;
+  - frase do Sonnet (800 Mohler) e do GLM pelo OpenRouter (só código) na secção do harness;
+  - escala do RIAYN (4 a 12);
+  - custos ignoram também o desconto do batch.
+- **Seleção do PT-CS (#25):** "whose grade the teachers changed from the platform's first suggestion" (sem
+  "score"/total).
+- **Estado da arte (#11, #12):** a subsecção "Rubrics and Reference Answers" ganhou a frase sobre respostas
+  de referência (Mohler 2011 e SemEval-2013, verificada no PDF do Mohler).
+- **Outros:**
+  - RQ2/RQ3 remetem para o Method a explicação da ausência do GLM (#36, #37);
+  - "collapse to zero" passa a "show the zero-collapse" (#46);
+  - o SemEval fica só com a accuracy, sem a sensibilidade do corte (#39);
+  - "not only … but" no RQ5 reescrito.
+
+**Lista de verificação dos 51 comentários (estado depois da segunda passagem):**
+
+| # | Onde | Estado |
+|---|---|---|
+| 1 | "extended reasoning" | ✅ não aparece em lado nenhum; "reasoning" definido na Intro, no Related Work e no RQ1 |
+| 2 | escolha dos modelos; 2.º fechado | ✅ três critérios no §III-C; Claude Sonnet 4.6 na RQ6, no RQ4 e no guia |
+| 3–4 | plataforma que propõe notas | ✅ fora da Intro |
+| 5 | "rather than by model identity" | ✅ fora |
+| 6 | PT-CS nosso e necessário | ✅ Intro e contribuição: novo, nosso, único com exames completos (âmbito e conversa) |
+| 7 | secções em dois sítios | ✅ um só parágrafo |
+| 8 | "overthinking" | ✅ explicado |
+| 9–10 | crítica a outros trabalhos | ✅ neutro; retirado também "each run under one prompt configuration" |
+| 11–12 | rubricas em geral | ✅ "Rubrics and Reference Answers", com respostas de referência |
+| 13 | "usually QWK" | ✅ fora (a subsecção dos datasets saiu) |
+| 14 | PT-CS no estado da arte | ✅ fora |
+| 15–17 | tratamento de dados / taxa de parse | ✅ fora do estado da arte |
+| 18 | abertura do Method | ✅ descrição simples do estudo |
+| 19 | "stem" | ✅ fora |
+| 20 | Tabela I | ✅ tabela compacta de datasets (Tabela 2), referida no texto |
+| 21 | modelos por dimensão | ✅ coluna na Tabela 1 com notas |
+| 22 | "affordable" | ✅ fora |
+| 23 | prova de conceito da plataforma | ✅ |
+| 24 | "two teachers set the final grade jointly" | ✅ |
+| 25 | "AI-proposed total" | ✅ "changed from the platform's first suggestion" |
+| 26 | comentários da plataforma | ✅ fora |
+| 27 | cache / custo por chamada | ✅ fora |
+| 28–29 | tamanhos complicados | ✅ "every model grades every answer five times"; tamanhos na Tabela 2 |
+| 30 | IC incompreensível | ✅ linguagem simples |
+| 31 | overflow no Method | ✅ passou para o RQ1 |
+| 32 | abertura dos Resultados | ✅ sem disclaimer |
+| 33 | exclusão tendenciosa | ✅ sem exclusões (fallback) |
+| 34 | "adds little" pouco claro | ✅ abertura "left agreement almost where it was" + painel custo-benefício |
+| 35 | escala 0–1 | ✅ Figs. 1–3 e 6 |
+| 36–37 | GPT/GLM ausentes | ✅ GPT no RQ2/RQ3; ausência do GLM explicada no Method e referida no RQ2/RQ3 |
+| 38 | Fig. 4 → RQ1 | ✅ Fig. 1(a) |
+| 39 | SemEval confuso | ✅ só accuracy, em linguagem simples |
+| 40 | custos "historieta" | ✅ uma frase (€158.7) |
+| 41 | "deployment provides" | ✅ "only PT-CS provides" |
+| 42–43 | RQ6 transfer / Fig. 7 | ✅ fora; RQ6 é a instrução |
+| 44 | "significantly" vs "rarely" | ✅ "only six of twenty" |
+| 45 | consistência no RQ1 | ✅ SD sem/com reasoning, painel (c) |
+| 46 | "collapsed" | ✅ "show(ed) the zero-collapse" |
+| 47 | experiência para resolver o colapso | ✅ RQ6 (crédito parcial; justificação) |
+| 48–49 | "modelo mais forte que não colapsa" / "verificar o colapso" | ✅ fora; a receita nomeia o modelo |
+| 50 | guia condicional demais | ✅ uma receita + "The Guide in Use" (Tabela 5) |
+| 51 | demasiadas configurações | ✅ sem escada de orçamentos |
+
+**Pendentes (fora desta passagem):**
+- a frase de disponibilidade dos dados do PT-CS, ligada à questão ética/RGPD (D6/B4, adiada pelo Pedro);
+- a revogação das chaves que passaram pelo chat (Anthropic, OpenAI, OpenRouter).

@@ -1,6 +1,6 @@
 %% sections/conclusion.tex -- closes the loop the Introduction opened (CLAUDE.md S9.2). Rewritten 2026-10-16
-%% (Pedro's review): one recipe, the guide in use, no deployment or transfer angle. Update with the GPT-5.1 and
-%% GLM-5.1 (OpenRouter) partial-credit results.
+%% (Pedro's review): one recipe, the guide in use, no deployment or transfer angle. Second pass 2026-10-16:
+%% every model's partial-credit results in; the recipe names its model.
 
 \section{Conclusions}
 \label{sec:conclusion}
@@ -9,8 +9,8 @@ An instructor adopting an LLM grader faces several choices at once, and prior st
 in fragments. We tested them together for computer-science grading under one controlled protocol and
 condensed the result into one recipe. The central finding is that the cheap changes were the effective
 ones. Supplying a rubric or a reference answer raised agreement significantly in thirteen of fifteen
-model-dataset combinations, for 1.2 to 1.8 times the cost per grade, and asking the model to award partial
-credit raised code agreement by up to 0.11 QWK for a few extra input tokens. Reasoning raised
+model-dataset combinations, by 0.10 to 0.34 QWK, for 1.2 to 1.8 times the cost per grade, and asking the
+model to award partial credit raised code agreement by up to 0.11 QWK for a few extra input tokens. Reasoning raised
 agreement significantly in six of twenty combinations, three after correcting for multiple comparisons, while
 multiplying output tokens by up to 925 and usually making grades less consistent. Its clearest gains came on
 code, for models that scored many partially correct answers as zero. This zero-collapse is a property of the
@@ -20,10 +20,11 @@ Grading a whole exam in one call never helped, scoring criterion by criterion he
 dataset, both saved little or nothing, and the closed models did not repay their price on code.
 
 The recipe follows directly: the rubric or reference answer, an instruction to award partial credit, one
-question per call with reasoning off and a single holistic score, a clean conversation per answer, and an
-inexpensive model that grades soundly, DeepSeek-V4-Flash in our tests. Applied to every dataset, it was the
-best configuration without reasoning on PT-CS code and the second on RIAYN, and stayed within 0.05 QWK of the
-best on the public short-answer datasets, with the cheapest model we tested.
+question per call with reasoning off and a single holistic score, a clean conversation per answer, and
+DeepSeek-V4-Flash, the cheapest model we tested, which with partial credit graded code as well as the
+strongest model without reasoning at a tenth of its cost. Applied to every dataset, the recipe was the best
+configuration without reasoning on PT-CS code and the second on RIAYN, and stayed within 0.05 QWK of the
+best on the public short-answer datasets.
 
 Future work follows from the gaps this study declares and from what the literature has yet to settle.
 Few-shot guidance, adding a few already-graded answers to the prompt as examples, was held out; the strong
@@ -40,5 +41,5 @@ to our knowledge, described in the grading literature; it deserves study in its 
 and to prevent it without paying for reasoning.
 
 For the instructor the introduction began with, the answer is a short routine: supply the rubric or
-reference answer, ask for partial credit, and grade one question per call with reasoning off on an
-inexpensive model that grades soundly, for under ten cents per thousand grades.
+reference answer, ask for partial credit, and grade one question per call with reasoning off on
+DeepSeek-V4-Flash, for under 0.10 euros per thousand grades.

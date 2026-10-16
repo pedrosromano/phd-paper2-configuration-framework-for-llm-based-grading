@@ -26,11 +26,12 @@ reasoning model writes out its thinking before it answers, and this improves gen
 accuracy~\cite{jayarao_explicit_2025}, but the effect depends on the task and the
 architecture~\cite{larionov_deepseek_2025}. Long reasoning traces also carry verbose, redundant
 computation~\cite{sui_stop_2025}, and no peer-reviewed study isolates the effect of reasoning on
-rubric-bounded educational grading. Model comparisons exist for programming assignments and course
-evaluations~\cite{jukiewicz_comparison_2026,policar_automated_2025}, each run under one prompt
-configuration. Evaluation guidance has been studied for code grading~\cite{pathak_rubric_2025}, but, to
-our knowledge, no study compares guidance, grading scope, rubric decomposition, conversation state, and
-the grading instruction under one protocol (Section~\ref{sec:related}). What is missing is the
+rubric-bounded educational grading. Models have been compared as graders of programming
+assignments~\cite{jukiewicz_comparison_2026} and of assignments in a bioinformatics
+course~\cite{policar_automated_2025}, and evaluation guidance has been studied for code
+grading~\cite{pathak_rubric_2025}, but, to our knowledge, no study compares guidance, the grading
+instruction, grading scope, rubric decomposition, and conversation state under one protocol
+(Section~\ref{sec:related}). What is missing is the
 practical synthesis: for a given CS assessment task, which configuration should be used, and what does
 it cost?
 
@@ -42,7 +43,8 @@ call), rubric decomposition (one holistic score versus a score per criterion), c
 clean conversation per answer versus a shared history), and the model. Four model families take part,
 three open-weight (Qwen3.5, DeepSeek-V4-Flash, GLM-5.1) and one closed (GPT-5.1), and each lets
 reasoning be switched on or off within the same model, which separates the effect of reasoning from
-that of the model. The study runs on four datasets in two domains. Three are public, so the results can
+that of the model. A second closed model, Claude Sonnet 4.6, joins the grading-instruction comparison.
+The study runs on four datasets in two domains. Three are public, so the results can
 be checked beyond our own students: the Mohler corpus of graded computer-science short
 answers~\cite{mohler_text_2009,mohler_learning_2011}, the SemEval-2013 Task~7 corpus of graded science
 short answers~\cite{dzikovska_semeval_2013}, and the Rubric Is All You Need corpus of rubric-graded
@@ -70,7 +72,7 @@ Six research questions structure the study:
 
 From these comparisons we build a configuration guide: one recommended configuration for LLM grading
 in CS, with the evidence and the cost behind each of its settings. We then apply the guide to every
-dataset and compare it with all the configurations we ran, on agreement, consistency, and cost.
+dataset and compare it with the other configurations we ran, on agreement, consistency, and cost.
 
 The contribution is threefold. First, a configuration guide for LLM grading in CS, tested against every
 configuration in the study. Second, the first grading-specific, within-family isolation of the

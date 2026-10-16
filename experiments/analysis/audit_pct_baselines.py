@@ -223,10 +223,14 @@ def temp0_variation():
            & (df.decomposition == "holistic") & df.pred_norm.notna() & ~df.fallback]   # model's own grades only
     d = d[(d.dataset != "ptcs") | d.item_id.isin(_INTERV)]
     print("\n=== Temperature-0 variation: % of items whose grade varies across repetitions (Section VII) ===")
-    for r in ["off", "on"]:
-        pct = [100 * g.groupby("item_id").pred_norm.agg(lambda x: x.nunique() > 1).mean()
-               for _, g in d[d.reasoning == r].groupby(["dataset", "domain", "model"])]
-        print(f"  reasoning {r}: {min(pct):.0f}% to {max(pct):.0f}% across {len(pct)} model-dataset combinations")
+    # 2026-10-16 (second pass): GPT-5.1 rejects a temperature setting, so the harness never sends one and it
+    # samples at the API default; only the open models ran at temperature 0. The paper quotes the open models'
+    # range as the temperature-0 figure and GPT-5.1's separately.
+    for who, sel in [("open models, temperature 0", d.model != "gpt-5.1"), ("GPT-5.1, API default", d.model == "gpt-5.1")]:
+        for r in ["off", "on"]:
+            pct = [100 * g.groupby("item_id").pred_norm.agg(lambda x: x.nunique() > 1).mean()
+                   for _, g in d[sel & (d.reasoning == r)].groupby(["dataset", "domain", "model"])]
+            print(f"  {who}, reasoning {r}: {min(pct):.0f}% to {max(pct):.0f}% across {len(pct)} model-dataset combinations")
 
 
 def k_sensitivity():

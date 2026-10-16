@@ -52,7 +52,10 @@ of reasoning on grading itself, holding the model fixed and measuring quality, c
 together. This paper does so with an on/off switch within each model (RQ1).
 
 \subsection{Rubrics and Reference Answers}
-What the grader is given to grade against matters. Clearer, more explicit rubrics raise the
+What the grader is given to grade against matters. In short-answer grading the usual material is a
+reference answer: the standard corpora pair each question with an instructor's or expert's answer, and
+automatic graders have long scored a student answer by comparing it with that
+answer~\cite{mohler_learning_2011,dzikovska_semeval_2013}. Clearer, more explicit rubrics raise the
 consistency of LLM grading~\cite{garcia-huertes_leveraging_2024}, and closed models given a rubric
 outperform open ones while remaining more lenient than human raters~\cite{sessler_canai_2025}. In code
 grading, question-specific rubrics substantially outperform question-agnostic or no-rubric prompting on
@@ -68,7 +71,8 @@ guidance (RQ2), a rubric or a reference answer, and of how the grader is instruc
 
 \subsection{From Model Rankings to Configuration Guidance}
 A growing body of work compares LLMs as graders: large side-by-side studies of programming
-submissions~\cite{jukiewicz_comparison_2026}, course evaluations~\cite{policar_automated_2025}, and
+submissions~\cite{jukiewicz_comparison_2026}, assignments in a bioinformatics
+course~\cite{policar_automated_2025}, and
 multi-model frameworks emphasising transparency and reproducibility~\cite{anghel_graderassist_2025}.
 Dedicated benchmarks for LLM short-answer scoring are also beginning to appear~\cite{lai_sasbench_2026}.
 Where these studies compare which model grades best, we ask which configuration a grading task calls

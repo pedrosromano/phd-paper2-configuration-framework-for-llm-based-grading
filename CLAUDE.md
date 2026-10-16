@@ -1111,11 +1111,18 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   was the most effective" and names zero-collapse.
 - ✅ **Temperature-0 variation re-based again (2026-10-15):** with GPT-5.1 at full coverage the reasoning-off
   range is **9–60%** (was 9–56%); Threats updated (`audit_pct_baselines.temp0_variation`).
+  **CORRECTED 2026-10-16 (second pass): GPT-5.1 never ran at temperature 0.** The API rejects a temperature
+  for GPT-5.1, so `adapter_api` never sends one (the logged 0.0 is only the Config value) and it samples at its
+  fixed default. Only the open models and Claude Sonnet 4.6 ran at temperature 0. The paper's temperature-0
+  figure is the open models' range, **9–56%** with reasoning off (GPT-5.1 29–60%, reported by the audit
+  separately); Method states GPT-5.1's sampling. Never write "all calls use temperature 0".
 - ✅ **No run-period distinction in the paper (D12, user 2026-10-15):** no June/October, no "extensions", no
   reproduction-check sentence, no GLM-drift sentence; costs reported for all experiments together.
-- 🔧 **Pedro's review of the Access draft (2026-10-16, 51 PDF comments) — implemented (commits 9257d38,
-  cae86c9); NEXT: a SECOND PASS over the whole paper. Read `article/review/REVISAO_PR_ESTADO.md` FIRST
-  (section 'ONDE ESTAMOS': state, files, engines, pending items).** Final results: GPT-5.1 with partial
+- ✅ **Pedro's review of the Access draft (2026-10-16, 51 PDF comments) — implemented (commits 9257d38,
+  cae86c9) and given a SECOND PASS (2026-10-16 evening: all 51 comments checked, numbers re-verified against
+  the engines, corrections listed in section 5 of the state file). NEXT: Pedro's reading. Read
+  `article/review/REVISAO_PR_ESTADO.md` FIRST (section 'ONDE ESTAMOS': state, files, engines, pending
+  items).** Final results: GPT-5.1 with partial
   credit +0.076/+0.106 on code (Holm), zeros 32->20% (softens its collapse, not Qwen's); RQ3 now on three
   models (whole exam never helps; criterion helps only GPT on RIAYN); the recipe (DeepSeek-V4-Flash, partial
   credit) is first of ten on PT-CS code and second on RIAYN; all experiments EUR 158.7 at standard rates. Decisions (user):

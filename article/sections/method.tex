@@ -9,10 +9,10 @@
 \section{Study Design and Method}
 \label{sec:method}
 
-We graded the answers of four datasets with four model families under one grading protocol and compared
-every grade with the grade a teacher gave. Starting from a baseline configuration, each comparison
-changes one configuration choice and keeps everything else fixed. Every answer is graded five times
-with each configuration, so agreement with the teachers, consistency, and cost are measured together.
+We graded the answers of four datasets with five LLMs under one grading protocol and compared every
+grade with the grade a teacher gave. Starting from a baseline configuration, each comparison changes one
+configuration choice and keeps everything else fixed. Each answer is graded five times in every
+configuration it enters, so agreement with the teachers, consistency, and cost are measured together.
 
 \subsection{Configuration Choices}
 \label{sec:design}
@@ -63,11 +63,13 @@ Model & four families & all & \\
 SemEval), added to the question and the student answer. $^{b}$With or without a short justification
 before the score. $^{c}$One call per question, or one call for all the questions of a student's exam.
 $^{d}$One overall score, or one score per rubric criterion, summed. $^{e}$The four families and Claude
-Sonnet 4.6; GLM-5.1, and the justification, on code only. $^{f}$All but GLM-5.1. $^{g}$All but GPT-5.1.}
+Sonnet 4.6; GLM-5.1 on code only; the justification on code, with Qwen3.5 and DeepSeek-V4-Flash.
+$^{f}$All but GLM-5.1. $^{g}$All but GPT-5.1.}
 \end{table}
 
-Three applicability rules follow from the data. Scope needs complete multi-question exams, which only
-PT-CS has. Decomposition needs rubrics with separately scored criteria, which PT-CS and RIAYN both have.
+Three applicability rules follow from the data. Scope and conversation state need complete
+multi-question exams, which only PT-CS has. Decomposition needs rubrics with separately scored criteria,
+which PT-CS and RIAYN both have.
 Guidance means different material on different datasets: a question-specific rubric for PT-CS and RIAYN,
 and a reference answer for Mohler and SemEval, so the two are reported separately. PT-CS has no reference
 solutions, and we did not write any, to avoid introducing a confound.
@@ -93,8 +95,8 @@ solution paths; two graders scored each submission in consensus.
 \emph{PT-CS} is a new dataset that we collected with a proof-of-concept grading platform, built within
 this research project as a first prototype for gathering graded answers. It holds complete Java exams in
 Portuguese, and each question has its own rubric and no reference solution. Two teachers set the final
-grade of each answer jointly. PT-CS keeps the 379 answers whose final grade the two teachers changed from
-the score the platform first suggested: 295 code answers and 84 short answers on theory, from 97 exams.
+grade of each answer jointly. PT-CS keeps the 379 answers whose grade the teachers changed from the
+platform's first suggestion: 295 code answers and 84 short answers on theory, from 97 exams.
 All direct identifiers were removed. The final grade is a joint decision with no per-teacher record, so
 inter-rater agreement cannot be computed on PT-CS.
 
@@ -120,14 +122,16 @@ with \texttt{enable\_thinking} off or on. The closed model is \emph{GPT-5.1}~\ci
 GLM-5.1 with reasoning off, so guidance, scope, and decomposition are compared on the other three models,
 and in the grading-instruction comparison GLM-5.1 is served by its developer, Z.ai, through OpenRouter, with
 reasoning disabled. Its strict runs there reproduced its DeepInfra agreement on RIAYN (0.726 QWK on both), so
-on PT-CS code its partial-credit runs are compared with its DeepInfra strict runs. That comparison also includes a second closed model, \emph{Claude Sonnet 4.6}
+on PT-CS code its partial-credit runs are compared with its DeepInfra strict runs. To test the
+instruction on a second closed model, that comparison also includes \emph{Claude Sonnet 4.6}
 (\texttt{claude-sonnet-4-6}, via Anthropic, reasoning off), whose answer is constrained by the API's
 structured output to the JSON score that every prompt asks for; without that constraint it sometimes wrote
 an analysis before the score.
 
-All calls use temperature 0, the setting that makes a model's output as repeatable as the backend
-allows, so that the repeated runs measure only the variation that remains at that setting. Output is
-capped at 4096 tokens with reasoning off and at 32\,768 tokens with reasoning on. Every run logs the
+Calls to the open models and to Claude Sonnet 4.6 use temperature 0, the setting that makes a model's
+output as repeatable as the backend allows, so that the repeated runs measure only the variation that
+remains at that setting. GPT-5.1 accepts no temperature setting and samples at its fixed default. Output
+is capped at 4096 tokens with reasoning off and at 32\,768 tokens with reasoning on. Every run logs the
 provider, served model identifier, sampling parameters, prompt hash, and timestamp.
 
 \subsection{Grading Harness}
@@ -140,9 +144,10 @@ instruction, scope, and decomposition. All templates ask for the score as a Java
 criterion-level calls. A deterministic parser extracts the grade and records whether extraction
 succeeded; unparseable output is logged and left out of the metrics.
 
-With reasoning off, every model grades every answer of every dataset five times ($k=5$). Reasoning on
-is the most expensive setting, because reasoning traces run long, so it uses the fixed random samples of
-Table~\ref{tab:datasets}, also graded five times. The whole-exam arm grades the 88 complete exams that
+With reasoning off, every model grades every answer of every dataset five times ($k=5$); in the
+grading-instruction comparison, Claude Sonnet 4.6 grades a fixed random 800 of the Mohler answers and
+GLM-5.1 only the code sets. Reasoning on is the most expensive setting, because reasoning traces run
+long, so it uses the fixed random samples of Table~\ref{tab:datasets}, also graded five times. The whole-exam arm grades the 88 complete exams that
 contain a teacher-validated code answer, about four questions each (one to six). The conversation
 sub-study grades 80 complete exams in both answer orders, five times each with Qwen3.5 and
 DeepSeek-V4-Flash, and the first 20 of those exams three times with GLM-5.1.
@@ -153,7 +158,8 @@ DeepSeek-V4-Flash, and the first 20 of those exams three times with GLM-5.1.
 Two conventions are applied to every score before any metric. Predicted scores are clamped to
 $[0, \text{scale max}]$, because rubrics with penalty criteria can push a criterion sum below zero and a
 grade cannot be negative. Scores are then normalised to $[0,1]$ by their scale maximum, because the
-native scales differ (Mohler 5, SemEval 1, PT-CS 1 to 12) and raw scores must never be pooled.
+native scales differ (Mohler 5, SemEval 1, RIAYN 4 to 12, PT-CS 1 to 12) and raw scores cannot be
+pooled.
 
 Agreement is reported as quadratic weighted kappa (QWK), the standard measure for ordinal scoring: it
 penalises large disagreements between grader and human grade more than small ones. It reaches 1 at
@@ -169,7 +175,7 @@ Consistency is the mean within-item standard deviation across the $k$ repetition
 human grade, and a lower value means more reproducible grading. The reasoning premium is the ratio of
 output tokens with reasoning on to output tokens with reasoning off, computed within each model. Costs in
 euros are computed from each call's logged input and output tokens at the providers' standard per-token
-rates, ignoring discounts for cached input, so they are a slight upper bound. Rank correlations use
+rates, ignoring discounts for cached input or batched requests, so they are an upper bound. Rank correlations use
 Spearman's $\rho$.
 
 SemEval's human grade is binary, so we also turn the model's score into a correct or incorrect label at
