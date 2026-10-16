@@ -24,7 +24,9 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROMPTS = REPO_ROOT / "experiments" / "configs" / "prompts.yaml"
+PROMPTS_INSTRUCTION = REPO_ROOT / "experiments" / "configs" / "prompts_instruction.yaml"
 _BLOCKS: dict | None = None
+_IBLOCKS: dict | None = None
 
 
 def _blocks() -> dict:
@@ -32,6 +34,18 @@ def _blocks() -> dict:
     if _BLOCKS is None:
         _BLOCKS = yaml.safe_load(PROMPTS.read_text())
     return _BLOCKS
+
+
+def _iblocks() -> dict:
+    """Grading-instruction variant blocks (2026-10-16); they replace the same-named standard blocks."""
+    global _IBLOCKS
+    if _IBLOCKS is None:
+        _IBLOCKS = yaml.safe_load(PROMPTS_INSTRUCTION.read_text())
+    return _IBLOCKS
+
+
+def _instruction(config) -> str:
+    return getattr(config, "instruction", "standard") or "standard"
 
 
 def rubric_to_text(rubric_json: str | None) -> str:
@@ -69,6 +83,8 @@ def _grounding(config, item) -> str:
     if config.context_level == "none":
         return ""
     b = _blocks()["grounding"]
+    if _instruction(config) != "standard":
+        b = {**b, **_iblocks()["grounding"]}
     rubric = item.get("rubric_json")
     ref = item.get("reference_answer")
     if _has(rubric):
@@ -102,7 +118,9 @@ def render_turn(config, item, first: bool = True) -> str:
         question=str(item["question_text"]).strip(),
         answer=str(item["student_answer"]).strip())
     out_key = f"{config.scope}__{config.decomposition}"
-    output = Template(b["output"][out_key]).safe_substitute(max=_fmt(item.get("gold_scale_max", 1)))
+    out_block = (_iblocks()["output"][f"{out_key}__justified"] if _instruction(config) == "partial_credit_justified"
+                 else b["output"][out_key])
+    output = Template(out_block).safe_substitute(max=_fmt(item.get("gold_scale_max", 1)))
     parts = ([b["instruction"][config.domain]] if first else []) + [grounding, body, output]
     return _join(*parts)
 

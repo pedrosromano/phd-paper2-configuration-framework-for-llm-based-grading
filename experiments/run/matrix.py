@@ -46,6 +46,16 @@ DEFAULT_SEED = 20260609      # deterministic item sampling (stable across resume
 STRATA = REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet"
 
 
+def _store_for(arm: dict, stores: dict) -> store.RunStore:
+    """Per-arm run store. An arm may set `store: <file>.jsonl` to keep its rows apart from the main
+    matrix (instruction experiment, 2026-10-16: its same-batch re-run of the standard prompt must
+    never mix with the original baseline rows, which share the same config_hash)."""
+    path = RUNS_FILE.parent / arm["store"] if arm.get("store") else RUNS_FILE
+    if path not in stores:
+        stores[path] = store.RunStore(path)
+    return stores[path]
+
+
 def _item_filter(name: str | None):
     """Optional per-arm item filter (bloco C, 2026-10-15). 'ptcs_validated' keeps only the PT-CS
     answers the paper uses (teacher-validated = intervened stratum); other datasets pass through.
@@ -202,11 +212,21 @@ def _execute(tasks: list[tuple], st: store.RunStore, guard: CostGuard, concurren
     lock = threading.Lock()
     done = {"n": 0, "ok": 0}
     rows: list[dict] = []
+    no_credit: set[str] = set()                  # providers whose account ran dry during this arm
 
     def work(it, c):
+        prov = guard.provider_of(c.model)
+        if prov in no_credit:
+            return None
         try:
             res = adapter_api.grade(it, c, guard)
             row = store.build_run_row(it, c, res, prompts.render(c, it))
+        except adapter_api.NoCredits as e:   # empty account: skip that provider, store nothing, resume later
+            with lock:
+                if prov not in no_credit:
+                    no_credit.add(prov)
+                    _log(f"  !! NO CREDITS on {prov} ({c.model}): {e}. Skipping its cells; nothing stored.")
+            return None
         except Exception as e:   # one bad cell must not kill a multi-hour run; not stored -> retried on resume
             _log(f"  !! skipped {it['item_id']} {c.config_hash} r{c.run_index}: {type(e).__name__}: {e}")
             return None
@@ -291,6 +311,7 @@ def _report(arm_rows: dict, gate: dict, guard: CostGuard, aborted: bool, t0: flo
         lines.append("- **ABORTED at the gate — expensive arms (phase 2) did NOT run.**")
     lines += ["", "| arm | cells | π | mean_score | n_errors |", "|---|---:|---:|---:|---:|"]
     for arm, rws in arm_rows.items():
+        rws = [r for r in rws if r]              # cells skipped (no credit, crash) have no row yet
         if not rws:
             lines.append(f"| {arm} | 0 | - | - | - |")
             continue
@@ -309,7 +330,7 @@ def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
     corpus = pd.read_parquet(CORPUS)
     sampler = Sampler(spec, corpus)
     guard = CostGuard()
-    st = store.RunStore(RUNS_FILE)
+    stores: dict = {}
     by_id = {r["item_id"]: r for _, r in corpus.iterrows()}
     arm_by_name = {a["name"]: a for a in spec["arms"]}
     order_cache: dict = {}
@@ -334,6 +355,7 @@ def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
         p1_tasks_all: list[tuple] = []
         for name in GATE_PHASE1:
             _log(f"ARM {name} (phase 1)")
+            st = _store_for(arm_by_name[name], stores)
             tasks = _arm_tasks(arm_by_name[name], sampler, by_id, seed, order_cache)
             tasks = tasks[:limit] if limit else tasks
             _execute(tasks, st, guard, concurrency)
@@ -347,6 +369,7 @@ def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
             return 2
         for name in GATE_PHASE2:
             _log(f"ARM {name} (phase 2)")
+            st = _store_for(arm_by_name[name], stores)
             tasks = _arm_tasks(arm_by_name[name], sampler, by_id, seed, order_cache)
             tasks = tasks[:limit] if limit else tasks
             _execute(tasks, st, guard, concurrency)
@@ -355,7 +378,8 @@ def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
         # direct mode (e.g. the reasoning-ON re-run): no gate; mandatory ON π check after.
         all_rows: list = []
         for name in requested:
-            _log(f"ARM {name} (direct)")
+            st = _store_for(arm_by_name[name], stores)
+            _log(f"ARM {name} (direct) -> {st.path.name}")
             tasks = _arm_tasks(arm_by_name[name], sampler, by_id, seed, order_cache)
             tasks = tasks[:limit] if limit else tasks
             _execute(tasks, st, guard, concurrency)

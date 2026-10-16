@@ -1,42 +1,43 @@
-%% sections/conclusion.tex -- Register: CLAUDE.md S9.2 (claims, magnitudes, consequences; closes the
-%% loop opened by the Introduction). Numbers: tab_rq1_values, tab_framework, tab_guide_regret, RQ6 audit.
+%% sections/conclusion.tex -- closes the loop the Introduction opened (CLAUDE.md S9.2). Rewritten 2026-10-16
+%% (Pedro's review): one recipe, the guide in use, no deployment or transfer angle. Update with the GPT-5.1 and
+%% GLM-5.1 (OpenRouter) partial-credit results.
 
 \section{Conclusions}
 \label{sec:conclusion}
 
-An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them
-only in fragments. We tested them together for computer-science grading under one controlled protocol
-and condensed the result into a configuration guide. The central finding is that the expensive settings
-rarely paid and the cheapest change almost always did. Reasoning raised agreement significantly in five of
-twenty model-dataset combinations, two after correcting for multiple comparisons, while multiplying
-output tokens by up to 925 and usually making grades less consistent; its clearest gains came on code,
-for models that scored many partially correct answers as zero, the zero-collapse, which a zero-rate
-check on teacher-graded answers detects. Evaluation guidance, for 1.2 to 1.8 times the cost per grade,
-raised agreement significantly in thirteen of fifteen combinations across three model
-families. Grading a whole exam in one call and scoring criterion by criterion brought no significant
-gain and saved little or nothing, and the closed frontier model did not repay its price on the public data. In a real
-deployment these effects held, while the fine ranking of close configurations did not, which is why the
-guide confirms that choice locally. The guide's default follows directly: the strongest model that does not collapse to zero, with
-reasoning off, guidance, one question per call, holistic scoring, and a clean conversation. It stayed within 0.08 QWK of
-the best configuration on every dataset at up to 30 times lower cost. Because every rule is keyed to
-behaviour a user can check rather than to model identity, the same checks can be run on models we did
-not test.
+An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them only
+in fragments. We tested them together for computer-science grading under one controlled protocol and
+condensed the result into one recipe. The central finding is that the cheap changes were the effective
+ones. Supplying a rubric or a reference answer raised agreement significantly in thirteen of fifteen
+model-dataset combinations, for 1.2 to 1.8 times the cost per grade, and asking the model to award partial
+credit raised a sound model's code agreement by up to 0.07 QWK for a few extra input tokens. Reasoning raised
+agreement significantly in six of twenty combinations, three after correcting for multiple comparisons, while
+multiplying output tokens by up to 925 and usually making grades less consistent. Its clearest gains came on
+code, for models that scored many partially correct answers as zero; this zero-collapse is a property of the
+model, which names what the student did right and still gives no marks, and no instruction repaired it.
+Grading a whole exam in one call and scoring criterion by criterion brought no significant gain and saved
+little or nothing, and the closed models did not repay their price on code.
+
+The recipe follows directly: the rubric or reference answer, an instruction to award partial credit, one
+question per call with reasoning off and a single holistic score, a clean conversation per answer, and an
+inexpensive model that grades soundly, DeepSeek-V4-Flash in our tests. Applied to every dataset, it was the
+best configuration without reasoning on both code datasets and stayed within 0.05 QWK of the best on the
+public short-answer datasets, at the lowest cost per grade of any configuration we ran.
 
 Future work follows from the gaps this study declares and from what the literature has yet to settle.
-Two gaps arise in our design. Few-shot guidance, adding a few already-graded answers to the prompt as
-examples, was held out; the strong effect of the studied guidance makes it worth testing, but only with
-a principled rule for choosing the examples. And a fine-tuning arm remains open: fine-tuned models can
-match or exceed earlier supervised graders~\cite{cong_memorization_2026}, but fine-tuning has not yet
-been placed in a guide of this kind, comparing a fine-tuned grader against its base model on agreement,
-consistency, and cost together. Three more follow from the literature. Code evidence rests on two
-Java-centric datasets because code corpora graded with human rubrics are
-scarce~\cite{havare_ai-based_2025,pathak_rubric_2025}, so widening it to other languages and paradigms,
-and contributing such data, is the clearest way to firm up the code conclusions. Transfer was shown in a
-single Portuguese deployment, so testing the rules across more institutions and student populations
-would establish how far they carry. And the zero-collapse we found on code, where a grader scores many
-partially correct answers as zero, is not, to our knowledge, described in the grading literature; it
-deserves study in its own right, both to detect it and to prevent it without paying for reasoning.
+Few-shot guidance, adding a few already-graded answers to the prompt as examples, was held out; the strong
+effect of the studied guidance makes it worth testing, but only with a principled rule for choosing the
+examples. A fine-tuning arm also remains open: fine-tuned models can match or exceed earlier supervised
+graders~\cite{cong_memorization_2026}, but fine-tuning has not yet been placed in a guide of this kind,
+comparing a fine-tuned grader against its base model on agreement, consistency, and cost together. Code
+evidence rests on two Java-centric datasets because code corpora graded with human rubrics are
+scarce~\cite{havare_ai-based_2025,pathak_rubric_2025}, so widening it to other languages and paradigms, and
+contributing such data, is the clearest way to firm up the code conclusions. PT-CS comes from one
+institution, so testing the recipe across more institutions and student populations would establish how
+far it carries. And the zero-collapse, where a grader scores many partially correct answers as zero, is not,
+to our knowledge, described in the grading literature; it deserves study in its own right, both to detect it
+and to prevent it without paying for reasoning.
 
-For the instructor the introduction began with, the answer is a short routine: check candidate models for
-zero-collapse, supply the rubric or reference answer, and grade one question per call with reasoning off,
-for under one euro per thousand grades.
+For the instructor the introduction began with, the answer is a short routine: supply the rubric or
+reference answer, ask for partial credit, and grade one question per call with reasoning off on an
+inexpensive model that grades soundly, for under ten cents per thousand grades.

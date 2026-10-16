@@ -20,6 +20,7 @@ import pandas as pd
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RUNS = REPO_ROOT / "data" / "processed" / "runs" / "runs.jsonl"
 CONV = REPO_ROOT / "data" / "processed" / "runs" / "conversation.jsonl"
+INSTR = REPO_ROOT / "data" / "processed" / "runs" / "instruction.jsonl"   # grading-instruction experiment (2026-10-16)
 
 CELL = ["dataset", "domain", "model", "reasoning", "context_level", "scope", "decomposition"]
 QWK_K = 5                       # a-priori bins (0..5, Mohler-aligned); sensitivity over {4,5,6} in 5.2
@@ -65,8 +66,35 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame:
     return d
 
 
+def apply_reasoning_fallback(df: pd.DataFrame) -> pd.DataFrame:
+    """A reasoning-on run that returned no grade (its trace overflowed the output limit) takes the grade the
+    same model gave with reasoning off on the same item and repetition, as a grading system would fall back
+    to a cheaper call. Replaces the 'tractable items' exclusion (Pedro's review, 2026-10-16: excluding the
+    items whose reasoning overflowed selected on an outcome of the treatment). Marks fallback=True;
+    parse_ok stays False, so the extractable rate and the overflow counts are unchanged."""
+    d = df.copy()
+    d["fallback"] = False
+    bad = (d["reasoning"] == "on") & d["pred_norm"].isna()
+    if not bad.any():
+        return d
+    keys = ["dataset", "domain", "model", "context_level", "scope", "decomposition", "item_id", "run_index"]
+    off = d[(d["reasoning"] == "off") & d["pred_norm"].notna()].drop_duplicates(keys).set_index(keys)
+    idx = d.index[bad]
+    vals = off["pred_norm"].reindex(pd.MultiIndex.from_frame(d.loc[idx, keys])).to_numpy()
+    d.loc[idx, "pred_norm"] = vals
+    d.loc[idx, "pred"] = vals * d.loc[idx, "mx"].to_numpy()
+    d.loc[idx, "fallback"] = ~pd.isna(vals)
+    return d
+
+
 def load_main() -> pd.DataFrame:
-    return prepare(_read(RUNS))
+    return apply_reasoning_fallback(prepare(_read(RUNS)))
+
+
+def load_instruction() -> pd.DataFrame:
+    """Grading-instruction experiment rows (own store: its standard re-run shares config_hash with the
+    original baseline cells, so it must never be concatenated with load_main())."""
+    return prepare(_read(INSTR))
 
 
 def load_conversation() -> pd.DataFrame:
@@ -186,8 +214,11 @@ def _agreement(d: pd.DataFrame, k: int = QWK_K) -> dict:
 
 def _consistency(d: pd.DataFrame) -> float:
     """Mean within-item SD of the normalised score across the k repetitions (lower = more
-    consistent). Ground-truth-free."""
+    consistent). Ground-truth-free. Fallback grades (apply_reasoning_fallback) are left out: they come
+    from the reasoning-off mode, and mixing two modes within an item would inflate the reasoning-on SD."""
     s = d[d["pred_norm"].notna()]
+    if "fallback" in s:
+        s = s[~s["fallback"].astype(bool)]
     if s.empty:
         return np.nan
     sd = s.groupby("item_id")["pred_norm"].std()
@@ -291,6 +322,8 @@ def sd_length_spearman(df: pd.DataFrame) -> pd.DataFrame:
     from scipy import stats
     base = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question")
               & (df.decomposition == "holistic") & df.pred_norm.notna()]
+    if "fallback" in base:
+        base = base[~base["fallback"].astype(bool)]          # the model's own grades only (2026-10-16)
     rows = []
     for (ds, m), g in base.groupby(["dataset", "model"]):
         it = g.assign(ct=pd.to_numeric(g.completion_tokens, errors="coerce")) \

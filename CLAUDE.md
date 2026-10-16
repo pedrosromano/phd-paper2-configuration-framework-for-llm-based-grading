@@ -47,7 +47,9 @@ whole study and the Results structure):
 - **RQ4.** How do **current-generation models** (incl. 2026 open-weight, untested as graders) compare, and what
   is the **cost–quality trade-off** (local vs paid frontier)?
 - **RQ5 (sub-study).** Does **conversation state** (clean vs shared history) affect consistency/fairness?
-- **RQ6 (transfer — PARTIAL, demonstrated at reduced N).** Does the configuration guidance found on public
+- **RQ6 — REPLACED 2026-10-16 (Pedro's review): RQ6 is now the GRADING INSTRUCTION (strict vs explicit partial
+  credit; see §11 'Pedro's review'). The transfer question below and the deployment angle are no longer in the
+  paper; kept as history.** Former RQ6 (transfer — PARTIAL, demonstrated at reduced N). Does the configuration guidance found on public
   datasets **transfer** to a real Portuguese deployment context (PT-CS-verified, the curated intervened
   stratum, §2.2/§11)? **Rewritten (2026-06-11; supersedes both the "illustrative" and the "ranking-inversion"
   framings):** transfer is **partial and heterogeneous** — the public top open config (qwen3.5|on,
@@ -1111,3 +1113,27 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   range is **9–60%** (was 9–56%); Threats updated (`audit_pct_baselines.temp0_variation`).
 - ✅ **No run-period distinction in the paper (D12, user 2026-10-15):** no June/October, no "extensions", no
   reproduction-check sentence, no GLM-drift sentence; costs reported for all experiments together.
+- 🔧 **Pedro's review of the Access draft (2026-10-16, 51 PDF comments) — IN PROGRESS; read
+  `article/review/REVISAO_PR_ESTADO.md` FIRST (every comment, decision and result).** Decisions (user):
+  **(P1)** a grading-instruction experiment (prompt engineering, "simple and cheap") and a guide that is ONE
+  simple recipe: no budget ladder, no "confirm locally", no "check collapse first", no leave-one-out test;
+  **(P2)** RQ1 keeps every item: a reasoning run that overflowed takes the same model's reasoning-off grade
+  (`phase5.apply_reasoning_fallback`, applied in `load_main`; SD, zero rates and temperature-0 variation use
+  the model's own grades only) → RQ1 = **6 of 20 significant, 3 after Holm** (Qwen Mohler, Qwen RIAYN, GPT
+  RIAYN); RQ1 and RQ4 now share the same items; **(P3)** GPT-5.1 joins RQ3; a second closed model (Claude
+  Sonnet 4.6) as a ~$20 subset; GLM-5.1 off must be found elsewhere (DeepInfra retired it: `zai-org/GLM-5.1`
+  is answered by GLM-5.3, which reasons even with thinking off; OpenRouter still serves GLM-5.1 from 13
+  providers with `reasoning.mandatory=false` → needs an OpenRouter key); **(P4)** RQ6 (ranking transfer) and
+  the whole deployment/transfer angle are REMOVED; RQ6 is now the grading instruction; PT-CS = our new dataset
+  of complete exams (the only one for scope/conversation); **(P5)** PT-CS is described per question, one
+  sentence on the selection (teachers changed the platform's suggested score), no correction-feature detail;
+  **(P6)** NEW, at the end: a "guide in use" evaluation (`experiments/analysis/guide_eval.py`) comparing the
+  recipe with every configuration on QWK, SD, zeros and cost.
+  **Instruction experiment** (`prompts_instruction.yaml`, store `instruction.jsonl`, engine
+  `experiments/analysis/instruction.py`; standard cells keep their hashes): partial credit raises
+  DeepSeek-V4-Flash on code by 0.06–0.07 (Holm-significant) and is equivalent on short answers; it does NOT
+  repair Qwen3.5's zero-collapse (Qwen's justifications name what the student got right and still give 0);
+  the justification variant was unstable and dropped. GPT-5.1 runs (i4 arms, Batch API) wait for OpenAI
+  credit; Claude Sonnet 4.6 runs via the Message Batches API with structured output enforcing the JSON-only
+  score (`experiments/run/batch_runner.py`; Mohler capped at 800). Harness: `NoCredits` stops a provider
+  without storing rows (OpenAI 429 credit_balance_exhausted had been retried for 15 min per call).

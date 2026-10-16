@@ -14,6 +14,8 @@ Axes:
                      REFERENCE answer (Mohler/SemEval). "with_examples" adds few-shot (§11 optional).
   scope          question_by_question | whole_exam       (whole_exam = PT-CS only)
   decomposition  holistic | criterion                    (criterion  = PT-CS only)
+  instruction    standard | partial_credit | partial_credit_justified   (2026-10-16; variant blocks in
+                   prompts_instruction.yaml; only with guidance, one question per call, holistic)
   k              repetitions (consistency); temperature; run_index in [0, k)
 
 Applicability (CLAUDE.md §5/§6, verified Phase 2.6):
@@ -50,6 +52,12 @@ DECOMPOSITIONS = {"holistic", "criterion"}
 # sub-study (the default for the main factorial: each call is an independent conversation).
 # "clean" = a fresh conversation per answer; "shared" = one accumulating history per session.
 CONVERSATION_STATES = {"none", "clean", "shared"}
+# Grading-instruction experiment (Pedro's review, 2026-10-16): how the grader is told to apply the
+# guidance. "standard" = the original templates (prompts.yaml); "partial_credit" = explicit partial
+# credit instead of "grade strictly"; "partial_credit_justified" = partial credit plus a short
+# justification written before the score. Variant blocks live in prompts_instruction.yaml.
+INSTRUCTIONS = {"standard", "partial_credit", "partial_credit_justified"}
+PROMPTS_INSTRUCTION = REPO_ROOT / "experiments" / "configs" / "prompts_instruction.yaml"
 
 # Cell-defining fields read straight off the Config. config_hash ALSO folds in the
 # resolved model_id+provider and the prompt-template version (see config_hash) so that
@@ -86,6 +94,12 @@ def prompts_version() -> str:
     return _PROMPTS_VERSION
 
 
+def instruction_prompts_version() -> str:
+    """Short hash of prompts_instruction.yaml; enters config_hash only for non-standard instructions,
+    so the original cells (and their cache) are untouched by edits to the variant templates."""
+    return hashlib.sha1(PROMPTS_INSTRUCTION.read_bytes()).hexdigest()[:12]
+
+
 def resolve_model_id(model: str) -> str:
     return _pricing_models().get(model, {}).get("model_id", model)
 
@@ -117,6 +131,7 @@ class Config:
     scope: str = "question_by_question"
     decomposition: str = "holistic"
     conversation_state: str = "none"
+    instruction: str = "standard"
     k: int = 5
     temperature: float = 0.0
     top_p: float = 1.0
@@ -156,6 +171,13 @@ class Config:
             raise ConfigError("conversation-state sub-study (clean/shared) is PT-CS only")
         if self.reasoning == "on" and not _model_has_toggle(self.model):
             raise ConfigError(f"model {self.model!r} has no reasoning toggle for reasoning=on")
+        if self.instruction not in INSTRUCTIONS:
+            raise ConfigError(f"bad instruction {self.instruction!r}")
+        if self.instruction != "standard" and (
+                self.context_level != "with_guidance" or self.scope != "question_by_question"
+                or self.decomposition != "holistic" or self.conversation_state != "none"):
+            raise ConfigError("instruction variants are defined for with_guidance, one question per call, "
+                              "holistic, clean grading only")
         return self
 
     @property
@@ -169,6 +191,9 @@ class Config:
         payload["model_id"] = resolve_model_id(self.model)
         payload["provider"] = resolve_provider(self.model)
         payload["prompt_template_version"] = prompts_version()
+        if self.instruction != "standard":           # standard cells keep their original hash (cache-safe)
+            payload["instruction"] = self.instruction
+            payload["instruction_template_version"] = instruction_prompts_version()
         blob = json.dumps(payload, sort_keys=True, separators=(",", ":"))
         return hashlib.sha1(blob.encode("utf-8")).hexdigest()[:16]
 
@@ -194,11 +219,13 @@ def expand_arm(arm: dict) -> list[Config]:
     Cartesian axes: dataset/domain/model/reasoning/context_level/scope/decomposition/
     conversation_state. Per-arm scalars (not crossed): k, temperature, top_p, max_tokens, seed."""
     axes = ["dataset", "domain", "model", "reasoning", "context_level", "scope",
-            "decomposition", "conversation_state"]
+            "decomposition", "conversation_state", "instruction"]
     vals = {a: (arm[a] if isinstance(arm.get(a), list) else [arm.get(a)]) for a in axes}
     vals["reasoning"] = [_norm_reasoning(v) for v in vals["reasoning"]]
     if not arm.get("conversation_state"):
         vals["conversation_state"] = ["none"]   # default: not the sub-study
+    if not arm.get("instruction"):
+        vals["instruction"] = ["standard"]      # default: the original templates
     k = int(arm.get("k", 5))
     temp = float(arm.get("temperature", 0.0))
     top_p = float(arm.get("top_p", 1.0))

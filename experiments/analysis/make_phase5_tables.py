@@ -126,14 +126,14 @@ def dim_contrasts(df: pd.DataFrame, interv: set) -> pd.DataFrame:
 
 
 def rq1_cells(df: pd.DataFrame, interv: set) -> pd.DataFrame:
-    """RQ1 per (dataset, domain, model) on the bases the paper declares (single source for the RQ1
-    values table AND Figs. rq1trade / rq1, fixed 2026-10-15: the figures had plotted dQWK on all
-    paired items, including those whose reasoning overflowed, while the prose and Method use the
-    tractable items only). PT-CS rows use the verified (intervened) stratum.
-      - dQWK, CI, QWK_off, N: tractable (clean) paired items, bootstrap median, as in T1.
-      - pct: dQWK as a percent of QWK_off (the prose percentages; cf. audit_pct_baselines.rq1).
-      - SDk_off/on and prem_x: all paired items (truncated runs were still generated and paid for),
-        via phase5.reasoning_contrast, so they match the figures and the '16 of 20' prose count."""
+    """RQ1 per (dataset, domain, model): the single source for the RQ1 values table and figures. PT-CS
+    rows use the verified (intervened) stratum.
+      - dQWK, CI, QWK_off, N: every paired item (the reasoning samples), bootstrap median. Since
+        2026-10-16 (Pedro's review) there is no 'tractable items' exclusion: a reasoning-on run whose
+        trace overflowed carries the same model's reasoning-off grade (phase5.apply_reasoning_fallback).
+      - fallback_pct: share of reasoning-on runs that fell back (the overflow rate, a cost of reasoning).
+      - pct: dQWK as a percent of QWK_off (audit only; the paper quotes no QWK percentages).
+      - SDk_off/on and prem_x: all paired items (overflowed runs were still generated and paid for)."""
     dv = df[(df.dataset != "ptcs") | df.item_id.isin(interv)]
     rp = phase5.reasoning_paired(dv)
     base = rp[(rp.context_level == "with_guidance") & (rp.scope == "question_by_question") & (rp.decomposition == "holistic")]
@@ -143,15 +143,15 @@ def rq1_cells(df: pd.DataFrame, interv: set) -> pd.DataFrame:
         o, n = g[g.reasoning == "off"], g[g.reasoning == "on"]
         if o.empty or n.empty:
             continue
-        k = n.run_index.nunique(); ppi = n[n.parse_ok].groupby("item_id").size()
-        clean = set(ppi[ppi == k].index) if n.parse_ok.mean() < 1 else set(n.item_id.unique())
-        qoff, sA = _qwk_items(o[o.item_id.isin(clean)]); _, sB = _qwk_items(n[n.item_id.isin(clean)])
+        items = set(n.item_id.unique())          # every paired item; overflowed runs carry the off grade
+        qoff, sA = _qwk_items(o[o.item_id.isin(items)]); qon, sB = _qwk_items(n[n.item_id.isin(items)])
         dist = _boot_dist(sA, sB)
         lo, md, hi = np.percentile(dist, [2.5, 50, 97.5])
         prem = (pd.to_numeric(n.completion_tokens, errors="coerce").mean()
                 / max(pd.to_numeric(o.completion_tokens, errors="coerce").mean(), 1))
         r = rc.loc[(ds, dom, m)]
-        rows.append({"dataset": ds, "domain": dom, "model": m, "N": len(clean), "QWK_off": qoff,
+        rows.append({"dataset": ds, "domain": dom, "model": m, "N": len(items), "QWK_off": qoff, "QWK_on": qon,
+                     "fallback_pct": 100 * float(n["fallback"].mean()) if "fallback" in n else 0.0,
                      "dQWK": md, "lo": lo, "hi": hi, "pct": 100 * md / qoff if qoff else np.nan,
                      "sig": bool(lo > 0 or hi < 0), "prem_x": prem, "p": _p_boot(dist),
                      "SDk_off": r.SDk_off, "SDk_on": r.SDk_on})
@@ -229,15 +229,14 @@ def main() -> int:
         o, n = g[g.reasoning == "off"], g[g.reasoning == "on"]
         if o.empty or n.empty:
             continue
-        k = n.run_index.nunique(); ppi = n[n.parse_ok].groupby("item_id").size()
-        clean = set(ppi[ppi == k].index) if n.parse_ok.mean() < 1 else set(n.item_id.unique())
+        clean = set(n.item_id.unique())          # every paired item (fallback rule, 2026-10-16); name kept
         _, sA = _qwk_items(o[o.item_id.isin(clean)]); _, sB = _qwk_items(n[n.item_id.isin(clean)])
         lo, md, hi = _boot_ci(sA, sB)
         # cost premium on the verified PT-CS stratum, so the framework ranges match the RQ1 prose
         # and figures (both verified); the public datasets have no full/verified split.
         oo, nn = (o, n) if ds != "ptcs" else (o[o.item_id.isin(interv)], n[n.item_id.isin(interv)])
         prem = pd.to_numeric(nn.completion_tokens, errors="coerce").mean() / max(pd.to_numeric(oo.completion_tokens, errors="coerce").mean(), 1)
-        sdk_off = o.groupby("item_id").pred_norm.std().mean(); sdk_on = n.groupby("item_id").pred_norm.std().mean()
+        sdk_off = o.groupby("item_id").pred_norm.std().mean(); sdk_on = n[~n.fallback].groupby("item_id").pred_norm.std().mean()
         prem_by[(ds, dom, m)] = prem; sdk_by[(ds, dom, m)] = (sdk_off, sdk_on)
         dqwk_by[(ds, dom, m)] = (md, lo, hi)
         ver_cell = "--"
@@ -286,7 +285,8 @@ def main() -> int:
                           "SD off $\\to$ on": f"{c.SDk_off:.3f} $\\to$ {c.SDk_on:.3f}"})
     _tex(pd.DataFrame(vrows), "tab_rq1_values.tex",
          "Reasoning off versus on, per model and dataset. $\\Delta$QWK is QWK with reasoning on minus QWK "
-         "off, on the N items whose reasoning stayed within the output-token limit; bold marks a 95\\% "
+         "off, on the N sampled items; a reasoning run that reached the output limit without a grade takes "
+         "the reasoning-off grade (Section~\\ref{sec:metrics}). Bold marks a 95\\% "
          "bootstrap confidence interval that excludes zero. Holm marks the gains that stay significant after Holm's "
          "correction for the 20 comparisons. Tokens is how many times more output tokens reasoning used, "
          "and SD is the mean within-item standard deviation across repetitions (lower is more consistent); "
@@ -418,7 +418,7 @@ def main() -> int:
     # guidance + scope literals, derived from the T2 engine contrasts (not hand-typed)
     riayn_ctx = float(ctx_by["riayn"]["dQWK"]); ptcs_ctx_full = float(ctx_by["ptcs"]["dQWK"])
     ptcs_ctx_ver = float(ctx_by["ptcs"]["dQWK-V [CI] (N$_V$)"].split()[0]); scope_ver = float(scope_row["dQWK-V [CI] (N$_V$)"].split()[0])
-    R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "9--925", "109--192", "2.5--5"   # composite; verified by the test
+    R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "9--925", "109--192", "2.5--5"   # composite; verified by the test (SD excludes fallback grades, 2026-10-16)
     # scope cost per question: whole exam in one call vs one call per question, on the 252 whole-exam
     # questions (whole-exam cost deduplicated by call_group); backs the 'one question per call' row
     we_items = set(df[WQ].item_id)
@@ -451,91 +451,71 @@ def main() -> int:
     _cc = dcost.groupby(["model", "dataset", "decomposition"]).cost_eur.mean().unstack()
     dec_ratio = float((_cc["criterion"] / _cc["holistic"]).mean())   # criterion vs holistic cost per answer
     dec_lo, dec_hi = float((_cc["criterion"] / _cc["holistic"]).min()), float((_cc["criterion"] / _cc["holistic"]).max())
-    # --- T6: how well the guide does (C10, 2026-10-15; D13). Per dataset, the guide's default (reasoning
-    #     off with the strongest model that does not collapse to zeros, GLM-5.1, on both tasks) and the
-    #     budget alternative (the cheapest model with reasoning off) against the best configuration in
-    #     hindsight, all on the items every configuration graded (the reasoning samples). Engine: bloco_c.c10.
-    #     Computed before T5 because the guide's model row quotes it. ---
-    from experiments.analysis import bloco_c
-    bloco_c.GUIDE = {"short_answer": ["glm-5.1", "cheapest"], "code": ["glm-5.1", "cheapest"]}
-    reg = bloco_c.c10(df)
-    names = {"qwen3.5": "Qwen3.5", "glm-5.1": "GLM-5.1", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1"}
-    lbl = {"mohler:short": "Mohler", "semeval:short": "SemEval", "ptcs:short": "PT-CS short",
-           "riayn:code": "RIAYN", "ptcs:code": "PT-CS code"}
-    order = ["mohler:short", "semeval:short", "ptcs:short", "riayn:code", "ptcs:code"]
-    dft = reg[reg.role == "glm-5.1"].set_index("dataset").loc[order]
-    chp = reg[reg.role == "cheapest"].set_index("dataset").loc[order]
-    cheapest = chp.guide.str.split("|").str[0].unique()
-    assert len(cheapest) == 1, f"the cheapest model differs across datasets: {cheapest}"
-    cheapest = names[cheapest[0]]
-    rt = pd.DataFrame([[lbl[ds], int(a.N_common), names[a.best.split("|")[0]] + ", reasoning " + a.best.split("|")[1],
-                        f"{a.best_qwk:.3f}", f"{a['best_eur/1000']:.2f}",
-                        f"{a.guide_qwk:.3f}", f"{a['guide_eur/1000']:.2f}", f"{a.regret:.3f}",
-                        f"{b.guide_qwk:.3f}", f"{b['guide_eur/1000']:.2f}", f"{b.regret:.3f}"]
-                       for ds, a, b in zip(order, (dft.loc[o] for o in order), (chp.loc[o] for o in order))],
-                      columns=["Dataset", "N", "Configuration", "QWK", "\\euro/1000", "QWK", "\\euro/1000",
-                               "Given up", "QWK", "\\euro/1000", "Given up"])
-    _tex(rt, "tab_guide_regret.tex",
-         "How the guide's default compares with the best configuration in hindsight, per dataset. All "
-         "configurations use guidance, one question per call and holistic scoring. The guide's default is "
-         f"GLM-5.1 with reasoning off; the cheapest alternative is {cheapest} with reasoning off. Every "
-         "configuration is scored on the same N items, those that all of them graded (the reasoning samples). "
-         "Given up is the QWK lost against the best configuration; costs are euros per 1000 grades.",
-         "tab:guideregret", star=True, colspec="lrlrrrrrrrr", size="\\footnotesize",
-         head_pre=("& & \\multicolumn{3}{c}{Best in hindsight} & \\multicolumn{3}{c}{Guide default} & "
-                   "\\multicolumn{3}{c}{Cheapest model} \\\\ \\cmidrule(lr){3-5}\\cmidrule(lr){6-8}\\cmidrule(lr){9-11}"))
-    g_lo, g_hi = dft.regret.min(), dft.regret.max(); c_lo, c_hi = chp.regret.min(), chp.regret.max()
-    g_x = dft["best_eur/1000"] / dft["guide_eur/1000"]
-    c_x = dft["guide_eur/1000"] / chp["guide_eur/1000"]
-    print(f"  guide (Section framework): default gives up {g_lo:.3f}-{g_hi:.3f} at up to {g_x.max():.0f}x lower cost "
-          f"than the best; the cheapest gives up {c_lo:.3f}-{c_hi:.3f} and is {c_x.min():.0f}-{c_x.max():.0f}x cheaper than the default")
-    # budget ladder (2026-10-16): worst-case shortfall of every configuration on the Table V items
-    ra = bloco_c.regret_all(df)
-    worst = ra.groupby(["model", "reasoning"]).regret.max()
-    off_worst = worst.xs("off", level="reasoning").drop("glm-5.1")
-    glm_on_worst = worst[("glm-5.1", "on")]
-    _gl = ra[ra.model == "glm-5.1"].pivot_table(index="set", columns="reasoning", values="eur")
-    glm_on_x = (_gl["on"] / _gl["off"])
-    print(f"  budget ladder: GLM-5.1 off worst {worst[('glm-5.1', 'off')]:.3f} vs other off {off_worst.min():.3f}-{off_worst.max():.3f}; "
-          f"GLM-5.1 on worst {glm_on_worst:.3f} (smallest of all: {worst.idxmin()}) at {glm_on_x.min():.1f}-{glm_on_x.max():.1f}x the default's cost")
-    short_prem = [v for k, v in prem_by.items() if k[1] == "short_answer"]
-    R_SHORT = f"{int(round(min(short_prem)))}--{int(round(max(short_prem)))}"
-
+    # --- T5: the configuration guide as ONE recipe (Pedro's review 2026-10-16: no budget ladder, no
+    #     'check collapse first', no 'confirm locally'). One row per configuration choice: the setting, the
+    #     evidence, the cost. The model row reads the guide-in-use engine (guide_eval), which also writes the
+    #     table of the guide against every configuration (tab_guide_use). Numbers derived, never typed. ---
+    from experiments.analysis import guide_eval, instruction
+    ge = guide_eval.summary(guide_eval.evaluate(guide_eval.rows()))
+    geB = ge[ge.basis == "B"].set_index("set"); geA = ge[ge.basis == "A"].set_index("set")
+    code_sets, pub_short = ["RIAYN", "PT-CS code"], ["Mohler", "SemEval"]
+    rec_cost = (geB.guide_eur.min(), geB.guide_eur.max())
+    ins_c = instruction.contrasts(instruction.load())
+    pc = ins_c[ins_c.contrast == "partial credit vs strict"]
+    pc_ds_code = pc[(pc.model == guide_eval.GUIDE[0]) & (pc.domain == "code")]
+    pc_short = pc[pc.domain == "short_answer"]
+    pc_pub_short = pc_short[pc_short.dataset.isin(["mohler", "semeval"])]
+    n_sig = int(cells.sig.sum()); n_holm = int(cells.sig_holm.sum())
+    gcost = df[(df.reasoning == "off") & (df.scope == "question_by_question") & (df.decomposition == "holistic")
+               & df.model.isin(gd.model.unique())]
+    _gc = gcost.groupby(["model", "dataset", "domain", "context_level"]).cost_eur.mean().unstack()
+    g_ratio = (_gc["with_guidance"] / _gc["none"]).dropna()
     fw = pd.DataFrame([
-        {"Scenario": "Choosing the model", "Recommended": "The strongest model that does not collapse to zero, with reasoning off (here GLM-5.1, for both tasks)",
-         "Trade-off in the rule": f"on the five datasets it stayed {g_lo:.3f} to {g_hi:.3f} QWK below the best configuration in hindsight, at up to {g_x.max():.0f} times lower cost, the smallest worst-case shortfall of any reasoning-off configuration ({worst[('glm-5.1', 'off')]:.3f}, against {off_worst.min():.3f} to {off_worst.max():.3f}; Table~\\ref{{tab:guideregret}})"},
-        {"Scenario": "The budget is tight", "Recommended": f"The cheapest model, with reasoning off (here {cheapest})",
-         "Trade-off in the rule": f"about {c_x.min():.0f} times cheaper than the default, but it gave up {c_lo:.3f} to {c_hi:.3f} QWK against the best configuration"},
-        {"Scenario": "Agreement matters more than cost", "Recommended": "The default model with reasoning on (here GLM-5.1)",
-         "Trade-off in the rule": f"the most robust configuration: at most {glm_on_worst:.3f} QWK below the best on every dataset, at {glm_on_x.min():.0f} to {glm_on_x.max():.0f} times the default's cost"},
-        {"Scenario": "Grading short answers", "Recommended": "Reasoning off",
-         "Trade-off in the rule": f"the reasoning gain is small and none survives correction for multiple comparisons (before correction it is significant only for Qwen3.5 on Mohler and SemEval), while reasoning on uses {R_SHORT} times the output tokens"},
-        {"Scenario": "Grading code with a model that gives too many zeros", "Recommended": "Switch to a model that does not collapse, or turn reasoning on",
-         "Trade-off in the rule": f"reasoning roughly halved Qwen3.5's zeros and raised its PT-CS code agreement by ${qc_v:+.3f}$ QWK, but at {q_prem_lo:.0f} to {q_prem_hi:.0f} times the output tokens and with worse run-to-run consistency, so switching model is the cheaper fix"},
-        {"Scenario": "Grading code with a model that does not collapse", "Recommended": "Reasoning off; on only if local validation justifies it",
-         "Trade-off in the rule": f"for GLM-5.1 and DeepSeek-V4-Flash the reasoning gain on code varied in sign and was never significant, so off is the safe default, saving {R_DISCRIM_CODE} times the output tokens and keeping consistency"},
-        {"Scenario": "Consistency or fairness is critical", "Recommended": "Reasoning off",
-         "Trade-off in the rule": "reasoning on is less reproducible, partly a length effect and partly reasoning itself"},
-        {"Scenario": "A rubric or reference answer is available", "Recommended": "Supply it as evaluation guidance",
-         "Trade-off in the rule": f"guidance was the one change that reliably raised agreement: it helped significantly in {len(g_ok)} of {len(gd)} model-dataset combinations across three model families (${g_ok.dQWK.min():+.3f}$ to ${g_ok.dQWK.max():+.3f}$ QWK), at the cost of only the extra prompt tokens"},
-        {"Scenario": "The rubric has several criteria", "Recommended": "Holistic scoring (one overall score)",
-         "Trade-off in the rule": f"across two models and two code datasets, scoring criterion by criterion never improved agreement significantly (${dd_.dQWK.min():+.3f}$ to ${dd_.dQWK.max():+.3f}$ QWK, significantly worse in {['no', 'one', 'two', 'three', 'four'][int((dd_.hi < 0).sum())]} case{'s' if int((dd_.hi < 0).sum()) != 1 else ''}) at {dec_lo:.1f} to {dec_hi:.1f} times the cost per answer"},
-        {"Scenario": "The exam has several questions", "Recommended": "Grade one question per call",
-         "Trade-off in the rule": f"on PT-CS code, grading the whole exam in one call never improved agreement (Qwen3.5 ${sc_.loc['qwen3.5','dQWK']:+.3f}$ QWK, significant; DeepSeek-V4-Flash ${sc_.loc['deepseek-v4-flash','dQWK']:+.3f}$) and "
-         + f"saved little or nothing (${scope_cost['qwen3.5']:+.0f}$\\% cost per question for Qwen3.5, "
-           f"${scope_cost['deepseek-v4-flash']:+.0f}$\\% for DeepSeek-V4-Flash)"},
-        {"Scenario": "Grading many answers in sequence", "Recommended": "A clean conversation per answer; no history carried across the exam",
-         "Trade-off in the rule": f"a shared, accumulating conversation lowered grades slightly ({min(st_d):.3f} to {max(st_d):.3f} of the scale) and answer order moved individual grades by {min(or_a):.2f} to {max(or_a):.2f} of the scale (three models, up to 80 exams)"},
+        {"Choice": "Model", "Recommended": "DeepSeek-V4-Flash",
+         "Evidence and cost": (f"the cheapest model tested; with the rest of this recipe it was the best configuration "
+                               f"without reasoning on both code datasets ({geB.loc['RIAYN', 'guide_QWK']:.3f} on RIAYN, "
+                               f"{geB.loc['PT-CS code', 'guide_QWK']:.3f} on PT-CS code) and within "
+                               f"{geB.loc[pub_short, 'gap_to_best'].max():.3f} QWK of the best on the public short-answer "
+                               f"datasets, at {rec_cost[0]:.2f} to {rec_cost[1]:.2f} euros per 1000 grades "
+                               f"(Table~\\ref{{tab:guideuse}})")},
+        {"Choice": "Reasoning", "Recommended": "Off",
+         "Evidence and cost": (f"it raised agreement significantly in {n_sig} of {len(cells)} model-dataset combinations, "
+                               f"{n_holm} after correction, at {R_OVERALL} times the output tokens and with less consistent "
+                               f"grades; its large gains came only for models that score many answers as zero")},
+        {"Choice": "Evaluation guidance", "Recommended": "The rubric or reference answer, whenever one exists",
+         "Evidence and cost": (f"the change that most reliably raised agreement: significant in {len(g_ok)} of {len(gd)} "
+                               f"model-dataset combinations (${g_ok.dQWK.min():+.3f}$ to ${g_ok.dQWK.max():+.3f}$ QWK), "
+                               f"at {g_ratio.min():.1f} to {g_ratio.max():.1f} times the cost per grade")},
+        {"Choice": "Grading instruction", "Recommended": "Ask for partial credit explicitly",
+         "Evidence and cost": (f"it raised DeepSeek-V4-Flash's agreement on code by ${pc_ds_code.dQWK.min():+.3f}$ to "
+                               f"${pc_ds_code.dQWK.max():+.3f}$ QWK (significant after correction) and changed the public "
+                               f"short-answer datasets by less than the $\\pm0.05$ margin, for a few extra input tokens")},
+        {"Choice": "Scope", "Recommended": "One question per call",
+         "Evidence and cost": (f"on PT-CS code, grading the whole exam in one call never improved agreement (Qwen3.5 "
+                               f"${sc_.loc['qwen3.5','dQWK']:+.3f}$ QWK, significant; DeepSeek-V4-Flash "
+                               f"${sc_.loc['deepseek-v4-flash','dQWK']:+.3f}$) and saved little or nothing "
+                               f"(${scope_cost['qwen3.5']:+.0f}$\\% cost per question for Qwen3.5, "
+                               f"${scope_cost['deepseek-v4-flash']:+.0f}$\\% for DeepSeek-V4-Flash)")},
+        {"Choice": "Decomposition", "Recommended": "One holistic score",
+         "Evidence and cost": (f"scoring criterion by criterion never improved agreement significantly "
+                               f"(${dd_.dQWK.min():+.3f}$ to ${dd_.dQWK.max():+.3f}$ QWK, significantly worse in "
+                               f"{['no', 'one', 'two', 'three', 'four'][int((dd_.hi < 0).sum())]} "
+                               f"case{'s' if int((dd_.hi < 0).sum()) != 1 else ''}) at {dec_lo:.1f} to {dec_hi:.1f} "
+                               f"times the cost per answer")},
+        {"Choice": "Conversation", "Recommended": "A clean conversation per answer",
+         "Evidence and cost": (f"a shared, accumulating conversation lowered grades slightly ({min(st_d):.3f} to "
+                               f"{max(st_d):.3f} of the scale) and answer order moved individual grades by "
+                               f"{min(or_a):.2f} to {max(or_a):.2f} of the scale")},
     ])
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
-
-    fw["Trade-off in the rule"] = fw["Trade-off in the rule"].map(lambda s: s[0].upper() + s[1:] if s else s)
-    fw["Scenario"] = "\\raggedright " + fw["Scenario"]   # left-align (ragged right), not justified
+    fw["Evidence and cost"] = fw["Evidence and cost"].map(lambda s: s[0].upper() + s[1:] if s else s)
+    fw["Choice"] = "\\raggedright " + fw["Choice"]
     fw["Recommended"] = "\\raggedright " + fw["Recommended"]
     _tex(fw, "tab_framework.tex",
-         "The configuration guide. Each row pairs a grading scenario "
-         "with a recommended setting and the trade-off behind it.",
-         "tab:framework", star=True, colspec="p{2.8cm}p{4.2cm}p{9.2cm}", rowsep="3pt", rowrule=True)
+         "The configuration guide: one recommended setting per configuration choice, with the evidence and the "
+         "cost behind it. Together the settings form the recipe of Fig.~\\ref{fig:frameworkdiagram}.",
+         "tab:framework", star=True, colspec="p{2.6cm}p{3.8cm}p{9.8cm}", rowsep="3pt", rowrule=True)
+    guide_eval.write_table(ge)
     print("done.")
     return 0
 

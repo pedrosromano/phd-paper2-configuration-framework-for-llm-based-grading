@@ -110,6 +110,7 @@ def build_run_row(item, config, result, prompt: str, *,
         "reasoning": config.reasoning, "context_level": config.context_level,
         "scope": config.scope, "decomposition": config.decomposition,
         "conversation_state": config.conversation_state,
+        "instruction": getattr(config, "instruction", "standard"),
         "question_id": str(item.get("question_id", "")),
         "submission_id": _strornone(item.get("submission_id")),
         # --- conversation sub-study linkage (Phase 4.9; None for the main factorial) ---

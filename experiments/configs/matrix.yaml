@@ -218,7 +218,131 @@ arms:
     max_tokens: 32768
     item_filter: ptcs_validated
 
+  # --- Pedro's review (2026-10-16). GLM-5.1 cannot be run: DeepInfra no longer lists it and answers
+  #     zai-org/GLM-5.1 requests with GLM-5.3, which reasons even with enable_thinking=false (checked
+  #     2026-10-16: 195-1763 output tokens against 10 in June). Qwen3.5 and DeepSeek-V4-Flash still
+  #     reproduce their June outputs (same served model, 7 output tokens). ---
+  - name: c3_gpt_decomposition     # RQ3 on the same three models as RQ2: GPT-5.1 holistic vs criterion
+    model: gpt-5.1
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: [holistic, criterion]
+    dataset: [riayn, ptcs]
+    domain: code
+    k: 5
+    item_filter: ptcs_validated
+
+  # Grading-instruction experiment, stage 1 (code). standard = the original prompt re-run in the same
+  # batch (drift guard); partial_credit / partial_credit_justified = the variants in prompts_instruction.yaml.
+  # Own store, so the standard re-run never mixes with the original baseline rows (same config_hash).
+  - name: i1_instruction_code
+    store: instruction.jsonl
+    model: [qwen3.5, deepseek-v4-flash]            # GPT-5.1 runs in i4 (partial credit only; Batch API)
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: [standard, partial_credit, partial_credit_justified]
+    dataset: [riayn, ptcs]
+    domain: code
+    k: 5
+    item_filter: ptcs_validated
+
+  # Stage 2 (short answers). Stage 1 on the open models (2026-10-16): partial credit raised DeepSeek-V4-Flash
+  # by 0.06-0.07 on both code sets (significant after Holm) and lowered nothing; it did not repair Qwen3.5's
+  # zeros. The justification variant was unstable (it lowered DeepSeek on PT-CS) and is not carried forward.
+  # Stage 2 checks the partial-credit instruction on the short-answer sets, with the same-batch strict re-run.
+  - name: i2_instruction_short
+    store: instruction.jsonl
+    model: [qwen3.5, deepseek-v4-flash]            # GPT-5.1 runs in i4 (partial credit only; Batch API)
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: [standard, partial_credit]
+    dataset: [mohler, semeval, ptcs]
+    domain: short_answer
+    k: 5
+    item_filter: ptcs_validated
+
+  # Claude Sonnet 4.6 (Pedro's review 2026-10-16): a second closed model, reasoning off, strict and partial-credit
+  # instruction on every item, through the Message Batches API (-50%; experiments/run/batch_runner.py). Its
+  # JSON-only answer is enforced with the API's structured output (adapter_api.build_anthropic_payload).
+  - name: i3_sonnet
+    store: instruction.jsonl
+    model: claude-sonnet-4-6
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: [standard, partial_credit]
+    dataset: [mohler, semeval, riayn, ptcs]
+    domain: [short_answer, code]
+    k: 5
+    item_filter: ptcs_validated
+    item_cap: 800                  # Mohler: the first 800 of its seeded order (as SemEval), to keep the subset near $20;
+                                   # the structured output adds ~150 input tokens per call (measured 2026-10-16)
+
+  # GPT-5.1 with the partial-credit instruction (Batch API). Its strict cells are the C5 rows of the main store
+  # (the same-batch strict re-runs of Qwen3.5 and DeepSeek-V4-Flash reproduced their original rows, so GPT's
+  # strict re-run was skipped to save cost). Code first; short answers next.
+  - name: i4_gpt_partial_code
+    store: instruction.jsonl
+    model: gpt-5.1
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit
+    dataset: [riayn, ptcs]
+    domain: code
+    k: 5
+    item_filter: ptcs_validated
+
+  - name: i4_gpt_partial_short
+    store: instruction.jsonl
+    model: gpt-5.1
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit
+    dataset: [mohler, semeval, ptcs]
+    domain: short_answer
+    k: 5
+    item_filter: ptcs_validated
+
 # RQ6 transfer dependency (§11): the public-dataset winner needs a like-for-like PT-CS run
 # for 5.5b. SATISFIED structurally -- ptcs(code) is included in baseline, nonreasoning_main,
 # reasoning_arm, context_arm AND anchor_reduced, so EVERY candidate config (any model x
 # {off,on} x {none,with_guidance}) already has a PT-CS counterpart. No separate transfer arm.
+
+  # GLM-5.1 through OpenRouter (Z.AI pinned). OpenRouter caps new accounts at roughly 20-40 requests per minute
+  # on this model whatever the provider (429 'new-account-rpm', 2026-10-16), so the full design (strict and
+  # partial credit on every item, 21,280 calls, 10-18 h) was cut to where the instruction matters: partial credit
+  # on code, and the strict instruction on RIAYN as a check that this backend reproduces the June DeepInfra rows.
+  - name: i5_glm_code_partial
+    store: instruction.jsonl
+    model: glm-5.1-or
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit
+    dataset: [riayn, ptcs]
+    domain: code
+    k: 5
+    item_filter: ptcs_validated
+
+  - name: i5_glm_riayn_strict
+    store: instruction.jsonl
+    model: glm-5.1-or
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: standard
+    dataset: riayn
+    domain: code
+    k: 5

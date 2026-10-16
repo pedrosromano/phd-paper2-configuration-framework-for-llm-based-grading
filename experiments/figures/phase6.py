@@ -32,9 +32,10 @@ COL = 3.3      # IEEE Access column width is 85.29 mm (3.36 in)
 WIDE = 6.9     # IEEE Access text width is 177.53 mm (6.99 in)
 K = 5
 RNG = np.random.default_rng(20260610)
-MARK = {"qwen3.5": "o", "glm-5.1": "s", "deepseek-v4-flash": "^", "gpt-5.1": "D"}
+MARK = {"qwen3.5": "o", "glm-5.1": "s", "deepseek-v4-flash": "^", "gpt-5.1": "D"}   # the four families of RQ1
 COLOR = {"code": "#c0392b", "short_answer": "#2471a3"}
-MCOL = {"qwen3.5": "#1f77b4", "deepseek-v4-flash": "#ff7f0e", "glm-5.1": "#2ca02c", "gpt-5.1": "#d62728"}
+MCOL = {"qwen3.5": "#1f77b4", "deepseek-v4-flash": "#ff7f0e", "glm-5.1": "#2ca02c", "gpt-5.1": "#d62728",
+        "claude-sonnet-4-6": "#9467bd"}
 _INTERV = set(pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
               .query("stratum=='intervened'").item_id)
 
@@ -168,7 +169,8 @@ def _dims(full):
     return dim_contrasts(full, _INTERV)
 
 
-MNAME = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1", "glm-5.1": "GLM-5.1"}
+MNAME = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1", "glm-5.1": "GLM-5.1",
+         "claude-sonnet-4-6": "Claude Sonnet 4.6"}
 
 
 def _grouped(ax, groups, models, get):
@@ -220,6 +222,175 @@ def fig_rq3(full):
     ax.set_ylabel("agreement change ($\\Delta$QWK)\n(below 0 = worse than baseline)")
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.27), framealpha=0.9, ncol=2)
     _save(fig, "fig_rq3_scope_decomp")
+
+
+SETS = [("mohler", "short_answer", "Mohler"), ("semeval", "short_answer", "SemEval"),
+        ("riayn", "code", "RIAYN"), ("ptcs", "code", "PT-CS code"), ("ptcs", "short_answer", "PT-CS short")]
+
+
+def _paired_levels(ax, groups, models, get):
+    """Absolute QWK on one common 0-1 axis (Pedro's review 2026-10-16): per group and model, a light bar for
+    the starting setting and a dark hatched bar for the changed one, so the size of an effect can be compared
+    across the RQ1, RQ2, RQ3 and RQ6 figures (bars of differences on per-figure axes had made a +0.07 look
+    as large as a +0.30). get(group, model) -> (QWK start, QWK changed) or None."""
+    x = np.arange(len(groups)); nb = 2 * len(models); w = 0.84 / nb
+    for i, m in enumerate(models):
+        for j in (0, 1):
+            vals = [(lambda v: v[j] if v else np.nan)(get(g, m)) for g in groups]
+            pos = x + (2 * i + j - (nb - 1) / 2) * w
+            ax.bar(pos, vals, w, color=MCOL[m], alpha=0.45 if j == 0 else 1.0, edgecolor="k", lw=0.3,
+                   hatch="" if j == 0 else "///")
+    ax.set_xticks(x); ax.set_ylim(0, 1)
+    ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.2))
+    ax.set_ylabel("agreement (QWK)")
+
+
+def _level_legend(fig, models, start, changed, y=0.0, ncol=None):
+    from matplotlib.patches import Patch
+    h = [Patch(facecolor=MCOL[m], edgecolor="k", lw=0.3, label=MNAME[m]) for m in models]
+    h += [Patch(facecolor="#bbb", alpha=0.45, edgecolor="k", lw=0.3, label=start),
+          Patch(facecolor="#888", edgecolor="k", lw=0.3, hatch="///", label=changed)]
+    fig.legend(handles=h, loc="upper center", ncol=ncol or len(h), bbox_to_anchor=(0.5, y), framealpha=0.9,
+               handlelength=1.4, columnspacing=0.9)
+
+
+def fig_rq1(rc):
+    """RQ1 in one row (Pedro's review 2026-10-16; replaces fig_rq1_panels): (a) agreement with reasoning off
+    and on, absolute QWK on the 0-1 axis shared with the RQ2, RQ3 and RQ6 figures; (b) what the change cost,
+    the agreement change (95% CI) against the output-token multiplier on a log axis, with the +/-0.05
+    equivalence band shaded; (c) consistency, within-item SD with reasoning on against off (above the
+    diagonal = less consistent with reasoning). Values from rq1_cells: every sampled item, a reasoning run
+    that overflowed carries the reasoning-off grade."""
+    models = list(MARK)
+    fig = plt.figure(figsize=(WIDE, COL * 0.80))
+    gs = fig.add_gridspec(1, 3, width_ratios=[2.4, 1, 1], wspace=0.42)
+    cell = lambda ds, dom, m: rc[(rc.dataset == ds) & (rc.domain == dom) & (rc.model == m)]
+    get = lambda g, m: (lambda r: (float(r.QWK_off.iloc[0]), float(r.QWK_on.iloc[0])) if len(r) else None)(
+        cell(g[0], g[1], m))
+    ax = fig.add_subplot(gs[0])
+    _paired_levels(ax, SETS, models, get)
+    ax.set_xticklabels(["Mohler", "SemEval", "RIAYN", "PT-CS\ncode", "PT-CS\nshort"])
+    ax.set_title("(a) agreement with the teachers", loc="left", fontsize=7)
+    bx = fig.add_subplot(gs[1])
+    bx.axhspan(-0.05, 0.05, color="#e3e3e3", lw=0, zorder=0)
+    bx.axhline(0, color="k", lw=0.5)
+    for r in rc.itertuples():
+        bx.errorbar(r.premium_x, r.dQWK, yerr=[[r.dQWK - r.lo], [r.hi - r.dQWK]],
+                    fmt="o" if r.domain == "short_answer" else "s", color=MCOL[r.model], mec="k", mew=0.3,
+                    ms=3.6, elinewidth=0.5, capsize=1, zorder=3)
+    bx.set_xscale("log")
+    bx.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    bx.set_xlabel("output tokens, on/off ($\\times$)")
+    bx.set_ylabel("agreement change ($\\Delta$QWK)")
+    bx.set_title("(b) gain against cost", loc="left", fontsize=7)
+    cx = fig.add_subplot(gs[2])
+    lim = float(max(rc.SDk_off.max(), rc.SDk_on.max())) * 1.12
+    cx.plot([0, lim], [0, lim], color="k", lw=0.5)
+    for r in rc.itertuples():
+        cx.scatter(r.SDk_off, r.SDk_on, marker="o" if r.domain == "short_answer" else "s", color=MCOL[r.model],
+                   edgecolor="k", lw=0.3, s=14, zorder=3)
+    cx.set_xlim(0, lim); cx.set_ylim(0, lim); cx.set_aspect("equal")
+    cx.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(3)); cx.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(3))
+    cx.set_xlabel("SD$_k$, reasoning off"); cx.set_ylabel("SD$_k$, reasoning on")
+    cx.set_title("(c) consistency", loc="left", fontsize=7)
+    from matplotlib.patches import Patch
+    h = [Patch(facecolor=MCOL[m], edgecolor="k", lw=0.3, label=MNAME[m]) for m in models]
+    h += [Patch(facecolor="#bbb", alpha=0.45, edgecolor="k", lw=0.3, label="reasoning off"),
+          Patch(facecolor="#888", edgecolor="k", lw=0.3, hatch="///", label="reasoning on"),
+          plt.Line2D([], [], marker="o", color="grey", ls="", mec="k", mew=0.3, label="short answers"),
+          plt.Line2D([], [], marker="s", color="grey", ls="", mec="k", mew=0.3, label="code")]
+    fig.legend(handles=h, loc="upper center", ncol=4, bbox_to_anchor=(0.5, -0.1), framealpha=0.9,
+               handlelength=1.6, columnspacing=1.4)
+    _save(fig, "fig_rq1")
+
+
+def fig_rq2_levels(full):
+    """RQ2 on the shared 0-1 axis (2026-10-16; replaces the dQWK bars): QWK without guidance (light) and
+    with it (hatched), per set and model, reasoning off, on every item graded both ways. The differences
+    with their CIs are in the text (dim_contrasts)."""
+    b = full[(full.reasoning == "off") & (full.scope == "question_by_question") & (full.decomposition == "holistic")]
+    b = b[(b.dataset != "ptcs") | b.item_id.isin(_INTERV)]
+    models = ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]
+
+    def get(g, m):
+        c = b[(b.dataset == g[0]) & (b.domain == g[1]) & (b.model == m)]
+        a, z = c[c.context_level == "none"], c[c.context_level == "with_guidance"]
+        if a.empty or z.empty:
+            return None
+        common = set(a.item_id) & set(z.item_id)
+        return _qwk(_itemmeans(a[a.item_id.isin(common)])), _qwk(_itemmeans(z[z.item_id.isin(common)]))
+    fig, ax = plt.subplots(figsize=(COL, COL * 0.66))
+    _paired_levels(ax, SETS, models, get)
+    ax.set_xticklabels(["Mohler", "SemEval", "RIAYN", "PT-CS\ncode", "PT-CS\nshort"])
+    fig.tight_layout()
+    _level_legend(fig, models, "no guidance", "with guidance", y=0.0, ncol=3)
+    _save(fig, "fig_rq2_guidance")
+
+
+def fig_rq3_levels(full):
+    """RQ3 on the shared 0-1 axis (2026-10-16): QWK of the baseline shape (one question per call, holistic;
+    light) and of the alternative (hatched): the whole exam in one call (PT-CS code) and criterion-by-criterion
+    scoring (RIAYN, PT-CS code), per model, reasoning off, on the items graded both ways."""
+    b = full[(full.reasoning == "off") & (full.context_level == "with_guidance") & (full.domain == "code")]
+    b = b[(b.dataset != "ptcs") | b.item_id.isin(_INTERV)]
+    models = [m for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]
+              if ((b.model == m) & ((b.scope == "whole_exam") | (b.decomposition == "criterion"))).any()]
+    groups = [("scope", "ptcs"), ("decomp", "riayn"), ("decomp", "ptcs")]
+
+    def get(g, m):
+        c = b[(b.dataset == g[1]) & (b.model == m)]
+        a = c[(c.scope == "question_by_question") & (c.decomposition == "holistic")]
+        z = (c[(c.scope == "whole_exam") & (c.decomposition == "holistic")] if g[0] == "scope"
+             else c[(c.scope == "question_by_question") & (c.decomposition == "criterion")])
+        if a.empty or z.empty:
+            return None
+        common = set(a.item_id) & set(z.item_id)
+        return _qwk(_itemmeans(a[a.item_id.isin(common)])), _qwk(_itemmeans(z[z.item_id.isin(common)]))
+    fig, ax = plt.subplots(figsize=(COL, COL * 0.62))
+    _paired_levels(ax, groups, models, get)
+    ax.set_xticklabels(["whole exam\nPT-CS code", "per criterion\nRIAYN", "per criterion\nPT-CS code"])
+    fig.tight_layout()
+    _level_legend(fig, models, "one question, holistic", "alternative", y=0.0, ncol=3)
+    _save(fig, "fig_rq3_scope_decomp")
+
+
+def fig_rq6_instruction():
+    """RQ6 grading instruction (Pedro's review 2026-10-16): (a) QWK with the strict instruction (light) and with
+    explicit partial credit (hatched), per set and model, reasoning off, on the 0-1 axis shared with Figs.
+    rq1-rq3; (b) share of code grades that are exactly zero under each instruction, with the teachers' share.
+    Values from experiments.analysis.instruction (GPT-5.1's strict cells are its main-store rows)."""
+    from experiments.analysis import instruction as I
+    lv = I.levels(I.load())
+    lv = lv[lv.instruction.isin(["standard", "partial_credit"])]
+    models = [m for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1", "claude-sonnet-4-6"]
+              if ((lv.model == m) & (lv.instruction == "partial_credit")).any()]
+
+    def get(g, m):
+        c = lv[(lv.dataset == g[0]) & (lv.domain == g[1]) & (lv.model == m)].set_index("instruction")
+        return (float(c.QWK["standard"]), float(c.QWK["partial_credit"])) if {"standard", "partial_credit"} <= set(c.index) else None
+    fig = plt.figure(figsize=(WIDE, COL * 0.80))
+    gs = fig.add_gridspec(1, 2, width_ratios=[2.6, 1], wspace=0.30)
+    ax = fig.add_subplot(gs[0])
+    _paired_levels(ax, SETS, models, get)
+    ax.set_xticklabels(["Mohler", "SemEval", "RIAYN", "PT-CS\ncode", "PT-CS\nshort"])
+    ax.set_title("(a) agreement with the teachers", loc="left", fontsize=7)
+    bx = fig.add_subplot(gs[1])
+    code = [("riayn", "RIAYN"), ("ptcs", "PT-CS code")]
+    x = np.arange(len(code)); nb = 2 * len(models); w = 0.84 / nb
+    for i, m in enumerate(models):
+        for j, ins in enumerate(["standard", "partial_credit"]):
+            vals = [(lambda c: float(c.zero_pct.iloc[0]) if len(c) else np.nan)(
+                lv[(lv.dataset == ds) & (lv.domain == "code") & (lv.model == m) & (lv.instruction == ins)]) for ds, _ in code]
+            bx.bar(x + (2 * i + j - (nb - 1) / 2) * w, vals, w, color=MCOL[m], alpha=0.45 if j == 0 else 1.0,
+                   edgecolor="k", lw=0.3, hatch="" if j == 0 else "///")
+    for k, (ds, _) in enumerate(code):
+        t = lv[(lv.dataset == ds) & (lv.domain == "code")].teacher_zero_pct.iloc[0]
+        bx.hlines(t, k - 0.45, k + 0.45, color="k", lw=1.0, ls="--")
+    bx.set_xticks(x); bx.set_xticklabels([lbl for _, lbl in code])
+    bx.set_ylabel("grades of exactly zero (\\%)")
+    bx.set_title("(b) zeros on code (dashed: teachers)", loc="left", fontsize=7)
+    _level_legend(fig, models, "strict instruction", "partial credit", y=-0.02, ncol=len(models) + 2)
+    _save(fig, "fig_rq6_instruction")
 
 
 def _common_items(full):
@@ -429,15 +600,16 @@ def main() -> int:
     _style()
     print("Phase 6 figures ->", OUT)
     df = load_verified()                 # PT-CS = verified stratum everywhere
-    # RQ1 cells come from the table generator's rq1_cells, so Figs. rq1trade/rq1 plot exactly the
-    # values of the RQ1 table and prose: dQWK on the tractable (non-overflowing) items, SD and token
-    # premium on all paired items, PT-CS on the verified stratum. (Until 2026-10-15 the figures plotted
-    # dQWK on all paired items, a different basis from the prose; the advisor review caught it.)
+    # RQ1 cells come from the table generator's rq1_cells, so the RQ1 figure plots exactly the values of
+    # the RQ1 table and prose (every sampled item; an overflowed reasoning run carries the reasoning-off
+    # grade, phase5.apply_reasoning_fallback), PT-CS on the verified stratum.
+    # Pedro's review (2026-10-16): fig_rq1 replaces fig_rq1_panels; RQ2/RQ3 show absolute QWK on the same
+    # 0-1 axis; fig3 (per dataset) became panel (a) of fig_rq1; fig_rq6_transfer left the paper with RQ6.
     from experiments.analysis.make_phase5_tables import rq1_cells
     _full = phase5.load_main()
     rc = rq1_cells(_full, _INTERV).rename(columns={"prem_x": "premium_x"})
-    fig1(rc); fig2(rc); fig_panels(rc); fig_rq2(_full); fig_rq3(_full); fig_rq4_cost(_full)
-    fig_rq6_transfer(_full); fig3(df); fig4(df); fig5(df)
+    fig_rq1(rc); fig_rq2_levels(_full); fig_rq3_levels(_full); fig_rq4_cost(_full); fig5(df)
+    fig_rq6_instruction()
     print("done.")
     return 0
 

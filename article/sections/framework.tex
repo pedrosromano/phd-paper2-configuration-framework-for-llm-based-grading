@@ -1,7 +1,8 @@
-%% sections/framework.tex -- the configuration guide, the paper's deliverable (own section since
-%% 2026-06-16). Register: CLAUDE.md S9.2. Centre = tab_framework; tab_guide_regret (C10) tests the default.
-%% Default rule D13 (2026-10-15): reasoning off with the strongest model that does not collapse to zero
-%% (GLM-5.1 here), on both tasks. Every number here regenerates from make_phase5_tables (T5, T6).
+%% sections/framework.tex -- The Configuration Guide. Rewritten 2026-10-16 (Pedro's review): ONE simple recipe
+%% (no budget ladder, no 'check for collapse first', no 'confirm locally', no extra validation test), and a
+%% 'guide in use' subsection that applies the recipe to every dataset and compares it with every configuration
+%% (tab_guide_use, engine experiments/analysis/guide_eval.py). Register: CLAUDE.md S9.2; numbers from the
+%% generated tables, never typed by hand.
 
 \section{The Configuration Guide}
 \label{sec:framework}
@@ -20,47 +21,36 @@
   edgelbl/.style={font=\scriptsize\itshape, fill=white, inner sep=1pt},
   arr/.style={->, draw=black!75, semithick},
 ]
-% --- one block: question, answer and guidance are all the prompt; group them in one column,
-%     and let the code/short decision pick which guidance the column carries ---
-\node[data, text width=22mm] (q) {the question};
-\node[data, text width=22mm, below=1.8mm of q] (ans) {the student answer};
-\node[data, text width=22mm, below=1.8mm of ans] (rub) {a rubric};
-\node[data, text width=22mm, below=1.8mm of rub] (ref) {a reference answer};
+% --- one block: instruction, question, answer and guidance form the prompt ---
+\node[data, text width=24mm] (ins) {award partial credit};
+\node[data, text width=24mm, below=1.8mm of ins] (q) {the question};
+\node[data, text width=24mm, below=1.8mm of q] (ans) {the student answer};
+\node[data, text width=24mm, below=1.8mm of ans] (rub) {a rubric};
+\node[data, text width=24mm, below=1.8mm of rub] (ref) {a reference answer};
 \coordinate (gmid) at ($(rub.west)!0.5!(ref.west)$);
 \node[dec] (cs) at ([xshift=-16mm]gmid) {which one\\exists?};
 \draw[arr] (cs.east) to[out=35,in=180] (rub.west);
 \draw[arr] (cs.east) to[out=-35,in=180] (ref.west);
-\node[draw=black!45, dotted, rounded corners=2pt, inner sep=2.2mm, fit=(q)(ans)(rub)(ref)] (ctx) {};
-\node[font=\scriptsize\itshape, black!55, below=0.9mm of ctx] (ctxlbl) {prompt context};
+\node[draw=black!45, dotted, rounded corners=2pt, inner sep=2.2mm, fit=(ins)(q)(ans)(rub)(ref)] (ctx) {};
+\node[font=\scriptsize\itshape, black!55, below=0.9mm of ctx] (ctxlbl) {prompt};
 \node[bc, fill=none, fit=(cs)(ctx)(ctxlbl)] (block) {};
 \node[font=\scriptsize\itshape, anchor=south] at ([yshift=4mm]block.north) (blocklbl) {one question, ready to grade};
-% stack effect: peers of the front block, offset up-right, suggesting many blocks.
-% Shadows behind, then a white mask so the front block stays clean and the inputs show.
 \begin{scope}[on background layer]
   \draw[bc, fill=black!5] ([xshift=3.2mm,yshift=3.2mm]block.south west) rectangle ([xshift=3.2mm,yshift=3.2mm]block.north east);
   \draw[bc, fill=black!3] ([xshift=1.6mm,yshift=1.6mm]block.south west) rectangle ([xshift=1.6mm,yshift=1.6mm]block.north east);
   \fill[white, rounded corners=3pt] (block.south west) rectangle (block.north east);
 \end{scope}
-% --- start, the exam, and the split, stacked at the left to save width (activity-diagram start node) ---
+% --- start, the exam, and the split ---
 \node[proc, left=16mm of block, text width=24mm] (split) {Take the questions one at a time};
 \node[proc, above=6mm of split] (exam) {A student's exam};
 \node[start, above=6mm of exam] (start) {};
 \draw[arr] (start) -- (exam);
 \draw[arr] (exam) -- (split);
 \draw[arr] (split.east) -- (block.west);
-% --- prompt the LLM: the call applied to the assembled block (outside it) ---
-\node[llm, right=16mm of block] (llm) {prompt the LLM\\[1pt]\tiny holistic $\cdot$ clean conversation};
+% --- the call ---
+\node[llm, right=16mm of block, text width=30mm] (llm) {grade with the LLM\\[2pt]\tiny DeepSeek-V4-Flash $\cdot$ reasoning off\\[-1pt]\tiny one holistic score $\cdot$ clean conversation};
 \draw[arr] (block.east) -- (llm.west);
-% reasoning is the one conditional setting of the call -> a decision above it,
-% with the two outcomes placed below the diamond so they do not overlap the block
-\node[dec, above=20mm of llm, xshift=9mm] (rdec) {model\\collapses to 0?};
-\node[data, below left=5mm and 6mm of rdec] (roff) {reasoning off\\\tiny(default)};
-\node[data, below right=5mm and 6mm of rdec] (ron) {switch model,\\or reasoning on};
-\draw[arr] (rdec) -- node[edgelbl,left,pos=0.45]{no} (roff.north);
-\draw[arr] (rdec) -- node[edgelbl,right,pos=0.45]{yes} (ron.north);
-\draw[arr] (roff.south) -- (llm.north);
-\draw[arr] (ron.south) -- (llm.north);
-% --- loop and the activity-diagram final node ---
+% --- loop and the final node ---
 \node[dec, right=14mm of llm, text width=15mm] (more) {more questions?};
 \node[circle, draw=black, minimum size=4.4mm, inner sep=0pt, right=11mm of more] (end) {};
 \fill[black] (end) circle (1.1mm);
@@ -71,69 +61,52 @@
 \draw[arr] (more.south) |- (loopbot) -| node[edgelbl,pos=0.25,below]{yes, next question} (block.south);
 \end{tikzpicture}%
 }
-\caption{How the recommended configuration grades an exam. Each question is graded in its own call
-(the stack stands for the remaining questions, graded the same way). The call carries the input data
-shown dashed: the question, the student answer, and the evaluation guidance that exists for it, a
-rubric or a reference answer. The model returns one holistic score, in a clean conversation, and the
-process repeats until every question is graded. Reasoning is the one conditional setting: it stays off
-unless the model collapses to zero and cannot be replaced.}
+\caption{The recipe at work on one exam. Each question is graded in its own call (the stack stands for the
+remaining questions). The prompt, shown dashed, holds the instruction to award partial credit, the
+question, the student answer, and the rubric or reference answer that exists for it. The model,
+DeepSeek-V4-Flash with reasoning off, returns one holistic score in a clean conversation, and the process
+repeats until every question is graded.}
 \label{fig:frameworkdiagram}
 \end{figure*}
 
 \input{tables/tab_framework}
 
-The study's deliverable is a configuration guide for LLM-based grading: for a given grading task, it
-says which configuration to use and why. It is a small set of rules, one per configuration choice, each
-giving a recommended default, the trade-off that justifies it, and the condition that would call for a
-different choice. Table~\ref{tab:framework} sets out the rules with their evidence from the controlled
-comparisons of Section~\ref{sec:results}, and Fig.~\ref{fig:frameworkdiagram} shows how the recommended
-configuration grades an exam. We take the rules one choice at a time.
+The comparisons of Section~\ref{sec:results} come together in one recipe for grading with an LLM
+(Table~\ref{tab:framework}, Fig.~\ref{fig:frameworkdiagram}). Give the model the question, the student
+answer, and the rubric or reference answer, and ask it to award partial credit. Grade one question per
+call with reasoning off and a single holistic score, in a clean conversation for every answer, with
+DeepSeek-V4-Flash. Each setting is the one the comparisons favoured, and Table~\ref{tab:framework} gives the
+evidence and the cost behind it.
 
-The first choice is the model, and the guide's default is the strongest model that does not collapse to
-zero, used with reasoning off on both tasks. A model collapses when, on the same teacher-graded answers,
-it scores clearly more answers as exactly zero than the other candidates do (Section~\ref{sec:rq1}): with
-reasoning off, Qwen3.5 and GPT-5.1 scored 16 to 17\% of the RIAYN answers as zero against 9\% for the
-other two models (teachers 5\%), and 32 to 49\% of the PT-CS code answers against 13\% (teachers 2\%).
-Collapse is therefore the property to check first, on a set of teacher-graded answers large enough to
-show such a gap; among the models that pass, the strongest is the one that agrees best with those
-grades. In this study the default is GLM-5.1, which with reasoning off was the best of the four models on
-both tasks (Section~\ref{sec:cost}), so one model serves both.
+Two settings carry most of the gain. Supplying the rubric or the reference answer was the change that
+raised agreement most reliably (Section~\ref{sec:rq2}), and asking for partial credit raised it further on
+code (Section~\ref{sec:rq6}). The other settings keep grading cheap and fair. Reasoning seldom helped and
+always cost (Section~\ref{sec:rq1}); grading a whole exam in one call or scoring criterion by criterion never
+improved agreement (Section~\ref{sec:rq3}); and a clean conversation keeps a grade independent of the
+answers graded before it (Section~\ref{sec:rq5}). DeepSeek-V4-Flash is the recipe's model because, with
+these settings, it graded code as well as any configuration without reasoning, at the lowest price per
+grade.
 
-\input{tables/tab_guide_regret}
+\subsection{The Guide in Use}
+\label{sec:guideuse}
 
-Table~\ref{tab:guideregret} tests this default against the best configuration found in hindsight on each
-dataset, with every configuration scored on the same items, as in Figs.~\ref{fig:perdataset}
-and~\ref{fig:costquality}. The default gave up between 0.000 and 0.077 QWK, less than a third of the 0.259
-spread between configurations on code, and cost up to 30 times less than the best configuration. Its
-worst case was also the smallest of any reasoning-off configuration (0.077, against 0.131 to 0.259 for
-the other three models). Two rules cover budgets at either end (Table~\ref{tab:framework}). When the
-budget is tight, the cheapest model, DeepSeek-V4-Flash with reasoning off, costs about ten times less
-than the default but gives up 0.073 to 0.131. When agreement matters more than cost, the default model
-with reasoning on was the most robust configuration in the study, never more than 0.055 below the best,
-at five to seven times the default's cost.
+\input{tables/tab_guide_use}
 
-Reasoning stays off by default. On short answers its gain was small and none survived correction for
-multiple comparisons, while it multiplied the output tokens by up to 925 and made grades less consistent
-across repetitions in most combinations. On code the gain depended on the model. For the two models that
-do not collapse, GLM-5.1 and DeepSeek-V4-Flash, reasoning changed agreement by $-0.048$ to $+0.076$, with
-no change significant, at 109 to 192 times the output tokens. Reasoning earned its keep only where a model
-gave too many zeros: it roughly halved Qwen3.5's zeros on PT-CS code, and it lifted GPT-5.1, which also
-overused zero, by 0.228 on RIAYN. Even there, switching model is the cheaper fix: on RIAYN, GLM-5.1
-without reasoning (0.726, \euro{}0.95 per thousand grades) came within 0.028 of Qwen3.5 with reasoning
-(0.754, \euro{}6.4) at a seventh of its cost, and on PT-CS code it was both cheaper and better (0.676
-against 0.610).
+We applied the recipe to every dataset and compared it with every configuration in the study: the four
+models with reasoning off and on under the strict instruction, and the partial-credit instruction on the
+other models (Table~\ref{tab:guideuse}).
 
-The other choices resolve into simpler rules. Evaluation guidance was the one change that reliably
-helped, so a trustworthy rubric or reference answer should be supplied whenever one exists. Grading the
-whole exam in one call never improved agreement and saved at most 6\% of the cost per question, so each
-question is graded in its own call. Scoring a rubric criterion by criterion brought no significant gain
-and cost 1.3 to 3.1 times as much, so holistic scoring is the default. The grading session should be
-kept clean, each answer scored on its own, because a shared conversation that accumulated across the exam
-lowered grades slightly and answer order moved individual grades. Finally, because the fine ranking of
-close configurations did not transfer from the public data to the deployment (Section~\ref{sec:rq6}), the
-choice between them is confirmed on local answers.
+%% DRAFT 2026-10-16: the numbers below are from guide_eval before GLM-5.1 (OpenRouter) and GPT-5.1 with partial
+%% credit were in; re-read tab_guide_use and update.
+On code, the recipe was the best configuration without reasoning on both datasets, with 0.732 QWK on
+RIAYN and 0.674 on PT-CS code, at under 0.10 euros per thousand grades. On the sampled items only
+configurations with reasoning on, or a closed model, did better, by 0.024 to 0.071, at 41 to 68 times the
+cost. On the public short-answer datasets, where all configurations lie close together, the recipe stayed
+within 0.046 QWK of the best configuration without reasoning, at the lowest cost of any; on the 84 PT-CS
+short answers it was 0.123 below Claude Sonnet 4.6, which costs 43 times as much. Against the study's
+baseline configuration, Qwen3.5 with the strict instruction, the recipe raised agreement by 0.19 on RIAYN and
+0.21 on PT-CS code and matched it on short answers.
 
-In practice the guide is a short routine. Check on a set of teacher-graded answers that each candidate
-model does not collapse to zero, take the strongest one that passes (GLM-5.1 here), and grade with
-reasoning off, a trustworthy rubric or reference where one exists, one question per call, holistic
-scores, and a clean conversation per answer.
+In practice the guide is a short routine: write the rubric or reference answer into the prompt, ask for
+partial credit, and send each answer on its own, with reasoning off, to an inexpensive model that grades
+soundly.

@@ -13,6 +13,8 @@
 # (the open-weight roster). Per-provider enforcement is wired at Phase 4.1.
 budget_eur_ceiling: 150.0          # OpenAI anchor (GPT-5.1)
 deepinfra_budget_eur_ceiling: 150.0 # DeepInfra (open roster); runaway-guard, not a usage squeeze
+anthropic_budget_eur_ceiling: 30.0  # Claude Sonnet 4.6 subset (Pedro's review 2026-10-16: about $20, Batch API)
+openrouter_budget_eur_ceiling: 20.0 # GLM-5.1 via OpenRouter (Z.AI pinned); expected ~EUR 10, the matrix preflight overestimates (2026-10-16)
 eur_per_usd: 0.92          # ~1 USD = 0.92 EUR (Jun 2026 approx; verify)
 
 # Default token assumptions for a single grading call, used by the pre-flight estimator
@@ -75,7 +77,8 @@ models:
     # "low" (still reasons); thinking_budget=0 only disables thinking on Gemini 2.5
     # Flash/Flash-Lite, not 3 Pro. No clean reasoning-off -> unfit for RQ1.
     note: Rejected anchor (no clean reasoning-off). Reference price only.
-  claude-sonnet-4-6:             # extended thinking on/off
+  claude-sonnet-4-6:             # second closed model, reasoning off only (Pedro's review, 2026-10-16)
+    model_id: claude-sonnet-4-6
     input_per_1m_usd: 3.0
     output_per_1m_usd: 15.0
     provider: anthropic
@@ -83,7 +86,7 @@ models:
     base_url: https://api.anthropic.com
     env_key: ANTHROPIC_API_KEY
     is_anchor: false
-    note: Not chosen (~1.7x pricier). Reference price only; prompt-caching can cut input.
+    note: Not the anchor (~1.7x pricier than GPT-5.1). Joins the grading-instruction experiment and the guide test with reasoning off, via the Message Batches API (-50%). Claude counts ~1.19x the OpenAI tokens on our prompts (measured 2026-10-16).
 
   # --- Open-weight roster via DeepInfra (CLAUDE.md §6.1 / experiments/model_roster.md) ---
   # OpenAI-compatible. Prices APPROX (verify on https://deepinfra.com/models) and exact model
@@ -124,3 +127,20 @@ models:
     # 3.4 CHECK: confirm GLM hybrid allows a CLEAN reasoning-OFF (genuinely disabled) since
     # GLM is in the RQ1 toggle arm; if not, substitute or treat the axis with an honest caveat.
     note: VERIFY id/price; confirm clean OFF (3.4).
+
+  # --- GLM-5.1 through OpenRouter (Pedro's review 2026-10-16). DeepInfra retired GLM-5.1 (its zai-org/GLM-5.1
+  #     id now answers with GLM-5.3, which reasons even with thinking off). OpenRouter serves GLM-5.1 from 13
+  #     providers with reasoning not mandatory; pinned to Z.AI, its developer, with no fallbacks. Checked
+  #     2026-10-16: reasoning off gives 11 output tokens and the June DeepInfra scores on the items tried.
+  glm-5.1-or:
+    model_id: z-ai/glm-5.1
+    input_per_1m_usd: 1.40
+    output_per_1m_usd: 4.40
+    provider: openrouter
+    api: openai_compatible
+    base_url: https://openrouter.ai/api/v1
+    env_key: OPENROUTER_API_KEY
+    or_provider: z-ai
+    reasoning_param: reasoning
+    reasoning_values: { "off": {"enabled": false}, "on": {"enabled": true} }
+    note: OpenRouter, provider pinned to Z.AI (allow_fallbacks false); reasoning toggled with reasoning.enabled.

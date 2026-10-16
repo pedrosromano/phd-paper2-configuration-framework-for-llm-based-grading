@@ -142,8 +142,7 @@ def c9(df: pd.DataFrame) -> dict[str, pd.DataFrame]:
         o, n = g[g.reasoning == "off"], g[g.reasoning == "on"]
         if o.empty or n.empty:
             continue
-        k = n.run_index.nunique(); ppi = n[n.parse_ok].groupby("item_id").size()
-        clean = set(ppi[ppi == k].index) if n.parse_ok.mean() < 1 else set(n.item_id.unique())
+        clean = set(n.item_id.unique())          # every paired item (fallback rule, phase5.apply_reasoning_fallback)
         _, sA = _qwk_items(o[o.item_id.isin(clean)]); _, sB = _qwk_items(n[n.item_id.isin(clean)])
         fams["RQ1 reasoning"].append(_summ(f"{ds}:{dom[:5]} {m}", _boot(sA, sB), len(clean)))
     q = d[(d.reasoning == "off") & (d.scope == "question_by_question") & (d.decomposition == "holistic")]
@@ -345,8 +344,7 @@ def conclude_c5_on(df: pd.DataFrame) -> list[str]:
     out = []
     for (ds, dom), g in base.groupby(["dataset", "domain"]):
         o, n = g[g.reasoning == "off"], g[g.reasoning == "on"]
-        k = n.run_index.nunique(); ppi = n[n.parse_ok].groupby("item_id").size()
-        clean = set(ppi[ppi == k].index) if n.parse_ok.mean() < 1 else set(n.item_id.unique())
+        clean = set(n.item_id.unique())          # every paired item (fallback rule, phase5.apply_reasoning_fallback)
         r = _contrast(o[o.item_id.isin(clean)], n[n.item_id.isin(clean)])
         prem = pd.to_numeric(n.completion_tokens, errors="coerce").mean() / max(pd.to_numeric(o.completion_tokens, errors="coerce").mean(), 1)
         out.append(f"{DSN[ds]} {dom[:5]}: reasoning no GPT-5.1, {_fmt(r)}; {prem:.0f}× tokens")

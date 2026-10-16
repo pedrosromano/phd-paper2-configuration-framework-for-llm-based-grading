@@ -76,6 +76,8 @@ class CostGuard:
             return self.deepinfra_ceiling_eur if self.deepinfra_ceiling_eur is not None else float("inf")
         if provider in ("openai",):
             return self.ceiling_eur
+        if self.pricing.get(f"{provider}_budget_eur_ceiling") is not None:      # anthropic, openrouter (2026-10-16)
+            return float(self.pricing[f"{provider}_budget_eur_ceiling"])
         return self.ceiling_eur  # default/anchor-style providers (deepseek/anthropic/google) on the €150
 
     def spent_for(self, provider: str) -> float:
@@ -185,12 +187,16 @@ class CostGuard:
         input_tokens: int,
         output_tokens: int,
         meta: dict | None = None,
+        price_factor: float = 1.0,
     ) -> float:
         """Record one real paid call; persist; return the EUR charged. The provider is
-        auto-stamped into meta so per-provider spend (OpenAI vs DeepInfra) is computable."""
-        cost = self.cost_eur(model, input_tokens, output_tokens)
+        auto-stamped into meta so per-provider spend (OpenAI vs DeepInfra) is computable.
+        price_factor < 1 records a discounted call (Batch API: 0.5, 2026-10-16)."""
+        cost = self.cost_eur(model, input_tokens, output_tokens) * price_factor
         m = dict(meta or {})
         m.setdefault("provider", self.provider_of(model))
+        if price_factor != 1.0:
+            m["price_factor"] = price_factor
         entry = {
             "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "model": model,

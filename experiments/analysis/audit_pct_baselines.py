@@ -23,7 +23,7 @@ Run:
 
 Cell definitions are copied verbatim from make_phase5_tables.py (RQ1 T1 loop; RQ3 T2 contrasts):
 PT-CS code, Qwen3.5 reasoning off, with_guidance, holistic, question-by-question is the baseline;
-scope alt = whole_exam; decomposition alt = criterion. RQ1 pairs on the clean (non-truncated) items.
+scope alt = whole_exam; decomposition alt = criterion. RQ1 pairs on every sampled item (overflowed reasoning runs carry the reasoning-off grade, phase5.apply_reasoning_fallback, 2026-10-16).
 """
 
 from __future__ import annotations
@@ -60,8 +60,7 @@ def rq1():
         o, n = g[g.reasoning == "off"], g[g.reasoning == "on"]
         if o.empty or n.empty:
             continue
-        k = n.run_index.nunique(); ppi = n[n.parse_ok].groupby("item_id").size()
-        clean = set(ppi[ppi == k].index) if n.parse_ok.mean() < 1 else set(n.item_id.unique())
+        clean = set(n.item_id.unique())          # every paired item (fallback rule, phase5.apply_reasoning_fallback)
         qoff, sA = _qwk_items(o[o.item_id.isin(clean)]); _, sB = _qwk_items(n[n.item_id.isin(clean)])
         _, md, _ = _boot_ci(sA, sB)
         extra = ""
@@ -176,7 +175,7 @@ def zero_collapse():
     b = rp[(rp.dataset == "ptcs") & (rp.domain == "code") & (rp.model == "qwen3.5")
            & (rp.context_level == "with_guidance") & (rp.scope == "question_by_question")
            & (rp.decomposition == "holistic")]
-    o, n = b[b.reasoning == "off"], b[b.reasoning == "on"]
+    o, n = b[b.reasoning == "off"], b[(b.reasoning == "on") & ~b.fallback]   # the model's own grades only
     gold = o.groupby("item_id").gold_norm.first()
     print("\n=== RQ1 zero-collapse, Qwen3.5, PT-CS-verified code (Section IV-A) ===")
     print(f"  model zeros: off {100 * (o.pred_norm < 1e-9).mean():.0f}%  on {100 * (n.pred_norm < 1e-9).mean():.0f}%"
@@ -195,7 +194,10 @@ def zero_rates():
     print("\n=== Zero rates with reasoning off on code (Section IV-A / guide) ===")
     for (ds, m), g in d.groupby(["dataset", "model"]):
         gold = g.groupby("item_id").gold_norm.first()
-        print(f"  {ds:6} {m:18} model zeros {100 * (g.pred_norm < 1e-9).mean():4.0f}%   teachers {100 * (gold < 1e-9).mean():3.0f}%")
+        it = g.groupby("item_id").agg(z=("pred_norm", lambda s: (s < 1e-9).mean()), gold=("gold_norm", "first"))
+        zz = it[it.z >= 0.6]                       # items the model scores zero in at least 3 of 5 runs
+        print(f"  {ds:6} {m:18} model zeros {100 * (g.pred_norm < 1e-9).mean():4.0f}%   teachers {100 * (gold < 1e-9).mean():3.0f}%"
+              f"   | on its zeroed items ({len(zz)}) the teachers gave {100 * zz.gold.mean():.0f}% of the marks")
 
 
 def overflow():
@@ -218,7 +220,7 @@ def temp0_variation():
     validated answers. The paper quotes the reasoning-off range."""
     df = phase5.load_main()
     d = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question")
-           & (df.decomposition == "holistic") & df.pred_norm.notna()]
+           & (df.decomposition == "holistic") & df.pred_norm.notna() & ~df.fallback]   # model's own grades only
     d = d[(d.dataset != "ptcs") | d.item_id.isin(_INTERV)]
     print("\n=== Temperature-0 variation: % of items whose grade varies across repetitions (Section VII) ===")
     for r in ["off", "on"]:

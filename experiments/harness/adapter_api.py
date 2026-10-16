@@ -31,6 +31,10 @@ class _Transient(Exception):
     pass
 
 
+class NoCredits(Exception):
+    """The provider account has no credit left: stop the arm, store nothing."""
+
+
 # Transient-retry counters (for tuning concurrency: watch the 429 rate per step).
 _RETRY = {"429": 0, "5xx": 0, "net": 0}
 _RETRY_LOCK = threading.Lock()
@@ -65,7 +69,15 @@ def _chat(base_url: str, key: str, payload: dict) -> dict:
         with urllib.request.urlopen(req, timeout=600) as r:
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
+        if e.code == 402:                          # OpenRouter: insufficient credits
+            raise NoCredits(e.read().decode("utf-8", "replace")[:200]) from e
         if e.code == 429:
+            body = e.read().decode("utf-8", "replace")
+            # an empty account is not transient (OpenAI 2026-10-16: 429 credit_balance_exhausted was
+            # retried for 15 min per call). NoCredits propagates out of grade(), so no error row is
+            # stored and a resume re-runs the cell once the account is topped up.
+            if "insufficient_quota" in body or "credit_balance_exhausted" in body:
+                raise NoCredits(body[:200]) from e
             _bump("429")
             raise _Transient("HTTP 429") from e
         if e.code in (500, 502, 503, 504):
@@ -98,6 +110,14 @@ def _build_payload_msgs(mcfg: dict, messages: list, config) -> dict:
         rp = mcfg.get("reasoning_param")           # reasoning_effort
         if rp and reasoning in rv:
             payload[rp] = rv[reasoning]            # none | high
+    elif mcfg.get("provider") == "openrouter":     # GLM-5.1 via OpenRouter (2026-10-16): pinned provider, no fallbacks
+        payload["max_tokens"] = config.max_tokens
+        payload["temperature"] = config.temperature
+        payload["top_p"] = config.top_p
+        if mcfg.get("reasoning_param") and reasoning in rv:
+            payload[mcfg["reasoning_param"]] = rv[reasoning]                # {"reasoning": {"enabled": bool}}
+        if mcfg.get("or_provider"):
+            payload["provider"] = {"order": [mcfg["or_provider"]], "allow_fallbacks": False}
     else:                                          # deepinfra (OpenAI-compatible) + others
         payload["max_tokens"] = config.max_tokens
         payload["temperature"] = config.temperature
@@ -137,25 +157,41 @@ def grade(item, config, guard: CostGuard | None = None) -> GradeResult:
         return err(f"budget exhausted for provider {provider}")
 
     prompt = prompts.render(config, item)
-    payload = _build_payload(mcfg, prompt, config)
+    anthropic = mcfg.get("api") == "anthropic"
+    payload = build_anthropic_payload(mcfg, prompt, config) if anthropic else _build_payload(mcfg, prompt, config)
     t0 = time.perf_counter()
     try:
-        resp = _chat(mcfg["base_url"], key, payload)
+        resp = _anthropic_messages(mcfg["base_url"], key, payload) if anthropic else _chat(mcfg["base_url"], key, payload)
     except urllib.error.HTTPError as e:
         return err(f"HTTP {e.code}: {e.read().decode('utf-8', 'replace')[:160]}")
     except _Transient as e:
         return err(f"transient (retries exhausted): {str(e)[:120]}")
     latency = round(time.perf_counter() - t0, 3)
+    return result_from_body(resp, config, guard, latency)
 
-    choice = resp.get("choices", [{}])[0]
-    raw = (choice.get("message", {}).get("content") or "").strip()
-    finish = choice.get("finish_reason")
-    usage = resp.get("usage", {})
-    tin, tout = int(usage.get("prompt_tokens", 0)), int(usage.get("completion_tokens", 0))
-    rtok = _reasoning_tokens(usage)
+
+def result_from_body(resp: dict, config, guard: CostGuard | None, latency: float = 0.0,
+                     price_factor: float = 1.0) -> GradeResult:
+    """Turn one response body into a GradeResult: OpenAI-style (choices/usage.prompt_tokens) or Anthropic
+    Messages (content blocks/usage.input_tokens). Shared by the synchronous path and the Batch API runner
+    (experiments/run/batch_runner.py), which passes price_factor=0.5 so the spend ledger records the
+    discounted batch price; the paper re-prices every call from its tokens at standard rates."""
+    if "choices" in resp:
+        choice = resp.get("choices", [{}])[0]
+        raw = (choice.get("message", {}).get("content") or "").strip()
+        finish = choice.get("finish_reason")
+        usage = resp.get("usage", {})
+        tin, tout = int(usage.get("prompt_tokens", 0)), int(usage.get("completion_tokens", 0))
+        rtok = _reasoning_tokens(usage)
+    else:
+        raw = "".join(b.get("text", "") for b in resp.get("content", []) if b.get("type") == "text").strip()
+        finish = resp.get("stop_reason")
+        usage = resp.get("usage", {})
+        tin, tout = int(usage.get("input_tokens", 0)), int(usage.get("output_tokens", 0))
+        rtok = None
     cost = None
     if guard is not None:
-        cost = round(guard.record(config.model, tin, tout,
+        cost = round(guard.record(config.model, tin, tout, price_factor=price_factor,
                                   meta={"config_hash": config.config_hash,
                                         "reasoning": config.reasoning}), 6)
     parsed, ok = parse_output(raw, config.scope, config.decomposition)
@@ -165,6 +201,49 @@ def grade(item, config, guard: CostGuard | None = None) -> GradeResult:
                        model=config.model, reasoning=config.reasoning,
                        config_hash=config.config_hash, reasoning_tokens=rtok,
                        finish_reason=finish, cost_eur=cost)
+
+
+SCORE_SCHEMA = {"type": "object", "properties": {"score": {"type": "number"}}, "required": ["score"],
+                "additionalProperties": False}
+
+
+def build_anthropic_payload(mcfg: dict, prompt: str, config) -> dict:
+    """Anthropic Messages request (Claude Sonnet 4.6, 2026-10-16). Reasoning off = no thinking block;
+    temperature from the Config (top_p left at the default, as Anthropic advises against setting both).
+    The JSON-only answer every prompt asks for is enforced with the API's structured output: without it
+    Sonnet sometimes wrote a rubric-by-rubric analysis (400-600 tokens) before the score, i.e. visible
+    reasoning in the reasoning-off condition, which the other models never did. Holistic, one question
+    per call only (the only shape this model is run in)."""
+    if config.reasoning == "on":
+        raise ValueError("reasoning on is not wired for Anthropic models in this study")
+    if config.scope != "question_by_question" or config.decomposition != "holistic" \
+            or getattr(config, "instruction", "standard") == "partial_credit_justified":
+        raise ValueError("Anthropic models run holistic, one question per call, score-only prompts here")
+    return {"model": mcfg["model_id"], "max_tokens": config.max_tokens, "temperature": config.temperature,
+            "messages": [{"role": "user", "content": prompt}],
+            "output_config": {"format": {"type": "json_schema", "schema": SCORE_SCHEMA}}}
+
+
+@retry(stop=stop_after_delay(900), wait=wait_random_exponential(multiplier=1, max=60),
+       retry=retry_if_exception_type(_Transient), reraise=True)
+def _anthropic_messages(base_url: str, key: str, payload: dict) -> dict:
+    req = urllib.request.Request(
+        f"{base_url.rstrip('/')}/v1/messages", data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01"})
+    try:
+        with urllib.request.urlopen(req, timeout=600) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")
+        if "credit balance is too low" in body:
+            raise NoCredits(body[:200]) from e
+        if e.code in (429, 500, 502, 503, 504, 529):
+            _bump("429" if e.code == 429 else "5xx")
+            raise _Transient(f"HTTP {e.code}") from e
+        raise urllib.error.HTTPError(e.url, e.code, body[:300], e.headers, None) from e
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        _bump("net")
+        raise _Transient(str(e)) from e
 
 
 def grade_whole_exam(items, config, guard: CostGuard | None = None):

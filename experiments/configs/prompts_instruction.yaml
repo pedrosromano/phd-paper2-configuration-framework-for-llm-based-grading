@@ -1,0 +1,32 @@
+# Grading-instruction variants (Pedro's review, 2026-10-16). Used ONLY when Config.instruction is not
+# "standard"; the original blocks in prompts.yaml are untouched, so earlier cells keep their hashes and
+# caches. Blocks here REPLACE the same-named blocks of prompts.yaml; everything else is shared.
+#
+# Motivation, from the run data before any variant was run: with reasoning off, Qwen3.5 and GPT-5.1 score
+# many partially correct code answers as exactly 0, and adding the "grade strictly" rubric raised their
+# zero rate on RIAYN (Qwen3.5 7% -> 16%, GPT-5.1 6% -> 17%; teachers 5%).
+#   partial_credit            the guidance asks for partial credit instead of strict application
+#   partial_credit_justified  the same, plus a short justification written before the score
+# Variants and the decision rule were fixed before running (article/review/REVISAO_PR_ESTADO.md, E1).
+
+grounding:
+  rubric: |
+    Use the following question-specific rubric to award marks. Give the marks for every rubric item the
+    answer satisfies, even when the answer is incomplete or contains errors (for code, even when it would
+    not compile), and apply any deductions the rubric specifies; do not invent criteria. A partially
+    correct answer earns partial marks; give 0 only when the answer earns none of the rubric's marks.
+    RUBRIC:
+    $grounding_body
+  reference: |
+    Use the following reference answer as the standard of a fully-correct response. The student
+    answer need not match it word-for-word; judge semantic equivalence. A partially correct answer
+    earns partial marks; give 0 only when nothing in the answer is correct.
+    REFERENCE ANSWER:
+    $grounding_body
+
+output:
+  question_by_question__holistic__justified: |
+    First justify the score in at most two sentences, naming what the answer gets right and what it
+    misses; then give the score. Return ONLY a single JSON object and nothing else (no markdown, no
+    commentary), with the justification first:
+    {"justification": "<at most two sentences>", "score": <number between 0 and $max>}
