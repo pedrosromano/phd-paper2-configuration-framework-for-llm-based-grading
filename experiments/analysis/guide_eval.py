@@ -102,7 +102,7 @@ def summary(r: pd.DataFrame) -> pd.DataFrame:
 
 
 MNAME = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "glm-5.1": "GLM-5.1", "gpt-5.1": "GPT-5.1",
-         "claude-sonnet-4-6": "Claude Sonnet 4.6", "glm-5.1-or": "GLM-5.1 (OpenRouter)"}
+         "claude-sonnet-4-6": "Claude Sonnet 4.6", "glm-5.1-or": "GLM-5.1"}
 
 
 def _name(cfg: str) -> str:
@@ -130,13 +130,11 @@ def write_table(ge: pd.DataFrame) -> None:
                                                     f"(recipe {a.guide_QWK:.3f}; {a.cheaper_x_than_best:.0f}$\\times$ cost)"),
                       "Baseline": f"{b.baseline_QWK:.3f}"})
     _tex(pd.DataFrame(rows_), "tab_guide_use.tex",
-         "The guide in use: the recipe (DeepSeek-V4-Flash, reasoning off, guidance, partial credit, one question per "
-         "call, holistic, clean conversation) against every configuration in the study. Rank is among the "
-         "configurations without reasoning, all scored on the same items (Mohler: the 800 that every one of them "
-         "graded). The best configuration on the sampled items includes reasoning on; the recipe's QWK on the same "
-         "items and the cost multiple of the best are in brackets. Baseline is the study's starting configuration, "
-         "Qwen3.5 with the strict instruction. Costs are euros per 1000 grades.",
-         "tab:guideuse", star=True, colspec="lrrlllr", size="\\footnotesize")
+         "The guide in use: the recipe against every configuration in the study. Rank is among the configurations "
+         "without reasoning, all scored on the same items (Mohler: the 800 that all of them graded). The best "
+         "configuration on the sampled items includes reasoning on; the recipe's QWK there and the cost multiple of the "
+         "best are in brackets. Baseline: Qwen3.5 with the strict instruction. Costs: euros per 1000 grades.",
+         "tab:guideuse", star=True, colspec="lrrlp{3.8cm}p{5.3cm}r", size="\\footnotesize")
 
 
 def main() -> int:

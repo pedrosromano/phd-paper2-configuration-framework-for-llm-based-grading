@@ -97,6 +97,34 @@
   - Na base A (amostras com reasoning) a receita fica a 0.024–0.071 da melhor no código. Essa melhor custa
     41–68× mais.
   - Decisão pendente: modelo da receita (DeepSeek, ou esperar pelo GPT e pelo GLM com crédito parcial).
+- **Fecho (2026-10-16, fim do dia):**
+  - **GPT-5.1** (Batch API; RQ3 exame inteiro síncrono):
+    - crédito parcial no código: PT-CS +0.076 e RIAYN +0.106, ambos com Holm; zeros 32%→20% e 17%→12%.
+      **Reduz o colapso do GPT**, mas não o do Qwen.
+    - No PT-CS, o GPT com crédito parcial passa o GPT com reasoning (0.706 contra 0.672, cerca de 1/20 do
+      custo).
+    - Respostas curtas: Mohler +0.030 (equivalente), resto equivalente ou não significativo.
+    - RQ3: exame inteiro −0.138 (Holm); critério RIAYN +0.153 (Holm); critério PT-CS +0.002 (equivalente).
+  - **GLM-5.1** (OpenRouter, Z.AI; conta nova limitada a cerca de 20 pedidos por minuto, por isso só no
+    código):
+    - o prompt estrito reproduz junho no RIAYN (0.726 nos dois; mesma nota em 77% das repetições);
+    - crédito parcial: RIAYN +0.033 e PT-CS −0.016 (contra o estrito da DeepInfra), ambos não
+      significativos;
+    - 6 notas ilegíveis em 2 965, por defeito do servidor.
+  - **Guia aplicado** (Tabela 5):
+    - a receita (DeepSeek + crédito parcial) é 1.ª de 10 no PT-CS código e 2.ª de 10 no RIAYN, atrás do GLM
+      com crédito parcial (0.760, cerca de 15× o custo);
+    - no Mohler e no SemEval fica a ≤0.046 da melhor sem reasoning; no PT-CS curtas a 0.123 do Sonnet (43×);
+    - face à baseline: +0.19 no RIAYN e +0.21 no PT-CS código.
+  - **Custo total de todas as experiências, a preços normais: €158.7** (OpenAI 65.0, DeepInfra 56.6,
+    Anthropic 33.7, OpenRouter 3.5).
+  - **Texto atualizado:**
+    - RQ3 com 3 modelos, RQ6 com 5 modelos, guia, Discussão, Conclusão e abstract (250 palavras);
+    - Method: Sonnet, GLM pelo OpenRouter e Tabela 2 compactada.
+    - Corrigida uma citação do Qwen que juntava duas justificações.
+    - Restam caixas largas só do template e uma de 2,9 pt numa figura.
+  - **Falta:** a leitura do Pedro (PDF no Google Drive) e a **revogação das chaves** que passaram pelo chat
+    (Anthropic, OpenAI e OpenRouter).
 
 **Já feito no texto e no código (por commitar):**
 - Introdução reescrita.

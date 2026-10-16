@@ -144,7 +144,7 @@ def rq3_cost():
     covers several questions). Backs the framework's 'per question by default' choice."""
     df = phase5.load_main()
     print("\n=== RQ3 scope cost per question (Section IV-C / framework) ===")
-    for m in ["qwen3.5", "deepseek-v4-flash"]:              # each model on its own whole-exam questions
+    for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]:   # each model on its own whole-exam questions
         we = df[(df.scope == "whole_exam") & (df.model == m)]
         items = set(we.item_id)
         calls = phase5.dedupe_call_groups(we).copy()

@@ -43,17 +43,17 @@ time from the baseline, on the models listed in Table~\ref{tab:design}.
 \caption{The configuration choices studied, the datasets each applies to, and the models it was
 compared on.}
 \label{tab:design}
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2pt}
 \begin{tabular}{llll}
 \hline
 Choice & Levels & Datasets & Models \\
 \hline
-Reasoning & off, on & all & all four \\
-Evaluation guidance & none, with guidance$^{a}$ & all & all but GLM-5.1 \\
-Grading instruction & strict, partial credit$^{b}$ & all$^{e}$ & all four$^{e}$, Sonnet 4.6 \\
-Scope & per question, whole exam$^{c}$ & PT-CS code & all but GLM-5.1 \\
-Decomposition & holistic, per criterion$^{d}$ & PT-CS code, RIAYN & all but GLM-5.1 \\
-Conversation state & clean, shared & PT-CS code & all but GPT-5.1 \\
+Reasoning & off, on & all & 4 \\
+Guidance & none, with guidance$^{a}$ & all & 3$^{f}$ \\
+Instruction & strict, partial credit$^{b}$ & all$^{e}$ & 5$^{e}$ \\
+Scope & per question, whole exam$^{c}$ & PT-CS code & 3$^{f}$ \\
+Decomposition & holistic, per criterion$^{d}$ & PT-CS code, RIAYN & 3$^{f}$ \\
+Conversation & clean, shared & PT-CS code & 3$^{g}$ \\
 Model & four families & all & \\
 \hline
 \end{tabular}
@@ -62,8 +62,8 @@ Model & four families & all & \\
 \parbox{0.95\columnwidth}{\scriptsize $^{a}$A rubric (PT-CS, RIAYN) or a reference answer (Mohler,
 SemEval), added to the question and the student answer. $^{b}$With or without a short justification
 before the score. $^{c}$One call per question, or one call for all the questions of a student's exam.
-$^{d}$One overall score, or one score per rubric criterion, summed. $^{e}$GLM-5.1 on code only; the
-justification was tried on code only.}
+$^{d}$One overall score, or one score per rubric criterion, summed. $^{e}$The four families and Claude
+Sonnet 4.6; GLM-5.1, and the justification, on code only. $^{f}$All but GLM-5.1. $^{g}$All but GPT-5.1.}
 \end{table}
 
 Three applicability rules follow from the data. Scope needs complete multi-question exams, which only
@@ -119,7 +119,8 @@ with \texttt{enable\_thinking} off or on. The closed model is \emph{GPT-5.1}~\ci
 (via OpenAI, \texttt{reasoning\_effort} set to \texttt{none} or \texttt{high}). DeepInfra no longer offers
 GLM-5.1 with reasoning off, so guidance, scope, and decomposition are compared on the other three models,
 and in the grading-instruction comparison GLM-5.1 is served by its developer, Z.ai, through OpenRouter, with
-reasoning disabled. That comparison also includes a second closed model, \emph{Claude Sonnet 4.6}
+reasoning disabled. Its strict runs there reproduced its DeepInfra agreement on RIAYN (0.726 QWK on both), so
+on PT-CS code its partial-credit runs are compared with its DeepInfra strict runs. That comparison also includes a second closed model, \emph{Claude Sonnet 4.6}
 (\texttt{claude-sonnet-4-6}, via Anthropic, reasoning off), whose answer is constrained by the API's
 structured output to the JSON score that every prompt asks for; without that constraint it sometimes wrote
 an analysis before the score.

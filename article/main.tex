@@ -80,21 +80,19 @@
 % "significant across all datasets" (5 of 20, 2 after Holm; D9). Numbers: tab_rq1_values,
 % tab_framework, tab_guide_regret, audit_pct_baselines.rq6_transfer.
 \begin{abstract}
-Instructors adopting graders based on large language models (LLMs) must answer several configuration
-questions. Should the model reason before scoring? What guidance should it receive, and how should it use
+Instructors adopting large language model (LLM) graders must answer several configuration questions. Should the model reason before scoring? What guidance should it receive, and how should it use
 it? Should an exam be graded in one call or question by question? Which configuration is worth
 its cost? We study these choices for computer science assessment, varying reasoning, evaluation guidance,
 the grading instruction, grading scope, rubric decomposition, model family, and conversation state under
-one protocol, on four datasets of short answers and code, including new teacher-graded exams in Portuguese. Every measurement is repeated, so consistency and cost are measured alongside agreement. The
+one protocol, on four datasets of short answers and code, including new teacher-graded exams in Portuguese. Repeated measurements give consistency and cost alongside agreement. The
 cheap changes were the effective ones: adding a rubric or reference answer raised quadratic weighted kappa
 (QWK) significantly in thirteen of fifteen combinations, by 0.10 to 0.34, and asking for partial credit
-added up to 0.07 on code. Reasoning raised agreement significantly in six of twenty combinations, three
+raised code agreement by up to 0.11. Reasoning raised agreement significantly in six of twenty combinations, three
 after correcting for multiple comparisons, at 9 to 925 times the output tokens, and reduced consistency in
 seventeen; its large code gains came only for models that scored many partially correct answers as zero, a
-failure we call zero-collapse, which no instruction repaired. Grading a whole exam in one call and scoring
-criterion by criterion brought no significant gain. We condense the comparisons into a one-recipe
-configuration guide; applied to every dataset, it was the best configuration without reasoning on code and
-within 0.05 QWK of the best on public short answers, at the lowest cost.
+failure we call zero-collapse, which asking for partial credit reduced in one of the two. Grading a whole exam in one call never helped, and
+scoring criterion by criterion helped once. We condense the comparisons into a one-recipe guide; applied to every dataset, it was among the two best configurations without reasoning
+on code and within 0.05 QWK of the best on public short answers, with the cheapest model.
 \end{abstract}
 
 \begin{keywords}

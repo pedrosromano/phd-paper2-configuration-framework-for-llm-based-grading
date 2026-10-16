@@ -27,18 +27,20 @@ Qwen3.5, was also the one that showed the zero-collapse.
 The zero-collapse explains where reasoning did pay. Its large gains came on code, for the two models that
 scored many partially correct answers as zero. The written justifications show what goes wrong: the
 collapsing model sees what the student did right and still gives no marks, as if any error voided the
-answer. An instruction to award partial credit did not change that, while reasoning, which works through the
-rubric before scoring, roughly halved the zeros (Sections~\ref{sec:rq1} and~\ref{sec:rq6}). The collapse is
-therefore a property of the model with reasoning off, and the cheaper remedy is a model that grades soundly
-without it.
+answer. An instruction to award partial credit reduced the zeros of the frontier model, GPT-5.1, but not
+those of Qwen3.5, while reasoning, which works through the rubric before scoring, roughly halved Qwen3.5's
+zeros (Sections~\ref{sec:rq1} and~\ref{sec:rq6}). The collapse is therefore a property of the model with
+reasoning off, which the instruction can soften but not always remove, and the dependable remedy is a model
+that grades soundly without reasoning.
 
 Evaluation guidance and the grading instruction are the opposite case: cheap and effective. Guidance raised
 agreement significantly in 13 of 15 model-dataset combinations across three model families, by 0.10 to 0.34
 QWK; on the public short answers the reference answer added more than the whole spread between the eight
-model and reasoning configurations on the same task. Asking for partial credit then added up to 0.07 on code
-for a model that grades soundly, for a few extra input tokens, and changed nothing on short answers. The
+model and reasoning configurations on the same task. Asking for partial credit then added up to 0.11 on code,
+for a few extra input tokens, and changed nothing on short answers. The
 simplest shape of the request also won: one question per call with a single holistic score was never beaten
-by the whole exam or by criterion scoring, which cost as much or more. A clean conversation per answer
+by the whole exam, and criterion scoring beat it only for GPT-5.1 on RIAYN, where it made a model that gives
+too many zeros credit the rubric step by step; both alternatives cost as much or more. A clean conversation per answer
 removes the small pull of a shared history and the effect of an answer's position, so it is also the fairer
 choice: a student's grade should not depend on where an answer fell in a session.
 

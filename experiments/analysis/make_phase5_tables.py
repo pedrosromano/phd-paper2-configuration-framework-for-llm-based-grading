@@ -90,9 +90,9 @@ def dim_contrasts(df: pd.DataFrame, interv: set) -> pd.DataFrame:
       guidance  none -> with guidance, per model x dataset (Qwen3.5, DeepSeek-V4-Flash, GPT-5.1); PT-CS
                 appears twice, code ("ptcs") and short answers ("ptcs-short", added 2026-10-15: the
                 runs existed but the contrast had been left out)
-      decomp    holistic -> criterion, per model x code dataset (Qwen3.5, DeepSeek-V4-Flash)
-      scope     question by question -> whole exam, per model (Qwen3.5, DeepSeek-V4-Flash), the
-                exam questions that belong to PT-CS"""
+      decomp    holistic -> criterion, per model x code dataset (Qwen3.5, DeepSeek-V4-Flash, GPT-5.1)
+      scope     question by question -> whole exam, per model (Qwen3.5, DeepSeek-V4-Flash, GPT-5.1), the
+                exam questions that belong to PT-CS. GPT-5.1 joined RQ3 on 2026-10-16 (Pedro's review)."""
     d = df[((df.dataset != "ptcs") | df.item_id.isin(interv)) & (df.reasoning == "off")]
     rows = []
     q = d[(d.scope == "question_by_question") & (d.decomposition == "holistic")]
@@ -104,13 +104,13 @@ def dim_contrasts(df: pd.DataFrame, interv: set) -> pd.DataFrame:
             if r:
                 rows.append({"family": "guidance", "model": m, "dataset": key, **r})
     g = d[(d.context_level == "with_guidance") & (d.scope == "question_by_question") & (d.domain == "code")]
-    for m in ["qwen3.5", "deepseek-v4-flash"]:
+    for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]:
         for ds in ["riayn", "ptcs"]:
             c = g[(g.model == m) & (g.dataset == ds)]
             r = _contrast(c[c.decomposition == "holistic"], c[c.decomposition == "criterion"])
             if r:
                 rows.append({"family": "decomp", "model": m, "dataset": ds, **r})
-    for m in ["qwen3.5", "deepseek-v4-flash"]:
+    for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]:
         w = d[(d.scope == "whole_exam") & (d.model == m)]
         qb = d[(d.model == m) & (d.dataset == "ptcs") & (d.domain == "code") & (d.context_level == "with_guidance")
                & (d.scope == "question_by_question") & (d.decomposition == "holistic") & d.item_id.isin(set(w.item_id))]
@@ -430,7 +430,7 @@ def main() -> int:
     # per model (2026-10-15 audit: the Qwen-only figure had been stated for both models): whole-exam cost
     # per question relative to one call per question, on each model's own whole-exam questions
     scope_cost = {}
-    for m in ["qwen3.5", "deepseek-v4-flash"]:
+    for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]:
         w_m = df[(df.scope == "whole_exam") & (df.model == m)]; it_m = set(w_m.item_id)
         q_m = df[(df.model == m) & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.domain == "code")
                  & (df.context_level == "with_guidance") & (df.scope == "question_by_question")
@@ -447,7 +447,7 @@ def main() -> int:
     st_d = [v["state_delta"] for v in cvs.values() if "state_delta" in v]
     or_a = [v["order_abs"] for v in cvs.values() if "order_abs" in v]
     dcost = df[(df.reasoning == "off") & (df.context_level == "with_guidance") & (df.scope == "question_by_question")
-               & (df.domain == "code") & df.model.isin(["qwen3.5", "deepseek-v4-flash"]) & df.dataset.isin(["riayn", "ptcs"])]
+               & (df.domain == "code") & df.model.isin(["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]) & df.dataset.isin(["riayn", "ptcs"])]
     _cc = dcost.groupby(["model", "dataset", "decomposition"]).cost_eur.mean().unstack()
     dec_ratio = float((_cc["criterion"] / _cc["holistic"]).mean())   # criterion vs holistic cost per answer
     dec_lo, dec_hi = float((_cc["criterion"] / _cc["holistic"]).min()), float((_cc["criterion"] / _cc["holistic"]).max())
@@ -470,13 +470,21 @@ def main() -> int:
                & df.model.isin(gd.model.unique())]
     _gc = gcost.groupby(["model", "dataset", "domain", "context_level"]).cost_eur.mean().unstack()
     g_ratio = (_gc["with_guidance"] / _gc["none"]).dropna()
+    _ORD = {1: "first", 2: "second", 3: "third", 4: "fourth"}
+    _W = {2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}
+    _MN2 = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1",
+            "claude-sonnet-4-6": "Claude Sonnet 4.6", "glm-5.1-or": "GLM-5.1"}
+    pc_code_sig = pc[(pc.domain == "code") & pc.sig_holm]
+    _MN = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1", "glm-5.1": "GLM-5.1"}
+    _DN = {"riayn": "RIAYN", "ptcs": "PT-CS code"}
     fw = pd.DataFrame([
         {"Choice": "Model", "Recommended": "DeepSeek-V4-Flash",
-         "Evidence and cost": (f"the cheapest model tested; with the rest of this recipe it was the best configuration "
-                               f"without reasoning on both code datasets ({geB.loc['RIAYN', 'guide_QWK']:.3f} on RIAYN, "
-                               f"{geB.loc['PT-CS code', 'guide_QWK']:.3f} on PT-CS code) and within "
-                               f"{geB.loc[pub_short, 'gap_to_best'].max():.3f} QWK of the best on the public short-answer "
-                               f"datasets, at {rec_cost[0]:.2f} to {rec_cost[1]:.2f} euros per 1000 grades "
+         "Evidence and cost": (f"the cheapest model tested; with the rest of this recipe it ranked "
+                               f"{_ORD[int(geB.loc['PT-CS code', 'guide_rank'])]} of {_W[int(geB.loc['PT-CS code', 'configs'])]} "
+                               f"configurations without reasoning on PT-CS code ({geB.loc['PT-CS code', 'guide_QWK']:.3f}) and "
+                               f"{_ORD[int(geB.loc['RIAYN', 'guide_rank'])]} on RIAYN ({geB.loc['RIAYN', 'guide_QWK']:.3f}), "
+                               f"and stayed within {geB.loc[pub_short, 'gap_to_best'].max():.3f} QWK of the best on the public "
+                               f"short-answer datasets, at {rec_cost[0]:.2f} to {rec_cost[1]:.2f} euros per 1000 grades "
                                f"(Table~\\ref{{tab:guideuse}})")},
         {"Choice": "Reasoning", "Recommended": "Off",
          "Evidence and cost": (f"it raised agreement significantly in {n_sig} of {len(cells)} model-dataset combinations, "
@@ -487,20 +495,22 @@ def main() -> int:
                                f"model-dataset combinations (${g_ok.dQWK.min():+.3f}$ to ${g_ok.dQWK.max():+.3f}$ QWK), "
                                f"at {g_ratio.min():.1f} to {g_ratio.max():.1f} times the cost per grade")},
         {"Choice": "Grading instruction", "Recommended": "Ask for partial credit explicitly",
-         "Evidence and cost": (f"it raised DeepSeek-V4-Flash's agreement on code by ${pc_ds_code.dQWK.min():+.3f}$ to "
-                               f"${pc_ds_code.dQWK.max():+.3f}$ QWK (significant after correction) and changed the public "
-                               f"short-answer datasets by less than the $\\pm0.05$ margin, for a few extra input tokens")},
+         "Evidence and cost": (f"it raised code agreement significantly after correction for "
+                               + " and ".join(f"{_MN2[m]} (${g.dQWK.min():+.3f}$ to ${g.dQWK.max():+.3f}$ QWK)"
+                                              for m, g in pc_code_sig.groupby("model", sort=False))
+                               + f", lowered it significantly for no model, and moved the public short-answer datasets by "
+                               f"less than the $\\pm0.05$ margin, for a few extra input tokens")},
         {"Choice": "Scope", "Recommended": "One question per call",
-         "Evidence and cost": (f"on PT-CS code, grading the whole exam in one call never improved agreement (Qwen3.5 "
-                               f"${sc_.loc['qwen3.5','dQWK']:+.3f}$ QWK, significant; DeepSeek-V4-Flash "
-                               f"${sc_.loc['deepseek-v4-flash','dQWK']:+.3f}$) and saved little or nothing "
-                               f"(${scope_cost['qwen3.5']:+.0f}$\\% cost per question for Qwen3.5, "
-                               f"${scope_cost['deepseek-v4-flash']:+.0f}$\\% for DeepSeek-V4-Flash)")},
+         "Evidence and cost": (f"on PT-CS code, grading the whole exam in one call never improved agreement and "
+                               f"lowered it significantly for {_W.get(int((sc_.hi < 0).sum()), int((sc_.hi < 0).sum()))} of {_W[len(sc_)]} models "
+                               f"(${sc_.dQWK.min():+.3f}$ to ${sc_.dQWK.max():+.3f}$ QWK), while changing the cost per "
+                               f"question by ${min(scope_cost.values()):+.0f}$ to ${max(scope_cost.values()):+.0f}$\\%")},
         {"Choice": "Decomposition", "Recommended": "One holistic score",
-         "Evidence and cost": (f"scoring criterion by criterion never improved agreement significantly "
-                               f"(${dd_.dQWK.min():+.3f}$ to ${dd_.dQWK.max():+.3f}$ QWK, significantly worse in "
-                               f"{['no', 'one', 'two', 'three', 'four'][int((dd_.hi < 0).sum())]} "
-                               f"case{'s' if int((dd_.hi < 0).sum()) != 1 else ''}) at {dec_lo:.1f} to {dec_hi:.1f} "
+         "Evidence and cost": (f"scoring criterion by criterion raised agreement significantly in "
+                               f"{['no', 'one', 'two', 'three'][int((dd_.lo > 0).sum())]} of {_W[len(dd_)]} model-dataset "
+                               f"combinations ({', '.join(f'{_MN[r.model]} on {_DN[r.dataset]}, ${r.dQWK:+.3f}$' for r in dd_[dd_.lo > 0].itertuples())}, "
+                               f"a model that gives too many zeros) and lowered it in "
+                               f"{['no', 'one', 'two', 'three'][int((dd_.hi < 0).sum())]}, at {dec_lo:.1f} to {dec_hi:.1f} "
                                f"times the cost per answer")},
         {"Choice": "Conversation", "Recommended": "A clean conversation per answer",
          "Evidence and cost": (f"a shared, accumulating conversation lowered grades slightly ({min(st_d):.3f} to "

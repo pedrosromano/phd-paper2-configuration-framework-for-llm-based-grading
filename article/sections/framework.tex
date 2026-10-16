@@ -7,7 +7,7 @@
 \section{The Configuration Guide}
 \label{sec:framework}
 
-\begin{figure*}[b]
+\begin{figure*}[t]
 \centering
 \resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
@@ -84,8 +84,8 @@ code (Section~\ref{sec:rq6}). The other settings keep grading cheap and fair. Re
 always cost (Section~\ref{sec:rq1}); grading a whole exam in one call or scoring criterion by criterion never
 improved agreement (Section~\ref{sec:rq3}); and a clean conversation keeps a grade independent of the
 answers graded before it (Section~\ref{sec:rq5}). DeepSeek-V4-Flash is the recipe's model because, with
-these settings, it graded code as well as any configuration without reasoning, at the lowest price per
-grade.
+these settings, it graded code as well as or close to the best configuration without reasoning, at the
+lowest price per grade.
 
 \subsection{The Guide in Use}
 \label{sec:guideuse}
@@ -96,16 +96,15 @@ We applied the recipe to every dataset and compared it with every configuration 
 models with reasoning off and on under the strict instruction, and the partial-credit instruction on the
 other models (Table~\ref{tab:guideuse}).
 
-%% DRAFT 2026-10-16: the numbers below are from guide_eval before GLM-5.1 (OpenRouter) and GPT-5.1 with partial
-%% credit were in; re-read tab_guide_use and update.
-On code, the recipe was the best configuration without reasoning on both datasets, with 0.732 QWK on
-RIAYN and 0.674 on PT-CS code, at under 0.10 euros per thousand grades. On the sampled items only
-configurations with reasoning on, or a closed model, did better, by 0.024 to 0.071, at 41 to 68 times the
-cost. On the public short-answer datasets, where all configurations lie close together, the recipe stayed
-within 0.046 QWK of the best configuration without reasoning, at the lowest cost of any; on the 84 PT-CS
-short answers it was 0.123 below Claude Sonnet 4.6, which costs 43 times as much. Against the study's
-baseline configuration, Qwen3.5 with the strict instruction, the recipe raised agreement by 0.19 on RIAYN and
-0.21 on PT-CS code and matched it on short answers.
+%% Numbers: tab_guide_use / experiments/analysis/guide_eval.py (2026-10-16, every model in).
+On code, the recipe was the best configuration without reasoning on PT-CS code (0.674 QWK) and the second on
+RIAYN (0.732), behind GLM-5.1 with the same instruction (0.760), which costs 15 times as much; it cost under
+0.10 euros per thousand grades. On the sampled items, configurations with reasoning on, or GLM-5.1, did better
+by 0.04 to 0.07, at 14 to 68 times the cost. On the public short-answer datasets, where all configurations lie
+close together, the recipe stayed within 0.046 QWK of the best configuration without reasoning, which cost 19
+to 53 times as much; on the 84 PT-CS short answers it was 0.123 below Claude Sonnet 4.6, at a 43rd of its
+cost. Against the study's baseline configuration, Qwen3.5 with the strict instruction, the recipe raised
+agreement by 0.19 on RIAYN and 0.21 on PT-CS code and matched it on short answers.
 
 In practice the guide is a short routine: write the rubric or reference answer into the prompt, ask for
 partial credit, and send each answer on its own, with reasoning off, to an inexpensive model that grades

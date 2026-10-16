@@ -124,8 +124,8 @@ A grade can be requested in more than one shape. Scope is whether the whole exam
 or one question at a time; decomposition is whether each answer gets a single holistic score or is
 scored criterion by criterion. In the decomposition contrast the model sees the same rubric either way;
 criterion-by-criterion scoring only asks it to score each criterion separately and sum the scores. We
-compare each shape against the baseline, one question per call with a single holistic score, on two
-model families, Qwen3.5 and DeepSeek-V4-Flash, with reasoning off (Fig.~\ref{fig:rq3}). Scope needs
+compare each shape against the baseline, one question per call with a single holistic score, on three
+model families, Qwen3.5, DeepSeek-V4-Flash, and GPT-5.1, with reasoning off (Fig.~\ref{fig:rq3}). Scope needs
 complete exams, so it is measured on PT-CS code; decomposition is measured on PT-CS code and on RIAYN,
 whose rubrics mark each step of one or more accepted solution paths. Both contrasts are scored against
 each answer's final grade.
@@ -140,24 +140,27 @@ Fig.~\ref{fig:rq1}a. Reasoning off; every answer graded both ways.}
 \label{fig:rq3}
 \end{figure}
 
-Across the 295 PT-CS code questions, grading the whole exam in one call lowered agreement for Qwen3.5 by
-0.091 QWK (CI $[-0.13,-0.05]$), from 0.468 with one question per call, and the loss remains significant
-after Holm's correction. For DeepSeek-V4-Flash the change was $-0.024$ (CI $[-0.07,+0.03]$), not
-significant. Scoring criterion by criterion brought no significant gain either: the four changes run
-from $-0.072$ (DeepSeek-V4-Flash on PT-CS code, significant after correction) to $+0.029$ (Qwen3.5 on
-RIAYN, not significant). None of the six intervals fits inside the $\pm0.05$ margin, so the data do not
-show the shapes to be equivalent; they show that no alternative did significantly better, and that two
-did significantly worse.
+Across the 295 PT-CS code questions, grading the whole exam in one call lowered agreement for two of the
+three models: by 0.091 QWK for Qwen3.5 (from 0.468 with one question per call) and by 0.138 for GPT-5.1
+(from 0.584), both significant after Holm's correction. For DeepSeek-V4-Flash the change was $-0.024$ (CI
+$[-0.07,+0.03]$), not significant.
 
-Cost does not favour the alternatives either. Per question, grading the whole exam in one call cost
-Qwen3.5 7\% more than one call per question, because the joint answer carries more output tokens, and
-saved DeepSeek-V4-Flash only 6\%; scoring criterion by criterion cost 1.3 to 3.1 times as much per answer as a single holistic score,
-because the per-criterion breakdown lengthens the output.
+Scoring criterion by criterion helped only one model on one dataset. GPT-5.1 rose by 0.153 on RIAYN (from
+0.561), significant after correction, and its share of zero grades fell from 17\% to 13\%; on PT-CS code it
+was unchanged ($+0.002$, equivalent to zero within the $\pm0.05$ margin). For the other two models the
+changes ran from $-0.072$ (DeepSeek-V4-Flash on PT-CS code, significant after correction) to $+0.029$
+(Qwen3.5 on RIAYN, not significant).
 
-Overall, of the six contrasts against the baseline shape none improved agreement and two lowered it
-significantly (the whole exam by 0.091 for Qwen3.5, criterion scoring by 0.072 for DeepSeek-V4-Flash),
-while the whole exam changed the cost per question by $-6$ to $+7$\% and criterion scoring multiplied it
-by 1.3 to 3.1. Question-by-question, holistic grading is therefore the default.
+Cost does not favour the alternatives either. Per question, grading the whole exam in one call cost 7\%
+more for Qwen3.5 and 9\% more for GPT-5.1 than one call per question, because the joint answer carries more
+output tokens, and saved DeepSeek-V4-Flash only 6\%; scoring criterion by criterion cost 1.3 to 3.1 times as
+much per answer as a single holistic score, because the per-criterion breakdown lengthens the output.
+
+Overall, the whole exam never helped and lowered agreement for two of the three models, while changing
+the cost per question by $-6$ to $+9$\%. Criterion scoring helped only GPT-5.1 on RIAYN, where, like
+reasoning, it made a model that gives too many zeros credit the rubric step by step; for the models that
+grade soundly it brought nothing or a loss, at 1.3 to 3.1 times the cost. Question-by-question, holistic
+grading is therefore the default.
 
 \subsection{RQ4: Models and Cost}
 \label{sec:cost}
@@ -208,7 +211,7 @@ with reasoning on (\euro{}6.4). For Qwen3.5 the code gain (0.544 to 0.765) came 
 off GPT-5.1 agrees less than GLM-5.1 on both tasks at a higher cost, and on code its best result with
 reasoning (0.791, \euro{}30 per thousand grades) sits below GLM-5.1 with reasoning (0.803, \euro{}6.4) and
 only 0.065 above GLM-5.1 without it, at 31 times the cost. All the experiments together cost
-\euro{}103.9 at the providers' standard rates.
+\euro{}158.7 at the providers' standard rates.
 
 Overall, GLM-5.1 was the best grader without reasoning on both tasks (0.585 on short answers, 0.726 on
 code), at under one euro per thousand grades. Reasoning raised agreement on both tasks, but on short
@@ -258,8 +261,7 @@ session.
 \subsection{RQ6: Grading Instruction}
 \label{sec:rq6}
 
-%% DRAFT 2026-10-16: Qwen3.5, DeepSeek-V4-Flash and Claude Sonnet 4.6 complete; GLM-5.1 (code, OpenRouter)
-%% and GPT-5.1 (Batch API, needs OpenAI credit) to be added. Numbers: experiments/analysis/instruction.py.
+%% Numbers: experiments/analysis/instruction.py (2026-10-16; five models, GLM-5.1 on code only).
 
 \begin{figure*}[t]
 \centering
@@ -276,32 +278,37 @@ specifies, and to return only the score. The alternative asks for partial credit
 gives the marks for every rubric item or part of the reference answer that the student answer meets, even
 when the answer is incomplete or the code would not compile, and gives zero only when nothing earns marks.
 On code we also tried the same instruction with a justification of at most two sentences written before
-the score. The instructions were compared with reasoning off, each answer graded five times, on
-Qwen3.5, DeepSeek-V4-Flash, and Claude Sonnet 4.6, a second closed model that grades every dataset in
-this comparison (Fig.~\ref{fig:rq6}).
+the score. The instructions were compared with reasoning off, each answer graded five times, on Qwen3.5,
+DeepSeek-V4-Flash, GPT-5.1, and Claude Sonnet 4.6, and on code also on GLM-5.1 (Fig.~\ref{fig:rq6}).
 
-On code, the partial-credit instruction helped most where the model already graded soundly.
-DeepSeek-V4-Flash rose by 0.070 QWK on PT-CS code (from 0.604 to 0.674) and by 0.062 on RIAYN (from 0.668
-to 0.732), both significant after Holm's correction, and its share of zero grades fell from 14\% to
-10\% and from 9\% to 7\%. Claude Sonnet 4.6 rose by 0.031 on PT-CS code and was unchanged on RIAYN
-($+0.003$), and Qwen3.5 rose by 0.028 and 0.010; none of these changes survives the correction. The
-instruction added about 60 input tokens to each call, 5 to 12\% of the cost per grade.
+On code, the partial-credit instruction raised agreement significantly, after Holm's correction, for two
+models. DeepSeek-V4-Flash rose by 0.070 QWK on PT-CS code (from 0.604 to 0.674) and by 0.062 on RIAYN (from
+0.668 to 0.732); GPT-5.1 rose by 0.076 on PT-CS code (from 0.584 to 0.661) and by 0.106 on RIAYN (from 0.561
+to 0.667). GLM-5.1, which already grades code soundly, changed by $+0.033$ on RIAYN and $-0.016$ on PT-CS
+code. Claude Sonnet 4.6 rose by 0.031 on PT-CS code and was unchanged on RIAYN ($+0.003$), and Qwen3.5 rose by
+0.028 and 0.010; none of these changes survives the correction. The instruction added about 60 input tokens
+to each call, 5 to 12\% of the cost per grade.
 
-The instruction did not repair the zero-collapse. With partial credit requested, Qwen3.5 still scored 46\%
-of the PT-CS code answers as zero (49\% with the strict instruction, 2\% for the teachers). Its written
-justifications show why: on the answers it scored zero, Qwen3.5 named what the student had done correctly
-and still gave no marks, as in ``the student correctly identifies the logic of negating coordinates but
-fails to implement the required method'', written about an answer the teachers gave full marks. Asking for
-the justification halved its zeros (to 25\%) and raised its PT-CS code agreement by 0.053, significant
-before correction only, but reasoning did more on the same answers (0.612 against 0.524). For
-DeepSeek-V4-Flash the justification was unstable: it added 0.041 on RIAYN over partial credit alone but
-lost 0.068 on PT-CS code, and for both models it made grades two to five times more variable across
-repetitions while multiplying the output tokens by about ten.
+The instruction repaired part of the zero-collapse in one of the two models that show it. GPT-5.1's share of
+zero grades fell from 32\% to 20\% on PT-CS code and from 17\% to 12\% on RIAYN. On the sampled PT-CS code
+answers this took it above its own reasoning-on agreement (0.706 against 0.672) at about a twentieth of the
+cost, although on RIAYN reasoning stayed ahead (0.791 against 0.667). Qwen3.5 barely changed: with partial
+credit requested it still scored 46\% of the PT-CS code answers as zero (49\% with the strict instruction, 2\%
+for the teachers). Its written justifications show why: on the answers it scored zero, Qwen3.5 named what
+the student had done correctly and still gave no marks, as in ``the student correctly identifies the logic
+of negating coordinates but fails to implement the method signature correctly'', written about an answer the
+teachers gave full marks. Asking for the justification halved its zeros (to 25\%) and raised its PT-CS code
+agreement by 0.053, significant before correction only, but reasoning did more on the same answers (0.612
+against 0.524). For DeepSeek-V4-Flash the justification was unstable: it added 0.041 on RIAYN over partial
+credit alone but lost 0.068 on PT-CS code, and for both models it made grades 2 to 5.5 times more variable
+across repetitions while multiplying the output tokens by about ten.
 
 On short answers the instruction changed nothing that matters. On Mohler and SemEval every change for the
-three models lay inside the $\pm0.05$ equivalence margin, and on the 84 PT-CS short answers the changes
-($-0.043$ to $-0.001$) were not significant after correction.
+four models lay inside the $\pm0.05$ equivalence margin, the largest being a gain of 0.030 for GPT-5.1 on
+Mohler, and on the 84 PT-CS short answers the changes ($-0.043$ to $-0.001$) were not significant after
+correction.
 
-Overall, asking for partial credit is a near-free improvement on code for models that grade soundly and
-leaves short-answer grading unchanged; it does not repair the zero-collapse, which only reasoning
+Overall, asking for partial credit is a near-free improvement on code: it raised agreement significantly
+for two of the five models, by 0.06 to 0.11, lowered it significantly for none, and left short-answer grading
+essentially unchanged. It softened GPT-5.1's zero-collapse but did not repair Qwen3.5's, which only reasoning
 repaired.

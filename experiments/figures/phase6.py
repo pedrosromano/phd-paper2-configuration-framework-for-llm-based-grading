@@ -35,7 +35,7 @@ RNG = np.random.default_rng(20260610)
 MARK = {"qwen3.5": "o", "glm-5.1": "s", "deepseek-v4-flash": "^", "gpt-5.1": "D"}   # the four families of RQ1
 COLOR = {"code": "#c0392b", "short_answer": "#2471a3"}
 MCOL = {"qwen3.5": "#1f77b4", "deepseek-v4-flash": "#ff7f0e", "glm-5.1": "#2ca02c", "gpt-5.1": "#d62728",
-        "claude-sonnet-4-6": "#9467bd"}
+        "claude-sonnet-4-6": "#9467bd", "glm-5.1-or": "#2ca02c"}
 _INTERV = set(pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
               .query("stratum=='intervened'").item_id)
 
@@ -170,7 +170,7 @@ def _dims(full):
 
 
 MNAME = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1", "glm-5.1": "GLM-5.1",
-         "claude-sonnet-4-6": "Claude Sonnet 4.6"}
+         "claude-sonnet-4-6": "Claude Sonnet 4.6", "glm-5.1-or": "GLM-5.1"}
 
 
 def _grouped(ax, groups, models, get):
@@ -236,9 +236,10 @@ def _paired_levels(ax, groups, models, get):
     x = np.arange(len(groups)); nb = 2 * len(models); w = 0.84 / nb
     for i, m in enumerate(models):
         for j in (0, 1):
-            vals = [(lambda v: v[j] if v else np.nan)(get(g, m)) for g in groups]
+            vals = np.array([(lambda v: v[j] if v else np.nan)(get(g, m)) for g in groups], dtype=float)
             pos = x + (2 * i + j - (nb - 1) / 2) * w
-            ax.bar(pos, vals, w, color=MCOL[m], alpha=0.45 if j == 0 else 1.0, edgecolor="k", lw=0.3,
+            ok = np.isfinite(vals)                      # a missing cell draws nothing (pgf cannot hatch NaN bars)
+            ax.bar(pos[ok], vals[ok], w, color=MCOL[m], alpha=0.45 if j == 0 else 1.0, edgecolor="k", lw=0.3,
                    hatch="" if j == 0 else "///")
     ax.set_xticks(x); ax.set_ylim(0, 1)
     ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.2))
@@ -362,7 +363,7 @@ def fig_rq6_instruction():
     from experiments.analysis import instruction as I
     lv = I.levels(I.load())
     lv = lv[lv.instruction.isin(["standard", "partial_credit"])]
-    models = [m for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1", "claude-sonnet-4-6"]
+    models = [m for m in ["qwen3.5", "deepseek-v4-flash", "glm-5.1-or", "gpt-5.1", "claude-sonnet-4-6"]
               if ((lv.model == m) & (lv.instruction == "partial_credit")).any()]
 
     def get(g, m):
@@ -379,9 +380,10 @@ def fig_rq6_instruction():
     x = np.arange(len(code)); nb = 2 * len(models); w = 0.84 / nb
     for i, m in enumerate(models):
         for j, ins in enumerate(["standard", "partial_credit"]):
-            vals = [(lambda c: float(c.zero_pct.iloc[0]) if len(c) else np.nan)(
-                lv[(lv.dataset == ds) & (lv.domain == "code") & (lv.model == m) & (lv.instruction == ins)]) for ds, _ in code]
-            bx.bar(x + (2 * i + j - (nb - 1) / 2) * w, vals, w, color=MCOL[m], alpha=0.45 if j == 0 else 1.0,
+            vals = np.array([(lambda c: float(c.zero_pct.iloc[0]) if len(c) else np.nan)(
+                lv[(lv.dataset == ds) & (lv.domain == "code") & (lv.model == m) & (lv.instruction == ins)]) for ds, _ in code])
+            pos = x + (2 * i + j - (nb - 1) / 2) * w; ok = np.isfinite(vals)
+            bx.bar(pos[ok], vals[ok], w, color=MCOL[m], alpha=0.45 if j == 0 else 1.0,
                    edgecolor="k", lw=0.3, hatch="" if j == 0 else "///")
     for k, (ds, _) in enumerate(code):
         t = lv[(lv.dataset == ds) & (lv.domain == "code")].teacher_zero_pct.iloc[0]

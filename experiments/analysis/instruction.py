@@ -21,6 +21,7 @@ from experiments.analysis import phase5
 from experiments.analysis.make_phase5_tables import _boot_dist, _holm, _p_boot, _qwk_items
 
 VARIANTS = ["standard", "partial_credit", "partial_credit_justified"]
+MAIN_MODEL = {"glm-5.1-or": "glm-5.1"}     # the same model served elsewhere: its main-store (DeepInfra) rows
 VNAME = {"standard": "strict", "partial_credit": "partial credit", "partial_credit_justified": "partial credit + justification"}
 MODELS = ["qwen3.5", "gpt-5.1", "deepseek-v4-flash"]
 _INTERV = set(pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
@@ -37,14 +38,23 @@ def load() -> pd.DataFrame:
         d["instruction"] = "standard"
     d = d[~((d.model == "glm-5.1-or") & (d.domain != "code"))]   # GLM-5.1 (OpenRouter) ran on code only; 60 aborted Mohler rows out
     d = d.assign(source="instruction")
-    need = sorted(set(d.model) - set(d[d.instruction == "standard"].model))
-    if need:
+    # cells with a partial-credit run but no same-batch strict run take the main-store strict rows of the same
+    # model on the same items: GPT-5.1 (its strict re-run was skipped to save cost) and GLM-5.1 served through
+    # OpenRouter on PT-CS code (its strict re-run on RIAYN reproduced the June DeepInfra rows: QWK 0.726 on both,
+    # the same grade in 77% of item-repetitions)
+    have = set(map(tuple, d[d.instruction == "standard"][["model", "dataset", "domain"]].drop_duplicates().to_numpy()))
+    need = d[(d.instruction != "standard")][["model", "dataset", "domain"]].drop_duplicates()
+    need = need[[tuple(r) not in have for r in need.to_numpy()]]
+    if len(need):
         main = phase5.load_main()
-        base = main[main.model.isin(need) & (main.reasoning == "off") & (main.context_level == "with_guidance")
+        base = main[(main.reasoning == "off") & (main.context_level == "with_guidance")
                     & (main.scope == "question_by_question") & (main.decomposition == "holistic")]
-        keep = d[d.model.isin(need)][["dataset", "domain", "model", "item_id"]].drop_duplicates()
-        base = base.merge(keep, on=["dataset", "domain", "model", "item_id"]).assign(instruction="standard", source="main")
-        d = pd.concat([d, base], ignore_index=True)
+        parts = []
+        for m, ds, dom in need.to_numpy():
+            items = set(d[(d.model == m) & (d.dataset == ds) & (d.domain == dom)].item_id)
+            b = base[(base.model == MAIN_MODEL.get(m, m)) & (base.dataset == ds) & (base.domain == dom) & base.item_id.isin(items)]
+            parts.append(b.assign(model=m, instruction="standard", source="main"))
+        d = pd.concat([d] + parts, ignore_index=True)
     return d
 
 
@@ -96,7 +106,7 @@ def drift(d: pd.DataFrame) -> pd.DataFrame:
     main = main[(main.dataset != "ptcs") | main.item_id.isin(_INTERV)]
     rows = []
     for (ds, dom, m), g in d[(d.instruction == "standard") & (d.source == "instruction")].groupby(["dataset", "domain", "model"]):
-        o = main[(main.dataset == ds) & (main.domain == dom) & (main.model == m) & (main.reasoning == "off")
+        o = main[(main.dataset == ds) & (main.domain == dom) & (main.model == MAIN_MODEL.get(m, m)) & (main.reasoning == "off")
                  & (main.context_level == "with_guidance") & (main.scope == "question_by_question")
                  & (main.decomposition == "holistic") & main.item_id.isin(set(g.item_id))]
         if o.empty:

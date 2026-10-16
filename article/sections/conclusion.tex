@@ -10,19 +10,20 @@ in fragments. We tested them together for computer-science grading under one con
 condensed the result into one recipe. The central finding is that the cheap changes were the effective
 ones. Supplying a rubric or a reference answer raised agreement significantly in thirteen of fifteen
 model-dataset combinations, for 1.2 to 1.8 times the cost per grade, and asking the model to award partial
-credit raised a sound model's code agreement by up to 0.07 QWK for a few extra input tokens. Reasoning raised
+credit raised code agreement by up to 0.11 QWK for a few extra input tokens. Reasoning raised
 agreement significantly in six of twenty combinations, three after correcting for multiple comparisons, while
 multiplying output tokens by up to 925 and usually making grades less consistent. Its clearest gains came on
-code, for models that scored many partially correct answers as zero; this zero-collapse is a property of the
-model, which names what the student did right and still gives no marks, and no instruction repaired it.
-Grading a whole exam in one call and scoring criterion by criterion brought no significant gain and saved
-little or nothing, and the closed models did not repay their price on code.
+code, for models that scored many partially correct answers as zero. This zero-collapse is a property of the
+model with reasoning off: asking for partial credit reduced it in GPT-5.1, but not in Qwen3.5, which names
+what the student did right and still gives no marks.
+Grading a whole exam in one call never helped, scoring criterion by criterion helped only GPT-5.1 on one
+dataset, both saved little or nothing, and the closed models did not repay their price on code.
 
 The recipe follows directly: the rubric or reference answer, an instruction to award partial credit, one
 question per call with reasoning off and a single holistic score, a clean conversation per answer, and an
 inexpensive model that grades soundly, DeepSeek-V4-Flash in our tests. Applied to every dataset, it was the
-best configuration without reasoning on both code datasets and stayed within 0.05 QWK of the best on the
-public short-answer datasets, at the lowest cost per grade of any configuration we ran.
+best configuration without reasoning on PT-CS code and the second on RIAYN, and stayed within 0.05 QWK of the
+best on the public short-answer datasets, with the cheapest model we tested.
 
 Future work follows from the gaps this study declares and from what the literature has yet to settle.
 Few-shot guidance, adding a few already-graded answers to the prompt as examples, was held out; the strong

@@ -5,17 +5,17 @@
 \hline
 Choice & Recommended & Evidence and cost \\
 \hline
-\raggedright Model & \raggedright DeepSeek-V4-Flash & The cheapest model tested; with the rest of this recipe it was the best configuration without reasoning on both code datasets (0.732 on RIAYN, 0.674 on PT-CS code) and within 0.046 QWK of the best on the public short-answer datasets, at 0.02 to 0.09 euros per 1000 grades (Table~\ref{tab:guideuse}) \\[3pt]
+\raggedright Model & \raggedright DeepSeek-V4-Flash & The cheapest model tested; with the rest of this recipe it ranked first of ten configurations without reasoning on PT-CS code (0.674) and second on RIAYN (0.732), and stayed within 0.046 QWK of the best on the public short-answer datasets, at 0.02 to 0.09 euros per 1000 grades (Table~\ref{tab:guideuse}) \\[3pt]
 \hline
 \raggedright Reasoning & \raggedright Off & It raised agreement significantly in 6 of 20 model-dataset combinations, 3 after correction, at 9--925 times the output tokens and with less consistent grades; its large gains came only for models that score many answers as zero \\[3pt]
 \hline
 \raggedright Evaluation guidance & \raggedright The rubric or reference answer, whenever one exists & The change that most reliably raised agreement: significant in 13 of 15 model-dataset combinations ($+0.095$ to $+0.335$ QWK), at 1.2 to 1.8 times the cost per grade \\[3pt]
 \hline
-\raggedright Grading instruction & \raggedright Ask for partial credit explicitly & It raised DeepSeek-V4-Flash's agreement on code by $+0.062$ to $+0.070$ QWK (significant after correction) and changed the public short-answer datasets by less than the $\pm0.05$ margin, for a few extra input tokens \\[3pt]
+\raggedright Grading instruction & \raggedright Ask for partial credit explicitly & It raised code agreement significantly after correction for DeepSeek-V4-Flash ($+0.062$ to $+0.070$ QWK) and GPT-5.1 ($+0.076$ to $+0.106$ QWK), lowered it significantly for no model, and moved the public short-answer datasets by less than the $\pm0.05$ margin, for a few extra input tokens \\[3pt]
 \hline
-\raggedright Scope & \raggedright One question per call & On PT-CS code, grading the whole exam in one call never improved agreement (Qwen3.5 $-0.091$ QWK, significant; DeepSeek-V4-Flash $-0.024$) and saved little or nothing ($+7$\% cost per question for Qwen3.5, $-6$\% for DeepSeek-V4-Flash) \\[3pt]
+\raggedright Scope & \raggedright One question per call & On PT-CS code, grading the whole exam in one call never improved agreement and lowered it significantly for two of three models ($-0.138$ to $-0.024$ QWK), while changing the cost per question by $-6$ to $+9$\% \\[3pt]
 \hline
-\raggedright Decomposition & \raggedright One holistic score & Scoring criterion by criterion never improved agreement significantly ($-0.072$ to $+0.029$ QWK, significantly worse in one case) at 1.3 to 3.1 times the cost per answer \\[3pt]
+\raggedright Decomposition & \raggedright One holistic score & Scoring criterion by criterion raised agreement significantly in one of six model-dataset combinations (GPT-5.1 on RIAYN, $+0.153$, a model that gives too many zeros) and lowered it in one, at 1.3 to 3.1 times the cost per answer \\[3pt]
 \hline
 \raggedright Conversation & \raggedright A clean conversation per answer & A shared, accumulating conversation lowered grades slightly (0.010 to 0.027 of the scale) and answer order moved individual grades by 0.08 to 0.10 of the scale \\[3pt]
 \hline
