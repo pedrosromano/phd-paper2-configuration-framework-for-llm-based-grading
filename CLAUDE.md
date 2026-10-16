@@ -1124,8 +1124,20 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   `article/review/REVISAO_PR_ESTADO.md` FIRST (section 'ONDE ESTAMOS': state, files, engines, pending
   items).** Final results: GPT-5.1 with partial
   credit +0.076/+0.106 on code (Holm), zeros 32->20% (softens its collapse, not Qwen's); RQ3 now on three
-  models (whole exam never helps; criterion helps only GPT on RIAYN); the recipe (DeepSeek-V4-Flash, partial
-  credit) is first of ten on PT-CS code and second on RIAYN; all experiments EUR 158.7 at standard rates. Decisions (user):
+  models (whole exam never helps; criterion helps only GPT on RIAYN); all experiments EUR 158.7 at standard rates.
+  **GUIDE = A MODEL-INDEPENDENT CONFIGURATION (Pedro 2026-10-16, evening; supersedes "the recipe = DeepSeek-V4-Flash"):**
+  rubric or reference answer + ask for partial credit + reasoning off + one question per call + one holistic
+  score + clean conversation; NO model in the guide, no pre-tests, no conditions. Validated by
+  `experiments/analysis/guide_eval.py` on EVERY configuration graded (incl. no guidance, whole exam, criterion,
+  justification, shared conversation): **Test 1** (within each model, paired bootstrap 95%, no correction):
+  without reasoning 1 of 56 alternatives significantly better (Sonnet strict, PT-CS short, +0.043), 22 no
+  difference, 33 worse; reasoning on better in 7 of 17 (5 Qwen), never worse, less consistent in 14/17, 2.6-179x
+  cost -> Table 4 (tab_framework, written by guide_eval). **Test 2** (across models, items all no-reasoning
+  configs graded): with the best-suited model the guide is the best config on Mohler (GPT-5.1 0.653) and PT-CS
+  code (DeepSeek 0.674), within 0.002/0.014/0.043 on SemEval/RIAYN/PT-CS short (<=0.053 on the reasoning
+  samples); four models grade code at 0.65-0.76 under it, Qwen 0.50/0.55; with the cheapest model nothing
+  cheaper agrees better (one 0.001 tie on SemEval) -> Fig. 8 (phase6.fig_guide_validation). Old Table 5
+  (tab_guide_use) removed. Decisions (user):
   **(P1)** a grading-instruction experiment (prompt engineering, "simple and cheap") and a guide that is ONE
   simple recipe: no budget ladder, no "confirm locally", no "check collapse first", no leave-one-out test;
   **(P2)** RQ1 keeps every item: a reasoning run that overflowed takes the same model's reasoning-off grade

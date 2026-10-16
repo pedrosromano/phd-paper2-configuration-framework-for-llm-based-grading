@@ -452,6 +452,45 @@ def fig_rq4_cost(full):
     _save(fig, "fig_rq4_cost")
 
 
+def fig_guide_validation():
+    """Fig. 8 (Section VI-A, Test 2): the guide among every configuration graded without reasoning, per answer set,
+    agreement (QWK) against the cost of 1000 grades (log). Grey: every other configuration; coloured: the guide's
+    configuration with each model; dashed: the cost-quality frontier (configurations no cheaper one beats). Values
+    from experiments/analysis/guide_eval.field (basis B: the answers every configuration graded)."""
+    from experiments.analysis import guide_eval
+    f = guide_eval.field(guide_eval.rows(), "B")
+    order = ["deepseek-v4-flash", "glm-5.1", "gpt-5.1", "claude-sonnet-4-6", "qwen3.5"]
+    fig, axes = plt.subplots(1, 5, figsize=(WIDE, WIDE * 0.29))
+    for ax, (_, _, lbl) in zip(axes, guide_eval.SETS):
+        g = f[f.set == lbl]
+        o = g[~g.guide]
+        ax.scatter(o.eur_1000, o.QWK, s=9, color="#9a9a9a", alpha=0.8, lw=0, zorder=2)
+        fr = g[g.frontier].sort_values("eur_1000")
+        ax.step(list(fr.eur_1000) + [6.0], list(fr.QWK) + [fr.QWK.iloc[-1]], where="post", color="0.35",
+                ls="--", lw=0.7, zorder=1)
+        for m in order:
+            p = g[g.guide & (g.fam == m)]
+            if not p.empty:
+                ax.scatter(p.eur_1000, p.QWK, s=32, color=MCOL[m], edgecolor="k", lw=0.4, zorder=3)
+        ax.set_xscale("log"); ax.set_xlim(0.01, 6)
+        ax.set_xticks([0.01, 0.1, 1])
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+        ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        lo, hi = g.QWK.min(), g.QWK.max()
+        ax.set_ylim(lo - 0.06 * (hi - lo) - 0.01, hi + 0.08 * (hi - lo) + 0.01)
+        ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter("%.2f"))
+        ax.set_title(lbl, fontsize=7)
+    axes[0].set_ylabel("agreement (QWK)")
+    axes[2].set_xlabel("cost of 1000 grades (euros, log scale)")
+    h = [plt.Line2D([], [], marker="o", color=MCOL[m], ls="", mec="k", mew=0.4, label=MNAME[m]) for m in order]
+    h += [plt.Line2D([], [], marker="o", color="#9a9a9a", ls="", label="other configurations"),
+          plt.Line2D([], [], color="0.35", ls="--", lw=0.7, label="frontier")]
+    fig.tight_layout()
+    fig.legend(handles=h, loc="upper center", ncol=7, bbox_to_anchor=(0.5, 0.0), framealpha=0.9,
+               handletextpad=0.3, columnspacing=1.6)
+    _save(fig, "fig_guide_validation")
+
+
 def fig_rq6_transfer(full):
     """6.8 -- RQ6 transfer slopegraph, WITHIN DOMAIN: does the configuration ranking learned on the
     public datasets hold on the PT-CS deployment data, separately for short answers and for code.
@@ -612,6 +651,7 @@ def main() -> int:
     rc = rq1_cells(_full, _INTERV).rename(columns={"prem_x": "premium_x"})
     fig_rq1(rc); fig_rq2_levels(_full); fig_rq3_levels(_full); fig_rq4_cost(_full); fig5(df)
     fig_rq6_instruction()
+    fig_guide_validation()
     print("done.")
     return 0
 

@@ -451,81 +451,17 @@ def main() -> int:
     _cc = dcost.groupby(["model", "dataset", "decomposition"]).cost_eur.mean().unstack()
     dec_ratio = float((_cc["criterion"] / _cc["holistic"]).mean())   # criterion vs holistic cost per answer
     dec_lo, dec_hi = float((_cc["criterion"] / _cc["holistic"]).min()), float((_cc["criterion"] / _cc["holistic"]).max())
-    # --- T5: the configuration guide as ONE recipe (Pedro's review 2026-10-16: no budget ladder, no
-    #     'check collapse first', no 'confirm locally'). One row per configuration choice: the setting, the
-    #     evidence, the cost. The model row reads the guide-in-use engine (guide_eval), which also writes the
-    #     table of the guide against every configuration (tab_guide_use). Numbers derived, never typed. ---
-    from experiments.analysis import guide_eval, instruction
-    ge = guide_eval.summary(guide_eval.evaluate(guide_eval.rows()))
-    geB = ge[ge.basis == "B"].set_index("set"); geA = ge[ge.basis == "A"].set_index("set")
-    code_sets, pub_short = ["RIAYN", "PT-CS code"], ["Mohler", "SemEval"]
-    rec_cost = (geB.guide_eur.min(), geB.guide_eur.max())
-    ins_c = instruction.contrasts(instruction.load())
-    pc = ins_c[ins_c.contrast == "partial credit vs strict"]
-    pc_ds_code = pc[(pc.model == guide_eval.GUIDE[0]) & (pc.domain == "code")]
-    pc_short = pc[pc.domain == "short_answer"]
-    pc_pub_short = pc_short[pc_short.dataset.isin(["mohler", "semeval"])]
-    n_sig = int(cells.sig.sum()); n_holm = int(cells.sig_holm.sum())
-    gcost = df[(df.reasoning == "off") & (df.scope == "question_by_question") & (df.decomposition == "holistic")
-               & df.model.isin(gd.model.unique())]
-    _gc = gcost.groupby(["model", "dataset", "domain", "context_level"]).cost_eur.mean().unstack()
-    g_ratio = (_gc["with_guidance"] / _gc["none"]).dropna()
-    _ORD = {1: "first", 2: "second", 3: "third", 4: "fourth"}
-    _W = {2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}
-    _MN2 = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1",
-            "claude-sonnet-4-6": "Claude Sonnet 4.6", "glm-5.1-or": "GLM-5.1"}
-    pc_code_sig = pc[(pc.domain == "code") & pc.sig_holm]
-    _MN = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "gpt-5.1": "GPT-5.1", "glm-5.1": "GLM-5.1"}
-    _DN = {"riayn": "RIAYN", "ptcs": "PT-CS code"}
-    fw = pd.DataFrame([
-        {"Choice": "Model", "Recommended": "DeepSeek-V4-Flash",
-         "Evidence and cost": (f"the cheapest model tested; with the rest of this recipe it ranked "
-                               f"{_ORD[int(geB.loc['PT-CS code', 'guide_rank'])]} of {_W[int(geB.loc['PT-CS code', 'configs'])]} "
-                               f"configurations without reasoning on PT-CS code ({geB.loc['PT-CS code', 'guide_QWK']:.3f}) and "
-                               f"{_ORD[int(geB.loc['RIAYN', 'guide_rank'])]} on RIAYN ({geB.loc['RIAYN', 'guide_QWK']:.3f}), "
-                               f"and stayed within {geB.loc[pub_short, 'gap_to_best'].max():.3f} QWK of the best on the public "
-                               f"short-answer datasets, at {rec_cost[0]:.2f} to {rec_cost[1]:.2f} euros per 1000 grades "
-                               f"(Table~\\ref{{tab:guideuse}})")},
-        {"Choice": "Reasoning", "Recommended": "Off",
-         "Evidence and cost": (f"it raised agreement significantly in {n_sig} of {len(cells)} model-dataset combinations, "
-                               f"{n_holm} after correction, at {R_OVERALL} times the output tokens and with less consistent "
-                               f"grades; its large gains came only for models that score many answers as zero")},
-        {"Choice": "Evaluation guidance", "Recommended": "The rubric or reference answer, whenever one exists",
-         "Evidence and cost": (f"the change that most reliably raised agreement: significant in {len(g_ok)} of {len(gd)} "
-                               f"model-dataset combinations (${g_ok.dQWK.min():+.3f}$ to ${g_ok.dQWK.max():+.3f}$ QWK), "
-                               f"at {g_ratio.min():.1f} to {g_ratio.max():.1f} times the cost per grade")},
-        {"Choice": "Grading instruction", "Recommended": "Ask for partial credit explicitly",
-         "Evidence and cost": (f"it raised code agreement significantly after correction for "
-                               + " and ".join(f"{_MN2[m]} (${g.dQWK.min():+.3f}$ to ${g.dQWK.max():+.3f}$ QWK)"
-                                              for m, g in pc_code_sig.groupby("model", sort=False))
-                               + f", lowered it significantly for no model, and moved the public short-answer datasets by "
-                               f"less than the $\\pm0.05$ margin, for a few extra input tokens")},
-        {"Choice": "Scope", "Recommended": "One question per call",
-         "Evidence and cost": (f"on PT-CS code, grading the whole exam in one call never improved agreement and "
-                               f"lowered it significantly for {_W.get(int((sc_.hi < 0).sum()), int((sc_.hi < 0).sum()))} of {_W[len(sc_)]} models "
-                               f"(${sc_.dQWK.min():+.3f}$ to ${sc_.dQWK.max():+.3f}$ QWK), while changing the cost per "
-                               f"question by ${min(scope_cost.values()):+.0f}$ to ${max(scope_cost.values()):+.0f}$\\%")},
-        {"Choice": "Decomposition", "Recommended": "One holistic score",
-         "Evidence and cost": (f"scoring criterion by criterion raised agreement significantly in "
-                               f"{['no', 'one', 'two', 'three'][int((dd_.lo > 0).sum())]} of {_W[len(dd_)]} model-dataset "
-                               f"combinations ({', '.join(f'{_MN[r.model]} on {_DN[r.dataset]}, ${r.dQWK:+.3f}$' for r in dd_[dd_.lo > 0].itertuples())}, "
-                               f"a model that gives too many zeros) and lowered it in "
-                               f"{['no', 'one', 'two', 'three'][int((dd_.hi < 0).sum())]}, at {dec_lo:.1f} to {dec_hi:.1f} "
-                               f"times the cost per answer")},
-        {"Choice": "Conversation", "Recommended": "A clean conversation per answer",
-         "Evidence and cost": (f"a shared, accumulating conversation lowered grades slightly ({min(st_d):.3f} to "
-                               f"{max(st_d):.3f} of the scale) and answer order moved individual grades by "
-                               f"{min(or_a):.2f} to {max(or_a):.2f} of the scale")},
-    ])
+    print(f"  [audit] guidance significant after Holm in {len(g_ok)} of {len(gd)} ({g_ok.dQWK.min():+.3f} to "
+          f"{g_ok.dQWK.max():+.3f}); criterion scoring {dec_lo:.1f}-{dec_hi:.1f}x the cost per answer; shared history "
+          f"{min(st_d):.3f}-{max(st_d):.3f}, answer order {min(or_a):.2f}-{max(or_a):.2f} of the scale")
+    # --- T5: the configuration guide and its validation (Pedro's review 2026-10-16, second pass): the guide is a
+    #     configuration, independent of the model; Table 4 lists its six settings with the alternatives tested
+    #     against it within each model (Test 1), and Fig. 8 places it among every configuration (Test 2). Both come
+    #     from experiments/analysis/guide_eval.py. The composite ranges quoted in RQ1 stay guarded below. ---
+    from experiments.analysis import guide_eval
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
-    fw["Evidence and cost"] = fw["Evidence and cost"].map(lambda s: s[0].upper() + s[1:] if s else s)
-    fw["Choice"] = "\\raggedright " + fw["Choice"]
-    fw["Recommended"] = "\\raggedright " + fw["Recommended"]
-    _tex(fw, "tab_framework.tex",
-         "The configuration guide: one recommended setting per configuration choice, with the evidence and the "
-         "cost behind it. Together the settings form the recipe of Fig.~\\ref{fig:frameworkdiagram}.",
-         "tab:framework", star=True, colspec="p{2.6cm}p{3.8cm}p{9.8cm}", rowsep="3pt", rowrule=True)
-    guide_eval.write_table(ge)
+    _gd = guide_eval.rows()
+    guide_eval.write_table(guide_eval.departures(guide_eval.within_model(_gd)))
     print("done.")
     return 0
 

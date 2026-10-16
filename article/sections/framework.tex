@@ -1,8 +1,8 @@
-%% sections/framework.tex -- The Configuration Guide. Rewritten 2026-10-16 (Pedro's review): ONE simple recipe
-%% (no budget ladder, no 'check for collapse first', no 'confirm locally', no extra validation test), and a
-%% 'guide in use' subsection that applies the recipe to every dataset and compares it with every configuration
-%% (tab_guide_use, engine experiments/analysis/guide_eval.py). Register: CLAUDE.md S9.2; numbers from the
-%% generated tables, never typed by hand.
+%% sections/framework.tex -- The Configuration Guide and its validation. Second pass 2026-10-16 (Pedro): the guide
+%% is a configuration, independent of the model (no model prescribed), with two validation tests from
+%% experiments/analysis/guide_eval.py: Test 1 within each model (Table 4, tab_framework) and Test 2 across every
+%% configuration (Fig. 8, fig_guide_validation). No budget ladder, no pre-tests, no 'confirm locally'.
+%% Register: CLAUDE.md S9.2; every number from guide_eval (printed by `python -m experiments.analysis.guide_eval`).
 
 \section{The Configuration Guide}
 \label{sec:framework}
@@ -47,8 +47,8 @@
 \draw[arr] (start) -- (exam);
 \draw[arr] (exam) -- (split);
 \draw[arr] (split.east) -- (block.west);
-% --- the call ---
-\node[llm, right=16mm of block, text width=30mm] (llm) {grade with the LLM\\[2pt]\tiny DeepSeek-V4-Flash $\cdot$ reasoning off\\[-1pt]\tiny one holistic score $\cdot$ clean conversation};
+% --- the call: any model, configured by the guide ---
+\node[llm, right=16mm of block, text width=30mm] (llm) {grade with the LLM\\[2pt]\tiny reasoning off\\[-1pt]\tiny one holistic score $\cdot$ clean conversation};
 \draw[arr] (block.east) -- (llm.west);
 % --- loop and the final node ---
 \node[dec, right=14mm of llm, text width=15mm] (more) {more questions?};
@@ -61,59 +61,67 @@
 \draw[arr] (more.south) |- (loopbot) -| node[edgelbl,pos=0.25,below]{yes, next question} (block.south);
 \end{tikzpicture}%
 }
-\caption{The recipe at work on one exam. Each question is graded in its own call (the stack stands for the
-remaining questions). The prompt, shown dashed, holds the instruction to award partial credit, the
-question, the student answer, and the rubric or reference answer that exists for it. The model,
-DeepSeek-V4-Flash with reasoning off, returns one holistic score in a clean conversation, and the process
-repeats until every question is graded.}
+\caption{The guide at work on one exam. Each question is graded in its own call (the stack stands for the
+remaining questions). The prompt, shown dashed, holds the instruction to award partial credit, the question,
+the student answer, and the rubric or reference answer that exists for it. The model, with reasoning off,
+returns one holistic score in a clean conversation, and the process repeats until every question is graded.}
 \label{fig:frameworkdiagram}
 \end{figure*}
 
 \input{tables/tab_framework}
 
-The comparisons of Section~\ref{sec:results} come together in one recipe for grading with an LLM
-(Table~\ref{tab:framework}, Fig.~\ref{fig:frameworkdiagram}). Give the model the question, the student
-answer, and the rubric or reference answer, and ask it to award partial credit. Grade one question per
-call with reasoning off and a single holistic score, in a clean conversation for every answer, with
-DeepSeek-V4-Flash. Each setting is the one the comparisons favoured, and Table~\ref{tab:framework} gives the
-evidence and the cost behind it.
+The comparisons of Section~\ref{sec:results} combine into one configuration for grading with an LLM
+(Table~\ref{tab:framework}, Fig.~\ref{fig:frameworkdiagram}). Give the model the rubric or the reference
+answer and ask it to award partial credit. Grade one question per call, with reasoning off and a single
+holistic score, in a clean conversation for each answer. The guide sets how the grader is configured and
+leaves the choice of model open, so we validated it on all five models of the study.
 
-Two settings carry most of the gain. Supplying the rubric or the reference answer was the change that
-raised agreement most reliably (Section~\ref{sec:rq2}), and asking for partial credit raised it further on
-code (Section~\ref{sec:rq6}). The other settings keep grading cheap and fair. Reasoning seldom helped and
-always cost (Section~\ref{sec:rq1}); grading a whole exam in one call never improved agreement, and scoring
-criterion by criterion improved it only for GPT-5.1 on RIAYN (Section~\ref{sec:rq3}); and a clean
-conversation keeps a grade independent of the answers graded before it (Section~\ref{sec:rq5}).
-DeepSeek-V4-Flash is the recipe's model because, asked for partial credit, it graded code as well as
-GLM-5.1, the strongest model without reasoning, at about a tenth of its price (Section~\ref{sec:rq6}).
+Two settings carry the gain. The rubric or the reference answer raised agreement significantly in 13 of 15
+model-dataset combinations, by 0.10 to 0.34 QWK (Section~\ref{sec:rq2}), and the request for partial credit raised code
+agreement by up to 0.11 for a few extra input tokens (Section~\ref{sec:rq6}). The other four settings keep
+grading cheap, consistent, and fair. Reasoning raised agreement significantly in only six of twenty
+combinations, at 9 to 925 times the output tokens (Section~\ref{sec:rq1}); grading the whole exam in one call never improved
+agreement, and scoring criterion by criterion did so once (Section~\ref{sec:rq3}); and a clean conversation
+keeps each grade independent of the answers graded before it (Section~\ref{sec:rq5}).
 
-\subsection{The Guide in Use}
+\subsection{Validating the Guide}
 \label{sec:guideuse}
 
-\input{tables/tab_guide_use}
+\begin{figure*}[t]
+\centering
+\input{figures/fig_guide_validation.pgf}
+\caption{The guide among every configuration graded without reasoning (Test 2). Each point is one
+configuration on the answers they all graded (Mohler: the 800 every configuration graded), with its
+agreement with the teachers (QWK) against the cost of 1000 grades (log scale). Coloured points are the
+guide's configuration with each model, grey points the other configurations, and the dashed line the
+cost-quality frontier, the configurations that no cheaper one beats.}
+\label{fig:guidevalidation}
+\end{figure*}
 
-We applied the recipe to every dataset and compared it with every combination of model, reasoning, and
-grading instruction in the study: the four model families with reasoning off and on under the strict
-instruction, and every model with reasoning off under the partial-credit instruction, Claude Sonnet 4.6
-under both (Table~\ref{tab:guideuse}). The configurations without reasoning are compared on the answers
-they all graded, and those with reasoning on the sampled items.
+%% Numbers: experiments/analysis/guide_eval.py (Test 1: within_model / departures; Test 2: field / field_summary).
+We validated the guide with two tests that use every configuration graded in the study. The first asks
+whether another configuration of the same model agrees better with the teachers. The second asks how the
+guide, with each model, compares with the best configuration of any model, and at what cost.
 
-%% Numbers: tab_guide_use / experiments/analysis/guide_eval.py (2026-10-16, every model in).
-On code, the recipe was the best configuration without reasoning on PT-CS code (0.674 QWK) and the second on
-RIAYN (0.732), behind GLM-5.1 with the same instruction (0.760), which costs 15 times as much; it cost under
-0.10 euros per thousand grades. On the sampled code answers, the best configuration, GLM-5.1 with partial
-credit on PT-CS code and with reasoning on RIAYN, did better by 0.04 and 0.07, at 14 and 68 times the cost.
-On the public short-answer datasets, where all configurations lie close together, the recipe stayed within
-0.046 QWK of the best configuration without reasoning, which cost 19 to 53 times as much; on the 84 PT-CS
-short answers it was 0.12 below Claude Sonnet 4.6, at a 43rd of its cost. On the sampled short answers the
-best configurations led by 0.06 to 0.12, at 19 to 53 times the cost. Against the study's baseline
-configuration, Qwen3.5 with the strict instruction, the recipe raised agreement by 0.19 on RIAYN and 0.21 on
-PT-CS code and matched it on short answers.
+\emph{Test 1: the same model, configured otherwise.} Without reasoning, no other configuration of the same
+model agreed significantly better with the teachers than the guide's, with one exception in 56 comparisons
+(Table~\ref{tab:framework}). Each comparison pairs the guide's configuration with another configuration of
+the same model on the answers both graded, using the bootstrap of Section~\ref{sec:metrics} without
+correction for multiple comparisons, which makes an advantage of the alternative easier to detect. The
+exception is the strict instruction for Claude Sonnet 4.6 on the 84 PT-CS short answers, by 0.043 QWK.
+Thirty-three alternatives agreed significantly worse, by up to 0.34, and no alternative to the guidance,
+the scope, the decomposition, or the clean conversation agreed better for any model. Turning reasoning on
+was the only change that raised agreement more than once: it did so significantly in 7 of 17 comparisons,
+five of them for Qwen3.5, the model with the strongest zero-collapse, and never lowered it, but it made
+grades less consistent across repetitions in 14 of the 17 and cost 2.6 to 179 times as much per grade.
+The other alternatives also made grades less consistent in most comparisons (34 of 56).
 
-The recipe's grades also varied little and showed no zero-collapse. Their within-item standard deviation
-was 0.011 to 0.029 of the scale (0.002 to 0.006 for Claude Sonnet 4.6, the most consistent model), and on
-code the recipe scored 7\% of the RIAYN answers and 10\% of the PT-CS code answers as zero, against 5\% and
-2\% for the teachers and up to 49\% for Qwen3.5.
-
-In practice the guide is a short routine: write the rubric or reference answer into the prompt, ask for
-partial credit, and send each answer on its own, with reasoning off, to DeepSeek-V4-Flash.
+\emph{Test 2: every configuration in the study.} With the model best suited to each dataset, the guide's
+configuration reached or approached the best agreement in the study (Fig.~\ref{fig:guidevalidation}): it
+was the best configuration on Mohler (GPT-5.1, 0.653 QWK) and on PT-CS code (DeepSeek-V4-Flash, 0.674), and
+came within 0.002 of the best on SemEval, 0.014 on RIAYN, and 0.043 on the PT-CS short answers. On the
+sampled answers, which also include the configurations with reasoning, the best configuration led it by at
+most 0.053. With four of the five models it graded code at 0.65 to 0.76 QWK, and with Qwen3.5 at 0.50 and
+0.55, as that model's zero-collapse persisted under partial credit (Section~\ref{sec:rq6}). With the
+cheapest model, DeepSeek-V4-Flash, the guide cost 0.02 to 0.09 euros per thousand grades, and no cheaper
+configuration agreed better, apart from a difference of 0.001 QWK on SemEval.

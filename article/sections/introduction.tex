@@ -71,11 +71,11 @@ Six research questions structure the study:
 \end{itemize}
 
 From these comparisons we build a configuration guide: one recommended configuration for LLM grading
-in CS, with the evidence and the cost behind each of its settings. We then apply the guide to every
-dataset and compare it with the other configurations we ran, on agreement, consistency, and cost.
+in CS, which names no model. We validate it on five models against every other configuration we ran, on
+agreement, consistency, and cost.
 
-The contribution is threefold. First, a configuration guide for LLM grading in CS, tested against every
-configuration in the study. Second, the first grading-specific, within-family isolation of the
+The contribution is threefold. First, a configuration guide for LLM grading in CS, validated on five
+models against every configuration in the study. Second, the first grading-specific, within-family isolation of the
 reasoning effect, measured jointly on agreement, consistency, and cost. Third, PT-CS, a new dataset of
 379 teacher-validated answers from complete computer-science exams in Portuguese, which repeats every
 comparison outside the public corpora and alone supports the comparisons that need complete exams.
@@ -83,6 +83,6 @@ comparison outside the public corpora and alone supports the comparisons that ne
 The paper is organised as follows. Section~\ref{sec:related} reviews the related work.
 Section~\ref{sec:method} describes the configuration choices, datasets, models, grading harness, and
 statistics. Section~\ref{sec:results} reports the results by research question, and
-Section~\ref{sec:discussion} discusses them. Section~\ref{sec:framework} presents the configuration
-guide and tests it, Section~\ref{sec:threats} states the threats to validity, and
+Section~\ref{sec:discussion} discusses them. Section~\ref{sec:framework} presents and validates the
+configuration guide, Section~\ref{sec:threats} states the threats to validity, and
 Section~\ref{sec:conclusion} concludes.

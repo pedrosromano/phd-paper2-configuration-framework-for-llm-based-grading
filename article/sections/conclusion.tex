@@ -1,5 +1,5 @@
 %% sections/conclusion.tex -- closes the loop the Introduction opened (CLAUDE.md S9.2). Rewritten 2026-10-16
-%% (Pedro's review): one recipe, the guide in use, no deployment or transfer angle. Second pass 2026-10-16:
+%% (Pedro's review): one guide, validated on five models, no deployment or transfer angle. Second pass 2026-10-16:
 %% every model's partial-credit results in; the recipe names its model.
 
 \section{Conclusions}
@@ -7,7 +7,7 @@
 
 An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them only
 in fragments. We tested them together for computer-science grading under one controlled protocol and
-condensed the result into one recipe. The central finding is that the cheap changes were the effective
+condensed the result into a configuration guide. The central finding is that the cheap changes were the effective
 ones. Supplying a rubric or a reference answer raised agreement significantly in thirteen of fifteen
 model-dataset combinations, by 0.10 to 0.34 QWK, for 1.2 to 1.8 times the cost per grade, and asking the
 model to award partial credit raised code agreement by up to 0.11 QWK for a few extra input tokens. Reasoning raised
@@ -19,12 +19,13 @@ what the student did right and still gives no marks.
 Grading a whole exam in one call never helped, scoring criterion by criterion helped only GPT-5.1 on one
 dataset, both saved little or nothing, and the closed models did not repay their price on code.
 
-The recipe follows directly: the rubric or reference answer, an instruction to award partial credit, one
-question per call with reasoning off and a single holistic score, a clean conversation per answer, and
-DeepSeek-V4-Flash, the cheapest model we tested, which with partial credit graded code as well as the
-strongest model without reasoning at a tenth of its cost. Applied to every dataset, the recipe was the best
-configuration without reasoning on PT-CS code and the second on RIAYN, and stayed within 0.05 QWK of the
-best on the public short-answer datasets.
+The guide follows directly and names no model: the rubric or reference answer, an instruction to award
+partial credit, one question per call with reasoning off and a single holistic score, and a clean
+conversation per answer. Validated on five models, it was rarely beaten: of 56 other configurations of
+the same models without reasoning, one agreed significantly better with the teachers and 33 significantly
+worse. With the model best suited to each dataset, it matched or came within 0.05 QWK of the best
+configuration in the study, and with the cheapest model no cheaper configuration graded better, apart from
+a difference of 0.001 QWK on one dataset.
 
 Future work follows from the gaps this study declares and from what the literature has yet to settle.
 Few-shot guidance, adding a few already-graded answers to the prompt as examples, was held out; the strong
@@ -35,11 +36,11 @@ comparing a fine-tuned grader against its base model on agreement, consistency, 
 evidence rests on two Java-centric datasets because code corpora graded with human rubrics are
 scarce~\cite{havare_ai-based_2025,pathak_rubric_2025}, so widening it to other languages and paradigms, and
 contributing such data, is the clearest way to firm up the code conclusions. PT-CS comes from one
-institution, so testing the recipe across more institutions and student populations would establish how
+institution, so testing the guide across more institutions and student populations would establish how
 far it carries. And the zero-collapse, where a grader scores many partially correct answers as zero, is not,
 to our knowledge, described in the grading literature; it deserves study in its own right, both to detect it
 and to prevent it without paying for reasoning.
 
 For the instructor the introduction began with, the answer is a short routine: supply the rubric or
-reference answer, ask for partial credit, and grade one question per call with reasoning off on
-DeepSeek-V4-Flash, for under 0.10 euros per thousand grades.
+reference answer, ask for partial credit, and grade one question per call with reasoning off, in a clean
+conversation; with an inexpensive model this costs under 0.10 euros per thousand grades.

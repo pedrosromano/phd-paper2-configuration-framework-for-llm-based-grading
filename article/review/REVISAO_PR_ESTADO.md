@@ -10,10 +10,12 @@
     `revisao-access`);
   - a **segunda passagem** de revisão ao artigo inteiro (secção 5 abaixo).
   - Todos os 51 comentários estão resolvidos (lista de verificação na secção 5).
-- **PDF para leitura:** Google Drive do Pedro, "O meu disco" → `artigo_2_access_revisto2_2026-10-16.pdf`
-  (15 páginas). A versão anterior, `artigo_2_access_revisto_2026-10-16.pdf`, fica lá também. O PDF anotado
-  do Pedro continua em `~/Desktop/artigo_2_access_2026-10-16.pdf` e **não pode ser apagado**.
-- **Próximo passo:** a leitura do Pedro sobre a segunda passagem.
+- **PDF para leitura:** Google Drive do Pedro, "O meu disco" → `artigo_2_access_revisto3_2026-10-16.pdf`
+  (15 páginas, com o guia novo). As versões anteriores (`..._revisto_...` e `..._revisto2_...`) ficam lá
+  também. O PDF anotado do Pedro continua em `~/Desktop/artigo_2_access_2026-10-16.pdf` e **não pode ser
+  apagado**.
+- **Guia refeito (secção 6 abaixo):** independente do modelo, com dois testes de validação.
+- **Próximo passo:** a leitura do Pedro sobre o guia novo.
 - **Motores novos:**
   - `experiments/analysis/instruction.py` (RQ6);
   - `experiments/analysis/guide_eval.py` (Tabela 5, guia aplicado);
@@ -515,3 +517,58 @@ todos os números contra os motores (`guide_eval`, `instruction`, `make_phase5_t
 **Pendentes (fora desta passagem):**
 - a frase de disponibilidade dos dados do PT-CS, ligada à questão ética/RGPD (D6/B4, adiada pelo Pedro);
 - a revogação das chaves que passaram pelo chat (Anthropic, OpenAI, OpenRouter).
+
+---
+
+## 6. O guia refeito: independente do modelo, com validação (2026-10-16, noite)
+
+**Pedido do Pedro:**
+- o guia é a parte mais importante: limpo e claro, sem disclaimers nem historietas;
+- testes claros e validados;
+- independente do modelo, sem aconselhar logo o DeepSeek;
+- comparação completa, simples para humanos;
+- rever várias vezes até ter qualidade de revista Q1.
+
+**O guia (Tabela 4 e Fig. 7):**
+- dar a rubrica ou a resposta de referência;
+- pedir crédito parcial;
+- reasoning desligado;
+- uma pergunta por chamada;
+- uma nota holística;
+- conversa limpa por resposta.
+
+Não indica modelo, não tem condições e não tem pré-testes.
+
+**Validação** (motor `experiments/analysis/guide_eval.py`, sobre TODAS as configurações corridas, incluindo
+sem guia, exame inteiro, critério a critério, justificação e conversa partilhada):
+- **Teste 1, dentro de cada modelo (Tabela 4).**
+  - Como funciona: o guia é comparado com cada outra configuração do mesmo modelo, nas mesmas respostas, por
+    bootstrap emparelhado a 95% e sem correção (o que favorece a alternativa).
+  - Sem reasoning, em 56 alternativas: 1 melhor (o Sonnet com a instrução estrita no PT-CS curtas, +0.043),
+    22 sem diferença e 33 piores.
+  - Sem guia, exame inteiro, critério a critério e conversa partilhada: nunca melhores.
+  - Reasoning ligado: melhor em 7 de 17 (5 delas no Qwen) e nunca pior, mas menos consistente em 14 de 17 e
+    a 2,6–179 vezes o custo.
+- **Teste 2, entre modelos (Fig. 8).** Mostra custo contra concordância por dataset, com todas as
+  configurações sem reasoning.
+  - Com o modelo mais adequado a cada dataset, o guia:
+    - é a melhor configuração do estudo no Mohler (GPT-5.1, 0.653) e no PT-CS código (DeepSeek, 0.674);
+    - fica a 0.002 no SemEval, a 0.014 no RIAYN e a 0.043 no PT-CS curtas;
+    - nas amostras com reasoning, fica a 0.053 no máximo.
+  - Com quatro dos cinco modelos dá 0.65–0.76 no código; com o Qwen, 0.50 e 0.55 (o colapso persiste).
+  - Com o modelo mais barato custa €0,02–0,09 por 1000 notas, e nenhuma configuração mais barata concorda
+    melhor (só um empate de 0.001 no SemEval).
+
+**Mudanças:**
+- A antiga Tabela 5 (`tab_guide_use`) saiu.
+- A Tabela 4 passou a ser gerada pelo `guide_eval`.
+- Figura nova: `phase6.fig_guide_validation`.
+- Atualizados o resumo, a Introdução, a Discussão, as Ameaças e a Conclusão.
+- A palavra "recipe" saiu do artigo.
+
+**Revisões da secção (4 passagens):**
+- números verificados contra o motor;
+- "significantly" nas afirmações;
+- abertura do Teste 2 condicionada ao modelo adequado;
+- o reasoning com o compromisso completo (melhor às vezes, menos consistente, mais caro);
+- legenda da figura sem sobreposições.
