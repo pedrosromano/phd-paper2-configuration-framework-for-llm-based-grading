@@ -30,20 +30,19 @@ rubric-bounded educational grading. Models have been compared as graders of prog
 assignments~\cite{jukiewicz_comparison_2026} and of assignments in a bioinformatics
 course~\cite{policar_automated_2025}, and evaluation guidance has been studied for code
 grading~\cite{pathak_rubric_2025}, but, to our knowledge, no study compares guidance, the grading
-instruction, grading scope, rubric decomposition, and conversation state under one protocol
-(Section~\ref{sec:related}). What is missing is the
-practical synthesis: for a given CS assessment task, which configuration should be used, and what does
-it cost?
+instruction, grading scope, rubric decomposition, and conversation state under one protocol. What is
+missing is an empirical answer to the instructor's question: for a given CS assessment task, which
+configuration should be used, and what does it cost?
 
 This paper studies these configuration choices under one protocol and turns the results into a
-configuration guide. We vary seven configuration choices: reasoning (on or off), evaluation guidance
-(none versus a rubric or a reference answer), the grading instruction (apply the guidance strictly, or
-award partial credit explicitly), grading scope (a whole exam in one call versus one question per
-call), rubric decomposition (one holistic score versus a score per criterion), conversation state (a
-clean conversation per answer versus a shared history), and the model. Four model families take part,
-three open-weight (Qwen3.5, DeepSeek-V4-Flash, GLM-5.1) and one closed (GPT-5.1), and each lets
-reasoning be switched on or off within the same model, which separates the effect of reasoning from
-that of the model. A second closed model, Claude Sonnet 4.6, joins the grading-instruction comparison.
+configuration guide. We vary reasoning (on or off), evaluation guidance (none versus a rubric or a
+reference answer), grading scope (a whole exam in one call versus one question per call), rubric
+decomposition (one holistic score versus a score per criterion), conversation state (a clean
+conversation per answer versus a shared history), and the model; a follow-up experiment varies the
+grading instruction (apply the guidance strictly, or award partial credit explicitly). Five models take part, three
+open-weight (Qwen3.5, DeepSeek-V4-Flash, GLM-5.1) and two closed (GPT-5.1, Claude Sonnet 4.6). The
+first four are graded with reasoning both off and on within the same model, which separates the effect
+of reasoning from that of the model; Claude Sonnet 4.6 grades with reasoning off.
 The study runs on four datasets in two domains. Three are public, so the results can
 be checked beyond our own students: the Mohler corpus of graded computer-science short
 answers~\cite{mohler_text_2009,mohler_learning_2011}, the SemEval-2013 Task~7 corpus of graded science
@@ -53,7 +52,7 @@ Java code and short answers in Portuguese, from complete exams. Because it keeps
 exam, it is the only one of the four on which grading a whole exam in one call and the conversation
 state can be studied.
 
-Six research questions structure the study:
+Five research questions structure the study:
 \begin{itemize}
   \item \textbf{RQ1.} How does reasoning affect grading quality, consistency, and cost, and does the
         effect differ between code and short answers?
@@ -66,23 +65,25 @@ Six research questions structure the study:
         cost-quality trade-off between open-weight and closed models?
   \item \textbf{RQ5.} Does conversation state (clean versus shared history) affect consistency and
         fairness?
-  \item \textbf{RQ6.} How does the grading instruction, applying the guidance strictly or awarding
-        partial credit explicitly, affect agreement and cost?
 \end{itemize}
+The follow-up experiment, designed after the first results, asks how the grading instruction affects
+agreement and cost.
 
-From these comparisons we build a configuration guide: one recommended configuration for LLM grading
-in CS, which names no model. We validate it on five models against every other configuration we ran, on
+From these comparisons we build a model-agnostic configuration guide: one recommended configuration
+for LLM grading in CS, which leaves the choice of model open. We validate it on five models in two ways:
+against every other configuration of the same model, and against the best configuration of any model, on
 agreement, consistency, and cost.
 
-The contribution is threefold. First, a configuration guide for LLM grading in CS, validated on five
-models against every configuration in the study. Second, the first grading-specific, within-family isolation of the
-reasoning effect, measured jointly on agreement, consistency, and cost. Third, PT-CS, a new dataset of
-379 teacher-validated answers from complete computer-science exams in Portuguese, which repeats every
-comparison outside the public corpora and alone supports the comparisons that need complete exams.
+The contribution is threefold. First, a model-agnostic configuration guide for LLM grading in CS,
+validated on five models against every configuration in the study. Second, the first grading-specific,
+within-family isolation of the reasoning effect, measured jointly on agreement, consistency, and cost.
+Third, PT-CS, a new dataset of 379 teacher-graded answers from complete computer-science exams in
+Portuguese, which repeats every comparison outside the public corpora and alone supports the comparisons
+that need complete exams.
 
 The paper is organised as follows. Section~\ref{sec:related} reviews the related work.
 Section~\ref{sec:method} describes the configuration choices, datasets, models, grading harness, and
-statistics. Section~\ref{sec:results} reports the results by research question, and
-Section~\ref{sec:discussion} discusses them. Section~\ref{sec:framework} presents and validates the
+statistics. Section~\ref{sec:results} reports the results by research question and then the follow-up
+experiment, and Section~\ref{sec:discussion} discusses them. Section~\ref{sec:framework} presents and validates the
 configuration guide, Section~\ref{sec:threats} states the threats to validity, and
 Section~\ref{sec:conclusion} concludes.

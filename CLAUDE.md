@@ -137,6 +137,9 @@ These are not features; they gate submission. Keep them visible and track them a
    proposal. Whole-exam and conversation runs grade complete deployment exams and say so in one clause. This
    §2.2 analysis remains the internal record; the honesty rule now means: state the criterion, never imply
    the 379 were validated by a separate process.
+   **SUPERSEDED 2026-10-18 (Pedro, decision D2 of his second review): the paper no longer states the selection
+   criterion or the platform's AI suggestions anywhere (Method or Threats).** PT-CS is "379 answers ... from 97
+   exams", graded jointly by two teachers. Author's decision, taken after the integrity concern was raised.
 3. **No circularity.** Data used to *evaluate* configurations in Article 2 must stay conceptually separate
    from the GradeGenie *system* evaluated in Article 3. Do not validate an improved GradeGenie against
    grades a previous GradeGenie helped produce.
@@ -592,6 +595,10 @@ researcher in an adjacent area who does not work on this exact topic.
 - **A figure is graphical, not a container for prose.** Represent the content as nodes, arrows, decisions, and
   short labels, with consistent visual styles for inputs, decisions, and processes; explanatory sentences belong
   in the caption or the body, never as paragraphs inside the figure.
+- **No section cross-references in prose** (Pedro, 2026-10-18; comments #3, #29, #30, #37, #38, #41):
+  - do not send the reader to another section ("(Section IV-A)", "Section III-C explains why ...");
+  - say the thing where it is needed, or point to the figure or table;
+  - the section map at the end of the Introduction is the exception.
 - **Test:** before any section is declared done, re-read it asking **"would a tired reviewer follow this on
   first pass?"** — if a sentence requires re-reading, rewrite it. **Density is not rigor**; the rigor lives in
   the tables, the engine, and the threats.
@@ -1160,3 +1167,59 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   credit; Claude Sonnet 4.6 runs via the Message Batches API with structured output enforcing the JSON-only
   score (`experiments/run/batch_runner.py`; Mohler capped at 800). Harness: `NoCredits` stops a provider
   without storing rows (OpenAI 429 credit_balance_exhausted had been retried for 15 min per call).
+- ✅ **Pedro's second review (2026-10-18, 48 PDF comments on `~/Desktop/artigo_2_access_revisto3_2026-10-16.pdf`;
+  never overwrite or delete that annotated PDF). READ `article/review/REVISAO_PR2_ESTADO.md` FIRST** (every
+  comment, its status, decisions D1–D7 with options and recommendations). Done and committed; final PDFs
+  (version 6, clean and marked) on the Desktop. Facts established in this round, do not regress them:
+  - **Model choice (#14)**: "among the strongest open models" was false for Qwen3.5-35B-A3B (mid-table:
+    Artificial Analysis 6 Jun 2026 and Arena 9 Jun 2026 snapshots). GLM-5.1 was the #1 open model on Arena text
+    and code, and 4th on Artificial Analysis. DeepSeek-V4-Flash was in the top 15 open models on both.
+    **Paper text (Pedro, 2026-10-18): the choice is justified by PRIOR GRADING STUDIES, in ONE short sentence**
+    with citations per family. Pedro rejected the long version that named every author ("almost a literature
+    review"). The evidence behind the citations:
+    Four of the five families have a grading record:
+    - Jukiewicz: 18 models;
+    - Cipriano et al.: Claude 3.5 Sonnet closest to the human graders;
+    - Moazzez et al.: Claude the most consistent;
+    - Li et al.: GPT-4o first, DeepSeek-V3 second;
+    - Aminah et al.: DeepSeek with the lowest MAE on Mohler;
+    - Jiang & Fowler: Qwen 2.5 72B about as accurate as GPT-4o;
+    - Havare et al.: a 7B Qwen coder matched Codestral 22B;
+    - Cisneros-Gonzalez et al.: a dataset graded by DeepSeek and Qwen;
+    - Jayarao: the Qwen thinking switch.
+    GLM-5.1 has NO grading record. It is justified only as the #1 open model on the Arena code leaderboard
+    (31 May 2026), because the study grades code. Never claim a grading record for GLM. Every claim was checked
+    against the study's abstract.
+  - **Related Work (#7–#9)**: rubric effects were already studied (Nugroho 2025, 10 LLMs; Yoshida 2025;
+    Pathak), and lenient vs strict prompts too (Venkatraman 2026, 2 LLMs). Claim only the combination (one
+    protocol, 5 models, 4 datasets, 2 domains, k=5, cost), never being first. Pathak's κ: 0.41–0.43 without
+    a rubric, 0.60–0.65 with the best question-specific rubric.
+  - **Conversation sub-study exams**: 80 drawn at random (seed 20260609) from the 181 PT-CS exams with code
+    answers. Only 34 of them are among the 97 exams of the 379 graded answers, so never describe them as a
+    subset of those.
+  - **k / K**: k = repetitions; the QWK scale is "six ordered levels". The symbol K was removed from the paper.
+  - **Decisions taken by Pedro (2026-10-18, evening), all implemented:**
+    - **D1:** the grading instruction is a FOLLOW-UP experiment (not RQ6). There are 5 RQs, and
+      "F. Follow-Up: Asking for Partial Credit" is motivated by the zero-collapse.
+    - **D2: NO mention anywhere of the platform suggesting grades or of how the 379 PT-CS answers were
+      selected.** This is the author's decision and supersedes the B2 "kept in Threats" rule in §2.2. Do not
+      re-add it. The conversation exams are still described as drawn from the 181 collection exams with code.
+    - **D3:** the body says the open models ran "via DeepInfra". A footnote states the one exception
+      (GLM-5.1 partial credit via OpenRouter/Z.ai) and that we treat both providers as one backend
+      (strict 0.726 on RIAYN on both). Never write that nothing ran elsewhere.
+    - **D4:** the guide section is intro (why, measures, rule) -> A. the guide (Table 4 =
+      `make_phase5_tables.write_guide_table`) -> B. the two tests -> C. results. Test 1 is a figure
+      (`phase6.fig_guide_test1`, Fig. 8) and Test 2 is Fig. 9.
+    - **D5:** validation framing = "33 significantly better, 22 no significant difference, 1 worse" of 56
+      alternatives without reasoning. Pedro's sentence goes in the abstract and Intro: "against every other
+      configuration of the same model, and against the best configuration of any model, at what cost".
+    - **D7:** RQ4 uses all five sets (`audit_pct_baselines.rq4`).
+    - Guidance range is **0.095–0.335** (the old "0.10–0.34" was double rounding). Partial-credit cost on code
+      is **5–9%**.
+    - Pedro asked for this version with the changes marked: `article/review/tools/README.md`.
+  - **AI-use statement (IEEE policy, Acknowledgment section, 2026-10-18): final wording is Pedro's own;
+    do not change it without asking him.** "During the preparation of this work, the authors used Claude
+    Opus 5 (Anthropic) to help write the scripts that run the experiments and process the data for the tables
+    and figures, and to help revise the text. The research questions, study design, interpretation of the
+    results, discussion, and conclusions are the authors' own; the authors checked all results and take full
+    responsibility for the content."

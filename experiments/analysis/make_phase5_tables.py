@@ -285,8 +285,8 @@ def main() -> int:
                           "SD off $\\to$ on": f"{c.SDk_off:.3f} $\\to$ {c.SDk_on:.3f}"})
     _tex(pd.DataFrame(vrows), "tab_rq1_values.tex",
          "Reasoning off versus on, per model and dataset. $\\Delta$QWK is QWK with reasoning on minus QWK "
-         "off, on the N sampled items; a reasoning run that reached the output limit without a grade takes "
-         "the reasoning-off grade (Section~\\ref{sec:metrics}). Bold marks a 95\\% "
+         "off, on the N sampled items; a reasoning run that reached the output limit without returning a "
+         "grade counts with the grade the same model gave that answer with reasoning off. Bold marks a 95\\% "
          "bootstrap confidence interval that excludes zero. Holm marks the gains that stay significant after Holm's "
          "correction for the 20 comparisons. Tokens is how many times more output tokens reasoning used, "
          "and SD is the mean within-item standard deviation across repetitions (lower is more consistent); "
@@ -454,16 +454,93 @@ def main() -> int:
     print(f"  [audit] guidance significant after Holm in {len(g_ok)} of {len(gd)} ({g_ok.dQWK.min():+.3f} to "
           f"{g_ok.dQWK.max():+.3f}); criterion scoring {dec_lo:.1f}-{dec_hi:.1f}x the cost per answer; shared history "
           f"{min(st_d):.3f}-{max(st_d):.3f}, answer order {min(or_a):.2f}-{max(or_a):.2f} of the scale")
-    # --- T5: the configuration guide and its validation (Pedro's review 2026-10-16, second pass): the guide is a
-    #     configuration, independent of the model; Table 4 lists its six settings with the alternatives tested
-    #     against it within each model (Test 1), and Fig. 8 places it among every configuration (Test 2). Both come
-    #     from experiments/analysis/guide_eval.py. The composite ranges quoted in RQ1 stay guarded below. ---
-    from experiments.analysis import guide_eval
+    # --- T5: the configuration guide (Pedro's second review, 2026-10-18, comments #39-#48): Table 4 is the guide
+    #     itself, its six settings with the evidence for each, every number derived here from the engines above
+    #     (dim_contrasts, rq1_cells, instruction.contrasts, conversation_stats, the logged costs). Its validation is
+    #     plotted from experiments/analysis/guide_eval.py: Test 1 in phase6.fig_guide_test1 (it replaced the Test 1
+    #     table) and Test 2 in phase6.fig_guide_validation. The composite ranges quoted in RQ1 stay guarded. ---
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
-    _gd = guide_eval.rows()
-    guide_eval.write_table(guide_eval.departures(guide_eval.within_model(_gd)))
+    write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_hi, st_d, or_a)
     print("done.")
     return 0
+
+
+def write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_hi, st_d, or_a) -> None:
+    """Table 4 (tab_framework): the configuration guide, one row per setting with the evidence for it."""
+    from experiments.analysis import guide_eval
+    from experiments.analysis import instruction as I
+    m3 = ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]
+    # guidance: Holm-significant gains and the cost per grade with guidance relative to none (reasoning off)
+    g_ok = gd[gd.sig_holm & (gd.dQWK > 0)]
+    gq = df[((df.dataset != "ptcs") | df.item_id.isin(interv)) & (df.reasoning == "off") & df.model.isin(m3)
+            & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
+    gc = (gq.assign(ce=pd.to_numeric(gq.cost_eur, errors="coerce"))
+          .groupby(["model", "dataset", "domain", "context_level"]).ce.mean().unstack())
+    g_cost = gc["with_guidance"] / gc["none"]
+    # grading instruction: partial credit vs strict (follow-up experiment), Holm within its family
+    idf = I.load()
+    pc = I.contrasts(idf)
+    pc = pc[pc.contrast == "partial credit vs strict"]
+    pc_code, pc_short = pc[pc.domain == "code"], pc[pc.domain == "short_answer"]
+    i_win = pc_code[pc_code.sig_holm & (pc_code.dQWK > 0)]
+    prices = guide_eval._prices()
+    extra_tok, extra_pct = [], []
+    for (m, ds), g in idf[(idf.domain == "code") & idf.instruction.isin(["standard", "partial_credit"])].groupby(["model", "dataset"]):
+        a, b = g[g.instruction == "standard"], g[g.instruction == "partial_credit"]
+        if a.empty or b.empty:
+            continue
+        pr = prices[m if m in prices else guide_eval.PRICE_KEY.get(m, m)]
+        extra_tok.append(pd.to_numeric(b.prompt_tokens, errors="coerce").mean() - pd.to_numeric(a.prompt_tokens, errors="coerce").mean())
+        extra_pct.append(100 * (guide_eval._per_grade(b, pr) / guide_eval._per_grade(a, pr) - 1))
+    short_equiv = bool(pc_short[pc_short.dataset != "ptcs"].equivalent.all())
+    # reasoning: RQ1 cells (every sampled item)
+    r_sig, r_holm, r_n = int(cells.sig.sum()), int(cells.sig_holm.sum()), len(cells)
+    r_less = int((cells.SDk_on > cells.SDk_off).sum())
+    p_lo, p_hi = float(cells.prem_x.min()), float(cells.prem_x.max())
+    # scope and decomposition
+    s_low = int((sc_.sig_holm & (sc_.dQWK < 0)).sum()); s_up = int((sc_.sig & (sc_.dQWK > 0)).sum())
+    d_up = int((dd_.sig_holm & (dd_.dQWK > 0)).sum())
+    sc_lo, sc_hi = min(scope_cost.values()), max(scope_cost.values())
+    sg = lambda v: f"{v:+.0f}\\%".replace("-", "$-$").replace("+", "$+$")
+    assert s_up == 0, "the guide row says the whole exam never raised agreement"
+    rows = [
+        ("Evaluation guidance", "Give the rubric or the reference answer",
+         f"Raised agreement in {len(g_ok)} of {len(gd)} model-dataset combinations, by {g_ok.dQWK.min():.3f} to "
+         f"{g_ok.dQWK.max():.3f} QWK, for {g_cost.min():.1f} to {g_cost.max():.1f} times the cost per grade"),
+        ("Grading instruction", "Ask for partial credit",
+         f"Raised code agreement for {i_win.model.nunique()} of {pc_code.model.nunique()} models, by "
+         f"{i_win.dQWK.min():.2f} to {i_win.dQWK.max():.2f} QWK, for {min(extra_tok):.0f} to {max(extra_tok):.0f} "
+         f"extra input tokens ({min(extra_pct):.0f} to {max(extra_pct):.0f}\\% of the cost); "
+         + ("on Mohler and SemEval every change lay within $\\pm0.05$" if short_equiv else "mixed on short answers")),
+        ("Reasoning", "Off",
+         f"Turning it on raised agreement in {r_sig} of {r_n} combinations ({r_holm} after correction), made grades "
+         f"less consistent in {r_less}, and multiplied the output tokens by {p_lo:.0f} to {p_hi:.0f}"),
+        ("Scope", "One question per call",
+         f"The whole exam in one call never raised agreement, lowered it for {s_low} of {len(sc_)} models, and "
+         f"changed the cost per question by {sg(sc_lo)} to {sg(sc_hi)}"),
+        ("Decomposition", "One holistic score",
+         f"Scoring per criterion raised agreement in {d_up} of {len(dd_)} comparisons, at {dec_lo:.1f} to "
+         f"{dec_hi:.1f} times the cost per answer"),
+        ("Conversation", "A clean conversation per answer",
+         f"In one shared conversation per exam, grades fell by {min(st_d):.3f} to {max(st_d):.3f} of the scale, "
+         f"and answer order moved them by {100 * min(or_a):.0f} to {100 * max(or_a):.0f}\\% of the marks"),
+    ]
+    lines = [r"% auto-generated by make_phase5_tables.py (write_guide_table) -- do not hand-edit",
+             r"\begin{table*}[!t]\centering\footnotesize",
+             r"\caption{The configuration guide: its six settings and the evidence behind each, from the comparisons of "
+             r"the results. Changes in agreement are in QWK and come from comparisons against the baseline "
+             r"configuration, with reasoning off unless stated.}\label{tab:framework}",
+             r"\setlength{\tabcolsep}{5pt}",
+             r"\begin{tabular}{p{2.6cm}p{3.6cm}p{10.4cm}}",
+             r"\hline",
+             r"Setting & The guide & Evidence \\",
+             r"\hline"]
+    lines += [f"{s} & {g} & {e} \\\\[2pt]" for s, g, e in rows]
+    lines += [r"\hline", r"\end{tabular}", r"\end{table*}"]
+    (TABLES / "tab_framework.tex").write_text("\n".join(lines) + "\n")
+    print("  wrote tab_framework.tex (the configuration guide)")
+    for s, g, e in rows:
+        print(f"    {s}: {e}")
 
 
 if __name__ == "__main__":

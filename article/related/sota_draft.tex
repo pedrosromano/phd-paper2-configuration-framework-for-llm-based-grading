@@ -55,19 +55,28 @@ together. This paper does so with an on/off switch within each model (RQ1).
 What the grader is given to grade against matters. In short-answer grading the usual material is a
 reference answer: the standard corpora pair each question with an instructor's or expert's answer, and
 automatic graders have long scored a student answer by comparing it with that
-answer~\cite{mohler_learning_2011,dzikovska_semeval_2013}. Clearer, more explicit rubrics raise the
-consistency of LLM grading~\cite{garcia-huertes_leveraging_2024}, and closed models given a rubric
-outperform open ones while remaining more lenient than human raters~\cite{sessler_canai_2025}. In code
-grading, question-specific rubrics substantially outperform question-agnostic or no-rubric prompting on
-object-oriented and data-structures code: Cohen's $\kappa$, a chance-corrected agreement index, rises
-from $\approx0.41$ with no rubric to $0.60$--$0.65$ with a question-specific
-one~\cite{pathak_rubric_2025}. Rubric-based code graders that award partial credit reach about 85\%
-accuracy pooled over rubric criteria~\cite{havare_ai-based_2025}. Code grading with LLMs is a younger and
-smaller area than short-answer grading. Locally-run open-source LLMs already support teaching assistants
-in grading introductory programming~\cite{mazzone_exploring_2024}, and a systematic review of artificial
-intelligence in programming education lists automated assessment and feedback among its core
-application areas~\cite{manorat_artificial_2025}. These results motivate our comparison of evaluation
-guidance (RQ2), a rubric or a reference answer, and of how the grader is instructed to apply it (RQ6).
+answer~\cite{mohler_learning_2011,dzikovska_semeval_2013}. For LLM graders, the effect of a rubric has
+been measured directly. In a comparison of ten LLMs, rubric-guided prompts improved agreement with human
+essay scores~\cite{nugroho_evaluating_2025}, and a simplified rubric kept the essay-scoring accuracy of
+three of four LLMs at the level of a detailed one while using fewer tokens~\cite{yoshida_detailed_2025}.
+With GPT-3.5, a more explicit rubric made the grades of most of 18 engineering reports more consistent
+across ten runs~\cite{garcia-huertes_leveraging_2024}, and closed GPT models scoring essays against ten
+predefined criteria were more consistent and agreed better with teachers than open models, while rating
+more leniently than the teachers~\cite{sessler_canai_2025}. In code grading, question-specific rubrics
+outperform no-rubric prompting on object-oriented and data-structures code: Cohen's $\kappa$, a
+chance-corrected agreement index, rises from 0.41--0.43 without a rubric to 0.60--0.65 with the best
+question-specific rubric~\cite{pathak_rubric_2025}, and the best open-source code models grading
+against instructor-specified rubrics reach a micro-accuracy of 85\%~\cite{havare_ai-based_2025}. Code
+grading with LLMs is a younger and smaller area than short-answer grading: locally run open-source LLMs
+already support teaching assistants in grading introductory programming~\cite{mazzone_exploring_2024},
+and a systematic review of artificial intelligence in programming education lists automated assessment
+and feedback among its core application areas~\cite{manorat_artificial_2025}.
+
+How the model is told to apply the guidance has received less attention: one study compared a lenient
+and a strict prompt for two LLMs grading geography worksheets~\cite{venkatraman_llmbased_2026}. Each of
+these studies examines one kind of task. We measure the guidance and the instruction for applying it,
+strictly or with explicit partial credit, under one protocol, on five open and closed models and four
+datasets of code and short answers, with every grade repeated five times and its cost recorded.
 
 \subsection{From Model Rankings to Configuration Guidance}
 A growing body of work compares LLMs as graders: large side-by-side studies of programming

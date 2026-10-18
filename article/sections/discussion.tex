@@ -8,8 +8,9 @@
 \section{Discussion}
 \label{sec:discussion}
 
-Read together, the six questions point to one practical message: what the grader is given, and how it is
-told to use it, mattered more than how long it thinks or how much it costs. The two cheap changes, supplying
+Read together, the five research questions and the follow-up experiment point to one practical message:
+what the grader is given, and how it is told to use it, mattered more than how long it thinks or how much
+it costs. The two cheap changes, supplying
 a rubric or a reference answer and asking for partial credit, raised agreement more reliably than any
 expensive one. Turning reasoning on, paying for a closed model, grading a whole exam in one call, and
 scoring a rubric criterion by criterion cost more or saved little, and none of them reliably brought the
@@ -19,23 +20,23 @@ Reasoning is the expensive setting that most often disappointed. It raised agree
 model-dataset combinations, three after correction, while multiplying the output tokens by up to 925 and
 making grades less consistent in most combinations. The consistency loss is only partly mechanical: longer
 outputs give a non-deterministic backend more room to diverge, but length explained the variability only
-moderately and unevenly (Section~\ref{sec:rq1}), so part of the loss behaves like a property of reasoning
-itself. Consistency is not the same as quality either: the most reproducible grader with reasoning off,
-Qwen3.5, was also the one with the strongest zero-collapse.
+moderately and unevenly, so part of the loss behaves like a property of reasoning itself. Consistency is
+not the same as quality either: the most reproducible grader with reasoning off, Qwen3.5, was also the one
+with the strongest zero-collapse.
 
 The zero-collapse explains where reasoning did pay. Its large gains came on code, for the two models that
 scored many partially correct answers as zero. The written justifications show what goes wrong: the
 collapsing model sees what the student did right and still gives no marks, as if any error voided the
 answer. An instruction to award partial credit reduced the zeros of the closed model GPT-5.1, but not
 those of Qwen3.5, while reasoning, which works through the rubric before scoring, roughly halved Qwen3.5's
-zeros (Sections~\ref{sec:rq1} and~\ref{sec:rq6}). The collapse is therefore a property of the model with
+zeros. The collapse is therefore a property of the model with
 reasoning off, which the instruction can soften but not always remove, and the dependable remedy is to
 grade with a model that does not show it.
 
 Evaluation guidance and the grading instruction are the opposite case: cheap and effective. Guidance raised
-agreement significantly in 13 of 15 model-dataset combinations across three model families, by 0.10 to 0.34
-QWK; on the public short answers the reference answer added more than the whole spread between the eight
-model and reasoning configurations on the same task. Asking for partial credit then added up to 0.11 on code,
+agreement significantly in 13 of 15 model-dataset combinations across three model families, by 0.095 to
+0.335 QWK; on short answers it added more than the whole 0.11 spread between the eight model and reasoning
+configurations in seven of the nine combinations. Asking for partial credit then added up to 0.11 on code,
 for a few extra input tokens, and changed nothing on short answers. The
 simplest shape of the request also won: one question per call with a single holistic score was never beaten
 by the whole exam, and criterion scoring beat it only for GPT-5.1 on RIAYN, where it made a model that gives
@@ -44,13 +45,13 @@ conversation per answer
 removes the small pull of a shared history and the effect of an answer's position, so it is also the fairer
 choice: a student's grade should not depend on where an answer fell in a session.
 
-Model choice mattered far more on code than on short answers. On short answers the configurations lay
-close together, while on code they spread widely, largely according to whether a model showed the
-zero-collapse. Asking for partial credit also changes which model is worth paying for: with it, the
+Model choice mattered more on code than on short answers: on code the configurations spread about twice
+as widely, largely according to whether a model showed the zero-collapse. Asking for partial credit also changes which model is worth paying for: with it, the
 cheapest model, DeepSeek-V4-Flash, graded code as well as GLM-5.1, the strongest grader without reasoning,
-at about a tenth of its cost. The two closed models did not repay their price on code; Claude Sonnet 4.6
-graded the science and PT-CS short answers best, at 43 to 53 times the cost of DeepSeek-V4-Flash. Absolute
-levels should be read against the
+at about a tenth of its cost. On code, the closed models bought little for their price: the best
+configuration, GPT-5.1 with reasoning, agreed 0.031 better than GLM-5.1 without reasoning at 34 times the
+cost. Claude Sonnet 4.6 graded the science and PT-CS short answers best, at 43 to 53 times the cost of
+DeepSeek-V4-Flash. Absolute levels should be read against the
 agreement between humans: on Mohler the models' agreement with each teacher (0.39 to 0.75) brackets the two
 teachers' agreement with each other (0.49), so the remaining disagreement between model and teacher is of the
 size that separates two human graders.

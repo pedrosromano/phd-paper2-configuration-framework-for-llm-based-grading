@@ -263,16 +263,18 @@ def fig_rq1(rc):
     diagonal = less consistent with reasoning). Values from rq1_cells: every sampled item, a reasoning run
     that overflowed carries the reasoning-off grade."""
     models = list(MARK)
-    fig = plt.figure(figsize=(WIDE, COL * 0.80))
-    gs = fig.add_gridspec(1, 3, width_ratios=[2.4, 1, 1], wspace=0.42)
+    # Two rows (Pedro's review 2026-10-18, comment #26: one row was too compressed): (a) across the full
+    # width, (b) and (c) side by side below it.
+    fig = plt.figure(figsize=(WIDE, COL * 1.24))
+    gs = fig.add_gridspec(2, 2, height_ratios=[1, 1.15], hspace=0.48, wspace=0.32)
     cell = lambda ds, dom, m: rc[(rc.dataset == ds) & (rc.domain == dom) & (rc.model == m)]
     get = lambda g, m: (lambda r: (float(r.QWK_off.iloc[0]), float(r.QWK_on.iloc[0])) if len(r) else None)(
         cell(g[0], g[1], m))
-    ax = fig.add_subplot(gs[0])
+    ax = fig.add_subplot(gs[0, :])
     _paired_levels(ax, SETS, models, get)
     ax.set_xticklabels(["Mohler", "SemEval", "RIAYN", "PT-CS\ncode", "PT-CS\nshort"])
     ax.set_title("(a) agreement with the teachers", loc="left", fontsize=7)
-    bx = fig.add_subplot(gs[1])
+    bx = fig.add_subplot(gs[1, 0])
     bx.axhspan(-0.05, 0.05, color="#e3e3e3", lw=0, zorder=0)
     bx.axhline(0, color="k", lw=0.5)
     for r in rc.itertuples():
@@ -284,7 +286,7 @@ def fig_rq1(rc):
     bx.set_xlabel("output tokens, on/off ($\\times$)")
     bx.set_ylabel("agreement change ($\\Delta$QWK)")
     bx.set_title("(b) gain against cost", loc="left", fontsize=7)
-    cx = fig.add_subplot(gs[2])
+    cx = fig.add_subplot(gs[1, 1])
     lim = float(max(rc.SDk_off.max(), rc.SDk_on.max())) * 1.12
     cx.plot([0, lim], [0, lim], color="k", lw=0.5)
     for r in rc.itertuples():
@@ -300,8 +302,8 @@ def fig_rq1(rc):
           Patch(facecolor="#888", edgecolor="k", lw=0.3, hatch="///", label="reasoning on"),
           plt.Line2D([], [], marker="o", color="grey", ls="", mec="k", mew=0.3, label="short answers"),
           plt.Line2D([], [], marker="s", color="grey", ls="", mec="k", mew=0.3, label="code")]
-    fig.legend(handles=h, loc="upper center", ncol=4, bbox_to_anchor=(0.5, -0.1), framealpha=0.9,
-               handlelength=1.6, columnspacing=1.4)
+    fig.legend(handles=h, loc="upper center", ncol=8, bbox_to_anchor=(0.5, 0.02), framealpha=0.9,
+               handlelength=1.6, columnspacing=1.2)
     _save(fig, "fig_rq1")
 
 
@@ -419,19 +421,23 @@ def fig_rq4_cost(full):
     cost from the logged per-call cost_eur (engine-backed). Deterministic. Single column, side by side."""
     from experiments.analysis.make_phase5_tables import _qwk_items as _qi
     base = full[(full.context_level == "with_guidance") & (full.scope == "question_by_question")
-                & (full.decomposition == "holistic") & full.dataset.isin(["mohler", "semeval", "riayn"])].copy()
+                & (full.decomposition == "holistic")].copy()
+    base = base[(base.dataset != "ptcs") | base.item_id.isin(_INTERV)]   # all five sets (Pedro #28, 2026-10-18)
     base["ce"] = pd.to_numeric(base.get("cost_eur"), errors="coerce")   # cost per grade: all graded calls
     common = _common_items(full)                                         # QWK: items all configs graded
     models = ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]
     mk = {"off": "o", "on": "s"}
     fig, axes = plt.subplots(2, 1, figsize=(COL, COL * 1.05), sharey=True, sharex=True)
-    panels = [("(a) short answers (Mohler, SemEval)", ["mohler", "semeval"]), ("(b) code (RIAYN)", ["riayn"])]
+    panels = [("(a) short answers (Mohler, SemEval, PT-CS)", [("mohler", "short_answer"), ("semeval", "short_answer"),
+                                                              ("ptcs", "short_answer")]),
+              ("(b) code (RIAYN, PT-CS)", [("riayn", "code"), ("ptcs", "code")])]
     for ax, (title, dsets) in zip(axes, panels):
-        sub = base[base.dataset.isin(dsets)]
+        sub = pd.concat([base[(base.dataset == d) & (base.domain == dom)] for d, dom in dsets])
         for m in models:
             for rs in ["off", "on"]:
                 cell = sub[(sub.model == m) & (sub.reasoning == rs)]
-                qs = [_qi(cell[(cell.dataset == d) & cell.item_id.isin(common)])[0] for d in dsets]
+                qs = [_qi(cell[(cell.dataset == d) & (cell.domain == dom) & cell.item_id.isin(common)])[0]
+                      for d, dom in dsets]
                 qs = [q for q in qs if q == q]
                 if not qs:
                     continue
@@ -450,6 +456,67 @@ def fig_rq4_cost(full):
     fig.tight_layout()
     fig.legend(handles=h1 + h2, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 0.0), framealpha=0.9)
     _save(fig, "fig_rq4_cost")
+
+
+def fig_guide_test1():
+    """Test 1 of the guide (Section VI-C; replaced the Test 1 table on 2026-10-18, Pedro's comment #48): for each
+    alternative to the guide, (a) how many model-dataset comparisons it agreed with the teachers significantly
+    better, not significantly differently, or significantly worse than the guide (95% bootstrap, no correction);
+    (b) each comparison's change in QWK, alternative minus guide, coloured by model, filled when significant;
+    (c) its cost per grade relative to the guide's. Values from experiments/analysis/guide_eval.within_model."""
+    from experiments.analysis import guide_eval
+    t = guide_eval.within_model(guide_eval.rows())
+    order = [("no guidance", "No guidance"), ("strict instruction", "Strict instruction"),
+             ("justification", "With a justification"), ("whole exam", "Whole exam in one call"),
+             ("criterion scoring", "Score per criterion"), ("shared conversation", "Shared conversation"),
+             ("reasoning on", "Reasoning on")]
+    col = {"worse": "#c0392b", "same": "#bdbdbd", "better": "#27ae60"}
+    fig = plt.figure(figsize=(WIDE * 0.92, COL * 0.98))     # the row labels add width outside the axes
+    # fixed room for the row labels: LaTeX sets them in the paper's wider font, which tight layout does not see
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.35, 0.36], wspace=0.12, left=0.19, right=0.99)
+    ax, bx, cx = fig.add_subplot(gs[0]), fig.add_subplot(gs[1]), fig.add_subplot(gs[2])
+    ys = np.arange(len(order))[::-1].astype(float)
+    ys[-1] -= 0.35                                   # reasoning on sits apart: the one trade-off the guide makes
+    for y, (kind, _) in zip(ys, order):
+        g = t[t.kind == kind]
+        w, b = int(g.worse.sum()), int(g.better.sum())
+        left = 0
+        for n, key in [(w, "worse"), (len(g) - w - b, "same"), (b, "better")]:
+            if n:
+                ax.barh(y, n, left=left, color=col[key], edgecolor="white", lw=0.6, height=0.62)
+                ax.text(left + n / 2, y, str(n), ha="center", va="center", fontsize=6.5,
+                        color="black" if key == "same" else "white")
+            left += n
+        for r in g.itertuples():
+            mi = guide_eval.MODELS.index(r.model)
+            yy = y + (mi - 2) * 0.09
+            sig = bool(r.better or r.worse)
+            bx.plot([r.ci95[0], r.ci95[1]], [yy, yy], color=MCOL[r.model], lw=0.5, alpha=0.6, zorder=2)
+            bx.scatter(r.dQWK, yy, s=13, facecolor=MCOL[r.model] if sig else "white", edgecolor=MCOL[r.model],
+                       lw=0.7, zorder=3)
+        lo, hi = float(g.cost_x.min()), float(g.cost_x.max())
+        fmt = lambda v: f"{v:.1f}" if v < 10 else f"{v:.0f}"
+        cx.text(0.0, y, f"{fmt(lo)}--{fmt(hi)}$\\times$", va="center", fontsize=6.5)
+    for a in (ax, bx):
+        a.set_ylim(ys.min() - 0.6, ys.max() + 0.6)
+        a.axhline((ys[-2] + ys[-1]) / 2, color="0.6", lw=0.5, ls=":")
+    ax.set_yticks(ys); ax.set_yticklabels([lbl for _, lbl in order], fontsize=6.5)
+    ax.tick_params(axis="y", length=0, pad=12)       # buffer for the wider LaTeX font of the paper
+    ax.set_xlabel("number of comparisons (model $\\times$ dataset)")
+    ax.set_title("(a) the alternative against the guide", loc="left", fontsize=7)
+    bx.axvspan(-0.05, 0.05, color="#eeeeee", zorder=0); bx.axvline(0, color="k", lw=0.6)
+    bx.set_yticks(ys); bx.set_yticklabels([])
+    bx.set_xlabel("$\\Delta$QWK, alternative minus guide")
+    bx.set_title("(b) the change in agreement", loc="left", fontsize=7)
+    cx.set_ylim(ys.min() - 0.6, ys.max() + 0.6); cx.axis("off")
+    cx.set_title("(c) cost per grade", loc="left", fontsize=7)
+    from matplotlib.patches import Patch
+    h = [Patch(color=col["worse"], label="significantly worse"), Patch(color=col["same"], label="no significant difference"),
+         Patch(color=col["better"], label="significantly better")]
+    h += [plt.Line2D([], [], marker="o", ls="", color=MCOL[m], label=guide_eval.MNAME[m]) for m in guide_eval.MODELS]
+    fig.legend(handles=h, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 0.0), fontsize=6, columnspacing=1.2,
+               handlelength=1.4, framealpha=0.9)
+    _save(fig, "fig_guide_test1")
 
 
 def fig_guide_validation():
@@ -651,6 +718,7 @@ def main() -> int:
     rc = rq1_cells(_full, _INTERV).rename(columns={"prem_x": "premium_x"})
     fig_rq1(rc); fig_rq2_levels(_full); fig_rq3_levels(_full); fig_rq4_cost(_full); fig5(df)
     fig_rq6_instruction()
+    fig_guide_test1()
     fig_guide_validation()
     print("done.")
     return 0

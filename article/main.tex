@@ -77,25 +77,27 @@
 \corresp{Corresponding author: Pedro S. Romano (e-mail: Pedro\_Romano@iscte-iul.pt).}
 
 % Register: CLAUDE.md S9.2 (no em/en dashes as prose punctuation). RQ1: 6 of 20 significant, 3 after Holm.
-% Numbers: tab_rq1_values, bloco_c (C9), instruction.py, guide_eval.py (the guide names no model; its
-% validation: Test 1 within each model, Table 4; Test 2 across every configuration, Fig. 8).
+% Numbers: tab_rq1_values, bloco_c (C9), instruction.py, guide_eval.py (the guide is model-agnostic; its
+% validation: Test 1 within each model, Fig. 8; Test 2 across every configuration, Fig. 9). Framing of the
+% validation (Pedro #2, #44, 2026-10-18): better / no difference / worse counts, and the two tests named.
 \begin{abstract}
 Instructors adopting large language model (LLM) graders must answer several configuration questions.
-Should the model reason before scoring? What guidance should it receive, and how should it use it? Should
-an exam be graded in one call or question by question? Which configuration is worth its cost? For
-computer science assessment, we vary reasoning, evaluation guidance, the grading instruction, grading
-scope, rubric decomposition, model family, and conversation state under one protocol, on four datasets of
-short answers and code, including new teacher-graded exams in Portuguese. The cheap changes were the
-effective ones: adding a rubric or reference answer raised agreement with teachers (quadratic weighted
-kappa, QWK, where 1 is perfect) significantly in thirteen of fifteen combinations, by 0.10 to 0.34, and
-asking for partial credit raised code agreement by up to 0.11. Reasoning raised agreement significantly in
-six of twenty combinations, three after multiple-comparison correction, at 9 to 925 times the output
-tokens, and reduced consistency in seventeen; its large code gains came only for models that scored many
-partially correct answers as zero, a failure we call zero-collapse, which asking for partial credit
-reduced in one of the two. Whole-exam grading never helped, and criterion scoring helped once. We condense
-the comparisons into a configuration guide that names no model. Validated on five models, it was
-outperformed by one of 56 other configurations of the same models without reasoning, and with the
-best-suited model it came within 0.05 QWK of the best configuration on every dataset.
+Should the model reason before scoring? What guidance should it receive, and how should it apply it?
+Should an exam be graded whole, and which configuration is worth its cost? For computer science
+assessment, we vary reasoning, evaluation guidance, the grading instruction, grading scope, rubric
+decomposition, model family, and conversation state under one protocol, on four datasets of short answers
+and code, including new teacher-graded Portuguese exams. The cheap changes were the effective ones: adding
+a rubric or reference answer raised agreement with teachers (quadratic weighted kappa, QWK, where 1 is
+perfect) significantly in thirteen of fifteen combinations, by 0.095 to 0.335, and asking for partial
+credit raised code agreement by up to 0.11. Reasoning raised agreement significantly in six of twenty
+combinations, three after multiple-comparison correction, at 9 to 925 times the output tokens, and
+reduced consistency in seventeen; its large code gains came only for models that scored many partially
+correct answers as zero (zero-collapse). Whole-exam grading never helped, and criterion scoring helped
+once. We condense the comparisons into a model-agnostic configuration guide, validated twice: against
+every other configuration of the same model, and against the best configuration of any model, at what
+cost. Against 56 alternatives without reasoning, the guide agreed significantly better with teachers in 33,
+showed no significant difference in 22, and agreed worse in only one; with the best-suited model, it came
+within 0.05 QWK of the best configuration on every dataset.
 \end{abstract}
 
 \begin{keywords}
@@ -115,6 +117,14 @@ short-answer grading, code assessment, configuration guidelines.
 \input{sections/framework}
 \input{sections/threats}
 \input{sections/conclusion}
+
+% AI-use statement required by IEEE (acknowledgments section; identify the system, the parts, and the level of use).
+% Final wording: Pedro's own (2026-10-18). Do not change it without asking him.
+\section*{Acknowledgment}
+During the preparation of this work, the authors used Claude Opus 5 (Anthropic) to help write the scripts that
+run the experiments and process the data for the tables and figures, and to help revise the text. The research
+questions, study design, interpretation of the results, discussion, and conclusions are the authors' own; the
+authors checked all results and take full responsibility for the content.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}

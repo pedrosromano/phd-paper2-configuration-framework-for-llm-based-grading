@@ -278,10 +278,24 @@ def cost_by_period():
           f"(OpenAI {oa / 5.45:.1f}x, DeepInfra {di / 11.25:.1f}x); all analysed runs EUR {d.cost_eur.sum():.2f}")
 
 
+# RQ4 covers all five answer sets since Pedro's second review (2026-10-18, comment #28; it had used the public
+# datasets only, a leftover of the removed transfer analysis): short answers = Mohler, SemEval and PT-CS short
+# answers; code = RIAYN and PT-CS code (PT-CS = the validated answers).
+RQ4_SETS = {"mohler": ("mohler", "short_answer"), "semeval": ("semeval", "short_answer"),
+            "ptcs_short": ("ptcs", "short_answer"), "riayn": ("riayn", "code"), "ptcs_code": ("ptcs", "code")}
+RQ4_TASKS = [("short answers (Mohler, SemEval, PT-CS short)", ["mohler", "semeval", "ptcs_short"]),
+             ("code (RIAYN, PT-CS code)", ["riayn", "ptcs_code"])]
+
+
+def _rq4_set(g, key):
+    ds, dom = RQ4_SETS[key]
+    return g[(g.dataset == ds) & (g.domain == dom)]
+
+
 def rq4_winners():
-    """Section IV-D (2026-10-15): per-dataset QWK per configuration on the Fig. per-dataset basis (with
-    guidance, one question per call, holistic; item means; PT-CS = validated answers), the per-dataset
-    winner, and each configuration's mean QWK over the three public datasets."""
+    """Section IV-D (2026-10-15; all five sets since 2026-10-18): per-set QWK per configuration on the Fig.
+    per-dataset basis (with guidance, one question per call, holistic; item means; PT-CS = validated answers),
+    the per-set winner, and each configuration's mean QWK over the five sets."""
     df = phase5.load_main()
     base = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
     base = base[(base.dataset != "ptcs") | base.item_id.isin(_INTERV)]
@@ -291,16 +305,16 @@ def rq4_winners():
     for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]:
         for r in ["off", "on"]:
             g = base[(base.model == m) & (base.reasoning == r)]
-            q = {ds: _qwk_items(g[g.dataset == ds])[0] for ds in ["mohler", "semeval", "riayn"]}
+            q = {k: _qwk_items(_rq4_set(g, k))[0] for k in RQ4_SETS}
             rows.append({"cfg": f"{m}|{r}", **{k: round(v, 3) for k, v in q.items()},
-                         "public_mean": round(float(np.mean(list(q.values()))), 3)})
+                         "mean_5": round(float(np.mean(list(q.values()))), 3)})
     t = pd.DataFrame(rows)
-    print("\n=== RQ4 per-dataset QWK and winners (Section IV-D) ===")
+    print("\n=== RQ4 per-set QWK and winners (Section IV-D) ===")
     print(t.to_string(index=False))
-    for ds in ["mohler", "semeval", "riayn"]:
-        w = t.sort_values(ds, ascending=False).iloc[0]
-        print(f"  winner {ds}: {w.cfg} {w[ds]:.3f}")
-    print(f"  public mean range: {t.public_mean.min():.3f} to {t.public_mean.max():.3f}")
+    for k in RQ4_SETS:
+        w = t.sort_values(k, ascending=False).iloc[0]
+        print(f"  winner {k}: {w.cfg} {w[k]:.3f}")
+    print(f"  five-set mean range: {t.mean_5.min():.3f} to {t.mean_5.max():.3f}")
 
 
 def rq6_transfer():
@@ -327,27 +341,34 @@ def rq6_transfer():
 
 def rq4():
     """RQ4 cost-quality BY TASK (Section IV-D, Fig. agreement-vs-cost, 2 panels): per-task QWK spread
-    across the eight configs, and per-config QWK + euro cost per 1000 grades for short-answer
-    (Mohler+SemEval) and code (RIAYN). Cost from the logged cost_eur."""
+    across the eight configs, and per-config QWK + euro cost per 1000 grades for short answers (Mohler,
+    SemEval, PT-CS short) and code (RIAYN, PT-CS code). QWK on the items all eight configurations graded;
+    cost from the logged cost_eur over every graded call of the task."""
     df = phase5.load_main()
     df["ce"] = pd.to_numeric(df.get("cost_eur"), errors="coerce")
     base = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question")
-              & (df.decomposition == "holistic") & df.dataset.isin(["mohler", "semeval", "riayn"])]
+              & (df.decomposition == "holistic")]
+    base = base[(base.dataset != "ptcs") | base.item_id.isin(_INTERV)]
     import experiments.figures.phase6 as P
     common = P._common_items(df)          # QWK on items all eight configurations graded; cost on all calls
     models = ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]
-    for task, dsets in [("short-answer (Mohler+SemEval)", ["mohler", "semeval"]), ("code (RIAYN)", ["riayn"])]:
-        sub = base[base.dataset.isin(dsets)]
+    for task, keys in RQ4_TASKS:
+        sub = pd.concat([_rq4_set(base, k) for k in keys])
         print(f"\n=== RQ4 {task}: per-config QWK + EUR/1000 grades (Section IV-D) ===")
-        allq = []
+        res = {}
         for m in models:
             for rs in ["off", "on"]:
                 cell = sub[(sub.model == m) & (sub.reasoning == rs)]
-                qs = [_qwk_items(cell[(cell.dataset == d) & cell.item_id.isin(common)])[0] for d in dsets]
+                qs = [_qwk_items(_rq4_set(cell, k)[lambda x: x.item_id.isin(common)])[0] for k in keys]
                 qs = [q for q in qs if q == q]
-                q = np.mean(qs); allq.append(q)
-                print(f"  {m:18}|{rs:3}  QWK={q:.3f}  EUR/1000={cell.ce.mean() * 1000:.3f}")
+                res[(m, rs)] = (float(np.mean(qs)), float(cell.ce.mean() * 1000))
+                print(f"  {m:18}|{rs:3}  QWK={res[(m, rs)][0]:.3f}  EUR/1000={res[(m, rs)][1]:.3f}  "
+                      f"per set {[round(q, 3) for q in qs]}")
+        allq = [v[0] for v in res.values()]
         print(f"  -> QWK spread {max(allq) - min(allq):.3f} (min {min(allq):.3f}, max {max(allq):.3f})")
+        for m in models:
+            (qo, co), (qn, cn) = res[(m, "off")], res[(m, "on")]
+            print(f"  reasoning on - off, {m:18}: dQWK {qn - qo:+.3f} at {cn / co:.1f}x the cost")
 
 
 def main() -> int:

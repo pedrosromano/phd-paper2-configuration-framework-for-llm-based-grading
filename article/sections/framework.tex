@@ -1,8 +1,10 @@
-%% sections/framework.tex -- The Configuration Guide and its validation. Second pass 2026-10-16 (Pedro): the guide
-%% is a configuration, independent of the model (no model prescribed), with two validation tests from
-%% experiments/analysis/guide_eval.py: Test 1 within each model (Table 4, tab_framework) and Test 2 across every
-%% configuration (Fig. 8, fig_guide_validation). No budget ladder, no pre-tests, no 'confirm locally'.
-%% Register: CLAUDE.md S9.2; every number from guide_eval (printed by `python -m experiments.analysis.guide_eval`).
+%% sections/framework.tex -- The Configuration Guide and its validation. Rewritten 2026-10-18 (Pedro's second
+%% review, comments #39-#48): an introduction saying why a guide is needed, which measures decide each setting and
+%% by what rule; (A) the guide itself, Table 4 (make_phase5_tables.write_guide_table) and the diagram (Fig. 7);
+%% (B) the two validation tests, described before any result; (C) their results: Test 1 as a figure
+%% (phase6.fig_guide_test1, which replaced the Test 1 table) and Test 2 (phase6.fig_guide_validation).
+%% Register: CLAUDE.md S9.2; every number from experiments/analysis/guide_eval.py
+%% (`python -m experiments.analysis.guide_eval`).
 
 \section{The Configuration Guide}
 \label{sec:framework}
@@ -70,22 +72,74 @@ returns one holistic score in a clean conversation, and the process repeats unti
 
 \input{tables/tab_framework}
 
-The comparisons of Section~\ref{sec:results} combine into one configuration for grading with an LLM
-(Table~\ref{tab:framework}, Fig.~\ref{fig:frameworkdiagram}). Give the model the rubric or the reference
-answer and ask it to award partial credit. Grade one question per call, with reasoning off and a single
-holistic score, in a clean conversation for each answer. The guide sets how the grader is configured and
-leaves the choice of model open, so we validated it on all five models of the study.
+An instructor who sets up an LLM grader must settle every configuration choice at once, while each
+comparison in the results changed one choice and kept the others fixed. The configuration guide combines
+those comparisons into a single configuration that can be used with any model, so that the instructor
+does not have to weigh the evidence choice by choice. Every choice was judged on the three measures used
+throughout: agreement with the teachers (QWK), consistency across repeated gradings, and cost per grade.
+One rule decided each setting: keep the option that raised agreement reliably, and where no option did,
+keep the cheaper and more consistent one.
 
-Two settings carry the gain. The rubric or the reference answer raised agreement significantly in 13 of 15
-model-dataset combinations, by 0.10 to 0.34 QWK (Section~\ref{sec:rq2}), and the request for partial credit raised code
-agreement by up to 0.11 for a few extra input tokens (Section~\ref{sec:rq6}). The other four settings keep
-grading cheap, consistent, and fair. Reasoning raised agreement significantly in only six of twenty
-combinations, at 9 to 925 times the output tokens (Section~\ref{sec:rq1}); grading the whole exam in one call never improved
-agreement, and scoring criterion by criterion did so once (Section~\ref{sec:rq3}); and a clean conversation
-keeps each grade independent of the answers graded before it (Section~\ref{sec:rq5}).
+\subsection{The Guide}
+\label{sec:guide}
 
-\subsection{Validating the Guide}
+The guide has six settings (Table~\ref{tab:framework}), and Fig.~\ref{fig:frameworkdiagram} shows it at
+work on one exam. Two settings raise agreement: give the model the rubric or the reference answer, and ask
+it to award partial credit. The other four keep grading cheap, consistent, and fair: grade with reasoning
+off, one question per call, with a single holistic score, in a clean conversation for each answer. The
+guide sets how the grader is configured and leaves the choice of model open, so we validated it on all
+five models of the study.
+
+\subsection{How the Guide Was Validated}
+\label{sec:guidetests}
+
+We validated the guide with two tests that compare it with every configuration graded in the study, so
+that the guide faces every alternative we ran.
+
+\emph{Test 1: the guide against the other configurations of the same model.} For each model and
+dataset, the guide's configuration is compared with each other configuration of the same model, on the
+answers both graded. The alternatives are no guidance, the strict instruction, partial credit with a
+justification written first, the whole exam in one call, a score per criterion, one conversation per exam,
+and reasoning on. The alternatives other than the instruction ones were graded with the strict
+instruction, so they also differ from the guide in that setting. Each comparison uses the same bootstrap
+as the results, without correction for multiple comparisons, which makes an advantage of the alternative
+easier to detect. The alternative is then counted as significantly better than the guide, not
+significantly different, or significantly worse.
+
+\emph{Test 2: the guide against the best configuration of any model, and at what cost.} For each
+dataset, every configuration graded without reasoning, of any model, is placed by its agreement with the
+teachers and its cost per 1000 grades, on the answers that all of them graded. The test asks how close the
+guide comes to the best configuration in the study, with each model, and whether any cheaper
+configuration agrees better. The configurations that no cheaper one beats form the cost-quality frontier.
+The same comparison on the sampled answers adds the configurations with reasoning on.
+
+\subsection{Validation Results}
 \label{sec:guideuse}
+
+\begin{figure*}[t]
+\centering
+\input{figures/fig_guide_test1.pgf}
+\caption{The guide against the other configurations of the same model (Test 1). (a) For each alternative,
+the number of model-dataset comparisons in which it agreed with the teachers significantly better than the
+guide, not significantly differently, or significantly worse (95\% bootstrap intervals, without
+correction). (b) The change in agreement in each comparison, alternative minus guide, coloured by model;
+filled points are significant, and the shaded band is the $\pm0.05$ equivalence margin. (c) The
+alternative's cost per grade relative to the guide's. The alternatives other than the grading
+instruction used the strict instruction.}
+\label{fig:guidetest1}
+\end{figure*}
+
+Of the 56 comparisons without reasoning, the guide agreed significantly better with the teachers than
+the alternative in 33, showed no significant difference in 22, and agreed worse in one: Claude Sonnet 4.6
+with the strict instruction on the 84 PT-CS short answers, by 0.043 QWK (Fig.~\ref{fig:guidetest1}). No
+alternative to the guidance, the scope, the decomposition, or the clean conversation agreed better than
+the guide for any model. Most alternatives also made grades less consistent (34 of the 56 comparisons),
+and every alternative except dropping the guidance or the partial-credit request cost more per grade.
+
+Reasoning is the one setting in which the guide gives something up. With reasoning on, agreement rose
+significantly in 7 of 17 comparisons, five of them for Qwen3.5, the model with the strongest
+zero-collapse, and never fell; but grades became less consistent in 14 of the 17, and each grade cost
+2.6 to 179 times as much. The guide keeps reasoning off for that cost and that loss of consistency.
 
 \begin{figure*}[t]
 \centering
@@ -98,30 +152,16 @@ cost-quality frontier, the configurations that no cheaper one beats.}
 \label{fig:guidevalidation}
 \end{figure*}
 
-%% Numbers: experiments/analysis/guide_eval.py (Test 1: within_model / departures; Test 2: field / field_summary).
-We validated the guide with two tests that use every configuration graded in the study. The first asks
-whether another configuration of the same model agrees better with the teachers. The second asks how the
-guide, with each model, compares with the best configuration of any model, and at what cost.
+Across models, the guide's configuration reached or approached the best agreement in the study
+(Fig.~\ref{fig:guidevalidation}). With the model best suited to each dataset, it was the best
+configuration on Mohler (GPT-5.1, 0.653 QWK) and on PT-CS code (DeepSeek-V4-Flash, 0.674), and came within
+0.002 of the best on SemEval, 0.014 on RIAYN, and 0.043 on the PT-CS short answers. On the sampled answers,
+which add the configurations with reasoning, the best configuration led it by at most 0.053. With four of
+the five models it graded code at 0.65 to 0.76 QWK, and with Qwen3.5 at 0.50 and 0.55, as that model's
+zero-collapse persisted under partial credit. With the cheapest model, DeepSeek-V4-Flash, it cost 0.02 to
+0.09 euros per thousand grades, and no cheaper configuration agreed better, apart from a difference of
+0.001 QWK on SemEval.
 
-\emph{Test 1: the same model, configured otherwise.} Without reasoning, no other configuration of the same
-model agreed significantly better with the teachers than the guide's, with one exception in 56 comparisons
-(Table~\ref{tab:framework}). Each comparison pairs the guide's configuration with another configuration of
-the same model on the answers both graded, using the bootstrap of Section~\ref{sec:metrics} without
-correction for multiple comparisons, which makes an advantage of the alternative easier to detect. The
-exception is the strict instruction for Claude Sonnet 4.6 on the 84 PT-CS short answers, by 0.043 QWK.
-Thirty-three alternatives agreed significantly worse, by up to 0.34, and no alternative to the guidance,
-the scope, the decomposition, or the clean conversation agreed better for any model. Turning reasoning on
-was the only change that raised agreement more than once: it did so significantly in 7 of 17 comparisons,
-five of them for Qwen3.5, the model with the strongest zero-collapse, and never lowered it, but it made
-grades less consistent across repetitions in 14 of the 17 and cost 2.6 to 179 times as much per grade.
-The other alternatives also made grades less consistent in most comparisons (34 of 56).
-
-\emph{Test 2: every configuration in the study.} With the model best suited to each dataset, the guide's
-configuration reached or approached the best agreement in the study (Fig.~\ref{fig:guidevalidation}): it
-was the best configuration on Mohler (GPT-5.1, 0.653 QWK) and on PT-CS code (DeepSeek-V4-Flash, 0.674), and
-came within 0.002 of the best on SemEval, 0.014 on RIAYN, and 0.043 on the PT-CS short answers. On the
-sampled answers, which also include the configurations with reasoning, the best configuration led it by at
-most 0.053. With four of the five models it graded code at 0.65 to 0.76 QWK, and with Qwen3.5 at 0.50 and
-0.55, as that model's zero-collapse persisted under partial credit (Section~\ref{sec:rq6}). With the
-cheapest model, DeepSeek-V4-Flash, the guide cost 0.02 to 0.09 euros per thousand grades, and no cheaper
-configuration agreed better, apart from a difference of 0.001 QWK on SemEval.
+Overall, the guide held its ground in both tests: within each model, almost no alternative without
+reasoning agreed better with the teachers, and across models it came within 0.05 QWK of the best
+configuration on every dataset.

@@ -9,24 +9,19 @@ Every setting of the guide except scope and conversation state is supported on a
 public datasets, whose human grades are independent of the authors. PT-CS is the only source of complete
 exams, so grading scope and the conversation sub-study rest
 on it alone; none of the public datasets links answers into exams. The PT-CS exams are short, so the scope
-result holds for exams of a few questions. Three further properties of PT-CS bound what it can show. Its
-answers are those whose suggested grade the teachers changed, and such answers may differ in difficulty
-from typical ones, so absolute PT-CS levels need not represent all the answers the platform graded. The
-grades are a joint teacher decision with no per-teacher record, so no agreement ceiling between teachers
-can be computed on PT-CS. And because the platform's suggestions came from an AI model, agreement could be
-inflated if that model resembled one we test; keeping only answers whose grade the teachers changed limits
-this influence.
+result holds for exams of a few questions. The PT-CS grades are a joint teacher decision with no
+per-teacher record, so no agreement ceiling between teachers can be computed on PT-CS.
 
 The results are conditional on the served backends, whose quantisation, inference software, and hardware
 differ across providers, so what carries over to another backend is the comparison between
-configurations rather than the absolute scores; temperature 0 does not make grading deterministic either
-(Section~\ref{sec:rq1}). Reasoning token counts come from each provider's own accounting, so they are best
-compared within a model. The grading-instruction experiment was designed after the zero-collapse had been
+configurations rather than the absolute scores; temperature 0 does not make grading deterministic either.
+Reasoning token counts come from each provider's own accounting, so they are best
+compared within a model. The follow-up experiment on the grading instruction was designed after the zero-collapse had been
 found, so its wordings were chosen with that failure in mind; the wordings and the rule for adopting one
 were fixed before they were run, and other wordings may do better or worse.
 
 The guide was built and validated on the five models and the datasets of this study, so its standing in
-Table~\ref{tab:framework} and Fig.~\ref{fig:guidevalidation} may differ for other models and data. Across
+the two validation tests may differ for other models and data. Across
 all experiments, code evidence is narrower than
 short-answer evidence, resting on two Java-centric datasets, so we draw the code conclusions more
 cautiously. The guidance contrast bundles two different interventions, a rubric (PT-CS, RIAYN) and a
