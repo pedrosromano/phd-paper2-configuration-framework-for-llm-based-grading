@@ -38,11 +38,12 @@ This paper studies these configuration choices under one protocol and turns the 
 configuration guide. We vary reasoning (on or off), evaluation guidance (none versus a rubric or a
 reference answer), grading scope (a whole exam in one call versus one question per call), rubric
 decomposition (one holistic score versus a score per criterion), conversation state (a clean
-conversation per answer versus a shared history), and the model; a follow-up experiment varies the
-grading instruction (apply the guidance strictly, or award partial credit explicitly). Five models take part, three
-open-weight (Qwen3.5, DeepSeek-V4-Flash, GLM-5.1) and two closed (GPT-5.1, Claude Sonnet 4.6). The
-first four are graded with reasoning both off and on within the same model, which separates the effect
-of reasoning from that of the model; Claude Sonnet 4.6 grades with reasoning off.
+conversation per answer versus a shared history), and the model. In the first results, some models
+scored many partially correct code answers as zero, which we call zero-collapse, so a follow-up
+experiment varies the grading instruction: apply the guidance strictly, or award partial credit
+explicitly. Five models take part, three open-weight (Qwen3.5, DeepSeek-V4-Flash, GLM-5.1) and two
+closed (GPT-5.1, Claude Sonnet 4.6). The first four are graded with reasoning both off and on within the
+same model, which separates the effect of reasoning from that of the model.
 The study runs on four datasets in two domains. Three are public, so the results can
 be checked beyond our own students: the Mohler corpus of graded computer-science short
 answers~\cite{mohler_text_2009,mohler_learning_2011}, the SemEval-2013 Task~7 corpus of graded science
@@ -66,15 +67,16 @@ Five research questions structure the study:
   \item \textbf{RQ5.} Does conversation state (clean versus shared history) affect consistency and
         fairness?
 \end{itemize}
-The follow-up experiment, designed after the first results, asks how the grading instruction affects
-agreement and cost.
+These five questions were set before the experiments. The follow-up experiment is reported apart from
+them because it was added only once the zero-collapse appeared: it tests whether an explicit request for
+partial credit changes agreement and cost.
 
 From these comparisons we build a model-agnostic configuration guide: one recommended configuration
 for LLM grading in CS, which leaves the choice of model open. We validate it on five models in two ways:
 against every other configuration of the same model, and against the best configuration of any model, on
 agreement, consistency, and cost.
 
-The contribution is threefold. First, a model-agnostic configuration guide for LLM grading in CS,
+The overall contribution of this paper is threefold. First, a model-agnostic configuration guide for LLM grading in CS,
 validated on five models against every configuration in the study. Second, the first grading-specific,
 within-family isolation of the reasoning effect, measured jointly on agreement, consistency, and cost.
 Third, PT-CS, a new dataset of 379 teacher-graded answers from complete computer-science exams in

@@ -14,7 +14,6 @@
 \makeatother
 \usepackage[table]{xcolor}
 \usepackage{array,amsmath,amssymb}
-\usepackage{booktabs}     % \cmidrule for grouped column heads (tab_guide_regret)
 % Captions switch math to the class's Formata version, whose T1 encoding has no Greek, so $\Delta$ came
 % out as an accent there. Take the upright Delta from Computer Modern (OT1), as body math already does.
 \DeclareSymbolFont{UpGreek}{OT1}{cmr}{m}{n}
@@ -32,6 +31,26 @@
 \renewcommand{\floatpagefraction}{0.75}\renewcommand{\dblfloatpagefraction}{0.75}
 % stfloats enables [b] placement for double-column floats (figure*/table*).
 \usepackage{stfloats}
+% Every float follows its first reference (Pedro, 2026-10-18). Each float is defined right after the
+% paragraph that first refers to it, with [!htb] (one column) or [!tb] (full width); a full-width float may
+% be defined just before that paragraph, after its subsection heading, to reach the bottom of that page
+% (CLAUDE.md S9). Two changes to
+% stfloats' \@addtocurcol keep it from going above that paragraph on the page where it is defined:
+%  - a one-column float may go here or to the bottom of the column, never to its top (what flafter does;
+%    loading flafter itself would replace stfloats' \@addtocurcol and lose the next change);
+%  - a full-width float may go to the bottom of the page, never to its top; if it does not fit, it goes
+%    to the top of the next page.
+% article/tools/check_floats.py checks the PDF after every build (latexmkrc).
+\makeatletter
+\ExplSyntaxOn
+\tl_replace_once:Nnn \@addtocurcol { \@addtotoporbot } { \@addtobot }
+\tl_replace_once:Nnn \@addtocurcol { \if@firstcolumn \@getfpsbit \tw@ } { \if@firstcolumn \@tempcnta \z@ }
+\tl_if_in:NnT \@addtocurcol { \@addtotoporbot }
+  { \errmessage{float~placement~patch~1~not~applied:~check~stfloats~and~main.tex} }
+\tl_if_in:NnF \@addtocurcol { \if@firstcolumn \@tempcnta \z@ }
+  { \errmessage{float~placement~patch~2~not~applied:~check~stfloats~and~main.tex} }
+\ExplSyntaxOff
+\makeatother
 % hyperref: clickable \href (ORCID), \cite, \ref, \url. The class loads it only in JTEHM mode.
 \usepackage[hidelinks]{hyperref}
 \hypersetup{pdftitle={Configuring LLM-Based Grading in Computer Science: An Empirical Study of Reasoning, Guidance, Scope, and Cost},
@@ -78,26 +97,27 @@
 
 % Register: CLAUDE.md S9.2 (no em/en dashes as prose punctuation). RQ1: 6 of 20 significant, 3 after Holm.
 % Numbers: tab_rq1_values, bloco_c (C9), instruction.py, guide_eval.py (the guide is model-agnostic; its
-% validation: Test 1 within each model, Fig. 8; Test 2 across every configuration, Fig. 9). Framing of the
-% validation (Pedro #2, #44, 2026-10-18): better / no difference / worse counts, and the two tests named.
+% validation: Test 1 within each model, Fig. 9; Test 2 across every configuration, Fig. 10). Framing of the
+% validation (Pedro #2, #44, 2026-10-18): better / no difference / worse, and the two tests named; as
+% percentages of the 56 alternatives (33, 22, 1 -> 59%, 39%, 2%; Pedro's third review, 2026-10-18).
 \begin{abstract}
-Instructors adopting large language model (LLM) graders must answer several configuration questions.
-Should the model reason before scoring? What guidance should it receive, and how should it apply it?
-Should an exam be graded whole, and which configuration is worth its cost? For computer science
-assessment, we vary reasoning, evaluation guidance, the grading instruction, grading scope, rubric
-decomposition, model family, and conversation state under one protocol, on four datasets of short answers
-and code, including new teacher-graded Portuguese exams. The cheap changes were the effective ones: adding
-a rubric or reference answer raised agreement with teachers (quadratic weighted kappa, QWK, where 1 is
-perfect) significantly in thirteen of fifteen combinations, by 0.095 to 0.335, and asking for partial
-credit raised code agreement by up to 0.11. Reasoning raised agreement significantly in six of twenty
-combinations, three after multiple-comparison correction, at 9 to 925 times the output tokens, and
-reduced consistency in seventeen; its large code gains came only for models that scored many partially
-correct answers as zero (zero-collapse). Whole-exam grading never helped, and criterion scoring helped
-once. We condense the comparisons into a model-agnostic configuration guide, validated twice: against
-every other configuration of the same model, and against the best configuration of any model, at what
-cost. Against 56 alternatives without reasoning, the guide agreed significantly better with teachers in 33,
-showed no significant difference in 22, and agreed worse in only one; with the best-suited model, it came
-within 0.05 QWK of the best configuration on every dataset.
+Instructors adopting large language model (LLM) graders face several questions. Should the model reason
+before scoring? What guidance should it receive, and how should it apply it? Should a whole exam be graded
+in one call? Which configuration is worth its cost? For computer science assessment, we vary reasoning,
+evaluation guidance, the grading instruction, grading scope, rubric decomposition, model family, and
+conversation state under one protocol, on four short-answer and code datasets, including new
+teacher-graded Portuguese exams. The cheap changes were the effective ones: adding a rubric or reference
+answer raised agreement with teachers (quadratic weighted kappa, QWK, where 1 is perfect) significantly in
+thirteen of fifteen combinations, by 0.095 to 0.335, and asking for partial credit raised code agreement by
+up to 0.11. Reasoning raised agreement significantly in six of twenty combinations, three after
+multiple-comparison correction, at 9 to 925 times the output tokens, and reduced consistency in seventeen;
+its large code gains came only for models scoring many partially correct answers as zero (zero-collapse).
+Whole-exam grading never raised agreement; scoring criterion by criterion raised it in one of six
+combinations. We condense the comparisons into a model-agnostic configuration guide, validated against
+every other configuration of the same model and the best configuration of any model, at what cost. Against
+56 alternatives without reasoning, the guide agreed significantly better with teachers in 59\%, showed no
+significant difference in 39\%, and agreed worse in 2\%; with the best-suited model, it came within 0.05 QWK
+of the best on every dataset.
 \end{abstract}
 
 \begin{keywords}

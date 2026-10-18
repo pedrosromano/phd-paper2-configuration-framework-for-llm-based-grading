@@ -6,7 +6,7 @@ PYTHON := .venv/bin/python
 PIP    := .venv/bin/pip
 
 .DEFAULT_GOAL := help
-.PHONY: help install verify test cost ingest run smoke analyse analyse-pipeline figures paper paper-clean clean
+.PHONY: help install verify test cost ingest run smoke analyse analyse-pipeline figures paper check-floats paper-clean clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -48,6 +48,9 @@ figures: ## Phase 6 — generate figures -> article/figures (.pgf needs latex on
 paper: ## Phase 7 — compile the article (latexmk + ieeeaccess template, article/latexmkrc)
 	eval "$$(/usr/libexec/path_helper)"; cd article && \
 		latexmk -pdf -synctex=1 -interaction=nonstopmode main.tex
+
+check-floats: ## Check that every table and figure comes right after its first reference (also runs after every build)
+	cd article && /usr/bin/python3 tools/check_floats.py main.pdf
 
 paper-clean: ## Clear LaTeX build state (CLAUDE.md §9)
 	cd article && latexmk -C main.tex

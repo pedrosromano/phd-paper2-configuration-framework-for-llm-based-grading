@@ -5,7 +5,7 @@ Variants (prompts_instruction.yaml): standard = the original strict instruction,
 justification of at most two sentences written before the score. All with guidance, reasoning off, one
 question per call, holistic, k=5; PT-CS on the teacher-validated answers.
 
-Decision rule, fixed before any variant was run (article/review/REVISAO_PR_ESTADO.md, E1): a variant enters
+Decision rule, fixed before any variant was run (E1 in article/review/REVISAO_PR_ESTADO.md, now in git history: dcc1c22): a variant enters
 the guide if it raises QWK significantly (95% CI, Holm within this family) for the models that give too many
 zeros (Qwen3.5, GPT-5.1) without lowering it significantly for the one that does not (DeepSeek-V4-Flash).
 

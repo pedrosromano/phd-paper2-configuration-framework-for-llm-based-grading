@@ -6,9 +6,8 @@
 \label{sec:conclusion}
 
 An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them only
-in fragments. We tested them together for computer-science grading under one controlled protocol and
-condensed the result into a configuration guide. The central finding is that the cheap changes were the effective
-ones. Supplying a rubric or a reference answer raised agreement significantly in thirteen of fifteen
+in fragments. We tested them together for computer-science grading under one controlled protocol. The
+central finding is that the cheap changes were the effective ones. Supplying a rubric or a reference answer raised agreement significantly in thirteen of fifteen
 model-dataset combinations, by 0.095 to 0.335 QWK, for 1.2 to 1.8 times the cost per grade, and asking the
 model to award partial credit raised code agreement by up to 0.11 QWK for a few extra input tokens. Reasoning raised
 agreement significantly in six of twenty combinations, three after correcting for multiple comparisons, while
@@ -19,27 +18,22 @@ what the student did right and still gives no marks.
 Grading a whole exam in one call never helped, scoring criterion by criterion helped only GPT-5.1 on one
 dataset, both saved little or nothing, and on code the closed models bought little for their price.
 
-The guide follows directly and is model-agnostic: the rubric or reference answer, an instruction to award
-partial credit, one question per call with reasoning off and a single holistic score, and a clean
-conversation per answer. Validated on five models against 56 other configurations of the same models
-without reasoning, it agreed significantly better with the teachers in 33, showed no significant
-difference in 22, and agreed worse in only one. With the model best suited to each dataset, it matched or came within 0.05 QWK of the best
-configuration in the study, and with the cheapest model no cheaper configuration graded better, apart from
-a difference of 0.001 QWK on one dataset.
+Putting together the options that worked best in each comparison, we built a configuration guide that
+leaves the choice of model open: give the model the rubric or reference answer and ask it for partial
+credit, and grade one question per call, with reasoning off, a single holistic score, and a clean
+conversation for each answer. Tested on five models against the 56 other configurations of the same
+models without reasoning, the guide agreed significantly better with the teachers in 59\% of the
+comparisons, showed no significant difference in 39\%, and agreed worse in 2\%. With the model best suited
+to each dataset, it matched or came within 0.05 QWK of the best configuration in the study, and with the
+cheapest model no cheaper configuration graded better, apart from a difference of 0.001 QWK on one
+dataset.
 
-Future work follows from the gaps this study declares and from what the literature has yet to settle.
-Few-shot guidance, adding a few already-graded answers to the prompt as examples, was held out; the strong
-effect of the studied guidance makes it worth testing, but only with a principled rule for choosing the
-examples. A fine-tuning arm also remains open: fine-tuned models can match or exceed earlier supervised
-graders~\cite{cong_memorization_2026}, but fine-tuning has not yet been placed in a guide of this kind,
-comparing a fine-tuned grader against its base model on agreement, consistency, and cost together. Code
-evidence rests on two Java-centric datasets because code corpora graded with human rubrics are
-scarce~\cite{havare_ai-based_2025,pathak_rubric_2025}, so widening it to other languages and paradigms, and
-contributing such data, is the clearest way to firm up the code conclusions. PT-CS comes from one
-institution, so testing the guide across more institutions and student populations would establish how
-far it carries. And the zero-collapse, where a grader scores many partially correct answers as zero, is not,
-to our knowledge, described in the grading literature; it deserves study in its own right, both to detect it
-and to prevent it without paying for reasoning.
+Three directions for future work follow. The zero-collapse is not, to our knowledge, described in the
+grading literature; it deserves study in its own right, to detect it and to prevent it without paying for
+reasoning. The code evidence rests on two Java-centric datasets, and PT-CS on one institution, so the guide should
+be tested on other programming languages, institutions, and student populations. Two options were left
+out of the guide, few-shot examples of already-graded answers and fine-tuning, and each should be weighed
+against it on agreement, consistency, and cost.
 
 For the instructor the introduction began with, the answer is a short routine: supply the rubric or
 reference answer, ask for partial credit, and grade one question per call with reasoning off, in a clean

@@ -25,8 +25,9 @@ should you use?*
   TLT framing below. *History:* the paper was written for **TLT** (primary) / **ToE** (fallback); §1.1 and
   §9.1 keep that framing as background, and the TLT build is in git history (commit 7ec38b5).
 - **Advisor review (Daniel Fernandes, 2026-07-01, 79 PDF comments)** is being addressed on branch
-  `revisao-access`. **READ `article/review/REVISAO_DF_ESTADO.md` FIRST**: all decisions (D1–D15), the
-  status of every advisor comment, the bloco C results, and the ordered list of what is left to do.
+  `revisao-access`. Its state file (all decisions D1–D15, the status of every advisor comment, the bloco C
+  results) was removed in the cleanup of 2026-10-18 (Pedro's request) and is in git history:
+  `git show dcc1c22:article/review/REVISAO_DF_ESTADO.md`.
 - Arc across the thesis: **Map (SLR) → Analyse (this) → Build (GradeGenie)**.
 
 ### 1.2 Research questions & the deliverable's form
@@ -398,6 +399,10 @@ unchanged in spirit — keep the matrix affordable — but the lever is **token 
   temperature, and date for **every** run row.
 - **Caching:** cache by `(item_id, config_hash, run_index)`. Reruns must skip cached calls. This protects
   both cost and time.
+  **The prompt YAMLs enter `config_hash` byte for byte** (`prompts_version`, `instruction_prompts_version` hash
+  the raw files): never edit `experiments/configs/prompts.yaml` or `prompts_instruction.yaml`, not even a
+  comment, or every cached cell becomes a new one. (The comment in `prompts_instruction.yaml` that points to
+  `article/review/REVISAO_PR_ESTADO.md` stays as it is; that file is in git history, commit dcc1c22.)
 - **Cost guard:** a running tally of paid spend persisted to disk; the paid runner **refuses to start** an
   arm whose *estimated* cost would exceed the remaining budget (ceiling **€150**). Print the estimate first.
 - **Determinism of parsing:** the output parser returns `(score, per_criterion?, parse_ok)`. Log `parse_ok`
@@ -430,6 +435,33 @@ unchanged in spirit — keep the matrix affordable — but the lever is **token 
   gotcha applies here too).
 - **Figures** come from `experiments/figures` as `.pdf`/`.pgf`; **tables** are auto-generated to
   `article/tables`. Do not hand-edit either.
+- **Float rule (Pedro, 2026-10-18), binding: every table and figure comes AFTER its first reference in the
+  running text, at the nearest place after it.**
+  - Nearest place for a one-column float: right after the referring paragraph, the bottom of that column, or
+    the next column. For a full-width float: the bottom of the reference's page, or else the top of the next
+    page.
+  - How: define each float in the source right after the paragraph with its first reference, with `[!htb]`
+    (one column) or `[!tb]` (full width). The generators (`make_phase5_tables._tex`, `write_guide_table`,
+    `make_datasets_table`) write these options.
+  - Exception for full-width floats: one may be defined just before that paragraph, after the heading of the
+    same subsection, so it can still reach the bottom of that page. This is done for Fig. 6, Table 4, Fig. 7
+    and Fig. 9. The patch keeps it from going above its definition point, so it lands at the bottom of the page
+    (after all its text) or at the top of the next. The checker confirms it comes after the reference.
+  - `main.tex` patches stfloats' `\@addtocurcol` so that a float never goes above its definition point on
+    the same page. Do not load `flafter`: it would replace that macro and lose the bottom placement of
+    full-width floats.
+  - **Checker: `article/tools/check_floats.py`.** It reads the compiled PDF. Running text is Times 10 pt,
+    so mentions inside captions and tables do not count as references.
+    - It runs after EVERY latexmk build (END hook in `article/latexmkrc`) and by hand with
+      `make check-floats`.
+    - Every violation is an ERROR and fails the build. There are three kinds:
+      - a float before its first reference;
+      - a float never referenced;
+      - a float not at one of the nearest places above, so never two pages after its reference.
+      Pedro does not accept that last case.
+    - Every version must have 0 errors. The final version of 2026-10-18 has 0.
+    - Tested on 2026-10-18 on a copy with the old guide-section layout (Figs. 9 and 10 two pages after
+      their reference): the build failed with exactly those two errors.
 - Gitignored build artifacts: `*.aux *.bbl *.blg *.fdb_latexmk *.fls *.log *.synctex* *.pdf`.
 
 ### 9.1 Page budget (two-in-one: design for TLT, safe for ToE)
@@ -540,8 +572,8 @@ researcher in an adjacent area who does not work on this exact topic.
     reference material a reader will look values up in, not for the headline comparison.
   - **One figure, one message.** If a panel has no level difference to show, do not plot it (state it in prose);
     a chart that "transmits no information" is worse than a sentence.
-  - **Place the figure at its reference.** A figure should sit on or near the page (and, where it matters, the
-    column) where it is first cited. Prefer **inline single-column** figures so they flow with the text; only
+  - **Place the figure after its reference** (the binding float rule in §9, checked after every build). Prefer
+    **inline single-column** figures so they flow with the text; only
     promote to a full-width (`figure*`) float when the content genuinely needs the width. Keep captions readable
     on their own (Tier-B/C terms calibrated) but trim caption text that only describes a panel you removed.
 - **Neutral provenance for generated artifacts.** Describe figures and tables as **built from the experiment
@@ -1127,9 +1159,8 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   reproduction-check sentence, no GLM-drift sentence; costs reported for all experiments together.
 - ✅ **Pedro's review of the Access draft (2026-10-16, 51 PDF comments) — implemented (commits 9257d38,
   cae86c9) and given a SECOND PASS (2026-10-16 evening: all 51 comments checked, numbers re-verified against
-  the engines, corrections listed in section 5 of the state file). NEXT: Pedro's reading. Read
-  `article/review/REVISAO_PR_ESTADO.md` FIRST (section 'ONDE ESTAMOS': state, files, engines, pending
-  items).** Final results: GPT-5.1 with partial
+  the engines, corrections listed in section 5 of the state file).** The state file is in git history
+  (`git show dcc1c22:article/review/REVISAO_PR_ESTADO.md`; removed in the 2026-10-18 cleanup). Final results: GPT-5.1 with partial
   credit +0.076/+0.106 on code (Holm), zeros 32->20% (softens its collapse, not Qwen's); RQ3 now on three
   models (whole exam never helps; criterion helps only GPT on RIAYN); all experiments EUR 158.7 at standard rates.
   **GUIDE = A MODEL-INDEPENDENT CONFIGURATION (Pedro 2026-10-16, evening; supersedes "the recipe = DeepSeek-V4-Flash"):**
@@ -1167,10 +1198,10 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   credit; Claude Sonnet 4.6 runs via the Message Batches API with structured output enforcing the JSON-only
   score (`experiments/run/batch_runner.py`; Mohler capped at 800). Harness: `NoCredits` stops a provider
   without storing rows (OpenAI 429 credit_balance_exhausted had been retried for 15 min per call).
-- ✅ **Pedro's second review (2026-10-18, 48 PDF comments on `~/Desktop/artigo_2_access_revisto3_2026-10-16.pdf`;
-  never overwrite or delete that annotated PDF). READ `article/review/REVISAO_PR2_ESTADO.md` FIRST** (every
-  comment, its status, decisions D1–D7 with options and recommendations). Done and committed; final PDFs
-  (version 6, clean and marked) on the Desktop. Facts established in this round, do not regress them:
+- ✅ **Pedro's second review (2026-10-18, 48 PDF comments on the version 3 PDF).** Its state file (every
+  comment, its status, decisions D1–D7 with options and recommendations) is in git history:
+  `git show dcc1c22:article/review/REVISAO_PR2_ESTADO.md` (removed in the 2026-10-18 cleanup). Done and
+  committed (dcc1c22). Facts established in this round, do not regress them:
   - **Model choice (#14)**: "among the strongest open models" was false for Qwen3.5-35B-A3B (mid-table:
     Artificial Analysis 6 Jun 2026 and Arena 9 Jun 2026 snapshots). GLM-5.1 was the #1 open model on Arena text
     and code, and 4th on Artificial Analysis. DeepSeek-V4-Flash was in the top 15 open models on both.
@@ -1216,10 +1247,40 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
     - **D7:** RQ4 uses all five sets (`audit_pct_baselines.rq4`).
     - Guidance range is **0.095–0.335** (the old "0.10–0.34" was double rounding). Partial-credit cost on code
       is **5–9%**.
-    - Pedro asked for this version with the changes marked: `article/review/tools/README.md`.
+    - The marked-PDF tools (latexdiff steps, flatten, post-processing) are in git history:
+      `git show dcc1c22:article/review/tools/README.md`.
   - **AI-use statement (IEEE policy, Acknowledgment section, 2026-10-18): final wording is Pedro's own;
     do not change it without asking him.** "During the preparation of this work, the authors used Claude
     Opus 5 (Anthropic) to help write the scripts that run the experiments and process the data for the tables
     and figures, and to help revise the text. The research questions, study design, interpretation of the
     results, discussion, and conclusions are the authors' own; the authors checked all results and take full
     responsibility for the content."
+- ✅ **Pedro's third review (2026-10-18, 18 PDF comments on the marked version 6): implemented and VALIDATED
+  by Pedro.** The final PDF is `~/Desktop/artigo_2_access_final_2026-10-18.pdf` (17 pages). Cleanup done at his
+  request:
+  - the intermediate PDFs went to the Trash;
+  - `article/review/` was deleted (it is in git history at dcc1c22);
+  - six stale figures and `tab_guide_regret.tex` were deleted;
+  - the unused booktabs package was removed;
+  - the build files and the session's temporary files were removed.
+  NOT committed: Pedro commits and pushes only when he says so. Facts and decisions, do not regress them:
+  - **Validation as percentages**: the abstract and the Conclusion give Test 1 as shares of the 56 alternatives
+    without reasoning (59% better, 39% no significant difference, 2% worse; counts 33, 22, 1). The guide
+    section keeps the counts, with the percentages in parentheses.
+  - **Introduction**: the zero-collapse is named as the reason for the follow-up experiment. Pedro asked for this,
+    and it is the one result the Introduction previews. The five RQs "were set before the experiments", which
+    is why the follow-up is reported apart from them.
+  - **Providers**: the GLM-5.1/OpenRouter footnote was removed at Pedro's request. The body says the open models
+    ran "mainly via the DeepInfra" API, which keeps the sentence true. Never write that every open-model run
+    used DeepInfra.
+  - **Model choice**: the cited studies found Claude, GPT, DeepSeek and Qwen models "among the best graders
+    tested". GPT cites Li and Seßler, because Jukiewicz's abstract names no best model.
+  - **Fig. 8 is the guide's prompt**, verbatim from `experiments/configs/prompts.yaml` and
+    `prompts_instruction.yaml` (partial-credit grounding, holistic output). Keep it in sync if the templates
+    change.
+  - **Float placement**: superseded the same evening by the binding float rule in §9 (every float after its
+    first reference, checked after every build). The paper is 17 pages, and the last page holds only the
+    last biography.
+  - The abstract is at the 250-word limit.
+  - Future work is limited to three directions: zero-collapse; other languages, institutions and students;
+    and few-shot examples and fine-tuning.

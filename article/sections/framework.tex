@@ -1,15 +1,35 @@
 %% sections/framework.tex -- The Configuration Guide and its validation. Rewritten 2026-10-18 (Pedro's second
 %% review, comments #39-#48): an introduction saying why a guide is needed, which measures decide each setting and
-%% by what rule; (A) the guide itself, Table 4 (make_phase5_tables.write_guide_table) and the diagram (Fig. 7);
+%% by what rule; (A) the guide itself, Table 4 (make_phase5_tables.write_guide_table), the diagram (Fig. 7)
+%% and the guide's prompt (Fig. 8, verbatim from experiments/configs/prompts.yaml + prompts_instruction.yaml,
+%% partial-credit grounding; keep them in sync);
 %% (B) the two validation tests, described before any result; (C) their results: Test 1 as a figure
 %% (phase6.fig_guide_test1, which replaced the Test 1 table) and Test 2 (phase6.fig_guide_validation).
 %% Register: CLAUDE.md S9.2; every number from experiments/analysis/guide_eval.py
 %% (`python -m experiments.analysis.guide_eval`).
+%% Floats follow the paper-wide rule (CLAUDE.md S9): each comes after its first reference, at the nearest place,
+%% and article/tools/check_floats.py checks the PDF after every build. Five floats are referenced within
+%% about a page here. So Table 4 and Fig. 7 are defined right after the A heading, and the Test 1 figure
+%% right after the C heading, which lets each reach the bottom of the page that refers to it. Figs. 8 and
+%% 10 follow their paragraphs.
 
 \section{The Configuration Guide}
 \label{sec:framework}
 
-\begin{figure*}[t]
+An instructor who sets up an LLM grader must settle every configuration choice at once, while each
+comparison in the results changed one choice and kept the others fixed. The configuration guide combines
+those comparisons into a single configuration that can be used with any model, so that the instructor
+does not have to weigh the evidence choice by choice. Every choice was judged on the three measures used
+throughout: agreement with the teachers (QWK), consistency across repeated gradings, and cost per grade.
+One rule decided each setting: keep the option that raised agreement reliably, and where no option did,
+keep the cheaper and more consistent one.
+
+\subsection{The Guide}
+\label{sec:guide}
+
+\input{tables/tab_framework}
+
+\begin{figure*}[!tb]
 \centering
 \resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
@@ -70,25 +90,57 @@ returns one holistic score in a clean conversation, and the process repeats unti
 \label{fig:frameworkdiagram}
 \end{figure*}
 
-\input{tables/tab_framework}
-
-An instructor who sets up an LLM grader must settle every configuration choice at once, while each
-comparison in the results changed one choice and kept the others fixed. The configuration guide combines
-those comparisons into a single configuration that can be used with any model, so that the instructor
-does not have to weigh the evidence choice by choice. Every choice was judged on the three measures used
-throughout: agreement with the teachers (QWK), consistency across repeated gradings, and cost per grade.
-One rule decided each setting: keep the option that raised agreement reliably, and where no option did,
-keep the cheaper and more consistent one.
-
-\subsection{The Guide}
-\label{sec:guide}
-
 The guide has six settings (Table~\ref{tab:framework}), and Fig.~\ref{fig:frameworkdiagram} shows it at
 work on one exam. Two settings raise agreement: give the model the rubric or the reference answer, and ask
 it to award partial credit. The other four keep grading cheap, consistent, and fair: grade with reasoning
-off, one question per call, with a single holistic score, in a clean conversation for each answer. The
-guide sets how the grader is configured and leaves the choice of model open, so we validated it on all
-five models of the study.
+off, one question per call, with a single holistic score, in a clean conversation for each answer.
+Fig.~\ref{fig:guideprompt} gives the guide's prompt, in four blocks, with the wording used in the
+experiments. The guide sets how the grader is configured and leaves the choice of model open, so we
+validated it on all five models of the study.
+
+\begin{figure*}[!tb]
+\centering
+\fbox{\begin{minipage}{0.975\textwidth}\footnotesize\raggedright
+\begin{minipage}[t]{0.485\textwidth}\raggedright
+\textbf{1. The task} (by domain)\\[2pt]
+\emph{Code:} You are an experienced computer-science instructor grading a student's CODE submission for a
+programming exam. Assess the LOGICAL correctness of the solution against the problem requirements.
+Conceptual understanding and algorithmic correctness take precedence over minor syntax errors. Be
+objective and consistent.\\[3pt]
+\emph{Short answer:} You are an experienced instructor grading a student's SHORT ANSWER to an exam
+question. Assess whether the answer is correct and complete with respect to what the question asks. Be
+objective and consistent.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.485\textwidth}\raggedright
+\textbf{2. The guidance and the request for partial credit} (by the guidance available)\\[2pt]
+\emph{Rubric:} Use the following question-specific rubric to award marks. Give the marks for every rubric
+item the answer satisfies, even when the answer is incomplete or contains errors (for code, even when it
+would not compile), and apply any deductions the rubric specifies; do not invent criteria. A partially
+correct answer earns partial marks; give 0 only when the answer earns none of the rubric's marks.\\
+RUBRIC:\\ $\langle$\emph{the rubric}$\rangle$\\[3pt]
+\emph{Reference answer:} Use the following reference answer as the standard of a fully-correct response.
+The student answer need not match it word-for-word; judge semantic equivalence. A partially correct
+answer earns partial marks; give 0 only when nothing in the answer is correct.\\
+REFERENCE ANSWER:\\ $\langle$\emph{the reference answer}$\rangle$
+\end{minipage}\\[6pt]
+\begin{minipage}[t]{0.485\textwidth}\raggedright
+\textbf{3. The question and the answer}\\[2pt]
+QUESTION:\\ $\langle$\emph{the question}$\rangle$\\
+STUDENT ANSWER:\\ $\langle$\emph{the student answer}$\rangle$
+\end{minipage}\hfill
+\begin{minipage}[t]{0.485\textwidth}\raggedright
+\textbf{4. The output}\\[2pt]
+Return ONLY a single JSON object and nothing else (no markdown, no commentary):\\
+\{\textquotedbl score\textquotedbl: \textless number between 0 and $\langle$\emph{the maximum
+mark}$\rangle$\textgreater\}
+\end{minipage}
+\end{minipage}}
+\caption{The guide's prompt, with the wording used in the experiments. The four blocks are joined in
+order into a single message, taking in blocks 1 and 2 the version that fits the task and the guidance
+available; the parts in angle brackets are filled in for each answer. Reasoning is switched off through
+the model's settings, and the prompt does not mention it.}
+\label{fig:guideprompt}
+\end{figure*}
 
 \subsection{How the Guide Was Validated}
 \label{sec:guidetests}
@@ -116,7 +168,7 @@ The same comparison on the sampled answers adds the configurations with reasonin
 \subsection{Validation Results}
 \label{sec:guideuse}
 
-\begin{figure*}[t]
+\begin{figure*}[!tb]
 \centering
 \input{figures/fig_guide_test1.pgf}
 \caption{The guide against the other configurations of the same model (Test 1). (a) For each alternative,
@@ -130,7 +182,8 @@ instruction used the strict instruction.}
 \end{figure*}
 
 Of the 56 comparisons without reasoning, the guide agreed significantly better with the teachers than
-the alternative in 33, showed no significant difference in 22, and agreed worse in one: Claude Sonnet 4.6
+the alternative in 33 (59\%), showed no significant difference in 22 (39\%), and agreed worse in one
+(2\%): Claude Sonnet 4.6
 with the strict instruction on the 84 PT-CS short answers, by 0.043 QWK (Fig.~\ref{fig:guidetest1}). No
 alternative to the guidance, the scope, the decomposition, or the clean conversation agreed better than
 the guide for any model. Most alternatives also made grades less consistent (34 of the 56 comparisons),
@@ -141,17 +194,6 @@ significantly in 7 of 17 comparisons, five of them for Qwen3.5, the model with t
 zero-collapse, and never fell; but grades became less consistent in 14 of the 17, and each grade cost
 2.6 to 179 times as much. The guide keeps reasoning off for that cost and that loss of consistency.
 
-\begin{figure*}[t]
-\centering
-\input{figures/fig_guide_validation.pgf}
-\caption{The guide among every configuration graded without reasoning (Test 2). Each point is one
-configuration on the answers they all graded (Mohler: the 800 every configuration graded), with its
-agreement with the teachers (QWK) against the cost of 1000 grades (log scale). Coloured points are the
-guide's configuration with each model, grey points the other configurations, and the dashed line the
-cost-quality frontier, the configurations that no cheaper one beats.}
-\label{fig:guidevalidation}
-\end{figure*}
-
 Across models, the guide's configuration reached or approached the best agreement in the study
 (Fig.~\ref{fig:guidevalidation}). With the model best suited to each dataset, it was the best
 configuration on Mohler (GPT-5.1, 0.653 QWK) and on PT-CS code (DeepSeek-V4-Flash, 0.674), and came within
@@ -161,6 +203,17 @@ the five models it graded code at 0.65 to 0.76 QWK, and with Qwen3.5 at 0.50 and
 zero-collapse persisted under partial credit. With the cheapest model, DeepSeek-V4-Flash, it cost 0.02 to
 0.09 euros per thousand grades, and no cheaper configuration agreed better, apart from a difference of
 0.001 QWK on SemEval.
+
+\begin{figure*}[!tb]
+\centering
+\input{figures/fig_guide_validation.pgf}
+\caption{The guide among every configuration graded without reasoning (Test 2). Each point is one
+configuration on the answers they all graded (Mohler: the 800 every configuration graded), with its
+agreement with the teachers (QWK) against the cost of 1000 grades (log scale). Coloured points are the
+guide's configuration with each model, grey points the other configurations, and the dashed line the
+cost-quality frontier, the configurations that no cheaper one beats.}
+\label{fig:guidevalidation}
+\end{figure*}
 
 Overall, the guide held its ground in both tests: within each model, almost no alternative without
 reasoning agreed better with the teachers, and across models it came within 0.05 QWK of the best

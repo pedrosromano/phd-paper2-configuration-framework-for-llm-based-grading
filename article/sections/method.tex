@@ -9,7 +9,33 @@
 \section{Study Design and Method}
 \label{sec:method}
 
-\begin{table}[!b]
+We graded the answers of four datasets with five LLMs (Qwen3.5, DeepSeek-V4-Flash, GLM-5.1, GPT-5.1,
+and Claude Sonnet 4.6) under one grading protocol and compared every grade with the grade a teacher
+gave. Starting from a baseline configuration, each comparison changes one configuration choice and keeps
+everything else fixed. Each answer is graded $k$ times in every configuration it enters, with $k=5$
+unless stated otherwise, so agreement with the teachers, consistency across the $k$ repetitions, and
+cost are measured together.
+
+\subsection{Configuration Choices}
+\label{sec:design}
+
+The study varies seven configuration choices (Table~\ref{tab:design}), one of them, the grading
+instruction, in a follow-up experiment designed after the first results. \emph{Reasoning} switches the
+model's thinking mode off or on. \emph{Evaluation guidance} is the grading material added to the
+question and the student answer, which are always sent: nothing, or the rubric (the scoring criteria)
+or the reference answer that the dataset provides. The \emph{grading instruction} tells the model how
+to apply that guidance: strictly, as the rubric specifies, or awarding partial credit explicitly for
+every rubric item or part of the reference answer that the student answer meets, optionally with a
+justification of at most two sentences written before the score. \emph{Scope} contrasts grading a whole
+multi-question exam in one call against one call per question. \emph{Decomposition} contrasts one
+holistic score against scoring each rubric criterion separately and summing. \emph{Conversation state}
+contrasts a clean conversation per answer against a single conversation that accumulates the grading
+history of one student's exam. In a shared conversation the answers graded first can influence the ones
+graded later, so each exam is graded twice: once with the answers in the exam's own question order and
+once in reverse order. Comparing the two isolates the effect of an answer's position. The last choice is
+the model.
+
+\begin{table}[!htb]
 \centering
 \footnotesize
 \caption{The configuration choices studied, the datasets each applies to, and the models it was
@@ -38,32 +64,6 @@ $^{d}$One overall score, or one score per rubric criterion, summed. $^{e}$GLM-5.
 justification on code, with Qwen3.5 and DeepSeek-V4-Flash. $^{f}$Qwen3.5, DeepSeek-V4-Flash, and
 GPT-5.1. $^{g}$Qwen3.5, DeepSeek-V4-Flash, and GLM-5.1. $^{h}$All but Claude Sonnet 4.6.}
 \end{table}
-
-We graded the answers of four datasets with five LLMs (Qwen3.5, DeepSeek-V4-Flash, GLM-5.1, GPT-5.1,
-and Claude Sonnet 4.6) under one grading protocol and compared every grade with the grade a teacher
-gave. Starting from a baseline configuration, each comparison changes one configuration choice and keeps
-everything else fixed. Each answer is graded $k$ times in every configuration it enters, with $k=5$
-unless stated otherwise, so agreement with the teachers, consistency across the $k$ repetitions, and
-cost are measured together.
-
-\subsection{Configuration Choices}
-\label{sec:design}
-
-The study varies seven configuration choices (Table~\ref{tab:design}), one of them, the grading
-instruction, in a follow-up experiment designed after the first results. \emph{Reasoning} switches the
-model's thinking mode off or on. \emph{Evaluation guidance} is the grading material added to the
-question and the student answer, which are always sent: nothing, or the rubric (the scoring criteria)
-or the reference answer that the dataset provides. The \emph{grading instruction} tells the model how
-to apply that guidance: strictly, as the rubric specifies, or awarding partial credit explicitly for
-every rubric item or part of the reference answer that the student answer meets, optionally with a
-justification of at most two sentences written before the score. \emph{Scope} contrasts grading a whole
-multi-question exam in one call against one call per question. \emph{Decomposition} contrasts one
-holistic score against scoring each rubric criterion separately and summing. \emph{Conversation state}
-contrasts a clean conversation per answer against a single conversation that accumulates the grading
-history of one student's exam. In a shared conversation the answers graded first can influence the ones
-graded later, so each exam is graded twice: once with the answers in the exam's own question order and
-once in reverse order. Comparing the two isolates the effect of an answer's position. The last choice is
-the model.
 
 The \emph{baseline configuration} is reasoning off, with guidance, the strict instruction, one question
 per call, holistic scoring, and a clean conversation per answer. Model and reasoning are crossed in
@@ -110,24 +110,25 @@ needs no teacher grade and can use any exam of the collection.
 
 \subsection{Models and Backends}
 \label{sec:models}
+%% Providers (Pedro's third review, 2026-10-18): the GLM-5.1/OpenRouter footnote was removed at his request;
+%% "mainly via DeepInfra" keeps the sentence true (GLM-5.1 with partial credit ran through OpenRouter, Z.ai).
+%% Model choice: each cited study found that family among its best graders (abstracts checked 2026-10-18;
+%% Jukiewicz names no best model, so GPT cites Li and Sessler).
 
 Every model lets reasoning be switched on or off within the same model, so the reasoning comparison
 holds the model fixed and flips only its thinking mode. The model families follow prior studies of LLM
-grading of student answers, which evaluated Claude~\cite{cipriano_leveraging_2025,moazzez_assessing_2024},
-GPT~\cite{li_study_2025,jukiewicz_comparison_2026}, DeepSeek~\cite{aminah_evaluating_2025,li_study_2025},
-and Qwen~\cite{jiang_eipe_2026,havare_ai-based_2025} models as graders. GLM-5.1, without a comparable
-grading record, was added as the strongest open model for code when the study
-began~\cite{arena_leaderboard_2026}. GPT-5.1 is the lowest-priced closed frontier model whose reasoning
+grading of student answers, in which Claude~\cite{cipriano_leveraging_2025,moazzez_assessing_2024},
+GPT~\cite{li_study_2025,sessler_canai_2025}, DeepSeek~\cite{aminah_evaluating_2025,li_study_2025},
+and Qwen~\cite{jiang_eipe_2026,havare_ai-based_2025} models were among the best graders tested.
+GLM-5.1, without a comparable grading record, was added as the strongest open model for code when the
+study began~\cite{arena_leaderboard_2026}. GPT-5.1 is the lowest-priced closed frontier model whose reasoning
 can be switched fully off, and with it the prices span more than two orders of magnitude.
 The open-weight models are \emph{Qwen3.5}~\cite{qwen_qwen35_2026} (served as
 \texttt{Qwen/Qwen3.5-35B-A3B}), \emph{DeepSeek-V4-Flash}~\cite{deepseek_v4_2026}
 (\texttt{deepseek-ai/DeepSeek-V4-Flash}), and \emph{GLM-5.1}~\cite{glm5_2026}
-(\texttt{zai-org/GLM-5.1}), run via the DeepInfra inference application programming interface (API)
-with \texttt{enable\_thinking} off or on.\footnote{The one exception is GLM-5.1 with the partial-credit
-instruction, served by its developer, Z.ai, through OpenRouter, with reasoning disabled. Its strict runs
-gave the same agreement there as on DeepInfra (0.726 QWK on RIAYN), so we treat the two providers as one
-backend.} The closed models are \emph{GPT-5.1}~\cite{openai_gpt51_2025} (via
-OpenAI, \texttt{reasoning\_effort} set to \texttt{none} or \texttt{high}) and \emph{Claude Sonnet
+(\texttt{zai-org/GLM-5.1}), run mainly via the DeepInfra inference application programming interface
+(API) with \texttt{enable\_thinking} off or on. The closed models are
+\emph{GPT-5.1}~\cite{openai_gpt51_2025} (via OpenAI, \texttt{reasoning\_effort} set to \texttt{none} or \texttt{high}) and \emph{Claude Sonnet
 4.6}~\cite{anthropic_sonnet46_2026} (\texttt{claude-sonnet-4-6}, via Anthropic, reasoning off). The API's
 structured output restricts Claude Sonnet 4.6's answer to the JSON score that every prompt asks for, so
 that, like the other models with reasoning off, it returns the score without writing an analysis first.
