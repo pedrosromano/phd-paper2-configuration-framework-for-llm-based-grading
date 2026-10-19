@@ -28,41 +28,42 @@ to apply that guidance: strictly, as the rubric specifies, or awarding partial c
 every rubric item or part of the reference answer that the student answer meets, optionally with a
 justification of at most two sentences written before the score. \emph{Scope} contrasts grading a whole
 multi-question exam in one call against one call per question. \emph{Decomposition} contrasts one
-holistic score against scoring each rubric criterion separately and summing. \emph{Conversation state}
+holistic score with a score for each rubric criterion followed by the total. The grade is the total the
+model gives, not the sum of its criterion scores, because some rubrics describe alternative solutions and
+only the criteria of the solution the student wrote should count. \emph{Conversation state}
 contrasts a clean conversation per answer against a single conversation that accumulates the grading
 history of one student's exam. In a shared conversation the answers graded first can influence the ones
 graded later, so each exam is graded twice: once with the answers in the exam's own question order and
 once in reverse order. Comparing the two isolates the effect of an answer's position. The last choice is
 the model.
 
+%% Table 1 without footnotes (Pedro, 2026-10-19: "confusing and full of disclaimers"): the footnotes repeated what
+%% the paragraph above says about each level, and the model counts became columns, ticked where the choice was
+%% compared on that model.
 \begin{table}[!htb]
 \centering
 \footnotesize
-\caption{The configuration choices studied, the datasets each applies to, and the models it was
-compared on.}
+\caption{The configuration choices studied: the levels compared, the datasets each choice applies to, and
+the models it was compared on ($\checkmark$). The grading instruction was varied in the follow-up
+experiment, with GLM-5.1 on the code sets only.}
 \label{tab:design}
-\setlength{\tabcolsep}{2pt}
-\begin{tabular}{llll}
+\setlength{\tabcolsep}{2.6pt}
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{2.1cm}>{\raggedright\arraybackslash}p{1.4cm}ccccc@{}}
 \hline
-Choice & Levels & Datasets & Models \\
+Choice & Levels compared & Datasets & \rotatebox{90}{Qwen3.5}
+  & \rotatebox{90}{\shortstack[l]{DeepSeek-\\V4-Flash}} & \rotatebox{90}{GLM-5.1} & \rotatebox{90}{GPT-5.1}
+  & \rotatebox{90}{\shortstack[l]{Claude\\Sonnet 4.6}} \\
 \hline
-Reasoning & off, on & all & 4$^{h}$ \\
-Guidance & none, with guidance$^{a}$ & all & 3$^{f}$ \\
-Instruction & strict, partial credit$^{b}$ & all$^{e}$ & 5$^{e}$ \\
-Scope & per question, whole exam$^{c}$ & PT-CS code & 3$^{f}$ \\
-Decomposition & holistic, per criterion$^{d}$ & PT-CS code, RIAYN & 3$^{f}$ \\
-Conversation & clean, shared & PT-CS code & 3$^{g}$ \\
-Model & five models & all & 5 \\
+Reasoning & off, on & all & \checkmark & \checkmark & \checkmark & \checkmark & \\[2.5pt]
+Guidance & none, rubric or reference answer & all & \checkmark & \checkmark & & \checkmark & \\[2.5pt]
+Instruction & strict,\newline partial credit & all & \checkmark & \checkmark & code & \checkmark & \checkmark \\[2.5pt]
+ & partial credit with justification & RIAYN,\newline PT-CS code & \checkmark & \checkmark & & & \\[2.5pt]
+Scope & per question,\newline whole exam & PT-CS code & \checkmark & \checkmark & & \checkmark & \\[2.5pt]
+Decomposition & holistic,\newline per criterion & RIAYN,\newline PT-CS code & \checkmark & \checkmark & & \checkmark & \\[2.5pt]
+Conversation & clean, shared & PT-CS code & \checkmark & \checkmark & \checkmark & & \\[2.5pt]
+Model & five models & all & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
 \hline
 \end{tabular}
-
-\vspace{2pt}
-\parbox{0.95\columnwidth}{\scriptsize $^{a}$A rubric (PT-CS, RIAYN) or a reference answer (Mohler,
-SemEval), added to the question and the student answer. $^{b}$Varied in the follow-up experiment, with
-or without a short justification before the score. $^{c}$One call per question, or one call for all the questions of a student's exam.
-$^{d}$One overall score, or one score per rubric criterion, summed. $^{e}$GLM-5.1 on code only; the
-justification on code, with Qwen3.5 and DeepSeek-V4-Flash. $^{f}$Qwen3.5, DeepSeek-V4-Flash, and
-GPT-5.1. $^{g}$Qwen3.5, DeepSeek-V4-Flash, and GLM-5.1. $^{h}$All but Claude Sonnet 4.6.}
 \end{table}
 
 The \emph{baseline configuration} is reasoning off, with guidance, the strict instruction, one question
@@ -91,17 +92,19 @@ SemEval, RIAYN, PT-CS code, and PT-CS short answers.
 \emph{Mohler}~\cite{mohler_text_2009,mohler_learning_2011} provides CS short answers, each graded 0 to 5
 by two teachers; we use their mean. \emph{SemEval-2013 Task~7}~\cite{dzikovska_semeval_2013}
 (SciEntsBank and Beetle) provides science short answers whose human grade is a binary label, correct or
-incorrect. It is far larger than our other corpora, so we use a fixed-seed random sample of 800 answers.
+incorrect; it is the most widely used short-answer benchmark, and its subject checks that the short-answer
+findings are not specific to CS. It is far larger than our other corpora, so we use a fixed-seed random
+sample of 800 answers from all its subsets, with every reference answer a question has.
 \emph{Rubric Is All You Need} (RIAYN)~\cite{pathak_rubric_2025} provides data-structures-and-algorithms
-submissions, all but one in Java, whose question-specific rubrics mark each step of one or more accepted
-solution paths; two graders scored each submission in consensus.
+submissions to a practice website, all but one in Java, whose question-specific rubrics mark each step of
+one or more accepted solution paths; two graders scored each submission in consensus.
 
-\emph{PT-CS} is a new dataset that we collected with a proof-of-concept grading platform, built within
-this research project as a first prototype for gathering graded answers. It holds complete Java exams in
-Portuguese, and each question has its own rubric and no reference solution. Two teachers set the final
-grade of each answer jointly. PT-CS consists of 379 answers: 295 code answers and 84 short answers on
-theory, from 97 exams. All direct identifiers were removed. The final grade is a joint decision with no
-per-teacher record, so inter-rater agreement cannot be computed on PT-CS.
+\emph{PT-CS} is a new dataset of Java exams in Portuguese from a course at Iscte, graded on a
+proof-of-concept grading platform built within this research project; the answers were graded for the
+course and reused afterwards for this study. Each question has its own rubric and no reference solution.
+Two teachers set the final grade of each answer jointly. PT-CS consists of 379 answers: 295 code answers
+and 84 short answers on theory, from 97 exams. The final grade is a joint decision with no per-teacher
+record, so inter-rater agreement cannot be computed on PT-CS.
 
 Two experiments need complete exams rather than single answers: whole-exam grading (scope) and the
 conversation sub-study. The scope contrast is scored only on the PT-CS answers within those exams. The
@@ -110,8 +113,9 @@ needs no teacher grade and can use any exam of the collection.
 
 \subsection{Models and Backends}
 \label{sec:models}
-%% Providers (Pedro's third review, 2026-10-18): the GLM-5.1/OpenRouter footnote was removed at his request;
-%% "mainly via DeepInfra" keeps the sentence true (GLM-5.1 with partial credit ran through OpenRouter, Z.ai).
+%% Providers (Pedro's third review, 2026-10-18): the GLM-5.1/OpenRouter footnote was removed at his request.
+%% 2026-10-19 (Pedro: remove "mainly"): the sentence names OpenRouter instead, which keeps it true (GLM-5.1 with
+%% partial credit and on the validation datasets ran through OpenRouter, served by Z.ai).
 %% Model choice: each cited study found that family among its best graders (abstracts checked 2026-10-18;
 %% Jukiewicz names no best model, so GPT cites Li and Sessler).
 
@@ -123,11 +127,12 @@ and Qwen~\cite{jiang_eipe_2026,havare_ai-based_2025} models were among the best 
 GLM-5.1, without a comparable grading record, was added as the strongest open model for code when the
 study began~\cite{arena_leaderboard_2026}. GPT-5.1 is the lowest-priced closed frontier model whose reasoning
 can be switched fully off, and with it the prices span more than two orders of magnitude.
-The open-weight models are \emph{Qwen3.5}~\cite{qwen_qwen35_2026} (served as
-\texttt{Qwen/Qwen3.5-35B-A3B}), \emph{DeepSeek-V4-Flash}~\cite{deepseek_v4_2026}
+The open-weight models are \emph{Qwen3.5-35B-A3B}~\cite{qwen_qwen35_2026} (\texttt{Qwen/Qwen3.5-35B-A3B},
+called Qwen3.5 below), a small mixture-of-experts model that activates about 3B of its 35B parameters for
+each token, \emph{DeepSeek-V4-Flash}~\cite{deepseek_v4_2026}
 (\texttt{deepseek-ai/DeepSeek-V4-Flash}), and \emph{GLM-5.1}~\cite{glm5_2026}
-(\texttt{zai-org/GLM-5.1}), run mainly via the DeepInfra inference application programming interface
-(API) with \texttt{enable\_thinking} off or on. The closed models are
+(\texttt{zai-org/GLM-5.1}), run via the DeepInfra inference application programming interface (API)
+with \texttt{enable\_thinking} off or on, and GLM-5.1 also via OpenRouter. The closed models are
 \emph{GPT-5.1}~\cite{openai_gpt51_2025} (via OpenAI, \texttt{reasoning\_effort} set to \texttt{none} or \texttt{high}) and \emph{Claude Sonnet
 4.6}~\cite{anthropic_sonnet46_2026} (\texttt{claude-sonnet-4-6}, via Anthropic, reasoning off). The API's
 structured output restricts Claude Sonnet 4.6's answer to the JSON score that every prompt asks for, so
@@ -135,7 +140,8 @@ that, like the other models with reasoning off, it returns the score without wri
 
 Calls to the open models and to Claude Sonnet 4.6 use temperature 0, the setting that makes a model's
 output as repeatable as the backend allows, so that the repeated runs measure only the variation that
-remains at that setting. GPT-5.1 accepts no temperature setting and samples at its fixed default. Output
+remains at that setting. GPT-5.1 accepts no temperature setting and samples at its fixed default, so its
+consistency is best compared within the model rather than against the others. Output
 is capped at 4096 tokens with reasoning off and at 32\,768 tokens with reasoning on. Every run logs the
 provider, served model identifier, sampling parameters, prompt hash, and timestamp.
 
@@ -144,10 +150,13 @@ provider, served model identifier, sampling parameters, prompt hash, and timesta
 
 A single grading harness, the software that runs every model through one common interface and records
 its output, drives the whole study. Prompt templates are keyed by domain, guidance level, grading
-instruction, scope, and decomposition. All templates ask for the score as a JavaScript Object Notation
+instruction, scope, and decomposition. They are written in English for every dataset; the PT-CS
+questions, rubrics, and answers stay in Portuguese. All templates ask for the score as a JavaScript Object Notation
 (JSON) object, with one score per question for whole-exam calls and a score per criterion for
 criterion-level calls. A deterministic parser extracts the grade and records whether extraction
-succeeded; unparseable output is logged and left out of the metrics.
+succeeded; unparseable output is logged and left out of the metrics. Without reasoning, at most 0.6\% of
+any configuration's outputs could not be parsed. The supplementary material gives every prompt template,
+the models' identifiers and prices, the unparseable outputs per model, and the values behind every figure.
 
 With reasoning off, every model grades every answer of every dataset $k=5$ times, with two exceptions
 in the follow-up experiment: Claude Sonnet 4.6, the costliest model without reasoning, grades
@@ -172,8 +181,9 @@ Agreement is reported as quadratic weighted kappa (QWK), the standard measure fo
 penalises large disagreements between grader and human grade more than small ones. It reaches 1 at
 perfect agreement and 0 at chance, and can in principle fall below 0 when a grader disagrees more than
 chance would; all the values we report are positive. QWK needs discrete, ordered grades, while the model
-produces a continuous score. We therefore average each item's $k$ grades, round the mean onto six
-ordered levels (0 to 5, the resolution of Mohler's native grades), and compute QWK on these levels.
+produces a continuous score. We therefore average each item's $k$ grades, round the mean to the nearest of
+six ordered levels (0 to 5, the resolution of Mohler's native grades; a value exactly halfway between two
+levels goes to the even one), and compute QWK on these levels.
 Using the same six levels for every dataset makes the QWK values comparable. We fixed this scale in
 advance; recomputing on five or seven levels changes no baseline QWK by more than 0.05.
 
@@ -197,7 +207,8 @@ that answer with reasoning off in the same repetition, as a grading system would
 call. The scope contrast uses the 295 PT-CS code questions of the whole-exam arm.
 
 We report each difference with a 95\% confidence interval (CI), obtained by resampling the items with
-replacement 800 times (a bootstrap). A difference is significant when its interval excludes zero. Each
+replacement 10,000 times (a bootstrap). A difference is significant when its interval excludes zero; its
+p-value is twice the share of resamples that fall on the other side of zero. Each
 research question involves several comparisons, so we also apply Holm's correction within each group of
 related comparisons (reasoning, guidance, grading instruction, scope, and decomposition). The correction
 raises the bar for each comparison so that the chance of any false positive in the group stays at 5\%. A
@@ -206,3 +217,26 @@ test it directly: two settings count as equivalent when the 90\% CI of their dif
 $\pm0.05$ QWK (the two one-sided tests procedure, TOST), a margin we fixed in advance as too small to
 change any recommendation. The conversation sub-study compares two grades of the same answer, so it uses
 a paired test of the per-answer differences (the Wilcoxon signed-rank test).
+
+\subsection{Configuration Guide Validation}
+\label{sec:validmethod}
+
+%% Protocol fixed before any call (CLAUDE.md S11, 2026-10-18, with two amendments made before any comparison);
+%% numbers from experiments/analysis/verification.py. Naming (Pedro, 2026-10-19): "validation" is used only
+%% for these two datasets, which played no part in building the guide.
+The tests of the configuration guide use the answers it was built from, so we also graded two datasets that
+played no part in building it, as validation datasets. \emph{SAF}~\cite{filighera_saf_2022} provides English short answers on
+communication networks, each scored with partial credit by two trained annotators in consensus and paired
+with a reference answer; we use a fixed-seed random sample of 300 of its 2981 answers, covering its 31
+questions. \emph{HARMOGEN-R}~\cite{mendonca_harmogenr_2026} provides C++ code answers from a data-structures
+course, in Portuguese, each graded by four instructors independently and blind with their own rubric of
+separately scored criteria; we use all 129 non-empty answers to its three code questions, with the
+instructors' mean as the human grade. On both, the guide's configuration is compared with alternatives that
+each change one of its settings: no guidance, the strict instruction in place of the request for partial
+credit, reasoning on, and, on code, a score per criterion. The models grade every configuration three
+times, with two exceptions: Claude Sonnet 4.6 grades with reasoning off and one holistic score, as in the
+study, and reasoning on grades the first 150 of the 300 SAF answers. A reasoning run that returned no grade
+takes the guide's grade for that answer, as in the main comparison. The comparisons use the
+metric and bootstrap described above. Before any of
+these answers was graded, we fixed the criterion the guide had to meet: on each dataset, no alternative
+without reasoning may agree with the human grades significantly better than the guide, for any model.

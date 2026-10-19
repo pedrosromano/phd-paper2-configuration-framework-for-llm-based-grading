@@ -14,7 +14,7 @@
 budget_eur_ceiling: 150.0          # OpenAI anchor (GPT-5.1)
 deepinfra_budget_eur_ceiling: 150.0 # DeepInfra (open roster); runaway-guard, not a usage squeeze
 anthropic_budget_eur_ceiling: 30.0  # Claude Sonnet 4.6 subset (Pedro's review 2026-10-16: about $20, Batch API)
-openrouter_budget_eur_ceiling: 20.0 # GLM-5.1 via OpenRouter (Z.AI pinned); expected ~EUR 10, the matrix preflight overestimates (2026-10-16)
+openrouter_budget_eur_ceiling: 30.0 # GLM-5.1 via OpenRouter (Z.AI pinned); expected ~EUR 10, the matrix preflight overestimates (2026-10-16); 20 -> 30 for the verification (2026-10-19)
 eur_per_usd: 0.92          # ~1 USD = 0.92 EUR (Jun 2026 approx; verify)
 
 # Default token assumptions for a single grading call, used by the pre-flight estimator

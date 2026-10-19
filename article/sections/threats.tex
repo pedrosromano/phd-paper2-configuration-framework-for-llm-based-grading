@@ -20,10 +20,14 @@ compared within a model. The follow-up experiment on the grading instruction was
 found, so its wordings were chosen with that failure in mind; the wordings and the rule for adopting one
 were fixed before they were run, and other wordings may do better or worse.
 
-The guide was built and validated on the five models and the datasets of this study, so its standing in
-the two validation tests may differ for other models and data. Across
+The guide was built on the four datasets of this study and validated on two more, with the same five models;
+with other models and data its standing may differ. Mohler, SemEval, and SAF have been public for years and
+may be in the models' training data, which could raise the agreement measured on
+them~\cite{sainz_contamination_2023}; the comparisons between configurations also hold on PT-CS, which is not
+public. The prompts were written in English for every dataset, and prompts in Portuguese might grade the
+Portuguese answers differently. Across
 all experiments, code evidence is narrower than
-short-answer evidence, resting on two Java-centric datasets, so we draw the code conclusions more
+short-answer evidence, resting on two Java-centric datasets and one C++ dataset, so we draw the code conclusions more
 cautiously. The guidance contrast bundles two different interventions, a rubric (PT-CS, RIAYN) and a
 reference answer (Mohler, SemEval), which we report separately rather than as one combined effect. The
 expensive factors were varied one at a time rather than fully crossed, so interactions between them, such

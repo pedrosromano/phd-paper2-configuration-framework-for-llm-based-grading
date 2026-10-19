@@ -1,17 +1,17 @@
-%% sections/framework.tex -- The Configuration Guide and its validation. Rewritten 2026-10-18 (Pedro's second
-%% review, comments #39-#48): an introduction saying why a guide is needed, which measures decide each setting and
-%% by what rule; (A) the guide itself, Table 4 (make_phase5_tables.write_guide_table), the diagram (Fig. 7)
-%% and the guide's prompt (Fig. 8, verbatim from experiments/configs/prompts.yaml + prompts_instruction.yaml,
-%% partial-credit grounding; keep them in sync);
-%% (B) the two validation tests, described before any result; (C) their results: Test 1 as a figure
-%% (phase6.fig_guide_test1, which replaced the Test 1 table) and Test 2 (phase6.fig_guide_validation).
-%% Register: CLAUDE.md S9.2; every number from experiments/analysis/guide_eval.py
-%% (`python -m experiments.analysis.guide_eval`).
+%% sections/framework.tex -- The Configuration Guide, its tests and its validation. Rewritten 2026-10-18 (Pedro's
+%% second review, comments #39-#48): an introduction saying why a guide is needed, which measures decide each
+%% setting and by what rule; (A) the guide itself, Table 4 (make_phase5_tables.write_guide_table), the diagram
+%% (Fig. 7) and the guide's prompt (Fig. 8, verbatim from experiments/configs/prompts.yaml +
+%% prompts_instruction.yaml, partial-credit grounding; keep them in sync); (B) the two tests, described before
+%% any result; (C) their results; (D) the validation on the two datasets that played no part in building it.
+%% Naming (Pedro, 2026-10-19): "tests" on the study's data, "validation" only for SAF and HARMOGEN-R. The tests
+%% and the validation share one figure design (phase6.fig_guide_tests, phase6.fig_guide_validation), which
+%% replaced the Test 1 and Test 2 figures and the validation table (now only in the supplementary material).
+%% Register: CLAUDE.md S9.2; numbers from experiments/analysis/guide_eval.py and verification.py.
 %% Floats follow the paper-wide rule (CLAUDE.md S9): each comes after its first reference, at the nearest place,
-%% and article/tools/check_floats.py checks the PDF after every build. Five floats are referenced within
-%% about a page here. So Table 4 and Fig. 7 are defined right after the A heading, and the Test 1 figure
-%% right after the C heading, which lets each reach the bottom of the page that refers to it. Figs. 8 and
-%% 10 follow their paragraphs.
+%% and article/tools/check_floats.py checks the PDF after every build. Table 4, Fig. 7 and Fig. 8 follow the
+%% paragraph that first refers to them (2026-10-19: defined after the A heading, Table 4 and Fig. 7 were queued
+%% from the page before and landed above their reference).
 
 \section{The Configuration Guide}
 \label{sec:framework}
@@ -22,11 +22,17 @@ those comparisons into a single configuration that can be used with any model, s
 does not have to weigh the evidence choice by choice. Every choice was judged on the three measures used
 throughout: agreement with the teachers (QWK), consistency across repeated gradings, and cost per grade.
 One rule decided each setting: keep the option that raised agreement reliably, and where no option did,
-keep the cheaper and more consistent one.
+keep the cheaper and more consistent one. Five of the six settings are those of the baseline
+configuration, which the comparisons confirmed one at a time; the sixth, the request for partial credit,
+came from the follow-up experiment. The guide was then tested on the data it was built from and validated
+on two datasets that played no part in building it.
 
 \subsection{The Guide}
 \label{sec:guide}
 
+%% Table 4 and Fig. 7 are defined right after the heading, before the paragraph that first refers to them, so
+%% that both can take the bottom of that page (float rule exception, CLAUDE.md S9). If this heading ever falls
+%% on the page before its paragraph, move them back after the paragraph (check_floats.py will flag it).
 \input{tables/tab_framework}
 
 \begin{figure*}[!tb]
@@ -94,9 +100,11 @@ The guide has six settings (Table~\ref{tab:framework}), and Fig.~\ref{fig:framew
 work on one exam. Two settings raise agreement: give the model the rubric or the reference answer, and ask
 it to award partial credit. The other four keep grading cheap, consistent, and fair: grade with reasoning
 off, one question per call, with a single holistic score, in a clean conversation for each answer.
+The guide sets how the grader is configured and leaves the choice of model open, so we tested it on all
+five models of the study. It returns a score only: feedback for students, and the explanation a grade
+needs when it is contested, must come from the rubric or from a separate request.
 Fig.~\ref{fig:guideprompt} gives the guide's prompt, in four blocks, with the wording used in the
-experiments. The guide sets how the grader is configured and leaves the choice of model open, so we
-validated it on all five models of the study.
+experiments.
 
 \begin{figure*}[!tb]
 \centering
@@ -142,11 +150,11 @@ the model's settings, and the prompt does not mention it.}
 \label{fig:guideprompt}
 \end{figure*}
 
-\subsection{How the Guide Was Validated}
+\subsection{How the Guide Was Tested}
 \label{sec:guidetests}
 
-We validated the guide with two tests that compare it with every configuration graded in the study, so
-that the guide faces every alternative we ran.
+Two tests compare the guide with every configuration graded in the study, so that it faces every
+alternative we ran. Both use the answers the guide was built from.
 
 \emph{Test 1: the guide against the other configurations of the same model.} For each model and
 dataset, the guide's configuration is compared with each other configuration of the same model, on the
@@ -155,38 +163,45 @@ justification written first, the whole exam in one call, a score per criterion, 
 and reasoning on. The alternatives other than the instruction ones were graded with the strict
 instruction, so they also differ from the guide in that setting. Each comparison uses the same bootstrap
 as the results, without correction for multiple comparisons, which makes an advantage of the alternative
-easier to detect. The alternative is then counted as significantly better than the guide, not
-significantly different, or significantly worse.
+easier to detect. Each comparison is then counted as one in which the guide agreed significantly better,
+showed no significant difference, or agreed significantly worse.
 
-\emph{Test 2: the guide against the best configuration of any model, and at what cost.} For each
-dataset, every configuration graded without reasoning, of any model, is placed by its agreement with the
-teachers and its cost per 1000 grades, on the answers that all of them graded. The test asks how close the
-guide comes to the best configuration in the study, with each model, and whether any cheaper
-configuration agrees better. The configurations that no cheaper one beats form the cost-quality frontier.
-The same comparison on the sampled answers adds the configurations with reasoning on.
+\emph{Test 2: the guide against the best configuration of any model.} For each dataset, every
+configuration graded without reasoning, of any model, is compared on the answers that all of them graded.
+The test asks how close the guide comes, with each model, to the best configuration in the study, and
+whether any cheaper configuration agrees better. The same comparison on the sampled answers adds the
+configurations with reasoning on.
 
-\subsection{Validation Results}
+\subsection{Test Results}
 \label{sec:guideuse}
 
+%% The figure is defined before the paragraph that first cites it, so that it can take the bottom of that page,
+%% or else the top of the next (float rule, CLAUDE.md S9; check_floats.py confirms it follows the reference).
 \begin{figure*}[!tb]
 \centering
-\input{figures/fig_guide_test1.pgf}
-\caption{The guide against the other configurations of the same model (Test 1). (a) For each alternative,
-the number of model-dataset comparisons in which it agreed with the teachers significantly better than the
-guide, not significantly differently, or significantly worse (95\% bootstrap intervals, without
-correction). (b) The change in agreement in each comparison, alternative minus guide, coloured by model;
-filled points are significant, and the shaded band is the $\pm0.05$ equivalence margin. (c) The
-alternative's cost per grade relative to the guide's. The alternatives other than the grading
-instruction used the strict instruction.}
-\label{fig:guidetest1}
+\input{figures/fig_guide_tests.pgf}
+\caption{The tests of the guide, on the four datasets it was built from. (a) Test 1: for each alternative,
+the share of its comparisons (model and dataset) in which the guide agreed with the teachers significantly
+better, not significantly differently, or significantly worse (95\% bootstrap intervals, without
+correction); the numbers in the bars count the comparisons, and those in brackets give each alternative's
+total. On the right, the alternative's cost per grade relative to the guide's. The alternatives other
+than the grading instruction used the strict instruction. (b) Test
+2: the guide's agreement with each model, against the best configuration without reasoning of any model
+and the range of all of them, on the answers they all graded (Mohler: the 800 every configuration graded).
+GLM-5.1 graded only the code sets with the guide's configuration.}
+\label{fig:guidetests}
 \end{figure*}
 
+These two tests use the data the guide was built from, so they show how it fares where its settings were
+chosen; the validation at the end of this section judges it on answers that played no part in building it.
+Fig.~\ref{fig:guidetests} gives the results of both tests.
+
 Of the 56 comparisons without reasoning, the guide agreed significantly better with the teachers than
-the alternative in 33 (59\%), showed no significant difference in 22 (39\%), and agreed worse in one
+the alternative in 32 (57\%), showed no significant difference in 23 (41\%), and agreed worse in one
 (2\%): Claude Sonnet 4.6
-with the strict instruction on the 84 PT-CS short answers, by 0.043 QWK (Fig.~\ref{fig:guidetest1}). No
-alternative to the guidance, the scope, the decomposition, or the clean conversation agreed better than
-the guide for any model. Most alternatives also made grades less consistent (34 of the 56 comparisons),
+with the strict instruction on the 84 PT-CS short answers, by 0.043 QWK (Fig.~\ref{fig:guidetests}a). No
+alternative to the guidance, the scope, the decomposition, or the clean conversation agreed significantly
+better than the guide for any model. Most alternatives also made grades less consistent (34 of the 56 comparisons),
 and every alternative except dropping the guidance or the partial-credit request cost more per grade.
 
 Reasoning is the one setting in which the guide gives something up. With reasoning on, agreement rose
@@ -195,26 +210,78 @@ zero-collapse, and never fell; but grades became less consistent in 14 of the 17
 2.6 to 179 times as much. The guide keeps reasoning off for that cost and that loss of consistency.
 
 Across models, the guide's configuration reached or approached the best agreement in the study
-(Fig.~\ref{fig:guidevalidation}). With the model best suited to each dataset, it was the best
+(Fig.~\ref{fig:guidetests}b). With the model best suited to each dataset, it was the best
 configuration on Mohler (GPT-5.1, 0.653 QWK) and on PT-CS code (DeepSeek-V4-Flash, 0.674), and came within
 0.002 of the best on SemEval, 0.014 on RIAYN, and 0.043 on the PT-CS short answers. On the sampled answers,
-which add the configurations with reasoning, the best configuration led it by at most 0.053. With four of
-the five models it graded code at 0.65 to 0.76 QWK, and with Qwen3.5 at 0.50 and 0.55, as that model's
-zero-collapse persisted under partial credit. With the cheapest model, DeepSeek-V4-Flash, it cost 0.02 to
+which add the configurations with reasoning, the best configuration led it by at most 0.053. A teacher
+cannot pick the best-suited model before knowing the grades, so we also fixed the model in advance: the
+guide then fell short of the best configuration by 0.02 to 0.05 QWK on average across the datasets with
+four of the five models, and by 0.13 with Qwen3.5. On code it graded at 0.65 to 0.76 QWK with those four
+models and at 0.50 and 0.55 with Qwen3.5, as that model's zero-collapse persisted under partial credit; the
+guide does not choose the model, and on code the model matters more than any single setting. With the cheapest model, DeepSeek-V4-Flash, it cost 0.02 to
 0.09 euros per thousand grades, and no cheaper configuration agreed better, apart from a difference of
 0.001 QWK on SemEval.
+
+Overall, the guide held its ground in both tests on the data it was built from: within each model, almost
+no alternative without reasoning agreed significantly better with the teachers, and across models it came within 0.05
+QWK of the best configuration on every dataset with the best-suited model, and about as close on average
+with any model but Qwen3.5.
+
+\subsection{Guide Validation}
+\label{sec:validation}
+
+%% Numbers: experiments/analysis/verification.py (protocol and criterion fixed before any call, CLAUDE.md S11).
+%% Pedro (2026-10-19): open with the principle of the validation; the table gave way to a figure drawn like the
+%% tests' (its values are in the supplementary material).
+A guide that is built and tested on the same answers may fit those answers alone, so the validation judges
+it on answers that played no part in building it: 300 SAF short answers and 129 HARMOGEN-R code answers,
+each with its own human grade. Each model graded these answers with the guide's
+configuration and with alternatives that each change one of its settings, and the guide had to meet a
+criterion fixed before any of them was graded: no alternative without reasoning may agree with the human
+grades significantly better than the guide, for any model. Fig.~\ref{fig:guidevalidation} gives the
+results in the same form as the tests.
 
 \begin{figure*}[!tb]
 \centering
 \input{figures/fig_guide_validation.pgf}
-\caption{The guide among every configuration graded without reasoning (Test 2). Each point is one
-configuration on the answers they all graded (Mohler: the 800 every configuration graded), with its
-agreement with the teachers (QWK) against the cost of 1000 grades (log scale). Coloured points are the
-guide's configuration with each model, grey points the other configurations, and the dashed line the
-cost-quality frontier, the configurations that no cheaper one beats.}
+\caption{The validation of the guide, on two datasets that played no part in building it, drawn as the
+tests in Fig.~\ref{fig:guidetests}. (a) For each alternative, the share of its comparisons (model and
+dataset) in which the guide agreed with the human grades significantly better, not significantly
+differently, or significantly worse (95\% bootstrap intervals, without correction), with the counts as in
+Fig.~\ref{fig:guidetests}, and the alternative's cost per grade relative to the guide's. (b) The guide's
+agreement with each model, against the best configuration without reasoning of any model and the range of
+all of them; the hatched band is the four HARMOGEN-R instructors' agreement with each other. Reasoning on
+was graded on 150 of the 300 SAF answers and on all the HARMOGEN-R answers; Claude Sonnet 4.6 was graded
+with reasoning off and one holistic score only.}
 \label{fig:guidevalidation}
 \end{figure*}
 
-Overall, the guide held its ground in both tests: within each model, almost no alternative without
-reasoning agreed better with the teachers, and across models it came within 0.05 QWK of the best
-configuration on every dataset.
+On the SAF short answers, the guide met the criterion fixed in advance with every model: no alternative
+without reasoning agreed significantly better with the human grades. Under the guide the five models agreed at 0.62 to
+0.73 QWK, and with GLM-5.1 the guide was the best configuration without reasoning on the dataset.
+Removing the guidance lowered agreement by 0.18 to 0.30 for every model, and the strict instruction was no
+better: it lowered agreement for GLM-5.1 and Claude Sonnet 4.6, by 0.055 and 0.049, and changed it by less
+than 0.03 for the other three. Reasoning on raised agreement significantly for Qwen3.5 (by 0.096) and
+DeepSeek-V4-Flash (by 0.110), and not significantly for GPT-5.1 and GLM-5.1, at 3.5 to 55 times the cost
+per grade.
+
+On the HARMOGEN-R code answers, the result depended on the model. With GLM-5.1 and GPT-5.1, the guide
+agreed with the instructors' mean at 0.90 and 0.88 QWK, within the range of the four instructors'
+agreement with each other (0.87 to 0.93) and within 0.04 of the best configuration on the dataset; with
+Claude Sonnet 4.6 it reached 0.80. For these three models no alternative without reasoning agreed
+significantly better:
+removing the guidance lowered agreement by 0.21 to 0.25, and the strict instruction lowered it by 0.035
+to 0.063. With Qwen3.5 and DeepSeek-V4-Flash, the guide scored 40\% and 36\% of the answers as zero,
+against 7\% for the instructors, and agreed at 0.67 and 0.70: both models showed the zero-collapse,
+DeepSeek-V4-Flash for the first time in the study. For DeepSeek-V4-Flash a score per criterion agreed
+better than the guide, by 0.088, so on code the guide missed the criterion for this model; for Qwen3.5 no
+alternative without reasoning agreed significantly better.
+Reasoning on raised agreement significantly for all four models that have it, at 3.5 to 26 times the cost
+per grade: by 0.032 for GLM-5.1 and 0.058 for GPT-5.1, and by 0.156 for DeepSeek-V4-Flash and 0.247 for
+Qwen3.5, cutting their zeros from 36\% to 20\% and from 40\% to 16\%, as in the main study.
+
+Overall, on data it was not built from, the guide met the criterion fixed in advance on short answers
+with every model and on code with four of the five; with GLM-5.1 and GPT-5.1 it graded code nearly as
+well as the instructors agree with each other. The two models that collapsed gave zero to five to six times as many
+answers as the instructors, while the other three stayed within six percentage points of them; for those
+two, reasoning was the remedy, as it was in the main study.

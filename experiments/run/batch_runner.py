@@ -24,7 +24,6 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-import pandas as pd
 import requests
 import yaml
 
@@ -46,9 +45,8 @@ def _log(msg: str) -> None:
 def _ctx(arm_name: str):
     spec = yaml.safe_load(matrix.MATRIX.read_text())
     arm = next(a for a in spec["arms"] if a["name"] == arm_name)
-    corpus = pd.read_parquet(matrix.CORPUS)
-    by_id = {r["item_id"]: r for _, r in corpus.iterrows()}
-    tasks = matrix._arm_tasks(arm, matrix.Sampler(spec, corpus), by_id, matrix.DEFAULT_SEED, {})
+    sampler, by_id = matrix._corpus_for(arm, spec, {})
+    tasks = matrix._arm_tasks(arm, sampler, by_id, matrix.DEFAULT_SEED, {})
     st = matrix._store_for(arm, {})
     return arm, by_id, tasks, st
 

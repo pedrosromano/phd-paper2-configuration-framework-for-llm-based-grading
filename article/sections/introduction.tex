@@ -25,8 +25,10 @@ The literature answers these questions only in fragments. Reasoning is the clear
 reasoning model writes out its thinking before it answers, and this improves general LLM-as-a-judge
 accuracy~\cite{jayarao_explicit_2025}, but the effect depends on the task and the
 architecture~\cite{larionov_deepseek_2025}. Long reasoning traces also carry verbose, redundant
-computation~\cite{sui_stop_2025}, and no peer-reviewed study isolates the effect of reasoning on
-rubric-bounded educational grading. Models have been compared as graders of programming
+computation~\cite{sui_stop_2025}. In essay scoring, two reasoning models agreed less with expert raters,
+and less consistently, than a model without reasoning~\cite{yoshida_reasoning_2025}, but that comparison
+sets different models against each other, so it cannot separate reasoning from the model. Models have been
+compared as graders of programming
 assignments~\cite{jukiewicz_comparison_2026} and of assignments in a bioinformatics
 course~\cite{policar_automated_2025}, and evaluation guidance has been studied for code
 grading~\cite{pathak_rubric_2025}, but, to our knowledge, no study compares guidance, the grading
@@ -41,7 +43,7 @@ decomposition (one holistic score versus a score per criterion), conversation st
 conversation per answer versus a shared history), and the model. In the first results, some models
 scored many partially correct code answers as zero, which we call zero-collapse, so a follow-up
 experiment varies the grading instruction: apply the guidance strictly, or award partial credit
-explicitly. Five models take part, three open-weight (Qwen3.5, DeepSeek-V4-Flash, GLM-5.1) and two
+explicitly. Five models take part, three open-weight (Qwen3.5-35B-A3B, DeepSeek-V4-Flash, GLM-5.1) and two
 closed (GPT-5.1, Claude Sonnet 4.6). The first four are graded with reasoning both off and on within the
 same model, which separates the effect of reasoning from that of the model.
 The study runs on four datasets in two domains. Three are public, so the results can
@@ -69,16 +71,22 @@ Five research questions structure the study:
 \end{itemize}
 These five questions were set before the experiments. The follow-up experiment is reported apart from
 them because it was added only once the zero-collapse appeared: it tests whether an explicit request for
-partial credit changes agreement and cost.
+partial credit changes agreement and cost, and whether it repairs the zero-collapse.
 
-From these comparisons we build a model-agnostic configuration guide: one recommended configuration
-for LLM grading in CS, which leaves the choice of model open. We validate it on five models in two ways:
-against every other configuration of the same model, and against the best configuration of any model, on
-agreement, consistency, and cost.
+From these comparisons we build a configuration guide: one recommended configuration for LLM grading in
+CS, which leaves the choice of model open. Five of its six settings are those of the baseline
+configuration, which the comparisons confirm one at a time; the sixth, the request for partial credit,
+comes from the follow-up experiment. We then evaluate the guide in two ways. The \emph{tests} use the four
+datasets the guide was built from: with each of the five models, they compare the guide with every other
+configuration of the same model and with the best configuration of any model, on agreement, consistency,
+and cost. The \emph{validation} uses two new datasets, one of short answers and one of code, that played
+no part in building the guide, and checks it against a criterion fixed before they were graded.
 
-The overall contribution of this paper is threefold. First, a model-agnostic configuration guide for LLM grading in CS,
-validated on five models against every configuration in the study. Second, the first grading-specific,
-within-family isolation of the reasoning effect, measured jointly on agreement, consistency, and cost.
+The overall contribution of this paper is threefold. First, a configuration guide for LLM grading in CS,
+tested on five models against every configuration in the study and validated on two datasets that played
+no part in building it. Second, for grading in CS, the effect of each configuration choice (reasoning,
+evaluation guidance, the grading instruction, grading scope, rubric decomposition, and conversation state),
+isolated within the same model and measured jointly on agreement, consistency, and cost.
 Third, PT-CS, a new dataset of 379 teacher-graded answers from complete computer-science exams in
 Portuguese, which repeats every comparison outside the public corpora and alone supports the comparisons
 that need complete exams.
@@ -86,6 +94,6 @@ that need complete exams.
 The paper is organised as follows. Section~\ref{sec:related} reviews the related work.
 Section~\ref{sec:method} describes the configuration choices, datasets, models, grading harness, and
 statistics. Section~\ref{sec:results} reports the results by research question and then the follow-up
-experiment, and Section~\ref{sec:discussion} discusses them. Section~\ref{sec:framework} presents and validates the
-configuration guide, Section~\ref{sec:threats} states the threats to validity, and
+experiment, and Section~\ref{sec:discussion} discusses them. Section~\ref{sec:framework} presents, tests,
+and validates the configuration guide, Section~\ref{sec:threats} states the threats to validity, and
 Section~\ref{sec:conclusion} concludes.

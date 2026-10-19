@@ -47,9 +47,11 @@ what counts as correct, and the hard part is placing the score on the scale, whi
 not help. Whether reasoning helps or hurts here is therefore uncertain, and the three studies above
 measure it in general judging or in adjacent generation tasks. Closest to grading, one study frames
 short-answer grading as a move ``from memorization to reasoning'' and examines fine-tuning and
-rubric-based prompting~\cite{cong_memorization_2026}. To our knowledge, no study has isolated the effect
-of reasoning on grading itself, holding the model fixed and measuring quality, consistency, and cost
-together. This paper does so with an on/off switch within each model (RQ1).
+rubric-based prompting~\cite{cong_memorization_2026}. In essay scoring, two reasoning models agreed less
+with expert raters, and less consistently, than a model without reasoning~\cite{yoshida_reasoning_2025},
+but that comparison sets different models against each other. To our knowledge, no study has isolated
+the effect of reasoning on grading itself, holding the model fixed and measuring quality, consistency,
+and cost together. This paper does so with an on/off switch within each model (RQ1).
 
 \subsection{Rubrics and Reference Answers}
 What the grader is given to grade against matters. In short-answer grading the usual material is a
@@ -73,7 +75,9 @@ and a systematic review of artificial intelligence in programming education list
 and feedback among its core application areas~\cite{manorat_artificial_2025}.
 
 How the model is told to apply the guidance has received less attention: one study compared a lenient
-and a strict prompt for two LLMs grading geography worksheets~\cite{venkatraman_llmbased_2026}. Each of
+and a strict prompt for two LLMs grading geography worksheets~\cite{venkatraman_llmbased_2026}, and a
+concurrent study found that a lenient prompt awarding partial credit lowered the grading error of every
+model family on a mathematics exam~\cite{sapkota_math_2026}. Each of
 these studies examines one kind of task. We measure the guidance and the instruction for applying it under
 one protocol, on five models and four datasets of code and short answers.
 

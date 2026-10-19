@@ -30,30 +30,91 @@ def _qwk_items(d):
     return cohen_kappa_score(go, po, weights="quadratic", labels=list(range(K + 1))), s
 
 
-def _boot_dist(sA, sB, nb=800):
-    """Bootstrap distribution of dQWK = QWK(B)-QWK(A) over common items (item means already computed)."""
+NB = 10_000              # bootstrap resamples (independent review, 2026-10-18: 800 left the significance of
+                         # results near zero, and Holm's smallest thresholds, to one or two resamples)
+_W = (np.subtract.outer(np.arange(K + 1), np.arange(K + 1)) ** 2).astype(float)
+
+
+def _levels(x) -> np.ndarray:
+    """Six ordered levels of a 0-1 score; halves go to the even level (numpy's rounding, stated in Method)."""
+    return (np.asarray(x, dtype=float) * K).round().clip(0, K).astype(int)
+
+
+def _kappas(counts: np.ndarray) -> np.ndarray:
+    """Quadratic weighted kappa of each (L x L) confusion matrix in a (B, L, L) stack (gold rows, grader columns)."""
+    n = counts.sum(axis=(1, 2))
+    exp = counts.sum(axis=2)[:, :, None] * counts.sum(axis=1)[:, None, :] / n[:, None, None]
+    return 1 - (counts * _W).sum(axis=(1, 2)) / (exp * _W).sum(axis=(1, 2))
+
+
+def _common(sA, sB):
     items = sorted(set(sA.index) & set(sB.index))
+    a, b = sA.loc[items], sB.loc[items]
+    return items, _levels(a.g) * (K + 1) + _levels(a.p), _levels(a.g) * (K + 1) + _levels(b.p)
+
+
+def _point(sA, sB) -> float:
+    """dQWK = QWK(B) - QWK(A) on the common items: the estimate every table, figure and sentence reports."""
+    items, ca, cb = _common(sA, sB)
     if len(items) < 8:
+        return np.nan
+    L2 = (K + 1) ** 2
+    cnt = np.stack([np.bincount(ca, minlength=L2), np.bincount(cb, minlength=L2)]).reshape(2, K + 1, K + 1)
+    qa, qb = _kappas(cnt.astype(float))
+    return float(qb - qa)
+
+
+def _boot_dist(sA, sB, nb=NB):
+    """Bootstrap distribution of dQWK = QWK(B)-QWK(A) over common items (item means already computed): the items
+    are resampled with replacement nb times, with a fresh generator seeded with SEED."""
+    items, ca, cb = _common(sA, sB)
+    n = len(items)
+    if n < 8:
         return None
     rng = np.random.default_rng(SEED)
-    a = sA.loc[items]; b = sB.loc[items]
-    pa, ga, pb = a.p.to_numpy(), a.g.to_numpy(), b.p.to_numpy()
-    def q(p, g):
-        return cohen_kappa_score((g * K).round().clip(0, K).astype(int),
-                                 (p * K).round().clip(0, K).astype(int),
-                                 weights="quadratic", labels=list(range(K + 1)))
-    return np.array([q(pb[i], ga[i]) - q(pa[i], ga[i])
-                     for i in (rng.integers(0, len(items), len(items)) for _ in range(nb))])
+    L2 = (K + 1) ** 2
+    out = []
+    for start in range(0, nb, 500):
+        m = min(500, nb - start)
+        idx = rng.integers(0, n, (m, n))
+        off = (np.arange(m) * L2)[:, None]
+        qa = _kappas(np.bincount((off + ca[idx]).ravel(), minlength=m * L2).reshape(m, K + 1, K + 1).astype(float))
+        qb = _kappas(np.bincount((off + cb[idx]).ravel(), minlength=m * L2).reshape(m, K + 1, K + 1).astype(float))
+        out.append(qb - qa)
+    return np.concatenate(out)
 
 
-def _boot_ci(sA, sB, nb=800):
-    """Bootstrap dQWK = QWK(B)-QWK(A) over common items: (2.5%, median, 97.5%)."""
+def _boot_ci(sA, sB, nb=NB):
+    """dQWK = QWK(B)-QWK(A) over common items: (2.5% bootstrap bound, point estimate, 97.5% bootstrap bound)."""
     ds = _boot_dist(sA, sB, nb)
-    return (np.nan, np.nan, np.nan) if ds is None else tuple(np.percentile(ds, [2.5, 50, 97.5]))
+    if ds is None:
+        return (np.nan, np.nan, np.nan)
+    lo, hi = np.percentile(ds, [2.5, 97.5])
+    return (lo, _point(sA, sB), hi)
+
+
+def _sd_change(o, n, nb=NB) -> tuple[float, float]:
+    """95% bootstrap interval of the change in mean within-item SD, reasoning on minus off, over the items
+    with an SD in both modes (the same resampling as _boot_dist; fallback grades left out, as in SD_k)."""
+    def sd(d):
+        d = d[d.pred_norm.notna()]
+        if "fallback" in d:
+            d = d[~d["fallback"].astype(bool)]
+        return d.groupby("item_id").pred_norm.std().dropna()
+    so, sn = sd(o), sd(n)
+    items = sorted(set(so.index) & set(sn.index))
+    if len(items) < 8:
+        return (np.nan, np.nan)
+    diff = (sn.loc[items] - so.loc[items]).to_numpy()
+    rng = np.random.default_rng(SEED)
+    means = np.concatenate([diff[rng.integers(0, len(items), (min(500, nb - s), len(items)))].mean(axis=1)
+                            for s in range(0, nb, 500)])
+    lo, hi = np.percentile(means, [2.5, 97.5])
+    return (float(lo), float(hi))
 
 
 def _p_boot(ds) -> float:
-    """Two-sided bootstrap p for dQWK = 0 (floor 1/nb)."""
+    """Two-sided bootstrap p for dQWK = 0: twice the share of resamples on the far side of zero (floor 1/nb)."""
     return float(max(2 * min((ds <= 0).mean(), (ds >= 0).mean()), 1 / len(ds)))
 
 
@@ -78,8 +139,8 @@ def _contrast(A, B) -> dict:
     ds = _boot_dist(sA, sB)
     if ds is None:
         return {}
-    lo, md, hi = np.percentile(ds, [2.5, 50, 97.5]); lo90, hi90 = np.percentile(ds, [5, 95])
-    return {"dQWK": md, "lo": lo, "hi": hi, "N": len(set(sA.index) & set(sB.index)), "p": _p_boot(ds),
+    lo, hi = np.percentile(ds, [2.5, 97.5]); lo90, hi90 = np.percentile(ds, [5, 95])
+    return {"dQWK": _point(sA, sB), "lo": lo, "hi": hi, "N": len(set(sA.index) & set(sB.index)), "p": _p_boot(ds),
             "sig": bool(lo > 0 or hi < 0), "equiv": bool(-MARGIN < lo90 and hi90 < MARGIN),
             "QWK_A": _qwk_items(A[A.item_id.isin(set(sA.index) & set(sB.index))])[0]}
 
@@ -146,11 +207,13 @@ def rq1_cells(df: pd.DataFrame, interv: set) -> pd.DataFrame:
         items = set(n.item_id.unique())          # every paired item; overflowed runs carry the off grade
         qoff, sA = _qwk_items(o[o.item_id.isin(items)]); qon, sB = _qwk_items(n[n.item_id.isin(items)])
         dist = _boot_dist(sA, sB)
-        lo, md, hi = np.percentile(dist, [2.5, 50, 97.5])
+        lo, hi = np.percentile(dist, [2.5, 97.5]); md = _point(sA, sB)
         prem = (pd.to_numeric(n.completion_tokens, errors="coerce").mean()
                 / max(pd.to_numeric(o.completion_tokens, errors="coerce").mean(), 1))
         r = rc.loc[(ds, dom, m)]
+        sd_lo, sd_hi = _sd_change(o[o.item_id.isin(items)], n[n.item_id.isin(items)])
         rows.append({"dataset": ds, "domain": dom, "model": m, "N": len(items), "QWK_off": qoff, "QWK_on": qon,
+                     "sd_sig_up": bool(sd_lo > 0), "sd_sig_down": bool(sd_hi < 0),
                      "fallback_pct": 100 * float(n["fallback"].mean()) if "fallback" in n else 0.0,
                      "dQWK": md, "lo": lo, "hi": hi, "pct": 100 * md / qoff if qoff else np.nan,
                      "sig": bool(lo > 0 or hi < 0), "prem_x": prem, "p": _p_boot(dist),
@@ -284,7 +347,9 @@ def main() -> int:
                           "95\\% CI": f"[{sgn(c.lo, 3)}, {sgn(c.hi, 3)}]",
                           "Holm": "yes" if c.sig_holm else "",
                           "Tokens": f"{c.prem_x:.0f}$\\times$",
-                          "SD off $\\to$ on": f"{c.SDk_off:.3f} $\\to$ {c.SDk_on:.3f}"})
+                          "SD off $\\to$ on": (f"{c.SDk_off:.3f} $\\to$ \\textbf{{{c.SDk_on:.3f}}}"
+                                                 if (c.sd_sig_up or c.sd_sig_down)
+                                                 else f"{c.SDk_off:.3f} $\\to$ {c.SDk_on:.3f}")})
     _tex(pd.DataFrame(vrows), "tab_rq1_values.tex",
          "Reasoning off versus on, per model and dataset. $\\Delta$QWK is QWK with reasoning on minus QWK "
          "off, on the N sampled items; a reasoning run that reached the output limit without returning a "
@@ -292,12 +357,13 @@ def main() -> int:
          "bootstrap confidence interval that excludes zero. Holm marks the gains that stay significant after Holm's "
          "correction for the 20 comparisons. Tokens is how many times more output tokens reasoning used, "
          "and SD is the mean within-item standard deviation across repetitions (lower is more consistent); "
-         "both use all paired items.",
+         "both use all paired items. A bold SD with reasoning on marks a change whose 95\\% bootstrap interval "
+         "excludes zero.",
          "tab:rq1values", star=True, colspec="llrrrrcrr", size="\\footnotesize")
 
     # --- T2: dimension contrasts (context per dataset, scope, decomposition).
     #     Hybrid PT-CS rule (§11 2026-06-11): PT-CS contrasts get a verified robustness column. ---
-    def contrast_row(A, B, label, nb=800, verified=None):
+    def contrast_row(A, B, label, nb=NB, verified=None):
         _, sA = _qwk_items(A); _, sB = _qwk_items(B)
         if isinstance(sA, float) or isinstance(sB, float):
             return None
@@ -458,9 +524,9 @@ def main() -> int:
           f"{min(st_d):.3f}-{max(st_d):.3f}, answer order {min(or_a):.2f}-{max(or_a):.2f} of the scale")
     # --- T5: the configuration guide (Pedro's second review, 2026-10-18, comments #39-#48): Table 4 is the guide
     #     itself, its six settings with the evidence for each, every number derived here from the engines above
-    #     (dim_contrasts, rq1_cells, instruction.contrasts, conversation_stats, the logged costs). Its validation is
-    #     plotted from experiments/analysis/guide_eval.py: Test 1 in phase6.fig_guide_test1 (it replaced the Test 1
-    #     table) and Test 2 in phase6.fig_guide_validation. The composite ranges quoted in RQ1 stay guarded. ---
+    #     (dim_contrasts, rq1_cells, instruction.contrasts, conversation_stats, the logged costs). Its tests are
+    #     plotted from experiments/analysis/guide_eval.py in phase6.fig_guide_tests, and its validation from
+    #     verification.py in phase6.fig_guide_validation. The composite ranges quoted in RQ1 stay guarded. ---
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
     write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_hi, st_d, or_a)
     print("done.")
@@ -472,7 +538,9 @@ def write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_h
     from experiments.analysis import guide_eval
     from experiments.analysis import instruction as I
     m3 = ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]
-    # guidance: Holm-significant gains and the cost per grade with guidance relative to none (reasoning off)
+    # guidance: significant gains (and how many survive Holm, as in the reasoning row and the text) and the cost per
+    # grade with guidance relative to none (reasoning off)
+    g_sig = gd[gd.sig & (gd.dQWK > 0)]
     g_ok = gd[gd.sig_holm & (gd.dQWK > 0)]
     gq = df[((df.dataset != "ptcs") | df.item_id.isin(interv)) & (df.reasoning == "off") & df.model.isin(m3)
             & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
@@ -507,8 +575,9 @@ def write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_h
     assert s_up == 0, "the guide row says the whole exam never raised agreement"
     rows = [
         ("Evaluation guidance", "Give the rubric or the reference answer",
-         f"Raised agreement in {len(g_ok)} of {len(gd)} model-dataset combinations, by {g_ok.dQWK.min():.3f} to "
-         f"{g_ok.dQWK.max():.3f} QWK, for {g_cost.min():.1f} to {g_cost.max():.1f} times the cost per grade"),
+         f"Raised agreement in {len(g_sig)} of {len(gd)} model-dataset combinations ({len(g_ok)} after correction), "
+         f"by {g_sig.dQWK.min():.3f} to {g_sig.dQWK.max():.3f} QWK, for {g_cost.min():.1f} to {g_cost.max():.1f} times "
+         f"the cost per grade"),
         ("Grading instruction", "Ask for partial credit",
          f"Raised code agreement for {i_win.model.nunique()} of {pc_code.model.nunique()} models, by "
          f"{i_win.dQWK.min():.2f} to {i_win.dQWK.max():.2f} QWK, for {min(extra_tok):.0f} to {max(extra_tok):.0f} "

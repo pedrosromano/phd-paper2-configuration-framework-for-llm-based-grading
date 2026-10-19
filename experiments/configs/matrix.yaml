@@ -23,6 +23,8 @@ sampling:
     riayn:code: 149              # all of RIAYN
     ptcs:code: 737               # all PT-CS code
     ptcs:short_answer: 437       # all PT-CS theory
+    saf:short_answer: 300        # additional verification (2026-10-18): a seeded random 300 of SAF's 2981
+    harmogenr:code: 129          # additional verification: every non-empty HARMOGEN-R code answer
   reasoning_on_subsample: 175    # RQ1 axis: moderate power on the key contrast (was 60); still a few €
   whole_exam_submissions: 60     # PT-CS submissions graded as one call each (scope arm, RQ3)
   conversation_submissions: 80   # C4 (2026-10-15): 20 -> 80 exams; the seeded prefix nests, so the first 20 are reused
@@ -346,3 +348,244 @@ arms:
     dataset: riayn
     domain: code
     k: 5
+
+# Additional verification of the guide (2026-10-18; protocol fixed in CLAUDE.md §11 before any call). Two datasets
+# that played no part in building the guide, in their own corpus file and store: SAF (English short answers on
+# communication networks, reference answers) and HARMOGEN-R (C++ code answers in Portuguese, the instructors'
+# rubric). The guide is with guidance + partial credit + reasoning off + one question per call + holistic; every
+# alternative changes ONE of those settings: no guidance, the strict instruction, reasoning on, or (code) a score per
+# criterion, still with partial credit. Five models, k = 3. GPT-5.1 and Claude Sonnet 4.6 go through the batch APIs.
+  - name: v_saf_open
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: off
+    context_level: [none, with_guidance]
+    instruction: [standard, partial_credit]        # none + partial_credit is undefined and drops out
+    scope: question_by_question
+    decomposition: holistic
+    dataset: saf
+    domain: short_answer
+    k: 3
+
+  - name: v_saf_gpt
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: gpt-5.1
+    reasoning: off
+    context_level: [none, with_guidance]
+    instruction: [standard, partial_credit]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: saf
+    domain: short_answer
+    k: 3
+
+  - name: v_saf_claude
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: claude-sonnet-4-6
+    reasoning: off
+    context_level: [none, with_guidance]
+    instruction: [standard, partial_credit]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: saf
+    domain: short_answer
+    k: 3
+
+  - name: v_saf_reasoning_open
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: on
+    context_level: with_guidance
+    instruction: partial_credit
+    scope: question_by_question
+    decomposition: holistic
+    dataset: saf
+    domain: short_answer
+    k: 3
+    item_cap: 150                  # the first 150 of the same seeded order, so they nest in the 300
+    max_tokens: 32768
+
+  - name: v_saf_reasoning_gpt
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: gpt-5.1
+    reasoning: on
+    context_level: with_guidance
+    instruction: partial_credit
+    scope: question_by_question
+    decomposition: holistic
+    dataset: saf
+    domain: short_answer
+    k: 3
+    item_cap: 150
+    max_tokens: 32768
+
+  - name: v_harm_open
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: off
+    context_level: [none, with_guidance]
+    instruction: [standard, partial_credit]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: harmogenr
+    domain: code
+    k: 3
+
+  - name: v_harm_criterion_open
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: off
+    context_level: with_guidance
+    instruction: partial_credit
+    scope: question_by_question
+    decomposition: criterion
+    dataset: harmogenr
+    domain: code
+    k: 3
+
+  - name: v_harm_gpt
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: gpt-5.1
+    reasoning: off
+    context_level: [none, with_guidance]
+    instruction: [standard, partial_credit]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: harmogenr
+    domain: code
+    k: 3
+
+  - name: v_harm_criterion_gpt
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: gpt-5.1
+    reasoning: off
+    context_level: with_guidance
+    instruction: partial_credit
+    scope: question_by_question
+    decomposition: criterion
+    dataset: harmogenr
+    domain: code
+    k: 3
+
+  - name: v_harm_claude
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: claude-sonnet-4-6
+    reasoning: off
+    context_level: [none, with_guidance]
+    instruction: [standard, partial_credit]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: harmogenr
+    domain: code
+    k: 3
+
+
+  - name: v_harm_reasoning_open
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: on
+    context_level: with_guidance
+    instruction: partial_credit
+    scope: question_by_question
+    decomposition: holistic
+    dataset: harmogenr
+    domain: code
+    k: 3
+    max_tokens: 32768
+
+  - name: v_harm_reasoning_gpt
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: gpt-5.1
+    reasoning: on
+    context_level: with_guidance
+    instruction: partial_credit
+    scope: question_by_question
+    decomposition: holistic
+    dataset: harmogenr
+    domain: code
+    k: 3
+    max_tokens: 32768
+
+  # GLM-5.1 through OpenRouter, code only (amendment 2026-10-18, before any GLM result was compared): OpenRouter
+  # throttled it to a few requests per minute, and in the study its partial-credit runs were code-only too.
+  - name: v_harm_glm
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: glm-5.1-or
+    reasoning: off
+    context_level: [none, with_guidance]
+    instruction: [standard, partial_credit]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: harmogenr
+    domain: code
+    k: 3
+
+  - name: v_harm_criterion_glm
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: glm-5.1-or
+    reasoning: off
+    context_level: with_guidance
+    instruction: partial_credit
+    scope: question_by_question
+    decomposition: criterion
+    dataset: harmogenr
+    domain: code
+    k: 3
+
+  - name: v_harm_reasoning_glm
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: glm-5.1-or
+    reasoning: on
+    context_level: with_guidance
+    instruction: partial_credit
+    scope: question_by_question
+    decomposition: holistic
+    dataset: harmogenr
+    domain: code
+    k: 3
+    max_tokens: 32768
+
+  # GLM-5.1 on SAF too (2026-10-19): Pedro added OpenRouter credit so that GLM-5.1 runs every configuration the
+  # other models run; this withdraws the second amendment. The 200 SAF rows of the first attempt are the same cells.
+  - name: v_saf_glm
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: glm-5.1-or
+    reasoning: off
+    context_level: [none, with_guidance]
+    instruction: [standard, partial_credit]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: saf
+    domain: short_answer
+    k: 3
+
+  - name: v_saf_reasoning_glm
+    store: verification.jsonl
+    corpus: corpus_verification.parquet
+    model: glm-5.1-or
+    reasoning: on
+    context_level: with_guidance
+    instruction: partial_credit
+    scope: question_by_question
+    decomposition: holistic
+    dataset: saf
+    domain: short_answer
+    k: 3
+    item_cap: 150
+    max_tokens: 32768

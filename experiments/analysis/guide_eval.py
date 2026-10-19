@@ -1,10 +1,11 @@
-"""The configuration guide and its validation (Section VI). Engine for its two validation figures: Test 1
-(phase6.fig_guide_test1, which replaced the Test 1 table on 2026-10-18, Pedro #48) and Test 2
-(phase6.fig_guide_validation). Table 4, the guide itself, is written by make_phase5_tables.write_guide_table.
+"""The configuration guide and its tests (Section VI). Engine for the tests' figure, phase6.fig_guide_tests: panel
+(a) is Test 1 and panel (b) Test 2 (the figure replaced the Test 1 and Test 2 figures on 2026-10-19, Pedro's fourth
+review). "Validation" is kept for the two datasets that played no part in building the guide (verification.py).
+Table 4, the guide itself, is written by make_phase5_tables.write_guide_table.
 
 The guide is a configuration, not a model (Pedro's review 2026-10-16, second pass): the rubric or the reference
 answer, an explicit request for partial credit, reasoning off, one question per call, one holistic score, and a
-clean conversation per answer. It is validated with two tests on EVERY configuration the study graded:
+clean conversation per answer. It is tested with two tests on EVERY configuration the study graded:
 
   main store          guidance none / with, the whole exam in one call, a score per criterion, reasoning on/off;
   instruction store   partial credit (all five models; GLM-5.1 through OpenRouter on code only), partial credit
@@ -16,12 +17,13 @@ clean conversation per answer. It is validated with two tests on EVERY configura
           95% interval, NO correction for multiple comparisons (it makes an alternative's advantage easier to
           detect, so it is the stricter test of the guide). Cost per grade relative to the guide is computed from
           the tokens at one price per model (GLM-5.1 ran on two providers; both sides at the OpenRouter price),
-          so it measures what the alternative itself adds. -> Test 1 figure.
+          so it measures what the alternative itself adds. -> panel (a) of the tests' figure.
   Test 2, across models. Per answer set, every configuration without reasoning on the answers they all graded
           (Mohler: the 800 Claude Sonnet 4.6 graded; the conversation sub-study, which graded 104 of the PT-CS
           code answers, stays in Test 1): the guide with each model against the best configuration and the
           cost-quality frontier (configurations that no cheaper one beats), at each provider's own price. The
-          reasoning samples give the same comparison with reasoning on. -> Test 2 figure and the Section VI prose.
+          reasoning samples give the same comparison with reasoning on. -> panel (b) of the tests' figure and the
+          Section VI prose.
 
 Run:  python -m experiments.analysis.guide_eval
 """
@@ -43,8 +45,8 @@ MNAME = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "glm-5.
 FAMILY = {"glm-5.1-or": "glm-5.1"}                    # GLM-5.1 served by Z.ai through OpenRouter is the same model
 PRICE_KEY = {"glm-5.1": "glm-5.1-or"}                 # Test 1 prices both GLM-5.1 sides at the guide's provider
 GUIDE = {"reasoning": "off", "instruction": "partial_credit", "guid": "guid", "sc": "qbq", "dec": "hol", "conv": "clean"}
-# One block per setting of the guide and the alternatives tested against it (kind keys from _kind); the Test 1
-# figure (phase6.fig_guide_test1) plots them in this order. Table 4 (the guide) is written by make_phase5_tables.
+# One block per setting of the guide and the alternatives tested against it (kind keys from _kind). Table 4 (the
+# guide) is written by make_phase5_tables.
 TABLE = [("Evaluation guidance", "The rubric or the reference answer", [("no guidance", "None")]),
          ("Grading instruction", "Ask for partial credit", [("strict instruction", "Strict"),
                                                             ("justification", "Partial credit, with a justification first")]),
@@ -165,7 +167,7 @@ def within_model(d: pd.DataFrame) -> pd.DataFrame:
 
 
 def departures(t: pd.DataFrame) -> pd.DataFrame:
-    """Test 1 rows (Fig. 8): per alternative, the counts of significantly better / no difference / significantly worse."""
+    """Test 1 rows: per alternative, the counts of significantly better / no difference / significantly worse."""
     rows_ = []
     for setting, guide, alts in TABLE:
         for kind, label in alts:
@@ -224,6 +226,15 @@ def field_summary(f: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows_)
 
 
+def fixed_model(f: pd.DataFrame) -> pd.DataFrame:
+    """Test 2 with the model fixed in advance (independent review, 2026-10-18): for each model, the guide's shortfall
+    from the best configuration of each answer set, averaged and at its worst across the sets the model graded."""
+    best = f.groupby("set").QWK.max()
+    g = f[f.guide].copy()
+    g["gap"] = g.apply(lambda r: best[r.set] - r.QWK, axis=1)
+    return (g.groupby("fam").gap.agg(mean="mean", worst="max", sets="size").sort_values("mean"))
+
+
 def _fmt_x(lo: float, hi: float) -> str:
     f = lambda v: f"{v:.0f}" if v >= 10 else f"{v:.1f}"
     return f"{f(lo)}$\\times$" if f(lo) == f(hi) else f"{f(lo)}--{f(hi)}$\\times$"
@@ -242,7 +253,7 @@ def main() -> int:
     print(t[["model", "set", "contrast", "N", "dQWK", "ci95", "better", "worse", "cost_x", "sd_alt", "sd_guide"]]
           .round(3).to_string(index=False))
     dep = departures(t)
-    print("\n=== Test 1 per alternative (Fig. 8) ===\n" + dep.round(3).to_string(index=False))
+    print("\n=== Test 1 per alternative ===\n" + dep.round(3).to_string(index=False))
     off = dep[dep.kind != "reasoning on"]
     print(f"\nwithout reasoning: {int(off.n.sum())} comparisons, better {int(off.better.sum())}, no difference "
           f"{int(off.same.sum())}, worse {int(off.worse.sum())}; less consistent than the guide in "
@@ -253,6 +264,8 @@ def main() -> int:
         print(f"\n=== Test 2, basis {b}: every configuration {'without reasoning, all answers' if b == 'B' else 'incl. reasoning on, sampled answers'} ===")
         print(f.sort_values(["set", "QWK"], ascending=[True, False]).round(3).to_string(index=False))
         print(field_summary(f).round(3).to_string(index=False))
+        print("  guide with the model fixed in advance, shortfall from the best configuration per set:\n"
+              + fixed_model(f).round(3).to_string())
     return 0
 
 

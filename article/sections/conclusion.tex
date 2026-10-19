@@ -1,5 +1,5 @@
 %% sections/conclusion.tex -- closes the loop the Introduction opened (CLAUDE.md S9.2). Rewritten 2026-10-16
-%% (Pedro's review): one guide, validated on five models, no deployment or transfer angle. Second pass 2026-10-16:
+%% (Pedro's review): one guide, tested on five models, no deployment or transfer angle. Second pass 2026-10-16:
 %% every model's partial-credit results in; the recipe names its model.
 
 \section{Conclusions}
@@ -8,7 +8,7 @@
 An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them only
 in fragments. We tested them together for computer-science grading under one controlled protocol. The
 central finding is that the cheap changes were the effective ones. Supplying a rubric or a reference answer raised agreement significantly in thirteen of fifteen
-model-dataset combinations, by 0.095 to 0.335 QWK, for 1.2 to 1.8 times the cost per grade, and asking the
+model-dataset combinations, by 0.095 to 0.336 QWK, for 1.2 to 1.8 times the cost per grade, and asking the
 model to award partial credit raised code agreement by up to 0.11 QWK for a few extra input tokens. Reasoning raised
 agreement significantly in six of twenty combinations, three after correcting for multiple comparisons, while
 multiplying output tokens by up to 925 and usually making grades less consistent. Its clearest gains came on
@@ -22,19 +22,23 @@ Putting together the options that worked best in each comparison, we built a con
 leaves the choice of model open: give the model the rubric or reference answer and ask it for partial
 credit, and grade one question per call, with reasoning off, a single holistic score, and a clean
 conversation for each answer. Tested on five models against the 56 other configurations of the same
-models without reasoning, the guide agreed significantly better with the teachers in 59\% of the
-comparisons, showed no significant difference in 39\%, and agreed worse in 2\%. With the model best suited
+models without reasoning, the guide agreed significantly better with the teachers in 57\% of the
+comparisons, showed no significant difference in 41\%, and agreed worse in 2\%. With the model best suited
 to each dataset, it matched or came within 0.05 QWK of the best configuration in the study, and with the
 cheapest model no cheaper configuration graded better, apart from a difference of 0.001 QWK on one
-dataset.
+dataset. Validated on two datasets that played no part in building it, the guide met the criterion fixed
+in advance on short answers with every model. On code it met it with four of the five models: with GLM-5.1
+and GPT-5.1 it graded nearly as well as the instructors agree with each other, while Qwen3.5 and
+DeepSeek-V4-Flash showed the zero-collapse under it.
 
-Three directions for future work follow. The zero-collapse is not, to our knowledge, described in the
-grading literature; it deserves study in its own right, to detect it and to prevent it without paying for
-reasoning. The code evidence rests on two Java-centric datasets, and PT-CS on one institution, so the guide should
-be tested on other programming languages, institutions, and student populations. Two options were left
+Three directions for future work follow. The zero-collapse, a specific form of the severity that earlier
+work measured as leniency, deserves study in its own right, to detect it and to prevent it without paying
+for reasoning. The code evidence rests on three Java and C++ datasets, two of them from single courses, so
+the guide should be tested on other programming languages, institutions, and student populations. Two options were left
 out of the guide, few-shot examples of already-graded answers and fine-tuning, and each should be weighed
 against it on agreement, consistency, and cost.
 
 For the instructor the introduction began with, the answer is a short routine: supply the rubric or
 reference answer, ask for partial credit, and grade one question per call with reasoning off, in a clean
-conversation; with an inexpensive model this costs under 0.10 euros per thousand grades.
+conversation; with an inexpensive model this costs under 0.10 euros per thousand grades, and on code
+the model must be one that does not collapse to zeros.

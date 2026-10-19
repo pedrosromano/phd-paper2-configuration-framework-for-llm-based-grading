@@ -11,7 +11,9 @@ ensure_path('ENCFONTS', './access-template//');
 END {
   my $status = $?;
   my $pdf = ($out_dir ? "$out_dir/" : '') . 'main.pdf';
-  if (!$cleanup_mode && -e $pdf && -e 'tools/check_floats.py') {
+  # only after building the paper itself (supplementary.tex has its own floats and no such rule)
+  my $is_paper = !defined($root_filename) || $root_filename =~ /^main(\.tex)?$/;
+  if (!$cleanup_mode && $is_paper && -e $pdf && -e 'tools/check_floats.py') {
     my $py = -x '/usr/bin/python3' ? '/usr/bin/python3' : 'python3';
     my $rc = system($py, 'tools/check_floats.py', $pdf);
     $? = ($rc != 0 && $status == 0) ? 1 : $status;

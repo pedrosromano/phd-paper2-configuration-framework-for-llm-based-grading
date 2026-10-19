@@ -1,7 +1,7 @@
 # Model roster — fresh survey + selection (2026-06-08)
 
 **Paradigm change (user, 2026-06-08):** the 32 GB hardware ceiling is **no longer an eligibility
-criterion**. Ethics/treatment is Iscte-approved and we have an inference API (DeepInfra) for large
+criterion**. Ethics/treatment is Iscte-approved (unverified: CLAUDE.md §11, 2026-10-18) and we have an inference API (DeepInfra) for large
 models. **Select models by scientific relevance, not by what fits the Mac.** Infrastructure is a
 **downstream, per-model** note (local if it fits and we prefer; DeepInfra otherwise / for speed),
 never an upstream filter. This supersedes the inherited, stale roster benchmarked in Phase 0.3.

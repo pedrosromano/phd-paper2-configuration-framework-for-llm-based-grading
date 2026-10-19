@@ -288,7 +288,7 @@ examples) per dataset.
 analysed here).
 
 ### 6.1 Model roster (June 2026) — selected by SCIENTIFIC RELEVANCE, not hardware
-**Paradigm (2026-06-08): the 32 GB ceiling is NOT an eligibility criterion.** Treatment is Iscte-approved and
+**Paradigm (2026-06-08): the 32 GB ceiling is NOT an eligibility criterion.** Treatment is Iscte-approved (unverified, see §11 "Ethics statement facts") and
 we have an inference API (**DeepInfra**) for large models. Select by scientific relevance; **infrastructure
 (local vs DeepInfra) is a per-model downstream note, never an upstream filter.** Full fresh survey + selection
 rationale: `experiments/model_roster.md`. This supersedes the inherited/stale roster benchmarked in Phase 0.3.
@@ -444,8 +444,13 @@ unchanged in spirit — keep the matrix affordable — but the lever is **token 
     (one column) or `[!tb]` (full width). The generators (`make_phase5_tables._tex`, `write_guide_table`,
     `make_datasets_table`) write these options.
   - Exception for full-width floats: one may be defined just before that paragraph, after the heading of the
-    same subsection, so it can still reach the bottom of that page. This is done for Fig. 6, Table 4, Fig. 7
-    and Fig. 9. The patch keeps it from going above its definition point, so it lands at the bottom of the page
+    same subsection, so it can still reach the bottom of that page. This is done for Fig. 6, for Table 4 and
+    Fig. 7 (after the heading "The Guide") and for Fig. 9 (after the heading "Test Results", `[!tb]`). It only
+    works while the heading is on the same page as the paragraph: on the morning of 2026-10-19 the heading of
+    "The Guide" fell on the page before, Table 4 and Fig. 7 were queued from there and landed above their
+    reference, and they went back after the paragraph until Pedro's fourth review moved the text again. The
+    checker flags it whenever this happens. The patch keeps a float from going above its definition
+    point, so it lands at the bottom of the page
     (after all its text) or at the top of the next. The checker confirms it comes after the reference.
   - `main.tex` patches stfloats' `\@addtocurcol` so that a float never goes above its definition point on
     the same page. Do not load `flafter`: it would replace that macro and lose the bottom placement of
@@ -676,7 +681,7 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
 - ⬜ **Artifact-release scope** — confirm what ships (harness, prompts, public-dataset configs/ingest) and
   whether the anonymised AI-comment-stripped PT-CS subset can be released (ethics-gated).
 - ✅ **Model roster** (2026-06-08, paradigm change — supersedes the 0.3 local-only selection below) — **32 GB
-  is no longer an eligibility criterion** (Iscte-approved; DeepInfra API for large models). **Selected by
+  is no longer an eligibility criterion** (Iscte-approved, unverified; DeepInfra API for large models). **Selected by
   scientific relevance** (full survey + rationale: `experiments/model_roster.md`, §6.1): **RQ1 within-family
   toggle** = Qwen3.5 + DeepSeek-V4-Flash + GLM-5.1 (each OFF vs ON); **closed anchor** = GPT-5.1. RQ4 breadth
   = these 4 families (3 with a clean toggle). **Kimi K2.6 CUT** (priciest, no toggle, breadth already served —
@@ -1270,9 +1275,10 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   - **Introduction**: the zero-collapse is named as the reason for the follow-up experiment. Pedro asked for this,
     and it is the one result the Introduction previews. The five RQs "were set before the experiments", which
     is why the follow-up is reported apart from them.
-  - **Providers**: the GLM-5.1/OpenRouter footnote was removed at Pedro's request. The body says the open models
-    ran "mainly via the DeepInfra" API, which keeps the sentence true. Never write that every open-model run
-    used DeepInfra.
+  - **Providers**: the GLM-5.1/OpenRouter footnote was removed at Pedro's request. The body said the open models
+    ran "mainly via the DeepInfra" API. Pedro asked (2026-10-19) to remove "mainly"; the sentence now says they ran
+    via DeepInfra "and GLM-5.1 also via OpenRouter", which keeps it true (raised with him as a doubt). Never write
+    that every open-model run used DeepInfra.
   - **Model choice**: the cited studies found Claude, GPT, DeepSeek and Qwen models "among the best graders
     tested". GPT cites Li and Seßler, because Jukiewicz's abstract names no best model.
   - **Fig. 8 is the guide's prompt**, verbatim from `experiments/configs/prompts.yaml` and
@@ -1284,3 +1290,158 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   - The abstract is at the 250-word limit.
   - Future work is limited to three directions: zero-collapse; other languages, institutions and students;
     and few-shot examples and fine-tuning.
+- 🔧 **Validation of the guide (Pedro, 2026-10-18; called "additional verification" until his fourth review of
+  2026-10-19): protocol fixed here BEFORE any call.** An independent pre-submission review (in `~/Downloads`,
+  "Parecer de revisão IEEE Access") said the guide was validated on the data that built it. Pedro decided to test
+  it on data that played no part in building it. **Naming (Pedro, 2026-10-19): "validation" is used ONLY for these
+  two datasets; the comparisons on the study's own data are the "tests"; never "verification".** The code keeps
+  the names `verification.py`, `verification.jsonl` and `corpus_verification.parquet`. The budget is internal and
+  is never given as a reason in the manuscript.
+  - **Datasets**, in their own corpus (`corpus_verification.parquet`, `experiments/ingest/ingest_verification.py`)
+    and store (`runs/verification.jsonl`), never mixed with the study:
+    - SAF (Filighera et al., ACL 2022, CC BY 4.0): English short answers on communication networks, consensus of
+      two trained annotators, partial credit, a reference answer per question. A seeded random 300 of 2,981
+      answers (all 31 questions pooled; splits mean nothing to prompted models); reasoning on the first 150.
+    - HARMOGEN-R v2.0 (Mendonça et al., Zenodo 10.5281/zenodo.17284944, CC BY 4.0): C++ code answers of a
+      data-structures course, in Portuguese; all 129 non-empty code answers (3 questions); the gold is the
+      mean of four instructors, independent and blind, with their own rubric (points per criterion).
+  - **Configurations:** the guide (guidance, partial credit, reasoning off, one question per call, holistic,
+    clean conversation) and alternatives that change ONE setting: no guidance; the strict instruction;
+    reasoning on (with partial credit); and, on code, a score per criterion (with partial credit). Scope and
+    conversation state cannot be tested (no complete exams). Arms `v_*` in `matrix.yaml`.
+  - **Models:** Qwen3.5-35B-A3B and DeepSeek-V4-Flash (DeepInfra), GLM-5.1 (OpenRouter), GPT-5.1 (OpenAI Batch
+    API), Claude Sonnet 4.6 (Anthropic Message Batches; reasoning off only, as in the study). k = 3.
+  - **Statistics:** QWK on the six levels of the mean of the k grades, as in the study. Δ = alternative − guide
+    on the same answers; paired bootstrap over answers, 10,000 resamples, 95% CI, no correction (as Test 1).
+  - **Verification criterion, fixed now:** the guide passes on a dataset if, for every model, no alternative
+    without reasoning agrees with the teachers significantly better than the guide. Reasoning on is reported
+    with its cost, because the guide gives it up on purpose. Also reported: the guide with each model against
+    the best configuration on that dataset.
+  - **Budget (internal):** ceiling €50 for everything, estimate €33 from the rendered prompts with batch
+    discounts (DeepInfra 6.5, OpenRouter 9.9, OpenAI 9.1, Anthropic 7.6). Stop if spend passes €45.
+  - **Amendment after the smoke test, before the main runs (2026-10-18):** Claude Sonnet 4.6 does not run the
+    criterion alternative. Its adapter enforces a score-only JSON, and in the study it graded holistically only.
+    The criterion alternative therefore runs on four models.
+  - **Second amendment (2026-10-18, 23:20), before any GLM result was compared:** GLM-5.1 runs on HARMOGEN-R
+    code only, in its own arms (`v_harm_glm`, `v_harm_criterion_glm`, `v_harm_reasoning_glm`) at concurrency 3.
+    OpenRouter throttled it to about 3 requests per minute at concurrency 16 (180 calls in 70 minutes), which put
+    the full design at more than a day. In the study, GLM-5.1's partial-credit runs were code-only too. The 180
+    GLM rows already stored for SAF (no guidance only, no guide rows) are not analysed.
+    **Withdrawn on 2026-10-19:** Pedro added OpenRouter credit, and GLM-5.1 runs every configuration on SAF too
+    (arms `v_saf_glm`, `v_saf_reasoning_glm`; the 200 early rows are the same cells and are kept).
+  - **Run notes (all runs complete, 2026-10-19):** every cell has k = 3 and the store has no error rows.
+    - 84 DeepInfra calls (reasoning on, code) timed out at the 10-minute read limit; all were re-graded with
+      `regrade_errors --store verification.jsonl --corpus corpus_verification.parquet` (now generic: store, corpus,
+      workers, and the instruction in the rebuilt config), the last 27 with `GRADER_HTTP_TIMEOUT=2400`.
+    - OpenRouter ran out of credit once (GLM-5.1 code reasoning at 350 of 387); Pedro topped it up and the rest ran.
+      GLM-5.1 on SAF ran into a temporary store while the re-grade rewrote the main one, then was merged (backups
+      in `data/processed/_archive/`).
+    - 9 GLM-5.1 code reasoning runs returned no grade (4 at the output limit, 5 malformed) and take the guide's
+      grade (Method: "A reasoning run that returned no grade takes the guide's grade"); 5 GLM-5.1 code runs without
+      reasoning are malformed ("!!!" output from the provider) and are left out.
+    - Logged spend EUR 41.5 at list prices (OpenRouter 16.3, OpenAI 12.9, DeepInfra 6.3, Anthropic 6.0), under the
+      EUR 45 stop.
+  - ✅ **Result (final, 2026-10-19, `python -m experiments.analysis.verification`):**
+    - SAF: criterion met with all five models (10 comparisons: 0 better, 3 no difference, 7 worse). Guide QWK
+      0.62-0.73; GLM-5.1's guide (0.726) is the best configuration without reasoning on SAF. No guidance -0.18 to
+      -0.30; strict instruction worse for GLM-5.1 (-0.055) and Claude (-0.049), within 0.03 for the other three.
+    - HARMOGEN-R: criterion met with four of five; for DeepSeek-V4-Flash, criterion scoring agreed better (+0.088,
+      CI from +0.008). GLM-5.1 0.901 and GPT-5.1 0.884 (instructors agree with each other at 0.87-0.93; within
+      0.017 and 0.034 of the best configuration, GLM-5.1 criterion 0.918); Claude 0.798. Qwen3.5 and
+      DeepSeek-V4-Flash collapsed under the guide (40% and 36% zeros against 7% for the instructors).
+    - Reasoning on raised agreement in 6 of 8 comparisons, never lowered it: code, all significant, +0.032 GLM,
+      +0.058 GPT, +0.156 DeepSeek, +0.247 Qwen (zeros 36->20% and 40->16%), at 3.5-26x the cost; SAF +0.096 Qwen
+      and +0.110 DeepSeek (significant), GPT +0.051 and GLM +0.023 (not significant), at 3.5-55x.
+    - Paper: Method "Configuration Guide Validation", guide section D "Guide Validation" with Fig. 10
+      (`phase6.fig_guide_validation`, drawn like the tests' Fig. 9; Table 5 left the paper on 2026-10-19 and its
+      values are in the supplementary material), abstract and Conclusion. **Pedro (2026-10-19) rejected checking a model's zero rate before using it on code: the guide
+      stays without pre-tests.**
+- ✅ **Independent pre-submission review (2026-10-18; "Parecer de revisão IEEE Access" in `~/Downloads`): Pedro's
+  decisions, validated by him with version 9 on 2026-10-19.** Verdict of the review: "Reject, updates required" (Access's
+  major revision); every factual claim it made about the paper was checked and found correct.
+  - **Statistics, only what is standard practice (Pedro):** a survey of 16 comparable papers read in full (12 at or
+    above Access level: AAAI, EMNLP Findings, LAK, ICER, AIED, IJAIED, C&E:AI, Bioinformatics, Neural Networks, C&E
+    Open) found no cluster-aware inference on agreement and no equivalence margins; the best practice is CIs, tests,
+    Holm, and repeated runs. So the paper now has: 10,000 bootstrap resamples (`make_phase5_tables.NB`, one
+    vectorised engine `_boot_dist`/`_point` shared by bloco_c, guide_eval, instruction, verification), point
+    estimates everywhere (no bootstrap medians; this removed the "discrepancies" the review found between Table 3
+    and RQ4), the p-value method and the half-to-even rounding stated in Method, Table 3 marking significant SD
+    changes in bold ("17 of 20, significantly in 10"), and one sentence that all 12 public-set reasoning changes
+    were positive. NOT done (beyond practice): cluster bootstrap by question, single-run QWK, discretisation
+    sensitivity of differences, meta-analysis, MAE in %, exam totals, fallback sensitivity. Their zero-cost
+    results are kept for a response letter (cluster: RQ1 5/20, 2 after Holm; guidance 11/15; Test 1 with the
+    margin 25 better / 10 equivalent / 1 worse / 20 inconclusive; single-run dQWK -0.007 on average).
+  - **Numbers that moved with the engine:** guidance 13 of 15 significant, 12 after Holm (GPT-5.1 PT-CS short
+    loses it), 0.095 to 0.336; Test 1 32 better / 23 no difference / 1 worse (57/41/2%); RQ1 still 6 of 20, 3
+    after Holm (Qwen SemEval and PT-CS short intervals start at +0.002).
+  - **Text:** Qwen3.5-35B-A3B named in full, size as an alternative explanation (Jayarao measured thinking on
+    0.6B-4B Qwen3); zero-collapse framed as a specific form of severity (RIAYN's leniency, Venkatraman, Sapkota &
+    Murshed 2026), no "not described in the literature"; the Introduction no longer claims "the first" and cites
+    Yoshida (Findings EMNLP 2025); "validated" kept only for the additional verification; the guide is said to be
+    the baseline plus the partial-credit request; Test 2 also with the model fixed in advance; RQ5 noise baseline
+    (`audit_pct_baselines.rq5_noise`) and Wang et al. 2024 on position bias; contamination (Sainz 2023) and prompt
+    language in Threats; Okabe-Ito palette in the figures; data and code availability statement (Pedro: the code is
+    available on request; no public release); supplementary material (`experiments/analysis/supplementary.py` ->
+    `article/supplementary.tex`); bib fixed (no "Journal Abbreviation", arXiv ids, volumes and pages).
+  - **AI statement:** Pedro's text, with one change at his request (2026-10-19): "to help revise the text of all
+    sections".
+  - **Abstract (250 words):** rewritten with fewer numbers and without "at what cost"; Test 1 is now "only one of 56
+    alternatives without reasoning agreed better" (no percentages; the Conclusion keeps 57/41/2%), and it ends
+    with the additional verification. The ethics statement is the `\tfootnote` (first-page footnote) in main.tex.
+  - **Floats:** Fig. 6 after its paragraph; in the guide section the Test 1 figure is defined at the top of "How
+    the Guide Was Tested" ([!b], it takes the bottom of that page) and the Fig. 8 reference moved to the end of
+    its paragraph. 19 pages, 0 checker errors. **Marked PDF against version 6 = commit dcc1c22 (Pedro,
+    2026-10-19): the marks go against the last version he ANNOTATED (`..._revisto6_alteracoes_2026-10-18.pdf`,
+    built at 18:25 and committed as dcc1c22 at 18:26), not against later versions he only validated (7fae099).**
+    Built with latexdiff (changed tables shown whole; the new ethics footnote marked by hand); PDFs on the Desktop as `artigo_2_access_revisto8[_alteracoes]_2026-10-19.pdf` (version 8, after revisto7
+    of 18 October; the early-morning `revisto5_2026-10-19` PDFs went to the Trash) and
+    `artigo_2_access_suplementar_2026-10-19.pdf`. Method: at most 0.6% unparseable outputs per configuration
+    without reasoning, across all experiments (worst: GLM-5.1 on HARMOGEN-R, 2 of 387). Not committed (Pedro commits when he says so).
+- ✅ **Pedro's fourth review (2026-10-19, 21 comments on `artigo_2_access_revisto8_alteracoes_2026-10-19.pdf`):
+  implemented in version 9 and VALIDATED by Pedro the same day ("parece-me tudo ok"); the three doubts put to him
+  ("and GLM-5.1 also via OpenRouter", the reading of his comment at the start of "Test Results", Table 5 moved to the
+  supplementary material) stand as implemented.** His instruction for this round: say what will change, and
+  where he signals that a text is unclear, explain what it meant and show the new text so he can check it.
+  - **Naming:** "validation" only for SAF and HARMOGEN-R (see the validation entry above); "tested" for Tests 1
+    and 2. Section VI "presents, tests, and validates" the guide.
+  - **Figures:** the tests (Fig. 9, `phase6.fig_guide_tests`) and the validation (Fig. 10,
+    `phase6.fig_guide_validation`) share one design: (a) per alternative, the share of comparisons in which the
+    guide agreed significantly better / no difference / the alternative better, with counts and the relative
+    cost; (b) the guide's QWK with each model against the best configuration without reasoning and the range of
+    all of them (validation: plus the HARMOGEN-R instructors' band). They replaced the Test 1 and Test 2 figures
+    and Table 5. The supplementary material gained a Test 2 table.
+  - **Table 1** has no footnotes: models are tick columns; the footnotes only repeated the paragraph above.
+  - **Abstract (250 words):** "helped in only one of six"; "From these results we built a model-independent
+    configuration guide: ..."; Test 1 from the guide's side ("agreed significantly better than 32 of 56 ..., and
+    worse than one"); the last sentence states the validation result.
+  - **Text:** Introduction (tests vs validation paragraph; the follow-up also asks whether partial credit repairs
+    the zero-collapse; contribution 2 covers every configuration choice); Method (decomposition: the grade is the
+    model's total, not the sum of its criterion scores, because some rubrics describe alternative solutions);
+    RQ1 ("the 95% interval starts at +0.002, so those two gains are only barely significant"); guide section C
+    opens by contrasting the tests with the validation, D opens with the principle of the validation; "agreed
+    better" became "agreed significantly better" wherever the claim is about significance.
+  - **Ethics footnote:** Pedro asked whether it suffices for Access. Answer given: it meets PSPB 8.1.1.E (an
+    explanation instead of an approval, plus why no further consent); Iscte does not review studies after the
+    fact; a written authorisation from the course direction is optional and would add one clause. Footnote
+    unchanged pending his decision.
+  - **Final (2026-10-19):** `~/Desktop/artigo_2_access_final_2026-10-19.pdf` (19 pages, 0 checker errors, abstract
+    250 words) and `~/Desktop/artigo_2_access_suplementar_final_2026-10-19.pdf` (9 pages). Every intermediate and
+    annotated PDF went to the Trash, with the handoff file, the verification run logs and the two verification
+    store backups; nothing committed (Pedro commits when he says so).
+  - **Supplementary material, checked against every promise of the paper** (Method: "every prompt template, the
+    models' identifiers and prices, the unparseable outputs per model, and the values behind every figure"; Data
+    Availability: "the prompt templates and the models' settings"): prompts; models with identifiers, providers,
+    reasoning switches, prices, calls and the sampling settings (temperature 0, GPT-5.1 at its default, output
+    caps 4,096 / 32,768); unparseable outputs; and one table per figure, each naming it: Fig. 1 is Table 3 of the
+    paper; Figs. 2 and 3 (QWK before and after); Fig. 4 (`phase6.rq4_points`); Fig. 5
+    (`phase6.conversation_effects`, now 10,000 resamples like everything else); Fig. 6 (QWK and zeros per
+    instruction); Fig. 9 (Test 1 and Test 2); Fig. 10 (validation, with zeros and the instructors' agreement). The
+    figures and the supplement read the same helpers, so their numbers cannot drift apart. Its Table 1 had the
+    DeepSeek identifier printed over the Provider column and two tables ran past the margin: all tables are now
+    footnotesize with ragged-right wrapping columns; checked for overlapping words and margins page by page.
+- **Ethics statement facts (Pedro, 2026-10-18):** PT-CS comes from exams of the UpSkill professional
+  requalification course at Iscte, graded on the platform for real, with the answers reused later. The
+  platform's terms said answers could be used for research; students knew it was an academic platform and that
+  answers were sent to external services. Pedro does not know what the June note "treatment is Iscte-approved"
+  referred to, so it must not be cited. Iscte does not approve studies submitted after the fact, so the paper
+  gives the explanation IEEE allows (PSPB §8.1.1.E) instead of an approval, and never claims an exemption.

@@ -25,18 +25,27 @@ not the same as quality either: the most reproducible grader with reasoning off,
 with the strongest zero-collapse.
 
 The zero-collapse explains where reasoning did pay. Its large gains came on code, for the two models that
-scored many partially correct answers as zero. The written justifications show what goes wrong: the
+scored many partially correct answers as zero. Graders that are too severe have been described before:
+the authors of RIAYN measure a grader's leniency against the experts~\cite{pathak_rubric_2025}, strict
+and lenient prompts have been compared~\cite{venkatraman_llmbased_2026}, and in a concurrent study a
+lenient prompt that awards partial credit lowered the grading error of every model family on a
+mathematics exam~\cite{sapkota_math_2026}. The zero-collapse is a specific, measurable form of that
+severity, revealed by a share of zeros far above the teachers'. The written justifications show what goes wrong: the
 collapsing model sees what the student did right and still gives no marks, as if any error voided the
 answer. An instruction to award partial credit reduced the zeros of the closed model GPT-5.1, but not
 those of Qwen3.5, while reasoning, which works through the rubric before scoring, roughly halved Qwen3.5's
 zeros. The collapse is therefore a property of the model with
 reasoning off, which the instruction can soften but not always remove, and the dependable remedy is to
-grade with a model that does not show it.
+grade with a model that does not show it. Model size may also play a part. Five of the six significant
+reasoning gains belong to Qwen3.5-35B-A3B, which activates only about 3B parameters per token, and the
+gains of thinking reported for LLM judges were measured on Qwen3 models of 0.6B to
+4B parameters~\cite{jayarao_explicit_2025}. With a single small model in the study, the effect of its size
+cannot be separated from that of its zero-collapse.
 
 Evaluation guidance and the grading instruction are the opposite case: cheap and effective. Guidance raised
 agreement significantly in 13 of 15 model-dataset combinations across three model families, by 0.095 to
-0.335 QWK; on short answers it added more than the whole 0.11 spread between the eight model and reasoning
-configurations in seven of the nine combinations. Asking for partial credit then added up to 0.11 on code,
+0.336 QWK; on short answers it added more than the whole 0.11 spread between the eight model and reasoning
+configurations in eight of the nine combinations. Asking for partial credit then added up to 0.11 on code,
 for a few extra input tokens, and changed nothing on short answers. The
 simplest shape of the request also won: one question per call with a single holistic score was never beaten
 by the whole exam, and criterion scoring beat it only for GPT-5.1 on RIAYN, where it made a model that gives
@@ -59,4 +68,4 @@ size that separates two human graders.
 The PT-CS answers, graded by teachers in Portuguese, reproduced the effects found on the public datasets:
 guidance helped as much, the same models scored too many code answers as zero, and partial credit raised
 the agreement of DeepSeek-V4-Flash and GPT-5.1 on PT-CS code as it did on RIAYN. Taken together, the results support one configuration built from
-the cheap settings, which the next section presents and validates.
+the cheap settings, which the next section presents, tests, and validates.

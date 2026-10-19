@@ -34,8 +34,10 @@ K = 5
 RNG = np.random.default_rng(20260610)
 MARK = {"qwen3.5": "o", "glm-5.1": "s", "deepseek-v4-flash": "^", "gpt-5.1": "D"}   # the four families of RQ1
 COLOR = {"code": "#c0392b", "short_answer": "#2471a3"}
-MCOL = {"qwen3.5": "#1f77b4", "deepseek-v4-flash": "#ff7f0e", "glm-5.1": "#2ca02c", "gpt-5.1": "#d62728",
-        "claude-sonnet-4-6": "#9467bd", "glm-5.1-or": "#2ca02c"}
+# Okabe-Ito colours (independent review, 2026-10-18): distinguishable with colour-vision deficiencies and of
+# different lightness in greyscale; in the bar panels the models also keep a fixed order within each group.
+MCOL = {"qwen3.5": "#0072B2", "deepseek-v4-flash": "#E69F00", "glm-5.1": "#009E73", "gpt-5.1": "#D55E00",
+        "claude-sonnet-4-6": "#CC79A7", "glm-5.1-or": "#009E73"}
 _INTERV = set(pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
               .query("stratum=='intervened'").item_id)
 
@@ -414,35 +416,49 @@ def _common_items(full):
     return keep
 
 
-def fig_rq4_cost(full):
-    """RQ4 cost-quality BY TASK: QWK vs euro cost per 1000 grades (log), one point per model x
-    reasoning, in two panels (short-answer = Mohler+SemEval; code = RIAYN), shared y so the
-    short-answer cluster vs the code spread reads directly. QWK via the table generator's _qwk_items;
-    cost from the logged per-call cost_eur (engine-backed). Deterministic. Single column, side by side."""
+RQ4_PANELS = [("short answers", "(a) short answers (Mohler, SemEval, PT-CS)",
+               [("mohler", "short_answer"), ("semeval", "short_answer"), ("ptcs", "short_answer")]),
+              ("code", "(b) code (RIAYN, PT-CS)", [("riayn", "code"), ("ptcs", "code")])]
+
+
+def rq4_points(full) -> pd.DataFrame:
+    """The values of the RQ4 figure (also printed in the supplementary material): per task, model and reasoning
+    mode, QWK averaged over the task's answer sets (on the items every configuration graded) and the cost of 1000
+    grades (all graded calls). With guidance, one question per call, holistic; PT-CS on its validated answers."""
     from experiments.analysis.make_phase5_tables import _qwk_items as _qi
     base = full[(full.context_level == "with_guidance") & (full.scope == "question_by_question")
                 & (full.decomposition == "holistic")].copy()
     base = base[(base.dataset != "ptcs") | base.item_id.isin(_INTERV)]   # all five sets (Pedro #28, 2026-10-18)
     base["ce"] = pd.to_numeric(base.get("cost_eur"), errors="coerce")   # cost per grade: all graded calls
     common = _common_items(full)                                         # QWK: items all configs graded
-    models = ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]
-    mk = {"off": "o", "on": "s"}
-    fig, axes = plt.subplots(2, 1, figsize=(COL, COL * 1.05), sharey=True, sharex=True)
-    panels = [("(a) short answers (Mohler, SemEval, PT-CS)", [("mohler", "short_answer"), ("semeval", "short_answer"),
-                                                              ("ptcs", "short_answer")]),
-              ("(b) code (RIAYN, PT-CS)", [("riayn", "code"), ("ptcs", "code")])]
-    for ax, (title, dsets) in zip(axes, panels):
+    rows = []
+    for task, _, dsets in RQ4_PANELS:
         sub = pd.concat([base[(base.dataset == d) & (base.domain == dom)] for d, dom in dsets])
-        for m in models:
+        for m in ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]:
             for rs in ["off", "on"]:
                 cell = sub[(sub.model == m) & (sub.reasoning == rs)]
                 qs = [_qi(cell[(cell.dataset == d) & (cell.domain == dom) & cell.item_id.isin(common)])[0]
                       for d, dom in dsets]
                 qs = [q for q in qs if q == q]
-                if not qs:
-                    continue
-                ax.scatter(cell.ce.mean() * 1000, np.mean(qs), s=30, marker=mk[rs], color=MCOL[m],
-                           edgecolor="k", lw=0.3, alpha=0.9, zorder=3)
+                if qs:
+                    rows.append({"task": task, "model": m, "reasoning": rs, "QWK": float(np.mean(qs)),
+                                 "sets": len(qs), "eur_1000": float(cell.ce.mean() * 1000)})
+    return pd.DataFrame(rows)
+
+
+def fig_rq4_cost(full):
+    """RQ4 cost-quality BY TASK: QWK vs euro cost per 1000 grades (log), one point per model x
+    reasoning, in two panels (short-answer = Mohler+SemEval; code = RIAYN), shared y so the
+    short-answer cluster vs the code spread reads directly. QWK via the table generator's _qwk_items;
+    cost from the logged per-call cost_eur (engine-backed). Deterministic. Single column, side by side."""
+    pts = rq4_points(full)
+    models = ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]
+    mk = {"off": "o", "on": "s"}
+    fig, axes = plt.subplots(2, 1, figsize=(COL, COL * 1.05), sharey=True, sharex=True)
+    for ax, (task, title, _) in zip(axes, RQ4_PANELS):
+        for r in pts[pts.task == task].itertuples():
+            ax.scatter(r.eur_1000, r.QWK, s=30, marker=mk[r.reasoning], color=MCOL[r.model],
+                       edgecolor="k", lw=0.3, alpha=0.9, zorder=3)
         ax.set_xscale("log"); ax.set_title(title, loc="left", fontsize=7)
         ax.set_ylabel("agreement (QWK)")
         ax.set_xticks([0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30])
@@ -458,104 +474,150 @@ def fig_rq4_cost(full):
     _save(fig, "fig_rq4_cost")
 
 
-def fig_guide_test1():
-    """Test 1 of the guide (Section VI-C; replaced the Test 1 table on 2026-10-18, Pedro's comment #48): for each
-    alternative to the guide, (a) how many model-dataset comparisons it agreed with the teachers significantly
-    better, not significantly differently, or significantly worse than the guide (95% bootstrap, no correction);
-    (b) each comparison's change in QWK, alternative minus guide, coloured by model, filled when significant;
-    (c) its cost per grade relative to the guide's. Values from experiments/analysis/guide_eval.within_model."""
-    from experiments.analysis import guide_eval
-    t = guide_eval.within_model(guide_eval.rows())
-    order = [("no guidance", "No guidance"), ("strict instruction", "Strict instruction"),
-             ("justification", "With a justification"), ("whole exam", "Whole exam in one call"),
-             ("criterion scoring", "Score per criterion"), ("shared conversation", "Shared conversation"),
-             ("reasoning on", "Reasoning on")]
-    col = {"worse": "#c0392b", "same": "#bdbdbd", "better": "#27ae60"}
-    fig = plt.figure(figsize=(WIDE * 0.92, COL * 0.98))     # the row labels add width outside the axes
-    # fixed room for the row labels: LaTeX sets them in the paper's wider font, which tight layout does not see
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.35, 0.36], wspace=0.12, left=0.19, right=0.99)
-    ax, bx, cx = fig.add_subplot(gs[0]), fig.add_subplot(gs[1]), fig.add_subplot(gs[2])
-    ys = np.arange(len(order))[::-1].astype(float)
-    ys[-1] -= 0.35                                   # reasoning on sits apart: the one trade-off the guide makes
-    for y, (kind, _) in zip(ys, order):
-        g = t[t.kind == kind]
-        w, b = int(g.worse.sum()), int(g.better.sum())
-        left = 0
-        for n, key in [(w, "worse"), (len(g) - w - b, "same"), (b, "better")]:
-            if n:
-                ax.barh(y, n, left=left, color=col[key], edgecolor="white", lw=0.6, height=0.62)
-                ax.text(left + n / 2, y, str(n), ha="center", va="center", fontsize=6.5,
-                        color="black" if key == "same" else "white")
-            left += n
-        for r in g.itertuples():
-            mi = guide_eval.MODELS.index(r.model)
-            yy = y + (mi - 2) * 0.09
-            sig = bool(r.better or r.worse)
-            bx.plot([r.ci95[0], r.ci95[1]], [yy, yy], color=MCOL[r.model], lw=0.5, alpha=0.6, zorder=2)
-            bx.scatter(r.dQWK, yy, s=13, facecolor=MCOL[r.model] if sig else "white", edgecolor=MCOL[r.model],
-                       lw=0.7, zorder=3)
-        lo, hi = float(g.cost_x.min()), float(g.cost_x.max())
-        fmt = lambda v: f"{v:.1f}" if v < 10 else f"{v:.0f}"
-        cx.text(0.0, y, f"{fmt(lo)}--{fmt(hi)}$\\times$", va="center", fontsize=6.5)
-    for a in (ax, bx):
-        a.set_ylim(ys.min() - 0.6, ys.max() + 0.6)
-        a.axhline((ys[-2] + ys[-1]) / 2, color="0.6", lw=0.5, ls=":")
-    ax.set_yticks(ys); ax.set_yticklabels([lbl for _, lbl in order], fontsize=6.5)
-    ax.tick_params(axis="y", length=0, pad=12)       # buffer for the wider LaTeX font of the paper
-    ax.set_xlabel("number of comparisons (model $\\times$ dataset)")
-    ax.set_title("(a) the alternative against the guide", loc="left", fontsize=7)
-    bx.axvspan(-0.05, 0.05, color="#eeeeee", zorder=0); bx.axvline(0, color="k", lw=0.6)
-    bx.set_yticks(ys); bx.set_yticklabels([])
-    bx.set_xlabel("$\\Delta$QWK, alternative minus guide")
-    bx.set_title("(b) the change in agreement", loc="left", fontsize=7)
-    cx.set_ylim(ys.min() - 0.6, ys.max() + 0.6); cx.axis("off")
-    cx.set_title("(c) cost per grade", loc="left", fontsize=7)
+# The guide's tests (Section VI-C) and its validation (Section VI-D) share one design, so that both read the same
+# way (Pedro, 2026-10-19: the earlier Test 1 and Test 2 figures were hard to read and the validation had no figure).
+# (a) For each alternative, the share of its comparisons (model x dataset) in which the guide agreed with the human
+#     grades significantly better, not significantly differently, or significantly worse (95% bootstrap interval,
+#     no correction), with the counts, and its cost per grade relative to the guide's.
+# (b) The guide's agreement with each model, against the best configuration of any model without reasoning and the
+#     range of all of them, on the same answers.
+OUTCOME = {"guide": "#3d3d3d", "same": "#cccccc", "alt": "#F0E442"}   # dark, light grey, Okabe-Ito yellow
+GUIDE_MODELS = ["qwen3.5", "deepseek-v4-flash", "glm-5.1", "gpt-5.1", "claude-sonnet-4-6"]
+ALT_LABEL = {"no guidance": "No guidance", "strict instruction": "Strict instruction",
+             "justification": "With a justification", "whole exam": "Whole exam in one call",
+             "criterion scoring": "Score per criterion", "shared conversation": "Shared conversation",
+             "reasoning on": "Reasoning on"}
+
+
+def _xfmt(lo: float, hi: float) -> str:
+    f = lambda v: f"{v:.1f}" if v < 10 else f"{v:.0f}"
+    return f"{f(lo)}$\\times$" if f(lo) == f(hi) else f"{f(lo)}--{f(hi)}$\\times$"
+
+
+def _guide_figure(rows: list[dict], groups: list[dict], name: str, height: float, band: dict | None = None):
+    """rows: one per alternative, {kind, guide, same, alt, x_lo, x_hi}; groups: one per dataset, {label,
+    guide: {model: QWK}, best, lo, hi}; band: {label, lo, hi, text}, a human agreement range for one dataset."""
     from matplotlib.patches import Patch
-    h = [Patch(color=col["worse"], label="significantly worse"), Patch(color=col["same"], label="no significant difference"),
-         Patch(color=col["better"], label="significantly better")]
-    h += [plt.Line2D([], [], marker="o", ls="", color=MCOL[m], label=guide_eval.MNAME[m]) for m in guide_eval.MODELS]
-    fig.legend(handles=h, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 0.0), fontsize=6, columnspacing=1.2,
-               handlelength=1.4, framealpha=0.9)
-    _save(fig, "fig_guide_test1")
+    fig = plt.figure(figsize=(WIDE, height))
+    # fixed room for the row labels: LaTeX sets them in the paper's wider font, which tight layout does not see;
+    # the third, empty column holds the dataset labels of panel (b)
+    gs = fig.add_gridspec(1, 4, width_ratios=[1.0, 0.24, 0.30, 1.0], wspace=0.0, left=0.20, right=0.985, top=0.86,
+                          bottom=0.24 if len(rows) < 6 else 0.155)
+    ax, cx, bx = fig.add_subplot(gs[0]), fig.add_subplot(gs[1]), fig.add_subplot(gs[3])
+    ys = np.arange(len(rows))[::-1].astype(float)
+    ys[-1] -= 0.35                                    # reasoning on sits apart: the one trade-off the guide makes
+    for y, r in zip(ys, rows):
+        n, left = r["guide"] + r["same"] + r["alt"], 0.0
+        for k in ("guide", "same", "alt"):
+            if r[k]:
+                w = 100 * r[k] / n
+                ax.barh(y, w, left=left, color=OUTCOME[k], edgecolor="white", lw=0.6, height=0.62)
+                ax.text(left + w / 2, y, str(r[k]), ha="center", va="center", fontsize=6.5,
+                        color="white" if k == "guide" else "black")
+                left += w
+        cx.text(0.12, y, _xfmt(r["x_lo"], r["x_hi"]), va="center", fontsize=6.5)
+    for a in (ax, cx):
+        a.set_ylim(ys.min() - 0.6, ys.max() + 0.6)
+    ax.axhline((ys[-2] + ys[-1]) / 2, color="0.6", lw=0.5, ls=":")
+    ax.set_yticks(ys)
+    ax.set_yticklabels([f"{ALT_LABEL[r['kind']]} ({r['guide'] + r['same'] + r['alt']})" for r in rows], fontsize=6.5)
+    ax.tick_params(axis="y", length=0, pad=12)      # buffer for the wider LaTeX font of the paper
+    ax.set_xlim(0, 100); ax.set_xticks([0, 25, 50, 75, 100])
+    ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:.0f}\\%"))
+    ax.set_xlabel("share of the comparisons (model $\\times$ dataset)")
+    ax.grid(axis="y", visible=False)
+    ax.set_title("(a) against the other configurations\nof the same model", loc="left", fontsize=7)
+    cx.set_xticks([]); cx.set_yticks([]); cx.grid(False)
+    for s in cx.spines.values():
+        s.set_visible(False)
+    cx.set_title("  relative cost\n  per grade", loc="left", fontsize=6.5)
+    # (b): one block of five rows (the models) per dataset
+    yt, ylab, y0 = [], [], 0.0
+    for gi, g in enumerate(groups):
+        top, bot = y0 + 0.5, y0 - len(GUIDE_MODELS) + 0.5
+        bx.fill_between([g["lo"], g["hi"]], bot, top, color="#ececec", lw=0, zorder=0)
+        if band and g["label"] == band["label"]:
+            bx.fill_between([band["lo"], band["hi"]], bot, top, facecolor="#d9d9d9", edgecolor="0.2", hatch="////",
+                            lw=0, zorder=1)
+        bx.plot([g["best"], g["best"]], [bot, top], color="k", lw=1.1, zorder=2)
+        for j, m in enumerate(GUIDE_MODELS):
+            if m in g["guide"]:
+                bx.scatter(g["guide"][m], y0 - j, s=26, color=MCOL[m], edgecolor="k", lw=0.4, zorder=3)
+        yt.append(y0 - (len(GUIDE_MODELS) - 1) / 2); ylab.append(g["label"])
+        if gi < len(groups) - 1:
+            bx.axhline(bot - 0.5, color="0.75", lw=0.4)
+        y0 -= len(GUIDE_MODELS) + 1
+    bx.set_ylim(y0 + 0.5, 1.0)
+    bx.set_yticks(yt); bx.set_yticklabels(ylab, fontsize=6.5)
+    bx.tick_params(axis="y", length=0, pad=9)
+    bx.yaxis.set_label_position("left")
+    bx.grid(axis="y", visible=False)
+    bx.set_xlim(0.30, 1.0)
+    bx.set_xlabel("agreement with the human grade (QWK)")
+    bx.set_title("(b) against the best configuration\nof any model", loc="left", fontsize=7)
+    h = [Patch(color=OUTCOME["guide"], label="the guide agreed better"),
+         Patch(color=OUTCOME["same"], label="no significant difference"),
+         Patch(facecolor=OUTCOME["alt"], edgecolor="0.6", lw=0.4, label="the alternative agreed better")]
+    h += [plt.Line2D([], [], marker="o", ls="", color=MCOL[m], mec="k", mew=0.4, label=f"guide, {MNAME[m]}")
+          for m in GUIDE_MODELS]
+    h += [plt.Line2D([], [], color="k", lw=1.1, label="best configuration"),
+          Patch(color="#ececec", label="range of all configurations")]
+    if band:
+        h.append(Patch(facecolor="#d9d9d9", edgecolor="0.2", hatch="////", lw=0, label=band["text"]))
+    fig.legend(handles=h, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 0.0),
+               fontsize=5.8, columnspacing=1.0, handlelength=1.4, framealpha=0.9)
+    _save(fig, name)
+
+
+def _outcome_rows(t, kinds) -> list[dict]:
+    """t: one row per comparison with kind, better / worse (the alternative significantly better / worse than the
+    guide) and cost_x."""
+    out = []
+    for k in kinds:
+        g = t[t.kind == k]
+        b, w = g.better.astype(bool), g.worse.astype(bool)
+        out.append({"kind": k, "guide": int(w.sum()), "same": int((~b & ~w).sum()), "alt": int(b.sum()),
+                    "x_lo": float(g.cost_x.min()), "x_hi": float(g.cost_x.max())})
+    return out
+
+
+def fig_guide_tests():
+    """The guide's tests on the four datasets of the study (Section VI-C): (a) Test 1, within each model
+    (guide_eval.within_model); (b) Test 2, across models, every configuration without reasoning on the answers they
+    all graded (guide_eval.field, basis B)."""
+    from experiments.analysis import guide_eval
+    d = guide_eval.rows()
+    t = guide_eval.within_model(d)
+    kinds = ["no guidance", "strict instruction", "justification", "whole exam", "criterion scoring",
+             "shared conversation", "reasoning on"]
+    f = guide_eval.field(d, "B")
+    groups = []
+    for _, _, lbl in guide_eval.SETS:
+        g = f[f.set == lbl]
+        groups.append({"label": lbl, "guide": {r.fam: r.QWK for r in g[g.guide].itertuples()},
+                       "best": g.QWK.max(), "lo": g.QWK.min(), "hi": g.QWK.max()})
+    _guide_figure(_outcome_rows(t, kinds), groups, "fig_guide_tests", COL * 0.95)
 
 
 def fig_guide_validation():
-    """Fig. 8 (Section VI-A, Test 2): the guide among every configuration graded without reasoning, per answer set,
-    agreement (QWK) against the cost of 1000 grades (log). Grey: every other configuration; coloured: the guide's
-    configuration with each model; dashed: the cost-quality frontier (configurations no cheaper one beats). Values
-    from experiments/analysis/guide_eval.field (basis B: the answers every configuration graded)."""
-    from experiments.analysis import guide_eval
-    f = guide_eval.field(guide_eval.rows(), "B")
-    order = ["deepseek-v4-flash", "glm-5.1", "gpt-5.1", "claude-sonnet-4-6", "qwen3.5"]
-    fig, axes = plt.subplots(1, 5, figsize=(WIDE, WIDE * 0.29))
-    for ax, (_, _, lbl) in zip(axes, guide_eval.SETS):
-        g = f[f.set == lbl]
-        o = g[~g.guide]
-        ax.scatter(o.eur_1000, o.QWK, s=9, color="#9a9a9a", alpha=0.8, lw=0, zorder=2)
-        fr = g[g.frontier].sort_values("eur_1000")
-        ax.step(list(fr.eur_1000) + [6.0], list(fr.QWK) + [fr.QWK.iloc[-1]], where="post", color="0.35",
-                ls="--", lw=0.7, zorder=1)
-        for m in order:
-            p = g[g.guide & (g.fam == m)]
-            if not p.empty:
-                ax.scatter(p.eur_1000, p.QWK, s=32, color=MCOL[m], edgecolor="k", lw=0.4, zorder=3)
-        ax.set_xscale("log"); ax.set_xlim(0.01, 6)
-        ax.set_xticks([0.01, 0.1, 1])
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
-        ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
-        lo, hi = g.QWK.min(), g.QWK.max()
-        ax.set_ylim(lo - 0.06 * (hi - lo) - 0.01, hi + 0.08 * (hi - lo) + 0.01)
-        ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter("%.2f"))
-        ax.set_title(lbl, fontsize=7)
-    axes[0].set_ylabel("agreement (QWK)")
-    axes[2].set_xlabel("cost of 1000 grades (euros, log scale)")
-    h = [plt.Line2D([], [], marker="o", color=MCOL[m], ls="", mec="k", mew=0.4, label=MNAME[m]) for m in order]
-    h += [plt.Line2D([], [], marker="o", color="#9a9a9a", ls="", label="other configurations"),
-          plt.Line2D([], [], color="0.35", ls="--", lw=0.7, label="frontier")]
-    fig.tight_layout()
-    fig.legend(handles=h, loc="upper center", ncol=7, bbox_to_anchor=(0.5, 0.0), framealpha=0.9,
-               handletextpad=0.3, columnspacing=1.6)
-    _save(fig, "fig_guide_validation")
+    """The guide's validation on SAF and HARMOGEN-R, which played no part in building it (Section VI-D), drawn as the
+    tests: (a) each alternative against the guide within each model; (b) the guide with each model against the best
+    configuration without reasoning; the hatched band is the four HARMOGEN-R instructors' agreement with each other.
+    Values from experiments/analysis/verification."""
+    from experiments.analysis import verification
+    t = verification.contrasts(verification.load())
+    kinds = ["no guidance", "strict instruction", "criterion scoring", "reasoning on"]
+    a = t[t.kind != "guide"]
+    groups = []
+    for _, _, lbl in verification.SETS:
+        g = t[(t.set == lbl) & (t.kind != "reasoning on")]
+        groups.append({"label": lbl.split(" (")[0], "guide": {r.model: r.QWK for r in g[g.kind == "guide"].itertuples()},
+                       "best": g.QWK.max(), "lo": g.QWK.min(), "hi": g.QWK.max()})
+    ins = verification.instructors()
+    band = {"label": "HARMOGEN-R", "lo": ins["pairs_min"], "hi": ins["pairs_max"],
+            "text": "instructors' agreement with each other"}
+    with plt.rc_context({"hatch.linewidth": 0.8}):     # a hatch that still shows once the pgf is in the paper
+        _guide_figure(_outcome_rows(a, kinds), groups, "fig_guide_validation", COL * 0.66, band)
 
 
 def fig_rq6_transfer(full):
@@ -647,6 +709,34 @@ def fig4(df):
     _save(fig, "fig4_consistency")
 
 
+def conversation_effects() -> pd.DataFrame:
+    """The values of the conversation figure (also printed in the supplementary material), per model, as fractions of
+    the scale with 95% bootstrap intervals (10,000 resamples): shared minus clean conversation (item-mean grade);
+    the typical size of the order effect, mean |natural minus inverse|; and its average shift, mean (natural minus
+    inverse), over (item, run) pairs of the shared conversation."""
+    cv = phase5.load_conversation()
+    cv = cv[cv.pred_norm.notna()]
+    rng = np.random.default_rng(20260610)
+
+    def boot(v):
+        v = np.asarray(v, dtype=float)
+        b = v[rng.integers(0, len(v), (10_000, len(v)))].mean(axis=1)
+        return float(v.mean()), *map(float, np.percentile(b, [2.5, 97.5])), len(v)
+
+    rows = []
+    for m in ["qwen3.5", "deepseek-v4-flash", "glm-5.1"]:
+        d = cv[cv.model == m]
+        pv = d.pivot_table(index="item_id", columns="conversation_state", values="pred_norm", aggfunc="mean").dropna()
+        sh = d[d.conversation_state == "shared"]
+        po = sh.pivot_table(index=["item_id", "run_index"], columns="order_id", values="pred_norm", aggfunc="first").dropna()
+        for k, v in [("shared minus clean", pv["shared"] - pv["clean"]),
+                     ("order, typical size", (po["natural"] - po["inverse"]).abs()),
+                     ("order, average shift", po["natural"] - po["inverse"])]:
+            mu, lo, hi, n = boot(v)
+            rows.append({"model": m, "effect": k, "mean": mu, "lo": lo, "hi": hi, "N": n})
+    return pd.DataFrame(rows)
+
+
 def fig5(df):
     """RQ5 conversation sub-study, two panels with 95% bootstrap CIs over items, per model:
     (a) shared minus clean conversation (item-mean grade; below 0 = shared history lowers grades);
@@ -654,24 +744,11 @@ def fig5(df):
     inverse| (solid), and the average shift, mean (natural minus inverse) (hatched).
     Qwen3.5 and DeepSeek-V4-Flash: 80 exams, k=5 (2026-10-15); GLM-5.1: the first 20 of those exams, k=3
     (June 2026). PT-CS code, baseline configuration; no teacher grades are involved."""
-    cv = phase5.load_conversation()
-    cv = cv[cv.pred_norm.notna()]
-    mods = ["qwen3.5", "deepseek-v4-flash", "glm-5.1"]
+    ce = conversation_effects()
+    mods = list(ce.model.unique())
     lab = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "glm-5.1": "GLM-5.1 (20 exams)"}
-    rng = np.random.default_rng(20260610)
-
-    def boot(v):
-        v = np.asarray(v); b = [v[rng.integers(0, len(v), len(v))].mean() for _ in range(800)]
-        return v.mean(), *np.percentile(b, [2.5, 97.5])
-
-    st, oa, osg = [], [], []
-    for m in mods:
-        d = cv[cv.model == m]
-        pv = d.pivot_table(index="item_id", columns="conversation_state", values="pred_norm", aggfunc="mean").dropna()
-        st.append(boot(pv["shared"] - pv["clean"]))
-        sh = d[d.conversation_state == "shared"]
-        po = sh.pivot_table(index=["item_id", "run_index"], columns="order_id", values="pred_norm", aggfunc="first").dropna()
-        oa.append(boot((po["natural"] - po["inverse"]).abs())); osg.append(boot(po["natural"] - po["inverse"]))
+    pick = lambda k: [tuple(ce[(ce.model == m) & (ce.effect == k)][["mean", "lo", "hi"]].iloc[0]) for m in mods]
+    st, oa, osg = pick("shared minus clean"), pick("order, typical size"), pick("order, average shift")
     fig, axes = plt.subplots(1, 2, figsize=(COL, COL * 0.62), gridspec_kw={"width_ratios": [1, 1.2]})
     x = np.arange(len(mods))
 
@@ -718,7 +795,7 @@ def main() -> int:
     rc = rq1_cells(_full, _INTERV).rename(columns={"prem_x": "premium_x"})
     fig_rq1(rc); fig_rq2_levels(_full); fig_rq3_levels(_full); fig_rq4_cost(_full); fig5(df)
     fig_rq6_instruction()
-    fig_guide_test1()
+    fig_guide_tests()
     fig_guide_validation()
     print("done.")
     return 0

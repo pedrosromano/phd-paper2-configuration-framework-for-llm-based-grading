@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 from experiments.analysis import phase5
-from experiments.analysis.make_phase5_tables import _boot_dist, _holm, _p_boot, _qwk_items
+from experiments.analysis.make_phase5_tables import _boot_dist, _holm, _p_boot, _point, _qwk_items
 
 VARIANTS = ["standard", "partial_credit", "partial_credit_justified"]
 MAIN_MODEL = {"glm-5.1-or": "glm-5.1"}     # the same model served elsewhere: its main-store (DeepInfra) rows
@@ -85,7 +85,7 @@ def contrasts(d: pd.DataFrame) -> pd.DataFrame:
             dist = _boot_dist(sA, sB)
             if dist is None:
                 continue
-            lo, md, hi = np.percentile(dist, [2.5, 50, 97.5])
+            lo, hi = np.percentile(dist, [2.5, 97.5]); md = _point(sA, sB)
             lo90, hi90 = np.percentile(dist, [5, 95])
             rows.append({"dataset": ds, "domain": dom, "model": m, "contrast": f"{VNAME[b]} vs {VNAME[a]}",
                          "dQWK": md, "lo": lo, "hi": hi, "p": _p_boot(dist), "sig": bool(lo > 0 or hi < 0),

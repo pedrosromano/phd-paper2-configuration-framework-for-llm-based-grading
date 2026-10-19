@@ -371,6 +371,29 @@ def rq4():
             print(f"  reasoning on - off, {m:18}: dQWK {qn - qo:+.3f} at {cn / co:.1f}x the cost")
 
 
+def rq5_noise():
+    """RQ5 (independent review, 2026-10-18): the order effect against a noise baseline. For each model, the mean
+    absolute change of an answer's grade between the exam's own order and the reverse (same repetition), against
+    the mean absolute change between two repetitions in the same order; and the within-answer SD across
+    repetitions in a shared and in a clean conversation."""
+    import itertools
+    c = phase5.load_conversation()
+    c = c[c.pred_norm.notna()]
+    print("\n=== RQ5: answer order against same-order repetition noise (Section IV-E) ===")
+    for m, g in c.groupby("model"):
+        sh = g[g.conversation_state == "shared"]
+        nat = sh[sh.order_id == "natural"].pivot_table(index="item_id", columns="run_index", values="pred_norm")
+        inv = sh[sh.order_id == "inverse"].pivot_table(index="item_id", columns="run_index", values="pred_norm")
+        common, runs = nat.index.intersection(inv.index), sorted(set(nat.columns) & set(inv.columns))
+        order = np.nanmean([np.abs(nat.loc[common, r] - inv.loc[common, r]).mean() for r in runs])
+        noise = np.nanmean([np.abs(x[a] - x[b]).mean() for x in (nat, inv)
+                            for a, b in itertools.combinations(x.columns, 2)])
+        sd_clean = g[g.conversation_state == "clean"].groupby("item_id").pred_norm.std().mean()
+        sd_shared = np.nanmean([x.std(axis=1).mean() for x in (nat, inv)])
+        print(f"  {m:18s} order {order:.3f}  same-order noise {noise:.3f}  ({order / noise:.1f}x)  "
+              f"SD clean {sd_clean:.3f}  shared {sd_shared:.3f}")
+
+
 def main() -> int:
     rq1()
     rq2()
@@ -387,6 +410,7 @@ def main() -> int:
     rq4_winners()
     rq6_transfer()
     rq4()
+    rq5_noise()
     print("\nPaper cross-check (Phase 7): RQ1 Mohler +11%, SemEval +18%, RIAYN +45%, PT-CS-verified "
           "code +23%, PT-CS-verified short Qwen +12% (ns), RIAYN GPT +32% (GLM/GPT PT-CS short ns on verified). "
           "RQ2 (verified) RIAYN +29%, PT-CS-verified code +46%. RQ3 (verified) scope -17%, decomp -5%. "

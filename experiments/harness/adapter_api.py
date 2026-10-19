@@ -20,6 +20,10 @@ import urllib.request
 
 from tenacity import retry, retry_if_exception_type, stop_after_delay, wait_random_exponential
 
+# Read timeout per call, in seconds. GRADER_HTTP_TIMEOUT raises it for long reasoning calls that a busy backend
+# slows past ten minutes (verification re-grade, 2026-10-19); the default is unchanged.
+HTTP_TIMEOUT = int(os.environ.get("GRADER_HTTP_TIMEOUT", "600"))
+
 from experiments.harness import prompts
 from experiments.harness.cost_guard import BudgetExceeded, CostGuard, load_pricing
 from experiments.harness.env import load_env
@@ -66,7 +70,7 @@ def _chat(base_url: str, key: str, payload: dict) -> dict:
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"})
     try:
-        with urllib.request.urlopen(req, timeout=600) as r:
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as r:
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         if e.code == 402:                          # OpenRouter: insufficient credits
@@ -231,7 +235,7 @@ def _anthropic_messages(base_url: str, key: str, payload: dict) -> dict:
         f"{base_url.rstrip('/')}/v1/messages", data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01"})
     try:
-        with urllib.request.urlopen(req, timeout=600) as r:
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as r:
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", "replace")

@@ -37,13 +37,18 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PRICING = REPO_ROOT / "experiments" / "configs" / "pricing.yaml"
 PROMPTS = REPO_ROOT / "experiments" / "configs" / "prompts.yaml"
 
-DATASETS = {"ptcs", "mohler", "semeval", "riayn"}
+DATASETS = {"ptcs", "mohler", "semeval", "riayn", "saf", "harmogenr"}
 DOMAINS = {"code", "short_answer"}
 # which domains actually exist per dataset (Phase 2.6 corpus)
 DATASET_DOMAINS = {
     "mohler": {"short_answer"}, "semeval": {"short_answer"},
     "riayn": {"code"}, "ptcs": {"code", "short_answer"},
+    "saf": {"short_answer"}, "harmogenr": {"code"},
 }
+# The guide's additional verification (2026-10-18): two datasets that played no part in building the guide, in
+# their own corpus file (corpus_verification.parquet) and store (verification.jsonl). Each alternative there
+# changes ONE setting of the guide, so the criterion alternative keeps the partial-credit instruction.
+VERIFICATION_DATASETS = {"saf", "harmogenr"}
 REASONING = {"off", "on"}
 CONTEXT_LEVELS = {"none", "with_guidance", "with_examples"}
 SCOPES = {"question_by_question", "whole_exam"}
@@ -165,17 +170,18 @@ class Config:
             raise ConfigError("whole_exam scope is PT-CS only")
         # criterion decomposition needs per-criterion rubrics: PT-CS, and RIAYN since C2
         # (2026-10-15; RIAYN rubrics list marked steps per solution path, with human step marks)
-        if self.decomposition == "criterion" and self.dataset not in ("ptcs", "riayn"):
-            raise ConfigError("criterion decomposition is PT-CS / RIAYN only")
+        if self.decomposition == "criterion" and self.dataset not in ("ptcs", "riayn", "harmogenr"):
+            raise ConfigError("criterion decomposition is PT-CS / RIAYN / HARMOGEN-R only")
         if self.conversation_state in ("clean", "shared") and self.dataset != "ptcs":
             raise ConfigError("conversation-state sub-study (clean/shared) is PT-CS only")
         if self.reasoning == "on" and not _model_has_toggle(self.model):
             raise ConfigError(f"model {self.model!r} has no reasoning toggle for reasoning=on")
         if self.instruction not in INSTRUCTIONS:
             raise ConfigError(f"bad instruction {self.instruction!r}")
+        criterion_ok = self.dataset in VERIFICATION_DATASETS and self.instruction == "partial_credit"
         if self.instruction != "standard" and (
                 self.context_level != "with_guidance" or self.scope != "question_by_question"
-                or self.decomposition != "holistic" or self.conversation_state != "none"):
+                or (self.decomposition != "holistic" and not criterion_ok) or self.conversation_state != "none"):
             raise ConfigError("instruction variants are defined for with_guidance, one question per call, "
                               "holistic, clean grading only")
         return self

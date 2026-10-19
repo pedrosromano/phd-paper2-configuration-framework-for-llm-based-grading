@@ -56,6 +56,17 @@ def _store_for(arm: dict, stores: dict) -> store.RunStore:
     return stores[path]
 
 
+def _corpus_for(arm: dict, spec: dict, cache: dict) -> tuple["Sampler", dict]:
+    """Per-arm corpus. An arm may set `corpus: <file>.parquet` (in data/processed) to grade items that are not
+    in corpus.parquet: the guide's additional verification (2026-10-18) grades two datasets that played no part
+    in building the guide, kept in corpus_verification.parquet. Returns (sampler, items by id)."""
+    path = CORPUS.parent / arm["corpus"] if arm.get("corpus") else CORPUS
+    if path not in cache:
+        corpus = pd.read_parquet(path)
+        cache[path] = (Sampler(spec, corpus), {r["item_id"]: r for _, r in corpus.iterrows()})
+    return cache[path]
+
+
 def _item_filter(name: str | None):
     """Optional per-arm item filter (bloco C, 2026-10-15). 'ptcs_validated' keeps only the PT-CS
     answers the paper uses (teacher-validated = intervened stratum); other datasets pass through.
@@ -81,7 +92,7 @@ class Sampler:
         self.n_submissions = ptcs.submission_id.nunique()
         # code items contained in the first N PT-CS submissions (for the conversation sub-study)
         code = ptcs[ptcs.domain == "code"]
-        subs = sorted(code.submission_id.dropna().unique())[: self.s["conversation_submissions"]]
+        subs = sorted(code.submission_id.dropna().unique())[: self.s["conversation_submissions"]] if len(code) else []
         self.conv_items = int(code[code.submission_id.isin(subs)].shape[0])
 
     def n_items(self, c, item_cap: int | None = None) -> int:
@@ -113,8 +124,7 @@ class Sampler:
 # --------------------------------------------------------------------------- estimation
 def estimate(arm_filter: str | None = None) -> int:
     spec = yaml.safe_load(MATRIX.read_text())
-    corpus = pd.read_parquet(CORPUS)
-    sampler = Sampler(spec, corpus)
+    corpora: dict = {}
     guard = CostGuard()
 
     concurrency = int(spec.get("concurrency", 8))
@@ -128,6 +138,7 @@ def estimate(arm_filter: str | None = None) -> int:
     for arm in spec["arms"]:
         if wanted and arm["name"] not in wanted:
             continue
+        sampler, _ = _corpus_for(arm, spec, corpora)
         cap = arm.get("item_cap")
         configs = expand_arm(arm)
         per_prov: dict[str, dict] = {}
@@ -277,12 +288,13 @@ def _on_pi_check(rows: list) -> tuple[bool, dict]:
                                "truncated": trunc, "threshold": GATE_MIN_PI}
 
 
-def _preflight(spec, sampler, guard, arm_names) -> bool:
+def _preflight(spec, corpora, guard, arm_names) -> bool:
     """Refuse to start if a provider's projected spend would breach its ceiling."""
     prov_eur = {}
     for arm in spec["arms"]:
         if arm["name"] not in arm_names:
             continue
+        sampler, _ = _corpus_for(arm, spec, corpora)
         cap = arm.get("item_cap")
         for c in expand_arm(arm):
             if c.scope == "whole_exam" or c.conversation_state in ("clean", "shared"):
@@ -327,11 +339,9 @@ def _report(arm_rows: dict, gate: dict, guard: CostGuard, aborted: bool, t0: flo
 def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
         limit: int | None = None) -> int:
     spec = yaml.safe_load(MATRIX.read_text())
-    corpus = pd.read_parquet(CORPUS)
-    sampler = Sampler(spec, corpus)
+    corpora: dict = {}
     guard = CostGuard()
     stores: dict = {}
-    by_id = {r["item_id"]: r for _, r in corpus.iterrows()}
     arm_by_name = {a["name"]: a for a in spec["arms"]}
     order_cache: dict = {}
     t0 = time.time()
@@ -346,7 +356,7 @@ def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
     pf_arms = CORE_ARMS if gated else requested
 
     _log(f"Phase 4 run | seed={seed} | concurrency={concurrency} | arms={pf_arms} | store={RUNS_FILE.name}")
-    if not _preflight(spec, sampler, guard, pf_arms):
+    if not _preflight(spec, corpora, guard, pf_arms):
         _log("REFUSED: a provider would breach its ceiling. Adjust matrix.yaml and retry.")
         return 1
 
@@ -356,6 +366,7 @@ def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
         for name in GATE_PHASE1:
             _log(f"ARM {name} (phase 1)")
             st = _store_for(arm_by_name[name], stores)
+            sampler, by_id = _corpus_for(arm_by_name[name], spec, corpora)
             tasks = _arm_tasks(arm_by_name[name], sampler, by_id, seed, order_cache)
             tasks = tasks[:limit] if limit else tasks
             _execute(tasks, st, guard, concurrency)
@@ -370,6 +381,7 @@ def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
         for name in GATE_PHASE2:
             _log(f"ARM {name} (phase 2)")
             st = _store_for(arm_by_name[name], stores)
+            sampler, by_id = _corpus_for(arm_by_name[name], spec, corpora)
             tasks = _arm_tasks(arm_by_name[name], sampler, by_id, seed, order_cache)
             tasks = tasks[:limit] if limit else tasks
             _execute(tasks, st, guard, concurrency)
@@ -380,6 +392,7 @@ def run(arm_filter: str | None, concurrency: int = 16, seed: int = DEFAULT_SEED,
         for name in requested:
             st = _store_for(arm_by_name[name], stores)
             _log(f"ARM {name} (direct) -> {st.path.name}")
+            sampler, by_id = _corpus_for(arm_by_name[name], spec, corpora)
             tasks = _arm_tasks(arm_by_name[name], sampler, by_id, seed, order_cache)
             tasks = tasks[:limit] if limit else tasks
             _execute(tasks, st, guard, concurrency)

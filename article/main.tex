@@ -95,29 +95,40 @@
 
 \corresp{Corresponding author: Pedro S. Romano (e-mail: Pedro\_Romano@iscte-iul.pt).}
 
+% Human-subjects statement, IEEE PSPB Operations Manual 8.1.1.E: either the review board's name or why no review
+% was conducted, and consent or why none was sought, in the first footnote. Facts: Pedro, 2026-10-18 (CLAUDE.md S11).
+% Iscte does not review studies after the fact, so this gives the explanation; it never claims an exemption.
+\tfootnote{This work involved human subjects in its research. Its PT-CS dataset consists of existing exam
+answers from a course at Iscte, graded for the course and reused for this study, with no intervention on
+the students and no effect on their grades; the study was therefore not submitted to an ethics committee. The students accepted the grading platform's terms of
+use, which stated that their answers could be used for research and processed by external services; no
+further consent was sought. Direct identifiers were removed before the analysis, the answers were checked
+for names, e-mail addresses, and numbers, only the question, the answer, and the grading material were
+sent to the model providers, and no student-level data are published or released.}
+
 % Register: CLAUDE.md S9.2 (no em/en dashes as prose punctuation). RQ1: 6 of 20 significant, 3 after Holm.
-% Numbers: tab_rq1_values, bloco_c (C9), instruction.py, guide_eval.py (the guide is model-agnostic; its
-% validation: Test 1 within each model, Fig. 9; Test 2 across every configuration, Fig. 10). Framing of the
-% validation (Pedro #2, #44, 2026-10-18): better / no difference / worse, and the two tests named; as
-% percentages of the 56 alternatives (33, 22, 1 -> 59%, 39%, 2%; Pedro's third review, 2026-10-18).
+% Numbers: tab_rq1_values, bloco_c (C9), instruction.py, guide_eval.py (the guide is model-agnostic; its tests
+% on the study's data, Fig. 9) and verification.py (its validation on SAF and HARMOGEN-R, Fig. 10). Naming
+% (Pedro, 2026-10-19): "validation" only for the two datasets that played no part in building the guide; the
+% comparisons on the study's own data are "tests". At most 250 words.
 \begin{abstract}
 Instructors adopting large language model (LLM) graders face several questions. Should the model reason
 before scoring? What guidance should it receive, and how should it apply it? Should a whole exam be graded
-in one call? Which configuration is worth its cost? For computer science assessment, we vary reasoning,
-evaluation guidance, the grading instruction, grading scope, rubric decomposition, model family, and
-conversation state under one protocol, on four short-answer and code datasets, including new
-teacher-graded Portuguese exams. The cheap changes were the effective ones: adding a rubric or reference
-answer raised agreement with teachers (quadratic weighted kappa, QWK, where 1 is perfect) significantly in
-thirteen of fifteen combinations, by 0.095 to 0.335, and asking for partial credit raised code agreement by
-up to 0.11. Reasoning raised agreement significantly in six of twenty combinations, three after
-multiple-comparison correction, at 9 to 925 times the output tokens, and reduced consistency in seventeen;
-its large code gains came only for models scoring many partially correct answers as zero (zero-collapse).
-Whole-exam grading never raised agreement; scoring criterion by criterion raised it in one of six
-combinations. We condense the comparisons into a model-agnostic configuration guide, validated against
-every other configuration of the same model and the best configuration of any model, at what cost. Against
-56 alternatives without reasoning, the guide agreed significantly better with teachers in 59\%, showed no
-significant difference in 39\%, and agreed worse in 2\%; with the best-suited model, it came within 0.05 QWK
-of the best on every dataset.
+in one call? Which configuration is worth its cost? In computer science, we vary reasoning, evaluation
+guidance, the grading instruction, grading scope, rubric decomposition, model family, and conversation state
+under one protocol, on four short-answer and code datasets, including new Portuguese exams. The cheap
+changes were the effective ones: adding a rubric or reference answer raised agreement with teachers
+(quadratic weighted kappa, QWK, where 1 is perfect) significantly in thirteen of fifteen combinations, by
+0.095 to 0.336, and asking for partial credit raised code agreement by up to 0.11. Reasoning raised
+agreement significantly in six of twenty combinations, three after multiple-comparison correction, at 9 to
+925 times the output tokens, and made grades less consistent in most; its large code gains came for models
+scoring many partially correct answers as zero (zero-collapse). Whole-exam grading never helped;
+criterion-by-criterion scoring helped in only one of six combinations. From these results we built a
+model-independent configuration guide: the rubric or reference answer, partial credit, reasoning off, and
+one question per call. Within each model, it agreed significantly better than 32 of 56 alternatives without
+reasoning, and worse than one. On two new datasets, used only for validation, no alternative without
+reasoning agreed significantly better than the guide on short answers, with any of five models, or on code,
+with four.
 \end{abstract}
 
 \begin{keywords}
@@ -140,9 +151,15 @@ short-answer grading, code assessment, configuration guidelines.
 
 % AI-use statement required by IEEE (acknowledgments section; identify the system, the parts, and the level of use).
 % Final wording: Pedro's own (2026-10-18). Do not change it without asking him.
+% Data availability (independent review, 2026-10-18, M7). Pedro (2026-10-19): code on request, no public release.
+\section*{Data Availability}
+The prompt templates and the models' settings are given in the supplementary material, and the code is
+available from the corresponding author on request. Mohler, SemEval-2013 Task~7, Rubric Is All You Need,
+SAF, and HARMOGEN-R are public datasets. PT-CS consists of students' exam answers and is not released.
+
 \section*{Acknowledgment}
 During the preparation of this work, the authors used Claude Opus 5 (Anthropic) to help write the scripts that
-run the experiments and process the data for the tables and figures, and to help revise the text. The research
+run the experiments and process the data for the tables and figures, and to help revise the text of all sections. The research
 questions, study design, interpretation of the results, discussion, and conclusions are the authors' own; the
 authors checked all results and take full responsibility for the content.
 

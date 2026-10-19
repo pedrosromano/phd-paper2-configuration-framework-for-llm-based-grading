@@ -24,10 +24,9 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, cohen_kappa_score, roc_auc_score
 
 from experiments.analysis import phase5
-from experiments.analysis.make_phase5_tables import K, SEED, _qwk_items
+from experiments.analysis.make_phase5_tables import K, NB, SEED, _boot_dist, _point, _qwk_items
 
 MARGIN = 0.05            # pre-registered equivalence margin (QWK), user 2026-10-15
-NB = 800                 # bootstrap resamples, as in the paper tables
 INTERV = set(pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
              .query("stratum=='intervened'").item_id)
 MODELS = ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]
@@ -46,26 +45,21 @@ def _qwk(p, g):
     return cohen_kappa_score(_bins(g), _bins(p), weights="quadratic", labels=list(range(K + 1)))
 
 
-def _boot(sA: pd.DataFrame, sB: pd.DataFrame) -> np.ndarray | None:
-    """Bootstrap distribution of dQWK = QWK(B) - QWK(A) over common items; identical procedure and
-    seed to make_phase5_tables._boot_ci, so its percentiles reproduce the paper's CIs."""
-    items = sorted(set(sA.index) & set(sB.index))
-    if len(items) < 8:
-        return None
-    rng = np.random.default_rng(SEED)
-    a, b = sA.loc[items], sB.loc[items]
-    pa, ga, pb = a.p.to_numpy(), a.g.to_numpy(), b.p.to_numpy()
-    return np.array([_qwk(pb[i], ga[i]) - _qwk(pa[i], ga[i])
-                     for i in (rng.integers(0, len(items), len(items)) for _ in range(NB))])
+def _boot(sA: pd.DataFrame, sB: pd.DataFrame) -> tuple[np.ndarray, float] | None:
+    """(bootstrap distribution, point estimate) of dQWK = QWK(B) - QWK(A) over common items: the paper's own
+    procedure (make_phase5_tables._boot_dist and _point, same seed and number of resamples)."""
+    ds = _boot_dist(sA, sB, NB)
+    return None if ds is None else (ds, _point(sA, sB))
 
 
-def _summ(name: str, ds: np.ndarray | None, n: int) -> dict:
-    if ds is None:
+def _summ(name: str, bp: tuple[np.ndarray, float] | None, n: int) -> dict:
+    if bp is None:
         return {"contrast": name, "N": n}
-    lo95, md, hi95 = np.percentile(ds, [2.5, 50, 97.5])
+    ds, point = bp
+    lo95, hi95 = np.percentile(ds, [2.5, 97.5])
     lo90, hi90 = np.percentile(ds, [5, 95])
-    p = max(2 * min((ds <= 0).mean(), (ds >= 0).mean()), 1 / NB)       # two-sided bootstrap p
-    return {"contrast": name, "N": n, "dQWK": round(md, 3), "ci95": (round(lo95, 3), round(hi95, 3)),
+    p = max(2 * min((ds <= 0).mean(), (ds >= 0).mean()), 1 / len(ds))  # two-sided bootstrap p
+    return {"contrast": name, "N": n, "dQWK": round(point, 3), "ci95": (round(lo95, 3), round(hi95, 3)),
             "sig95": bool(lo95 > 0 or hi95 < 0), "p_boot": round(p, 4),
             "ci90": (round(lo90, 3), round(hi90, 3)),
             "equivalent": bool(-MARGIN < lo90 and hi90 < MARGIN)}         # TOST at alpha=0.05
