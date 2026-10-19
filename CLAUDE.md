@@ -1511,9 +1511,9 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   - PDFs: `~/Desktop/artigo_2_access_revisto11[_alteracoes]_2026-10-19.pdf` (marked against the final version,
     commit 4fa3e36: no annotated PDF in this round) and `artigo_2_access_suplementar_revisto10_2026-10-19.pdf`
     (10 pages). 19 pages, 0 float errors. Not committed.
-- 🔧 **Third independent review (2026-10-19, "IEEE Access review — Configuring LLM-Based Grading in CS" in
-  `~/Downloads`, mock review, "Reject, updates required"): groups 1-3 and M1, M3, M7 applied (Pedro), version 12
-  awaiting validation.**
+- ✅ **Third independent review (2026-10-19, "IEEE Access review — Configuring LLM-Based Grading in CS" in
+  `~/Downloads`, mock review, "Reject, updates required"): groups 1-3 and M1, M3, M7 applied, version 12 validated
+  and committed by Pedro (1eb52c0). The current submission set is `~/Desktop/artigo_2_submissao/`.**
   - **Real errors fixed:** (1) total cost EUR 158.7 predated the validation runs; all experiments EUR **219.0**
     (`audit_pct_baselines.total_cost`). (2) Whole-exam cost per question: a whole-exam call's cost is now split over
     its questions (`phase5.apportion_whole_exam`, `call_questions` counted in `load_main` before any filter;
