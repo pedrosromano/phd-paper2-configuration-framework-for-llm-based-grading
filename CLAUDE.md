@@ -1439,8 +1439,9 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
     figures and the supplement read the same helpers, so their numbers cannot drift apart. Its Table 1 had the
     DeepSeek identifier printed over the Provider column and two tables ran past the margin: all tables are now
     footnotesize with ragged-right wrapping columns; checked for overlapping words and margins page by page.
-- 🔧 **Second independent review (2026-10-19, "Parecer de revisão — Configuring LLM-Based Grading" in `~/Downloads`,
-  AI-generated, "Reject, updates required"): groups 1 and 2 applied (Pedro), version 10 awaiting his validation.**
+- ✅ **Second independent review (2026-10-19, "Parecer de revisão — Configuring LLM-Based Grading" in `~/Downloads`,
+  AI-generated, "Reject, updates required"): groups 1 and 2 applied, the rounding fix, version 11 validated and
+  committed by Pedro (f95336a). The current submission set is `~/Desktop/artigo_2_submissao/` (submission/build.sh).**
   - **Practice check** (15 IEEE Access papers on LLM/AES/ASAG grading, 2024-2026, read in full): none uses a bootstrap
     (8 report agreement with no inference at all), none applies non-inferiority or equivalence tests to agreement,
     1 uses Holm; ethics: PSPB 8.1.1.E accepts an explanation instead of an approval; code release is optional
