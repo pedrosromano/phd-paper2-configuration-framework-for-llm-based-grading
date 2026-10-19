@@ -16,7 +16,7 @@
 
 \maketitle
 
-This supplement gives the prompt templates, the models and their prices, the share of unparseable outputs, and tables with the values behind the figures of the paper. Every value is computed from the logged runs, with the metrics and bootstrap of the paper (QWK on six levels of the mean of the repeated grades; 10,000 resamples of the answers; 95\% intervals). The values of Fig.~1 are in Table~3 of the paper; Figs.~2 to~6, 9, and~10 have their own tables below, each naming its figure; Figs.~7 and~8 show the guide and its prompt, whose templates are given in Section~1.
+This supplement gives the prompt templates, the models and their prices, the share of unparseable outputs, and tables with the values behind the figures of the paper. Every value is computed from the logged runs, with the metrics and bootstrap of the paper (QWK on six levels of the mean of the repeated grades; 10,000 resamples of the answers; 95\% intervals). The values of Fig.~1 are in Table~3 of the paper; Figs.~2 to~6, 9, and~10 have their own tables below, each naming its figure; Figs.~7 and~8 show the guide and its prompt, whose templates are given in Section~1. Section~13 gives two robustness checks: resampling whole questions instead of answers, and QWK on single runs instead of the mean of the repeated grades. A separate supplementary file holds every grade the models gave on the public and validation datasets, with a script that recomputes the reported agreement values and intervals from them.
 
 \section{Prompt templates}
 Every prompt is assembled from these blocks, in this order: the task, the guidance (omitted without guidance), the question and the student answer, and the output format. Placeholders written as \texttt{\$name} are filled for each answer. A whole-exam prompt lists every question of the exam, each with its maximum score, rubric, and student answer, after the task block. In a shared conversation the first answer is sent with the task block and every later answer as the next turn, with its question, guidance, answer, and output format. Reasoning is switched on or off through each model's settings and is never mentioned in the prompt.
@@ -160,17 +160,17 @@ Qwen3.5-35B-A3B & Mohler & 2273 & 0.475 & 0.637 & +0.162 & [+0.144, +0.180] & ye
 Qwen3.5-35B-A3B & SemEval & 800 & 0.352 & 0.590 & +0.237 & [+0.184, +0.291] & yes \\
 Qwen3.5-35B-A3B & RIAYN & 149 & 0.421 & 0.544 & +0.123 & [+0.046, +0.199] & yes \\
 Qwen3.5-35B-A3B & PT-CS code & 295 & 0.319 & 0.468 & +0.149 & [+0.106, +0.197] & yes \\
-Qwen3.5-35B-A3B & PT-CS short & 84 & 0.317 & 0.652 & +0.336 & [+0.053, +0.627] & yes \\
+Qwen3.5-35B-A3B & PT-CS short & 84 & 0.319 & 0.661 & +0.341 & [+0.063, +0.634] & yes \\
 DeepSeek-V4-Flash & Mohler & 2273 & 0.523 & 0.618 & +0.095 & [+0.076, +0.114] & yes \\
 DeepSeek-V4-Flash & SemEval & 800 & 0.331 & 0.589 & +0.258 & [+0.202, +0.312] & yes \\
 DeepSeek-V4-Flash & RIAYN & 149 & 0.573 & 0.672 & +0.099 & [+0.033, +0.171] & yes \\
 DeepSeek-V4-Flash & PT-CS code & 295 & 0.456 & 0.608 & +0.152 & [+0.097, +0.209] & yes \\
-DeepSeek-V4-Flash & PT-CS short & 84 & 0.528 & 0.647 & +0.119 & [$-$0.119, +0.380] &  \\
+DeepSeek-V4-Flash & PT-CS short & 84 & 0.530 & 0.648 & +0.118 & [$-$0.118, +0.376] &  \\
 GPT-5.1 & Mohler & 2273 & 0.455 & 0.618 & +0.162 & [+0.144, +0.180] & yes \\
 GPT-5.1 & SemEval & 800 & 0.404 & 0.600 & +0.196 & [+0.142, +0.248] & yes \\
 GPT-5.1 & RIAYN & 149 & 0.565 & 0.561 & $-$0.004 & [$-$0.131, +0.130] &  \\
 GPT-5.1 & PT-CS code & 295 & 0.392 & 0.584 & +0.192 & [+0.137, +0.247] & yes \\
-GPT-5.1 & PT-CS short & 84 & 0.522 & 0.728 & +0.205 & [+0.011, +0.415] &  \\
+GPT-5.1 & PT-CS short & 84 & 0.526 & 0.742 & +0.215 & [+0.022, +0.425] &  \\
 \hline
 \end{longtable}
 \endgroup
@@ -223,14 +223,14 @@ Task & Model & Reasoning & QWK & Euros per 1000 \\ \hline
 \hline
 Task & Model & Reasoning & QWK & Euros per 1000 \\ \hline
 \endhead
-short answers & Qwen3.5-35B-A3B & off & 0.605 & 0.032 \\
-short answers & Qwen3.5-35B-A3B & on & 0.686 & 6.169 \\
-short answers & GLM-5.1 & off & 0.656 & 0.204 \\
-short answers & GLM-5.1 & on & 0.656 & 1.209 \\
-short answers & DeepSeek-V4-Flash & off & 0.612 & 0.018 \\
+short answers & Qwen3.5-35B-A3B & off & 0.611 & 0.032 \\
+short answers & Qwen3.5-35B-A3B & on & 0.684 & 6.169 \\
+short answers & GLM-5.1 & off & 0.661 & 0.204 \\
+short answers & GLM-5.1 & on & 0.655 & 1.209 \\
+short answers & DeepSeek-V4-Flash & off & 0.611 & 0.018 \\
 short answers & DeepSeek-V4-Flash & on & 0.574 & 0.061 \\
-short answers & GPT-5.1 & off & 0.660 & 0.344 \\
-short answers & GPT-5.1 & on & 0.649 & 1.827 \\
+short answers & GPT-5.1 & off & 0.662 & 0.344 \\
+short answers & GPT-5.1 & on & 0.648 & 1.827 \\
 code & Qwen3.5-35B-A3B & off & 0.492 & 0.114 \\
 code & Qwen3.5-35B-A3B & on & 0.688 & 6.211 \\
 code & GLM-5.1 & off & 0.701 & 0.798 \\
@@ -271,7 +271,7 @@ GLM-5.1 & order, average shift & 243 & $-$0.0057 & [$-$0.0257, +0.0141] \\
 \section{Grading instruction (follow-up experiment)}
 \begingroup\footnotesize
 \begin{longtable}{ll>{\raggedright\arraybackslash}p{3.2cm}rrrr}
-\caption{Grading instruction (Fig. 6 of the paper): agreement (QWK) and share of grades that are exactly zero under each instruction, per model and dataset, reasoning off, with the teachers' share of zeros. GPT-5.1's strict cells are its runs of the main comparison.}\\
+\caption{Grading instruction (Fig. 6 of the paper): agreement (QWK) and share of grades that are exactly zero under each instruction, per model and dataset, reasoning off, with the teachers' share of zeros. Qwen3.5 and DeepSeek-V4-Flash graded the strict instruction again in this experiment, as a control, and their strict cells are those runs: their QWK stayed within 0.028 of the strict runs of the main comparison, with the same grade in 81 to 94\% of the answer and repetition pairs. GPT-5.1's strict cells are its runs of the main comparison. GLM-5.1's partial-credit runs went through OpenRouter; its strict cells are the OpenRouter runs on RIAYN and the DeepInfra runs of the main comparison on PT-CS code. On RIAYN, where it graded the strict instruction on both providers, the QWK was 0.726 (DeepInfra) and 0.726 (OpenRouter), and two runs of the same answer gave the same grade in 77\% of the pairs across providers, against 85\% and 90\% within each.}\\
 \hline
 Model & Dataset & Instruction & N & QWK & Zeros & Teachers' zeros \\ \hline
 \endfirsthead
@@ -282,7 +282,7 @@ Claude Sonnet 4.6 & Mohler & partial credit & 800 & 0.595 & 5.6\% & 0.6\% \\
 Claude Sonnet 4.6 & Mohler & strict & 800 & 0.583 & 8.1\% & 0.6\% \\
 Claude Sonnet 4.6 & PT-CS code & partial credit & 295 & 0.652 & 6.6\% & 1.7\% \\
 Claude Sonnet 4.6 & PT-CS code & strict & 295 & 0.620 & 10.4\% & 1.7\% \\
-Claude Sonnet 4.6 & PT-CS short & partial credit & 84 & 0.748 & 7.1\% & 9.5\% \\
+Claude Sonnet 4.6 & PT-CS short & partial credit & 84 & 0.758 & 7.1\% & 9.5\% \\
 Claude Sonnet 4.6 & PT-CS short & strict & 84 & 0.791 & 7.1\% & 9.5\% \\
 Claude Sonnet 4.6 & RIAYN & partial credit & 149 & 0.677 & 9.4\% & 5.4\% \\
 Claude Sonnet 4.6 & RIAYN & strict & 149 & 0.676 & 9.3\% & 5.4\% \\
@@ -294,7 +294,7 @@ DeepSeek-V4-Flash & PT-CS code & partial credit & 295 & 0.674 & 10.4\% & 1.7\% \
 DeepSeek-V4-Flash & PT-CS code & partial credit, justification first & 295 & 0.606 & 11.6\% & 1.7\% \\
 DeepSeek-V4-Flash & PT-CS code & strict & 295 & 0.604 & 13.7\% & 1.7\% \\
 DeepSeek-V4-Flash & PT-CS short & partial credit & 84 & 0.669 & 11.2\% & 9.5\% \\
-DeepSeek-V4-Flash & PT-CS short & strict & 84 & 0.675 & 8.6\% & 9.5\% \\
+DeepSeek-V4-Flash & PT-CS short & strict & 84 & 0.676 & 8.6\% & 9.5\% \\
 DeepSeek-V4-Flash & RIAYN & partial credit & 149 & 0.732 & 6.6\% & 5.4\% \\
 DeepSeek-V4-Flash & RIAYN & partial credit, justification first & 149 & 0.774 & 8.5\% & 5.4\% \\
 DeepSeek-V4-Flash & RIAYN & strict & 149 & 0.668 & 9.1\% & 5.4\% \\
@@ -308,8 +308,8 @@ GPT-5.1 & Mohler & partial credit & 2273 & 0.647 & 8.5\% & 1.0\% \\
 GPT-5.1 & Mohler & strict & 2273 & 0.618 & 11.4\% & 1.0\% \\
 GPT-5.1 & PT-CS code & partial credit & 295 & 0.661 & 20.1\% & 1.7\% \\
 GPT-5.1 & PT-CS code & strict & 295 & 0.584 & 31.9\% & 1.7\% \\
-GPT-5.1 & PT-CS short & partial credit & 84 & 0.700 & 11.9\% & 9.5\% \\
-GPT-5.1 & PT-CS short & strict & 84 & 0.728 & 11.9\% & 9.5\% \\
+GPT-5.1 & PT-CS short & partial credit & 84 & 0.723 & 11.9\% & 9.5\% \\
+GPT-5.1 & PT-CS short & strict & 84 & 0.742 & 11.9\% & 9.5\% \\
 GPT-5.1 & RIAYN & partial credit & 149 & 0.667 & 11.8\% & 5.4\% \\
 GPT-5.1 & RIAYN & strict & 149 & 0.561 & 17.0\% & 5.4\% \\
 GPT-5.1 & SemEval & partial credit & 800 & 0.591 & 23.7\% & 59.1\% \\
@@ -319,8 +319,8 @@ Qwen3.5-35B-A3B & Mohler & strict & 2273 & 0.635 & 9.3\% & 1.0\% \\
 Qwen3.5-35B-A3B & PT-CS code & partial credit & 295 & 0.502 & 46.2\% & 1.7\% \\
 Qwen3.5-35B-A3B & PT-CS code & partial credit, justification first & 295 & 0.527 & 25.5\% & 1.7\% \\
 Qwen3.5-35B-A3B & PT-CS code & strict & 295 & 0.475 & 49.1\% & 1.7\% \\
-Qwen3.5-35B-A3B & PT-CS short & partial credit & 84 & 0.633 & 5.5\% & 9.5\% \\
-Qwen3.5-35B-A3B & PT-CS short & strict & 84 & 0.653 & 6.4\% & 9.5\% \\
+Qwen3.5-35B-A3B & PT-CS short & partial credit & 84 & 0.650 & 5.5\% & 9.5\% \\
+Qwen3.5-35B-A3B & PT-CS short & strict & 84 & 0.661 & 6.4\% & 9.5\% \\
 Qwen3.5-35B-A3B & RIAYN & partial credit & 149 & 0.554 & 19.6\% & 5.4\% \\
 Qwen3.5-35B-A3B & RIAYN & partial credit, justification first & 149 & 0.552 & 10.6\% & 5.4\% \\
 Qwen3.5-35B-A3B & RIAYN & strict & 149 & 0.543 & 16.2\% & 5.4\% \\
@@ -352,10 +352,10 @@ GPT-5.1 & PT-CS code & partial credit vs strict & 295 & +0.077 & [+0.047, +0.110
 Qwen3.5-35B-A3B & PT-CS code & partial credit vs strict & 295 & +0.028 & [+0.002, +0.056] &  \\
 Qwen3.5-35B-A3B & PT-CS code & partial credit + justification vs strict & 295 & +0.053 & [+0.013, +0.094] &  \\
 Qwen3.5-35B-A3B & PT-CS code & partial credit + justification vs partial credit & 295 & +0.025 & [$-$0.019, +0.069] &  \\
-Claude Sonnet 4.6 & PT-CS short & partial credit vs strict & 84 & $-$0.043 & [$-$0.100, $-$0.003] &  \\
-DeepSeek-V4-Flash & PT-CS short & partial credit vs strict & 84 & $-$0.007 & [$-$0.135, +0.085] &  \\
-GPT-5.1 & PT-CS short & partial credit vs strict & 84 & $-$0.028 & [$-$0.105, +0.034] &  \\
-Qwen3.5-35B-A3B & PT-CS short & partial credit vs strict & 84 & $-$0.020 & [$-$0.088, +0.045] &  \\
+Claude Sonnet 4.6 & PT-CS short & partial credit vs strict & 84 & $-$0.033 & [$-$0.087, +0.004] &  \\
+DeepSeek-V4-Flash & PT-CS short & partial credit vs strict & 84 & $-$0.008 & [$-$0.134, +0.084] &  \\
+GPT-5.1 & PT-CS short & partial credit vs strict & 84 & $-$0.019 & [$-$0.094, +0.041] &  \\
+Qwen3.5-35B-A3B & PT-CS short & partial credit vs strict & 84 & $-$0.011 & [$-$0.077, +0.053] &  \\
 Claude Sonnet 4.6 & RIAYN & partial credit vs strict & 149 & +0.001 & [$-$0.061, +0.055] &  \\
 DeepSeek-V4-Flash & RIAYN & partial credit vs strict & 149 & +0.064 & [+0.022, +0.109] & yes \\
 DeepSeek-V4-Flash & RIAYN & partial credit + justification vs strict & 149 & +0.106 & [+0.029, +0.186] &  \\
@@ -386,7 +386,7 @@ Model & Dataset & Alternative & N & $\Delta$QWK & 95\% CI & Cost & SD \\ \hline
 \endhead
 Claude Sonnet 4.6 & Mohler & strict instruction & 800 & $-$0.012 & [$-$0.021, $-$0.003] & 0.94 & 0.002 / 0.003 \\
 Claude Sonnet 4.6 & PT-CS code & strict instruction & 295 & $-$0.031 & [$-$0.054, $-$0.008] & 0.95 & 0.006 / 0.005 \\
-Claude Sonnet 4.6 & PT-CS short & strict instruction & 84 & +0.043 & [+0.003, +0.100] & 0.90 & 0.006 / 0.003 \\
+Claude Sonnet 4.6 & PT-CS short & strict instruction & 84 & +0.033 & [$-$0.004, +0.087] & 0.90 & 0.006 / 0.003 \\
 Claude Sonnet 4.6 & RIAYN & strict instruction & 149 & $-$0.001 & [$-$0.055, +0.061] & 0.96 & 0.006 / 0.003 \\
 Claude Sonnet 4.6 & SemEval & strict instruction & 800 & +0.002 & [$-$0.010, +0.014] & 0.95 & 0.004 / 0.005 \\
 DeepSeek-V4-Flash & Mohler & no guidance & 2273 & $-$0.094 & [$-$0.114, $-$0.076] & 0.63 & 0.025 / 0.020 \\
@@ -400,9 +400,9 @@ DeepSeek-V4-Flash & PT-CS code & shared conversation, reverse order & 104 & $-$0
 DeepSeek-V4-Flash & PT-CS code & shared conversation, exam order & 104 & $-$0.061 & [$-$0.130, +0.016] & 2.18 & 0.021 / 0.029 \\
 DeepSeek-V4-Flash & PT-CS code & strict instruction & 295 & $-$0.066 & [$-$0.105, $-$0.029] & 0.93 & 0.026 / 0.028 \\
 DeepSeek-V4-Flash & PT-CS code & whole exam & 295 & $-$0.090 & [$-$0.139, $-$0.043] & 1.08 & 0.039 / 0.028 \\
-DeepSeek-V4-Flash & PT-CS short & no guidance & 84 & $-$0.140 & [$-$0.393, +0.090] & 0.61 & 0.025 / 0.021 \\
-DeepSeek-V4-Flash & PT-CS short & reasoning on & 32 & $-$0.181 & [$-$0.463, +0.102] & 3.53 & 0.066 / 0.026 \\
-DeepSeek-V4-Flash & PT-CS short & strict instruction & 84 & $-$0.022 & [$-$0.073, +0.023] & 0.86 & 0.025 / 0.021 \\
+DeepSeek-V4-Flash & PT-CS short & no guidance & 84 & $-$0.139 & [$-$0.390, +0.091] & 0.61 & 0.025 / 0.021 \\
+DeepSeek-V4-Flash & PT-CS short & reasoning on & 32 & $-$0.175 & [$-$0.451, +0.106] & 3.53 & 0.066 / 0.026 \\
+DeepSeek-V4-Flash & PT-CS short & strict instruction & 84 & $-$0.021 & [$-$0.072, +0.024] & 0.86 & 0.025 / 0.021 \\
 DeepSeek-V4-Flash & RIAYN & criterion scoring & 149 & $-$0.071 & [$-$0.134, $-$0.006] & 1.20 & 0.034 / 0.011 \\
 DeepSeek-V4-Flash & RIAYN & justification & 149 & +0.042 & [$-$0.013, +0.100] & 1.18 & 0.045 / 0.011 \\
 DeepSeek-V4-Flash & RIAYN & no guidance & 149 & $-$0.159 & [$-$0.231, $-$0.093] & 0.51 & 0.014 / 0.011 \\
@@ -425,9 +425,9 @@ GPT-5.1 & PT-CS code & no guidance & 295 & $-$0.269 & [$-$0.329, $-$0.208] & 0.7
 GPT-5.1 & PT-CS code & reasoning on & 67 & $-$0.034 & [$-$0.172, +0.104] & 22.56 & 0.060 / 0.066 \\
 GPT-5.1 & PT-CS code & strict instruction & 295 & $-$0.077 & [$-$0.110, $-$0.047] & 0.94 & 0.061 / 0.066 \\
 GPT-5.1 & PT-CS code & whole exam & 295 & $-$0.214 & [$-$0.260, $-$0.168] & 1.03 & 0.049 / 0.066 \\
-GPT-5.1 & PT-CS short & no guidance & 84 & $-$0.178 & [$-$0.362, +0.001] & 0.70 & 0.036 / 0.053 \\
-GPT-5.1 & PT-CS short & reasoning on & 32 & +0.006 & [$-$0.142, +0.151] & 9.22 & 0.078 / 0.077 \\
-GPT-5.1 & PT-CS short & strict instruction & 84 & +0.028 & [$-$0.034, +0.105] & 0.88 & 0.063 / 0.053 \\
+GPT-5.1 & PT-CS short & no guidance & 84 & $-$0.197 & [$-$0.379, $-$0.021] & 0.70 & 0.036 / 0.053 \\
+GPT-5.1 & PT-CS short & reasoning on & 32 & $-$0.016 & [$-$0.163, +0.116] & 9.22 & 0.078 / 0.077 \\
+GPT-5.1 & PT-CS short & strict instruction & 84 & +0.019 & [$-$0.041, +0.094] & 0.88 & 0.063 / 0.053 \\
 GPT-5.1 & RIAYN & criterion scoring & 149 & +0.047 & [$-$0.043, +0.146] & 1.85 & 0.083 / 0.077 \\
 GPT-5.1 & RIAYN & no guidance & 149 & $-$0.102 & [$-$0.236, +0.028] & 0.55 & 0.048 / 0.077 \\
 GPT-5.1 & RIAYN & reasoning on & 149 & +0.124 & [+0.027, +0.228] & 23.15 & 0.038 / 0.077 \\
@@ -446,9 +446,9 @@ Qwen3.5-35B-A3B & PT-CS code & shared conversation, reverse order & 104 & $-$0.1
 Qwen3.5-35B-A3B & PT-CS code & shared conversation, exam order & 104 & $-$0.051 & [$-$0.113, +0.011] & 2.11 & 0.033 / 0.022 \\
 Qwen3.5-35B-A3B & PT-CS code & strict instruction & 295 & $-$0.035 & [$-$0.064, $-$0.008] & 0.94 & 0.019 / 0.019 \\
 Qwen3.5-35B-A3B & PT-CS code & whole exam & 295 & $-$0.126 & [$-$0.172, $-$0.082] & 1.24 & 0.020 / 0.019 \\
-Qwen3.5-35B-A3B & PT-CS short & no guidance & 84 & $-$0.316 & [$-$0.613, $-$0.026] & 0.65 & 0.016 / 0.024 \\
-Qwen3.5-35B-A3B & PT-CS short & reasoning on & 32 & +0.135 & [+0.019, +0.270] & 92.37 & 0.040 / 0.030 \\
-Qwen3.5-35B-A3B & PT-CS short & strict instruction & 84 & +0.019 & [$-$0.029, +0.075] & 0.87 & 0.024 / 0.024 \\
+Qwen3.5-35B-A3B & PT-CS short & no guidance & 84 & $-$0.331 & [$-$0.627, $-$0.045] & 0.65 & 0.016 / 0.024 \\
+Qwen3.5-35B-A3B & PT-CS short & reasoning on & 32 & +0.112 & [$-$0.005, +0.234] & 92.37 & 0.040 / 0.030 \\
+Qwen3.5-35B-A3B & PT-CS short & strict instruction & 84 & +0.011 & [$-$0.036, +0.064] & 0.87 & 0.024 / 0.024 \\
 Qwen3.5-35B-A3B & RIAYN & criterion scoring & 149 & +0.020 & [$-$0.053, +0.096] & 2.77 & 0.042 / 0.025 \\
 Qwen3.5-35B-A3B & RIAYN & justification & 149 & $-$0.002 & [$-$0.073, +0.068] & 1.54 & 0.077 / 0.025 \\
 Qwen3.5-35B-A3B & RIAYN & no guidance & 149 & $-$0.133 & [$-$0.218, $-$0.051] & 0.54 & 0.012 / 0.025 \\
@@ -536,17 +536,17 @@ PT-CS code & GPT-5.1 & no guidance; strict; per question; holistic & 295 & 0.392
 PT-CS code & Qwen3.5-35B-A3B & guidance; strict; whole exam; holistic & 295 & 0.376 & 0.134 &  \\
 PT-CS code & Qwen3.5-35B-A3B & no guidance; strict; per question; holistic & 295 & 0.319 & 0.076 &  \\
 PT-CS short & Claude Sonnet 4.6 & guidance; strict; per question; holistic & 84 & 0.791 & 1.496 &  \\
-PT-CS short & Claude Sonnet 4.6 & guidance; partial credit; per question; holistic & 84 & 0.748 & 1.659 & yes \\
-PT-CS short & GPT-5.1 & guidance; strict; per question; holistic & 84 & 0.728 & 0.473 &  \\
-PT-CS short & GPT-5.1 & guidance; partial credit; per question; holistic & 84 & 0.700 & 0.534 & yes \\
-PT-CS short & GLM-5.1 & guidance; strict; per question; holistic & 84 & 0.692 & 0.331 &  \\
+PT-CS short & Claude Sonnet 4.6 & guidance; partial credit; per question; holistic & 84 & 0.758 & 1.659 & yes \\
+PT-CS short & GPT-5.1 & guidance; strict; per question; holistic & 84 & 0.742 & 0.473 &  \\
+PT-CS short & GPT-5.1 & guidance; partial credit; per question; holistic & 84 & 0.723 & 0.534 & yes \\
+PT-CS short & GLM-5.1 & guidance; strict; per question; holistic & 84 & 0.719 & 0.331 &  \\
 PT-CS short & DeepSeek-V4-Flash & guidance; partial credit; per question; holistic & 84 & 0.669 & 0.035 & yes \\
-PT-CS short & Qwen3.5-35B-A3B & guidance; strict; per question; holistic & 84 & 0.652 & 0.048 &  \\
-PT-CS short & DeepSeek-V4-Flash & guidance; strict; per question; holistic & 84 & 0.647 & 0.030 &  \\
-PT-CS short & Qwen3.5-35B-A3B & guidance; partial credit; per question; holistic & 84 & 0.633 & 0.055 & yes \\
-PT-CS short & DeepSeek-V4-Flash & no guidance; strict; per question; holistic & 84 & 0.528 & 0.021 &  \\
-PT-CS short & GPT-5.1 & no guidance; strict; per question; holistic & 84 & 0.522 & 0.375 &  \\
-PT-CS short & Qwen3.5-35B-A3B & no guidance; strict; per question; holistic & 84 & 0.317 & 0.035 &  \\
+PT-CS short & Qwen3.5-35B-A3B & guidance; strict; per question; holistic & 84 & 0.661 & 0.048 &  \\
+PT-CS short & Qwen3.5-35B-A3B & guidance; partial credit; per question; holistic & 84 & 0.650 & 0.055 & yes \\
+PT-CS short & DeepSeek-V4-Flash & guidance; strict; per question; holistic & 84 & 0.648 & 0.030 &  \\
+PT-CS short & DeepSeek-V4-Flash & no guidance; strict; per question; holistic & 84 & 0.530 & 0.021 &  \\
+PT-CS short & GPT-5.1 & no guidance; strict; per question; holistic & 84 & 0.526 & 0.375 &  \\
+PT-CS short & Qwen3.5-35B-A3B & no guidance; strict; per question; holistic & 84 & 0.319 & 0.035 &  \\
 \hline
 \end{longtable}
 \endgroup
@@ -554,56 +554,101 @@ PT-CS short & Qwen3.5-35B-A3B & no guidance; strict; per question; holistic & 84
 
 \section{Validation of the guide}
 \begingroup\footnotesize
-\begin{longtable}{lllrrrllr}
-\caption{Validation of the guide on SAF and HARMOGEN-R, which played no part in building it (Fig. 10 of the paper), every configuration: agreement (QWK), the change against the guide on the same answers ($\Delta$QWK, 95\% bootstrap interval), the within-answer standard deviation across the three repetitions, and the share of grades that are exactly zero. On HARMOGEN-R the four instructors agree with each other at 0.873 to 0.926 QWK (every pair) and give zero to 7\% of the answers.}\\
+\begin{longtable}{lllrrrlclr}
+\caption{Validation of the guide on SAF and HARMOGEN-R, which played no part in building it (Fig. 10 of the paper), every configuration: agreement (QWK), the change against the guide on the same answers ($\Delta$QWK, 95\% bootstrap interval), whether the guide is non-inferior to the alternative (Non-inf.: the upper bound of the 90\% interval of $\Delta$QWK is below the $+0.05$ margin fixed in advance; alternatives without reasoning), the within-answer standard deviation across the three repetitions, and the share of grades that are exactly zero. On HARMOGEN-R the four instructors agree with each other at 0.873 to 0.926 QWK (every pair) and give zero to 7\% of the answers.}\\
 \hline
-Model & Dataset & Configuration & N & QWK & $\Delta$QWK & 95\% CI & SD & Zeros \\ \hline
+Model & Dataset & Configuration & N & QWK & $\Delta$QWK & 95\% CI & Non-inf. & SD & Zeros \\ \hline
 \endfirsthead
 \hline
-Model & Dataset & Configuration & N & QWK & $\Delta$QWK & 95\% CI & SD & Zeros \\ \hline
+Model & Dataset & Configuration & N & QWK & $\Delta$QWK & 95\% CI & Non-inf. & SD & Zeros \\ \hline
 \endhead
-Qwen3.5-35B-A3B & SAF & guide & 300 & 0.676 &  &  & 0.012 & 7\% \\
-Qwen3.5-35B-A3B & SAF & no guidance & 300 & 0.375 & $-$0.301 & [$-$0.384, $-$0.214] & 0.019 & 7\% \\
-Qwen3.5-35B-A3B & SAF & strict instruction & 300 & 0.647 & $-$0.029 & [$-$0.071, +0.013] & 0.020 & 10\% \\
-Qwen3.5-35B-A3B & SAF & reasoning on & 150 & 0.742 & +0.096 & [+0.030, +0.171] & 0.028 & 3\% \\
-DeepSeek-V4-Flash & SAF & guide & 300 & 0.615 &  &  & 0.017 & 10\% \\
-DeepSeek-V4-Flash & SAF & no guidance & 300 & 0.433 & $-$0.182 & [$-$0.265, $-$0.103] & 0.024 & 5\% \\
-DeepSeek-V4-Flash & SAF & strict instruction & 300 & 0.606 & $-$0.010 & [$-$0.050, +0.029] & 0.020 & 11\% \\
-DeepSeek-V4-Flash & SAF & reasoning on & 150 & 0.722 & +0.110 & [+0.035, +0.190] & 0.035 & 6\% \\
-GLM-5.1 & SAF & guide & 300 & 0.726 &  &  & 0.030 & 9\% \\
-GLM-5.1 & SAF & no guidance & 300 & 0.511 & $-$0.214 & [$-$0.314, $-$0.115] & 0.034 & 10\% \\
-GLM-5.1 & SAF & strict instruction & 300 & 0.671 & $-$0.055 & [$-$0.095, $-$0.012] & 0.023 & 12\% \\
-GLM-5.1 & SAF & reasoning on & 150 & 0.761 & +0.023 & [$-$0.034, +0.080] & 0.034 & 7\% \\
-GPT-5.1 & SAF & guide & 300 & 0.712 &  &  & 0.036 & 6\% \\
-GPT-5.1 & SAF & no guidance & 300 & 0.450 & $-$0.262 & [$-$0.332, $-$0.188] & 0.055 & 9\% \\
-GPT-5.1 & SAF & strict instruction & 300 & 0.721 & +0.010 & [$-$0.017, +0.039] & 0.034 & 9\% \\
-GPT-5.1 & SAF & reasoning on & 150 & 0.763 & +0.051 & [$-$0.023, +0.130] & 0.047 & 4\% \\
-Claude Sonnet 4.6 & SAF & guide & 300 & 0.701 &  &  & 0.002 & 4\% \\
-Claude Sonnet 4.6 & SAF & no guidance & 300 & 0.425 & $-$0.277 & [$-$0.343, $-$0.210] & 0.005 & 1\% \\
-Claude Sonnet 4.6 & SAF & strict instruction & 300 & 0.652 & $-$0.049 & [$-$0.073, $-$0.027] & 0.003 & 4\% \\
-Qwen3.5-35B-A3B & HARMOGEN-R & guide & 129 & 0.674 &  &  & 0.011 & 40\% \\
-Qwen3.5-35B-A3B & HARMOGEN-R & no guidance & 129 & 0.679 & +0.005 & [$-$0.053, +0.082] & 0.007 & 19\% \\
-Qwen3.5-35B-A3B & HARMOGEN-R & strict instruction & 129 & 0.608 & $-$0.066 & [$-$0.097, $-$0.038] & 0.009 & 52\% \\
-Qwen3.5-35B-A3B & HARMOGEN-R & criterion scoring & 129 & 0.692 & +0.018 & [$-$0.044, +0.095] & 0.020 & 39\% \\
-Qwen3.5-35B-A3B & HARMOGEN-R & reasoning on & 129 & 0.921 & +0.247 & [+0.175, +0.341] & 0.028 & 16\% \\
-DeepSeek-V4-Flash & HARMOGEN-R & guide & 129 & 0.700 &  &  & 0.022 & 36\% \\
-DeepSeek-V4-Flash & HARMOGEN-R & no guidance & 129 & 0.732 & +0.032 & [$-$0.021, +0.082] & 0.018 & 4\% \\
-DeepSeek-V4-Flash & HARMOGEN-R & strict instruction & 129 & 0.739 & +0.039 & [$-$0.024, +0.127] & 0.024 & 40\% \\
-DeepSeek-V4-Flash & HARMOGEN-R & criterion scoring & 129 & 0.787 & +0.088 & [+0.008, +0.187] & 0.016 & 31\% \\
-DeepSeek-V4-Flash & HARMOGEN-R & reasoning on & 129 & 0.856 & +0.156 & [+0.075, +0.262] & 0.027 & 20\% \\
-GLM-5.1 & HARMOGEN-R & guide & 129 & 0.901 &  &  & 0.019 & 8\% \\
-GLM-5.1 & HARMOGEN-R & no guidance & 129 & 0.655 & $-$0.245 & [$-$0.313, $-$0.186] & 0.024 & 20\% \\
-GLM-5.1 & HARMOGEN-R & strict instruction & 129 & 0.866 & $-$0.035 & [$-$0.061, $-$0.013] & 0.025 & 12\% \\
-GLM-5.1 & HARMOGEN-R & criterion scoring & 129 & 0.918 & +0.017 & [$-$0.017, +0.052] & 0.031 & 11\% \\
-GLM-5.1 & HARMOGEN-R & reasoning on & 129 & 0.933 & +0.032 & [+0.003, +0.064] & 0.024 & 12\% \\
-GPT-5.1 & HARMOGEN-R & guide & 129 & 0.884 &  &  & 0.040 & 13\% \\
-GPT-5.1 & HARMOGEN-R & no guidance & 129 & 0.660 & $-$0.224 & [$-$0.285, $-$0.169] & 0.027 & 8\% \\
-GPT-5.1 & HARMOGEN-R & strict instruction & 129 & 0.820 & $-$0.063 & [$-$0.098, $-$0.034] & 0.047 & 18\% \\
-GPT-5.1 & HARMOGEN-R & criterion scoring & 129 & 0.885 & +0.002 & [$-$0.023, +0.026] & 0.039 & 18\% \\
-GPT-5.1 & HARMOGEN-R & reasoning on & 129 & 0.941 & +0.058 & [+0.024, +0.096] & 0.026 & 8\% \\
-Claude Sonnet 4.6 & HARMOGEN-R & guide & 129 & 0.798 &  &  & 0.002 & 11\% \\
-Claude Sonnet 4.6 & HARMOGEN-R & no guidance & 129 & 0.591 & $-$0.206 & [$-$0.254, $-$0.162] & 0.001 & 2\% \\
-Claude Sonnet 4.6 & HARMOGEN-R & strict instruction & 129 & 0.757 & $-$0.040 & [$-$0.068, $-$0.018] & 0.003 & 11\% \\
+Qwen3.5-35B-A3B & SAF & guide & 300 & 0.669 &  &  &  & 0.012 & 7\% \\
+Qwen3.5-35B-A3B & SAF & no guidance & 300 & 0.367 & $-$0.302 & [$-$0.385, $-$0.215] & yes & 0.019 & 7\% \\
+Qwen3.5-35B-A3B & SAF & strict instruction & 300 & 0.640 & $-$0.028 & [$-$0.071, +0.013] & yes & 0.020 & 10\% \\
+Qwen3.5-35B-A3B & SAF & reasoning on & 150 & 0.738 & +0.092 & [+0.027, +0.167] &  & 0.028 & 3\% \\
+DeepSeek-V4-Flash & SAF & guide & 300 & 0.620 &  &  &  & 0.017 & 10\% \\
+DeepSeek-V4-Flash & SAF & no guidance & 300 & 0.459 & $-$0.161 & [$-$0.245, $-$0.080] & yes & 0.024 & 5\% \\
+DeepSeek-V4-Flash & SAF & strict instruction & 300 & 0.604 & $-$0.015 & [$-$0.056, +0.025] & yes & 0.020 & 11\% \\
+DeepSeek-V4-Flash & SAF & reasoning on & 150 & 0.722 & +0.092 & [+0.011, +0.181] &  & 0.035 & 6\% \\
+GLM-5.1 & SAF & guide & 300 & 0.718 &  &  &  & 0.030 & 9\% \\
+GLM-5.1 & SAF & no guidance & 300 & 0.502 & $-$0.216 & [$-$0.317, $-$0.117] & yes & 0.034 & 10\% \\
+GLM-5.1 & SAF & strict instruction & 300 & 0.660 & $-$0.059 & [$-$0.100, $-$0.017] & yes & 0.023 & 12\% \\
+GLM-5.1 & SAF & reasoning on & 150 & 0.761 & +0.023 & [$-$0.034, +0.080] &  & 0.034 & 7\% \\
+GPT-5.1 & SAF & guide & 300 & 0.713 &  &  &  & 0.036 & 6\% \\
+GPT-5.1 & SAF & no guidance & 300 & 0.454 & $-$0.259 & [$-$0.330, $-$0.187] & yes & 0.055 & 9\% \\
+GPT-5.1 & SAF & strict instruction & 300 & 0.714 & +0.001 & [$-$0.026, +0.030] & yes & 0.034 & 9\% \\
+GPT-5.1 & SAF & reasoning on & 150 & 0.762 & +0.045 & [$-$0.029, +0.122] &  & 0.047 & 4\% \\
+Claude Sonnet 4.6 & SAF & guide & 300 & 0.701 &  &  &  & 0.002 & 4\% \\
+Claude Sonnet 4.6 & SAF & no guidance & 300 & 0.442 & $-$0.258 & [$-$0.331, $-$0.188] & yes & 0.005 & 1\% \\
+Claude Sonnet 4.6 & SAF & strict instruction & 300 & 0.664 & $-$0.036 & [$-$0.061, $-$0.013] & yes & 0.003 & 4\% \\
+Qwen3.5-35B-A3B & HARMOGEN-R & guide & 129 & 0.671 &  &  &  & 0.011 & 40\% \\
+Qwen3.5-35B-A3B & HARMOGEN-R & no guidance & 129 & 0.679 & +0.007 & [$-$0.049, +0.085] & no & 0.007 & 19\% \\
+Qwen3.5-35B-A3B & HARMOGEN-R & strict instruction & 129 & 0.608 & $-$0.063 & [$-$0.095, $-$0.034] & yes & 0.009 & 52\% \\
+Qwen3.5-35B-A3B & HARMOGEN-R & criterion scoring & 129 & 0.692 & +0.021 & [$-$0.042, +0.097] & no & 0.020 & 39\% \\
+Qwen3.5-35B-A3B & HARMOGEN-R & reasoning on & 129 & 0.921 & +0.250 & [+0.177, +0.343] &  & 0.028 & 16\% \\
+DeepSeek-V4-Flash & HARMOGEN-R & guide & 129 & 0.700 &  &  &  & 0.022 & 36\% \\
+DeepSeek-V4-Flash & HARMOGEN-R & no guidance & 129 & 0.732 & +0.032 & [$-$0.021, +0.082] & no & 0.018 & 4\% \\
+DeepSeek-V4-Flash & HARMOGEN-R & strict instruction & 129 & 0.739 & +0.039 & [$-$0.024, +0.127] & no & 0.024 & 40\% \\
+DeepSeek-V4-Flash & HARMOGEN-R & criterion scoring & 129 & 0.787 & +0.087 & [+0.009, +0.187] & no & 0.016 & 31\% \\
+DeepSeek-V4-Flash & HARMOGEN-R & reasoning on & 129 & 0.856 & +0.156 & [+0.075, +0.262] &  & 0.027 & 20\% \\
+GLM-5.1 & HARMOGEN-R & guide & 129 & 0.901 &  &  &  & 0.019 & 8\% \\
+GLM-5.1 & HARMOGEN-R & no guidance & 129 & 0.655 & $-$0.245 & [$-$0.313, $-$0.186] & yes & 0.024 & 20\% \\
+GLM-5.1 & HARMOGEN-R & strict instruction & 129 & 0.866 & $-$0.035 & [$-$0.061, $-$0.013] & yes & 0.025 & 12\% \\
+GLM-5.1 & HARMOGEN-R & criterion scoring & 129 & 0.915 & +0.014 & [$-$0.020, +0.049] & yes & 0.031 & 11\% \\
+GLM-5.1 & HARMOGEN-R & reasoning on & 129 & 0.933 & +0.032 & [+0.003, +0.064] &  & 0.024 & 12\% \\
+GPT-5.1 & HARMOGEN-R & guide & 129 & 0.884 &  &  &  & 0.040 & 13\% \\
+GPT-5.1 & HARMOGEN-R & no guidance & 129 & 0.660 & $-$0.224 & [$-$0.285, $-$0.169] & yes & 0.027 & 8\% \\
+GPT-5.1 & HARMOGEN-R & strict instruction & 129 & 0.820 & $-$0.063 & [$-$0.098, $-$0.034] & yes & 0.047 & 18\% \\
+GPT-5.1 & HARMOGEN-R & criterion scoring & 129 & 0.885 & +0.002 & [$-$0.023, +0.026] & yes & 0.039 & 18\% \\
+GPT-5.1 & HARMOGEN-R & reasoning on & 129 & 0.941 & +0.058 & [+0.024, +0.096] &  & 0.026 & 8\% \\
+Claude Sonnet 4.6 & HARMOGEN-R & guide & 129 & 0.798 &  &  &  & 0.002 & 11\% \\
+Claude Sonnet 4.6 & HARMOGEN-R & no guidance & 129 & 0.591 & $-$0.206 & [$-$0.254, $-$0.162] & yes & 0.001 & 2\% \\
+Claude Sonnet 4.6 & HARMOGEN-R & strict instruction & 129 & 0.757 & $-$0.040 & [$-$0.068, $-$0.018] & yes & 0.003 & 11\% \\
+\hline
+\end{longtable}
+\endgroup
+
+
+\section{Robustness checks}
+\begingroup\footnotesize
+\begin{longtable}{>{\raggedright\arraybackslash}p{6.4cm}rrrrr}
+\caption{Resampling whole questions instead of answers. The paper's intervals resample the answers; answers to the same question may be alike, so here the questions of the compared answers are resampled with replacement (10,000 times, same seed). Counts of significant results (95\% interval excluding zero) and of those that survive Holm's correction in their family. Criterion scoring counts its significant changes in either direction (a gain for GPT-5.1 on RIAYN and a loss for DeepSeek-V4-Flash on PT-CS code). The validation is not recomputed this way: HARMOGEN-R has only three questions.}\\
+\hline
+Result & Of & Answers & Holm & Questions & Holm \\ \hline
+\endfirsthead
+\hline
+Result & Of & Answers & Holm & Questions & Holm \\ \hline
+\endhead
+Reasoning on (RQ1), significant gains & 20 & 5 & 3 & 4 & 2 \\
+Evaluation guidance (RQ2), significant gains & 15 & 13 & 12 & 11 & 10 \\
+Whole exam (RQ3), significant losses & 3 & 2 & 2 & 2 & 2 \\
+Criterion scoring (RQ3), significant changes & 6 & 2 & 2 & 2 & 0 \\
+Test 1, guide significantly better & 56 & 33 & -- & 28 & -- \\
+Test 1, alternative significantly better & 56 & 0 & -- & 1 & -- \\
+\hline
+\end{longtable}
+\endgroup
+
+\begingroup\footnotesize
+\begin{longtable}{llrrrr}
+\caption{QWK on single runs. The paper computes QWK on the mean of the repeated grades of each answer, while the guide makes one call per answer. Here the guide and each alternative are scored run by run (each run against the same run of the other) and the differences averaged over the runs: the mean $\Delta$QWK (alternative minus guide) on the mean of the grades and on single runs, per alternative, and the comparisons whose sign differs. On single runs the guide's QWK is 0.009 lower on average ($-$0.003 to +0.045); the comparisons whose sign differs are all within 0.014 of zero.}\\
+\hline
+Part & Alternative & N & Mean of $k$ & Single run & Sign differs \\ \hline
+\endfirsthead
+\hline
+Part & Alternative & N & Mean of $k$ & Single run & Sign differs \\ \hline
+\endhead
+Test 1 & strict instruction & 22 & $-$0.018 & $-$0.020 & 2 \\
+Test 1 & no guidance & 15 & $-$0.190 & $-$0.185 & 0 \\
+Test 1 & reasoning on & 17 & +0.024 & +0.013 & 0 \\
+Test 1 & justification & 4 & $-$0.001 & $-$0.020 & 0 \\
+Test 1 & criterion scoring & 6 & $-$0.046 & $-$0.055 & 0 \\
+Test 1 & whole exam & 3 & $-$0.143 & $-$0.141 & 0 \\
+Test 1 & shared conversation & 6 & $-$0.149 & $-$0.125 & 0 \\
+Validation & no guidance & 10 & $-$0.183 & $-$0.179 & 0 \\
+Validation & strict instruction & 10 & $-$0.030 & $-$0.029 & 0 \\
+Validation & reasoning on & 8 & +0.093 & +0.092 & 0 \\
+Validation & criterion scoring & 4 & +0.031 & +0.029 & 1 \\
 \hline
 \end{longtable}
 \endgroup

@@ -100,16 +100,16 @@ submissions to a practice website, all but one in Java, whose question-specific 
 one or more accepted solution paths; two graders scored each submission in consensus.
 
 \emph{PT-CS} is a new dataset of Java exams in Portuguese from a course at Iscte, graded on a
-proof-of-concept grading platform built within this research project; the answers were graded for the
+digital platform; the answers were graded for the
 course and reused afterwards for this study. Each question has its own rubric and no reference solution.
 Two teachers set the final grade of each answer jointly. PT-CS consists of 379 answers: 295 code answers
-and 84 short answers on theory, from 97 exams. The final grade is a joint decision with no per-teacher
+and 84 short answers on theory, from 97 of the course's exams. The final grade is a joint decision with no per-teacher
 record, so inter-rater agreement cannot be computed on PT-CS.
 
 Two experiments need complete exams rather than single answers: whole-exam grading (scope) and the
 conversation sub-study. The scope contrast is scored only on the PT-CS answers within those exams. The
 conversation sub-study compares the model's grades with one another, never with a teacher's, so it
-needs no teacher grade and can use any exam of the collection.
+needs no teacher grade and can use any of the course's exams.
 
 \subsection{Models and Backends}
 \label{sec:models}
@@ -119,8 +119,9 @@ needs no teacher grade and can use any exam of the collection.
 %% Model choice: each cited study found that family among its best graders (abstracts checked 2026-10-18;
 %% Jukiewicz names no best model, so GPT cites Li and Sessler).
 
-Every model lets reasoning be switched on or off within the same model, so the reasoning comparison
-holds the model fixed and flips only its thinking mode. The model families follow prior studies of LLM
+For the four models graded with reasoning both off and on, reasoning is switched within the same model,
+so the reasoning comparison holds the model fixed and flips only its thinking mode; Claude Sonnet 4.6,
+added in the follow-up experiment, was graded with reasoning off only. The model families follow prior studies of LLM
 grading of student answers, in which Claude~\cite{cipriano_leveraging_2025,moazzez_assessing_2024},
 GPT~\cite{li_study_2025,sessler_canai_2025}, DeepSeek~\cite{aminah_evaluating_2025,li_study_2025},
 and Qwen~\cite{jiang_eipe_2026,havare_ai-based_2025} models were among the best graders tested.
@@ -133,7 +134,7 @@ each token, \emph{DeepSeek-V4-Flash}~\cite{deepseek_v4_2026}
 (\texttt{deepseek-ai/DeepSeek-V4-Flash}), and \emph{GLM-5.1}~\cite{glm5_2026}
 (\texttt{zai-org/GLM-5.1}), run via the DeepInfra inference application programming interface (API)
 with \texttt{enable\_thinking} off or on, and GLM-5.1 also via OpenRouter. The closed models are
-\emph{GPT-5.1}~\cite{openai_gpt51_2025} (via OpenAI, \texttt{reasoning\_effort} set to \texttt{none} or \texttt{high}) and \emph{Claude Sonnet
+\emph{GPT-5.1}~\cite{openai_gpt51_2025} (via OpenAI, \texttt{reasoning\_effort} set to \texttt{none} or \texttt{high}, its highest level) and \emph{Claude Sonnet
 4.6}~\cite{anthropic_sonnet46_2026} (\texttt{claude-sonnet-4-6}, via Anthropic, reasoning off). The API's
 structured output restricts Claude Sonnet 4.6's answer to the JSON score that every prompt asks for, so
 that, like the other models with reasoning off, it returns the score without writing an analysis first.
@@ -164,8 +165,8 @@ a fixed random 800 of the 2273 Mohler answers, and GLM-5.1 grades only the code 
 most expensive setting, because reasoning traces run long, so it grades fixed random samples
 (Table~\ref{tab:datasets}): all 149 RIAYN answers and 32 to 175 answers on the other sets. The
 whole-exam arm grades the 88 exams that contain at least one of the 295 PT-CS code answers, about four
-questions each (one to six). The conversation sub-study grades 80 exams drawn at random from the 181
-exams of the collection that contain code answers, in both answer orders, with Qwen3.5 and
+questions each (one to six). The conversation sub-study grades 80 exams drawn at random from the course's
+181 exams that contain code answers, in both answer orders, with Qwen3.5 and
 DeepSeek-V4-Flash; GLM-5.1 grades the first 20 of these exams, with $k=3$.
 
 \subsection{Metrics and Statistics}
@@ -174,8 +175,8 @@ DeepSeek-V4-Flash; GLM-5.1 grades the first 20 of these exams, with $k=3$.
 Every grade, the teacher's and the model's, is divided by the question's maximum mark, so all grades lie
 between 0 and 1 whatever the dataset's scale. A Mohler question is worth 5 points, a SemEval answer is
 either correct or incorrect (1 or 0), and a question is worth 4 to 12 points in RIAYN and 1 to 12 in
-PT-CS. A model score below zero, which can arise when a rubric has penalty criteria and the criterion
-scores are summed, is set to zero.
+PT-CS. A model score below zero, which arose when a rubric had penalty criteria and the model applied
+only a penalty, is set to zero.
 
 Agreement is reported as quadratic weighted kappa (QWK), the standard measure for ordinal scoring: it
 penalises large disagreements between grader and human grade more than small ones. It reaches 1 at
@@ -185,7 +186,7 @@ produces a continuous score. We therefore average each item's $k$ grades, round 
 six ordered levels (0 to 5, the resolution of Mohler's native grades; a value exactly halfway between two
 levels goes to the even one), and compute QWK on these levels.
 Using the same six levels for every dataset makes the QWK values comparable. We fixed this scale in
-advance; recomputing on five or seven levels changes no baseline QWK by more than 0.05.
+advance; recomputing on five or seven levels changes no baseline QWK by more than 0.06.
 
 Consistency is the mean within-item standard deviation across the $k$ repetitions (SD$_k$); it needs no
 human grade, and a lower value means more reproducible grading. The reasoning premium is the ratio of
@@ -208,7 +209,9 @@ call. The scope contrast uses the 295 PT-CS code questions of the whole-exam arm
 
 We report each difference with a 95\% confidence interval (CI), obtained by resampling the items with
 replacement 10,000 times (a bootstrap). A difference is significant when its interval excludes zero; its
-p-value is twice the share of resamples that fall on the other side of zero. Each
+p-value is twice the share of resamples that fall on the other side of zero. Answers to the same question
+may be alike, so we also repeated every comparison resampling whole questions, and computed QWK on single
+runs as well as on the mean of the $k$ grades (supplementary material). Each
 research question involves several comparisons, so we also apply Holm's correction within each group of
 related comparisons (reasoning, guidance, grading instruction, scope, and decomposition). The correction
 raises the bar for each comparison so that the chance of any false positive in the group stays at 5\%. A
@@ -230,8 +233,8 @@ communication networks, each scored with partial credit by two trained annotator
 with a reference answer; we use a fixed-seed random sample of 300 of its 2981 answers, covering its 31
 questions. \emph{HARMOGEN-R}~\cite{mendonca_harmogenr_2026} provides C++ code answers from a data-structures
 course, in Portuguese, each graded by four instructors independently and blind with their own rubric of
-separately scored criteria; we use all 129 non-empty answers to its three code questions, with the
-instructors' mean as the human grade. On both, the guide's configuration is compared with alternatives that
+separately scored criteria (we do not use the dataset's rubrics written by LLMs); we use all 129 non-empty
+answers to its three code questions, with the instructors' mean as the human grade. On both, the guide's configuration is compared with alternatives that
 each change one of its settings: no guidance, the strict instruction in place of the request for partial
 credit, reasoning on, and, on code, a score per criterion. The models grade every configuration three
 times, with two exceptions: Claude Sonnet 4.6 grades with reasoning off and one holistic score, as in the

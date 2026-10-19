@@ -25,8 +25,8 @@ def _qwk_items(d):
     s = d[d.pred_norm.notna() & d.gold_norm.notna()].groupby("item_id").agg(p=("pred_norm", "mean"), g=("gold_norm", "mean"))
     if len(s) < 8:
         return np.nan, s
-    po = (s.p * K).round().clip(0, K).astype(int)
-    go = (s.g * K).round().clip(0, K).astype(int)
+    po = phase5.to_levels(s.p, K)
+    go = phase5.to_levels(s.g, K)
     return cohen_kappa_score(go, po, weights="quadratic", labels=list(range(K + 1))), s
 
 
@@ -37,7 +37,7 @@ _W = (np.subtract.outer(np.arange(K + 1), np.arange(K + 1)) ** 2).astype(float)
 
 def _levels(x) -> np.ndarray:
     """Six ordered levels of a 0-1 score; halves go to the even level (numpy's rounding, stated in Method)."""
-    return (np.asarray(x, dtype=float) * K).round().clip(0, K).astype(int)
+    return phase5.to_levels(x, K)
 
 
 def _kappas(counts: np.ndarray) -> np.ndarray:

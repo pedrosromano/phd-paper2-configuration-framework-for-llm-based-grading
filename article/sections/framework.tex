@@ -197,26 +197,23 @@ chosen; the validation at the end of this section judges it on answers that play
 Fig.~\ref{fig:guidetests} gives the results of both tests.
 
 Of the 56 comparisons without reasoning, the guide agreed significantly better with the teachers than
-the alternative in 32 (57\%), showed no significant difference in 23 (41\%), and agreed worse in one
-(2\%): Claude Sonnet 4.6
-with the strict instruction on the 84 PT-CS short answers, by 0.043 QWK (Fig.~\ref{fig:guidetests}a). No
-alternative to the guidance, the scope, the decomposition, or the clean conversation agreed significantly
-better than the guide for any model. Most alternatives also made grades less consistent (34 of the 56 comparisons),
+the alternative in 33 (59\%) and showed no significant difference in the other 23 (41\%); no alternative
+without reasoning agreed significantly better than the guide for any model (Fig.~\ref{fig:guidetests}a). Most alternatives also made grades less consistent (34 of the 56 comparisons),
 and every alternative except dropping the guidance or the partial-credit request cost more per grade.
 
 Reasoning is the one setting in which the guide gives something up. With reasoning on, agreement rose
-significantly in 7 of 17 comparisons, five of them for Qwen3.5, the model with the strongest
+significantly in 6 of 17 comparisons, four of them for Qwen3.5, the model with the strongest
 zero-collapse, and never fell; but grades became less consistent in 14 of the 17, and each grade cost
 2.6 to 179 times as much. The guide keeps reasoning off for that cost and that loss of consistency.
 
 Across models, the guide's configuration reached or approached the best agreement in the study
 (Fig.~\ref{fig:guidetests}b). With the model best suited to each dataset, it was the best
 configuration on Mohler (GPT-5.1, 0.653 QWK) and on PT-CS code (DeepSeek-V4-Flash, 0.674), and came within
-0.002 of the best on SemEval, 0.014 on RIAYN, and 0.043 on the PT-CS short answers. On the sampled answers,
-which add the configurations with reasoning, the best configuration led it by at most 0.053. A teacher
+0.002 of the best on SemEval, 0.014 on RIAYN, and 0.033 on the PT-CS short answers. On the sampled answers,
+which add the configurations with reasoning, the best configuration led it by at most 0.043. A teacher
 cannot pick the best-suited model before knowing the grades, so we also fixed the model in advance: the
 guide then fell short of the best configuration by 0.02 to 0.05 QWK on average across the datasets with
-four of the five models, and by 0.13 with Qwen3.5. On code it graded at 0.65 to 0.76 QWK with those four
+four of the five models, and by 0.12 with Qwen3.5. On code it graded at 0.65 to 0.76 QWK with those four
 models and at 0.50 and 0.55 with Qwen3.5, as that model's zero-collapse persisted under partial credit; the
 guide does not choose the model, and on code the model matters more than any single setting. With the cheapest model, DeepSeek-V4-Flash, it cost 0.02 to
 0.09 euros per thousand grades, and no cheaper configuration agreed better, apart from a difference of
@@ -257,12 +254,14 @@ with reasoning off and one holistic score only.}
 \end{figure*}
 
 On the SAF short answers, the guide met the criterion fixed in advance with every model: no alternative
-without reasoning agreed significantly better with the human grades. Under the guide the five models agreed at 0.62 to
-0.73 QWK, and with GLM-5.1 the guide was the best configuration without reasoning on the dataset.
-Removing the guidance lowered agreement by 0.18 to 0.30 for every model, and the strict instruction was no
-better: it lowered agreement for GLM-5.1 and Claude Sonnet 4.6, by 0.055 and 0.049, and changed it by less
-than 0.03 for the other three. Reasoning on raised agreement significantly for Qwen3.5 (by 0.096) and
-DeepSeek-V4-Flash (by 0.110), and not significantly for GPT-5.1 and GLM-5.1, at 3.5 to 55 times the cost
+without reasoning agreed significantly better with the human grades. With the $\pm0.05$ margin fixed in
+advance, the guide was also non-inferior to every one of them: the upper bound of the 90\% interval of
+each alternative's advantage stayed below 0.05 QWK. Under the guide the five models agreed at 0.62 to
+0.72 QWK, and with GLM-5.1 the guide was the best configuration without reasoning on the dataset.
+Removing the guidance lowered agreement by 0.16 to 0.30 for every model, and the strict instruction was no
+better: it lowered agreement for GLM-5.1 and Claude Sonnet 4.6, by 0.059 and 0.036, and changed it by less
+than 0.03 for the other three. Reasoning on raised agreement significantly for Qwen3.5 and
+DeepSeek-V4-Flash (by 0.092 each), and not significantly for GPT-5.1 and GLM-5.1, at 3.5 to 55 times the cost
 per grade.
 
 On the HARMOGEN-R code answers, the result depended on the model. With GLM-5.1 and GPT-5.1, the guide
@@ -273,11 +272,18 @@ significantly better:
 removing the guidance lowered agreement by 0.21 to 0.25, and the strict instruction lowered it by 0.035
 to 0.063. With Qwen3.5 and DeepSeek-V4-Flash, the guide scored 40\% and 36\% of the answers as zero,
 against 7\% for the instructors, and agreed at 0.67 and 0.70: both models showed the zero-collapse,
-DeepSeek-V4-Flash for the first time in the study. For DeepSeek-V4-Flash a score per criterion agreed
-better than the guide, by 0.088, so on code the guide missed the criterion for this model; for Qwen3.5 no
-alternative without reasoning agreed significantly better.
+DeepSeek-V4-Flash for the first time in the study. It was the rubric that brought the collapse out:
+without guidance the two models gave zero to 19\% and 4\% of the answers, and with the rubric, under either
+instruction, to 36 to 52\%. In the main study the RIAYN rubric, which also scores separate steps, likewise
+raised the zeros of Qwen3.5 and GPT-5.1 (from 7 to 16\% and from 6 to 17\%), while the PT-CS rubrics
+lowered them. For DeepSeek-V4-Flash a score per criterion agreed
+better than the guide, by 0.087, so on code the guide missed the criterion for this model; for Qwen3.5 no
+alternative without reasoning agreed significantly better. The guide was non-inferior to every alternative
+without reasoning for GLM-5.1, GPT-5.1, and Claude Sonnet 4.6, but for the two models that collapsed only
+to Qwen3.5's strict instruction, one of their six alternatives; in the other five, the alternative's
+advantage could exceed the margin.
 Reasoning on raised agreement significantly for all four models that have it, at 3.5 to 26 times the cost
-per grade: by 0.032 for GLM-5.1 and 0.058 for GPT-5.1, and by 0.156 for DeepSeek-V4-Flash and 0.247 for
+per grade: by 0.032 for GLM-5.1 and 0.058 for GPT-5.1, and by 0.156 for DeepSeek-V4-Flash and 0.250 for
 Qwen3.5, cutting their zeros from 36\% to 20\% and from 40\% to 16\%, as in the main study.
 
 Overall, on data it was not built from, the guide met the criterion fixed in advance on short answers

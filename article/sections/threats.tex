@@ -12,6 +12,16 @@ on it alone; none of the public datasets links answers into exams. The PT-CS exa
 result holds for exams of a few questions. The PT-CS grades are a joint teacher decision with no
 per-teacher record, so no agreement ceiling between teachers can be computed on PT-CS.
 
+Two checks of the statistics, given in the supplementary material, move a few counts but no conclusion. The intervals
+resample answers, although answers to the same question may be alike; resampling whole questions instead
+leaves slightly fewer significant results: reasoning raises agreement significantly in four of the twenty
+combinations rather than five, guidance in eleven of fifteen rather than thirteen, and the guide agrees
+significantly better than 28 of the 56 alternatives without reasoning rather than 33, while one alternative,
+Claude Sonnet 4.6 with the strict instruction on the 84 PT-CS short answers, then agrees better, by 0.033.
+Agreement is computed on the mean
+of the repeated grades, while the guide makes one call per answer; on single runs the guide's QWK is about
+0.01 lower, and the only differences that change sign are within 0.02 of zero.
+
 The results are conditional on the served backends, whose quantisation, inference software, and hardware
 differ across providers, so what carries over to another backend is the comparison between
 configurations rather than the absolute scores; temperature 0 does not make grading deterministic either.

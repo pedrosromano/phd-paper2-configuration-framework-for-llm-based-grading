@@ -8,9 +8,9 @@
 An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them only
 in fragments. We tested them together for computer-science grading under one controlled protocol. The
 central finding is that the cheap changes were the effective ones. Supplying a rubric or a reference answer raised agreement significantly in thirteen of fifteen
-model-dataset combinations, by 0.095 to 0.336 QWK, for 1.2 to 1.8 times the cost per grade, and asking the
+model-dataset combinations, by 0.095 to 0.341 QWK, for 1.2 to 1.8 times the cost per grade, and asking the
 model to award partial credit raised code agreement by up to 0.11 QWK for a few extra input tokens. Reasoning raised
-agreement significantly in six of twenty combinations, three after correcting for multiple comparisons, while
+agreement significantly in five of twenty combinations, three after correcting for multiple comparisons, while
 multiplying output tokens by up to 925 and usually making grades less consistent. Its clearest gains came on
 code, for models that scored many partially correct answers as zero. This zero-collapse is a property of the
 model with reasoning off: asking for partial credit reduced it in GPT-5.1, but not in Qwen3.5, which names
@@ -22,8 +22,8 @@ Putting together the options that worked best in each comparison, we built a con
 leaves the choice of model open: give the model the rubric or reference answer and ask it for partial
 credit, and grade one question per call, with reasoning off, a single holistic score, and a clean
 conversation for each answer. Tested on five models against the 56 other configurations of the same
-models without reasoning, the guide agreed significantly better with the teachers in 57\% of the
-comparisons, showed no significant difference in 41\%, and agreed worse in 2\%. With the model best suited
+models without reasoning, the guide agreed significantly better with the teachers in 59\% of the
+comparisons and showed no significant difference in the other 41\%; none agreed significantly better. With the model best suited
 to each dataset, it matched or came within 0.05 QWK of the best configuration in the study, and with the
 cheapest model no cheaper configuration graded better, apart from a difference of 0.001 QWK on one
 dataset. Validated on two datasets that played no part in building it, the guide met the criterion fixed

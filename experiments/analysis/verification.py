@@ -16,6 +16,10 @@ Statistics as in the paper: QWK on six levels of the mean of the k grades, dQWK 
 both graded, 10,000 bootstrap resamples over answers, 95% CI, no correction (as Test 1).
 Criterion fixed in advance: the guide passes on a dataset if, for every model, no alternative without reasoning
 agrees with the teachers significantly better than the guide.
+Non-inferiority (second independent review, 2026-10-19; reported beside the criterion, which stays as fixed): with the
+equivalence margin fixed in advance (+/-0.05 QWK, bloco_c.MARGIN), the guide is non-inferior to an alternative when
+the upper bound of the 90% interval of (alternative - guide) is below 0.05, i.e. the alternative's advantage, if
+any, is shown to be smaller than the margin (one-sided test at 5%).
 
   python -m experiments.analysis.verification          # prints everything
 """
@@ -26,6 +30,7 @@ import numpy as np
 import pandas as pd
 
 from experiments.analysis import phase5
+from experiments.analysis.bloco_c import MARGIN
 from experiments.analysis.make_phase5_tables import _boot_dist, _point, _qwk_items
 
 VERIF = phase5.REPO_ROOT / "data" / "processed" / "runs" / "verification.jsonl"
@@ -91,10 +96,12 @@ def contrasts(d: pd.DataFrame) -> pd.DataFrame:
                 if ds_ is None:                                   # fewer than 8 common answers (runs incomplete)
                     continue
                 lo, hi = np.percentile(ds_, [2.5, 97.5])
+                hi90 = float(np.percentile(ds_, 95))
                 items = set(sA.index) & set(sG.index)
                 Gi, Ai = G[G.item_id.isin(items)], A[A.item_id.isin(items)]
                 rows.append({"set": lbl, "model": m, "kind": k, "N": len(items), "QWK": qa, "dQWK": _point(sG, sA),
                              "lo": lo, "hi": hi, "better": bool(lo > 0), "worse": bool(hi < 0),
+                             "hi90": hi90, "noninferior": bool(hi90 < MARGIN),
                              "SD": _sd(Ai), "SD_guide": _sd(Gi), "zeros": float((A.pred_norm < 1e-9).mean()),
                              "cost_x": pd.to_numeric(Ai.cost_eur, errors="coerce").mean()
                              / pd.to_numeric(Gi.cost_eur, errors="coerce").mean(),
@@ -137,7 +144,7 @@ def instructors() -> dict:
     c = pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "corpus_verification.parquet")
     h = c[c.dataset == "harmogenr"]
     sc = pd.DataFrame([json.loads(m)["instructor_scores"] for m in h.source_meta]).div(h.gold_scale_max.to_numpy(), axis=0)
-    lv = lambda x: (x * 5).round().clip(0, 5).astype(int)
+    lv = lambda x: phase5.to_levels(x, 5)
     pairs = [cohen_kappa_score(lv(sc[a]), lv(sc[b]), weights="quadratic", labels=list(range(6)))
              for a, b in itertools.combinations(sc.columns, 2)]
     return {"pairs_min": min(pairs), "pairs_max": max(pairs), "gold_zeros": float((h.gold_norm == 0).mean()),
@@ -155,6 +162,11 @@ def main() -> int:
     print(t.round(3).to_string(index=False))
     print("\n=== pre-registered verdict (alternatives without reasoning) ===")
     print(verdict(t).to_string(index=False))
+    ni = t[(t.kind != "guide") & (t.kind != "reasoning on")]
+    print("\n=== non-inferiority at the margin fixed in advance (alternatives without reasoning) ===")
+    print(ni.groupby("set", sort=False).noninferior.agg(["sum", "size"]).to_string())
+    print("not shown non-inferior: " + "; ".join(f"{r.set.split(' (')[0]} {r.model} {r.kind} (upper 90% {r.hi90:+.3f})"
+                                                  for r in ni[~ni.noninferior.astype(bool)].itertuples()))
     r = t[t.kind == "reasoning on"]
     print(f"\nreasoning on: better in {int(r.better.astype(bool).sum())}, worse in {int(r.worse.astype(bool).sum())} of {len(r)}; "
           f"cost x{r.cost_x.min():.1f} to x{r.cost_x.max():.1f}; less consistent in {int((r.SD > r.SD_guide).sum())}")

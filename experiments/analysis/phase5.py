@@ -101,8 +101,17 @@ def load_conversation() -> pd.DataFrame:
     return prepare(_read(CONV))
 
 
+def to_levels(x, k: int = QWK_K) -> np.ndarray:
+    """The QWK levels of 0-1 scores: x*k rounded to the nearest integer, a value exactly halfway going to the even
+    one (the rule stated in Method). x*k is first rounded to 9 decimals, so that a mean that is mathematically on a
+    half is treated as one whatever floating-point error its summation left (found 2026-10-19: without this, a
+    1e-16 error decided the level of such means, in 49 of 154 cells)."""
+    return np.round(np.round(np.asarray(x, dtype=float) * k, 9)).clip(0, k).astype(int)
+
+
 def to_ordinal(norm: pd.Series, k: int = QWK_K) -> pd.Series:
-    return (pd.to_numeric(norm, errors="coerce") * k).round().clip(0, k)
+    v = pd.to_numeric(norm, errors="coerce")
+    return pd.Series(np.round(np.round(v.to_numpy(dtype=float) * k, 9)), index=v.index).clip(0, k)
 
 
 # --------------------------------------------------------------------------- §5.0 cost dedupe
@@ -187,7 +196,7 @@ def qwk_k_sensitivity(df: pd.DataFrame, ks=(4, 5, 6)) -> pd.DataFrame:
             continue
         rec = {"dataset": ds, "domain": dom, "n_items": len(s)}
         for k in ks:
-            po = (s.p * k).round().clip(0, k).astype(int); go = (s.gold * k).round().clip(0, k).astype(int)
+            po = to_levels(s.p, k); go = to_levels(s.gold, k)
             rec[f"QWK@{k}"] = round(float(cohen_kappa_score(go, po, weights="quadratic",
                                                             labels=list(range(k + 1)))), 3)
         rec["dmax_vs_K5"] = round(max(abs(rec[f"QWK@{k}"] - rec["QWK@5"]) for k in ks), 3)

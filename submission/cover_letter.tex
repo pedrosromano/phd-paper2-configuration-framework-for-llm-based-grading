@@ -1,0 +1,40 @@
+\documentclass[11pt]{letter}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\signature{Pedro S. Romano\\on behalf of all authors}
+\address{Pedro S. Romano\\Iscte -- Instituto Universit\'ario de Lisboa\\1649-026 Lisbon, Portugal\\Pedro\_Romano@iscte-iul.pt}
+\begin{document}
+\begin{letter}{The Editor-in-Chief\\IEEE Access}
+\opening{Dear Editor,}
+
+We submit the manuscript \emph{Configuring LLM-Based Grading in Computer Science: An Empirical Study of
+Reasoning, Guidance, Scope, and Cost} for consideration as a regular article in IEEE Access.
+
+Instructors and institutions adopting large language models to grade student work face practical choices:
+whether the model should reason before scoring, what guidance it should receive, how much of an exam it
+should see at once, and which model is worth its cost. Prior studies have examined these choices one at a
+time. We compared them under one protocol, with five models on four datasets of short answers and code,
+including a new dataset of Portuguese exams, and measured agreement with teachers, consistency across
+repeated runs, and cost together.
+
+The cheap changes proved the effective ones: giving the model a rubric or a reference answer, and asking it
+for partial credit. Reasoning rarely justified its cost; its large gains came on code, for models that score
+many partially correct answers as zero, a failure we describe and measure. From these results we built a
+simple configuration guide, tested it against every other configuration in the study, and validated it on
+two datasets that played no part in building it.
+
+We believe the paper suits the broad engineering readership of IEEE Access: it gives practitioners who build
+or deploy grading systems a tested configuration and its cost. The supplementary material includes every
+prompt template, the values behind every figure, and a package with the models' grades on the public datasets
+and a script that recomputes the reported results.
+
+The manuscript is original, has not been published, and is not under consideration elsewhere. All authors
+have approved it. The manuscript includes the statement on research with human subjects and the statement
+on the use of AI tools required by IEEE.
+
+Thank you for considering our submission.
+
+\closing{Sincerely,}
+\end{letter}
+\end{document}

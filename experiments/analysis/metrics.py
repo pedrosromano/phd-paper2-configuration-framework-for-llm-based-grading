@@ -37,7 +37,8 @@ def normalised(df: pd.DataFrame) -> pd.DataFrame:
 def to_ordinal(norm: pd.Series, n_bins: int) -> pd.Series:
     """Bin a normalised [0,1] score into ordinal levels 0..n_bins (QWK input).
     n_bins is recorded in the results so the binning choice is explicit (§11)."""
-    return (pd.to_numeric(norm, errors="coerce") * n_bins).round().clip(0, n_bins)
+    v = pd.to_numeric(norm, errors="coerce")       # x*n rounded to 9 decimals first: halves exact (phase5.to_levels)
+    return pd.Series(np.round(np.round(v.to_numpy(dtype=float) * n_bins, 9)), index=v.index).clip(0, n_bins)
 
 
 # --------------------------------------------------------------------------- 5.2 agreement

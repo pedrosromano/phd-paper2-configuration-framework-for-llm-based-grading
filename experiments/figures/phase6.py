@@ -74,7 +74,7 @@ def _itemmeans(d):
 def _qwk(s):
     if len(s) < 8:
         return np.nan
-    return cohen_kappa_score((s.g * K).round().clip(0, K).astype(int), (s.p * K).round().clip(0, K).astype(int),
+    return cohen_kappa_score(phase5.to_levels(s.g, K), phase5.to_levels(s.p, K),
                              weights="quadratic", labels=list(range(K + 1)))
 
 

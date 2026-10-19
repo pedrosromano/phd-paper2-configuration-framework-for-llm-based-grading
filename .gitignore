@@ -54,3 +54,7 @@ venv/
 
 # Local Claude Code session/settings
 .claude/
+
+# Submission package (built by submission/build.sh; regenerable)
+/submission/reproducibility/grades.csv
+/submission/*.zip

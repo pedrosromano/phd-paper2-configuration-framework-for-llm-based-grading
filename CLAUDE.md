@@ -1439,6 +1439,77 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
     figures and the supplement read the same helpers, so their numbers cannot drift apart. Its Table 1 had the
     DeepSeek identifier printed over the Provider column and two tables ran past the margin: all tables are now
     footnotesize with ragged-right wrapping columns; checked for overlapping words and margins page by page.
+- 🔧 **Second independent review (2026-10-19, "Parecer de revisão — Configuring LLM-Based Grading" in `~/Downloads`,
+  AI-generated, "Reject, updates required"): groups 1 and 2 applied (Pedro), version 10 awaiting his validation.**
+  - **Practice check** (15 IEEE Access papers on LLM/AES/ASAG grading, 2024-2026, read in full): none uses a bootstrap
+    (8 report agreement with no inference at all), none applies non-inferiority or equivalence tests to agreement,
+    1 uses Holm; ethics: PSPB 8.1.1.E accepts an explanation instead of an approval; code release is optional
+    (11 of 15 release nothing); 14 of 15 abstracts use acronyms; 4 of 15 list index terms alphabetically.
+  - **Group 1 (errors and gaps, text):**
+    - Claude Sonnet 4.6 was graded with reasoning off only: Method no longer says every model was switched.
+    - Negative scores: the model applied only a penalty (not "criterion scores summed").
+    - "the course's 181 exams" instead of "the collection".
+    - Follow-up: Qwen3.5 and DeepSeek-V4-Flash re-graded the strict instruction as a control (within 0.03 QWK,
+      `instruction.drift`).
+    - Supplement Table 8: GLM-5.1's strict cells are OpenRouter on RIAYN and DeepInfra on PT-CS code; on RIAYN both
+      providers gave QWK 0.726, with the same grade in 77% of cross-provider run pairs against 85% and 90% within
+      each (`instruction.glm_providers`).
+    - Claude cost "of the guide with DeepSeek-V4-Flash"; HARMOGEN-R uses the instructors' own rubric (source 1),
+      not the LLM-written ones; SemEval accuracy against 59% for "all incorrect"; GPT-5.1 `high` is its highest
+      level; index terms alphabetical; abstract without the acronyms LLM and QWK (241 words; 248 with hyphenated
+      words split).
+  - **Group 2 (robustness, engine `experiments/analysis/robustness.py`, supplement Section 13, one paragraph in
+    Threats, one sentence in Method):** resampling questions instead of answers (numbers before the rounding fix,
+    see below): RQ1 5/20 (Holm 2), guidance 11/15 (Holm 10), Test 1 28/56
+    better and 1 worse, decomposition 2 significant (Holm 0); the validation is not recomputed this way (HARMOGEN-R
+    has 3 questions). QWK on single runs: the guide 0.009 lower on average; 3 of 105 differences change sign, all
+    within 0.017 of zero. Non-inferiority in the validation (margin ±0.05, upper 90% bound < 0.05,
+    `verification.contrasts` column `noninferior`): SAF 10/10; HARMOGEN-R 9/14 (all GLM-5.1, GPT-5.1, Claude; of
+    Qwen3.5 and DeepSeek-V4-Flash only Qwen's strict instruction). The rubric brought the collapse out on HARMOGEN-R
+    (zeros 19% and 4% without guidance, 36-52% with the rubric under either instruction) and raised zeros on RIAYN
+    (Qwen 7->16%, GPT 6->17%), lowered them on PT-CS code (`audit_pct_baselines.rubric_zeros`), in the validation
+    paragraph.
+  - **Not changed (answered only in a response letter):** re-running Test 1 alternatives with partial credit (the
+    text already says they used the strict instruction); a "maximum quality" variant; a neutral-instruction arm; a
+    fixed zero-collapse threshold; the GPT=Qwen Mohler row (coincidence after rounding: +0.16215 vs +0.16230); "9 to
+    13%" (correct on the main runs, 13.2%; the 13.7% is the follow-up re-run).
+  - **Open, Pedro's to decide:** point 8 (what the platform showed the teachers: Pedro says it was only for
+    collection, which conflicts with earlier notes in this file, see §2.2 and D2; asked him); ethics/GDPR sentence;
+    a code or data release.
+  - **Pedro (2026-10-19, later):** the platform was "only for collection": Method now says "graded on a digital
+    platform" (dropped "proof-of-concept grading platform built within this research project"); the ethics footnote
+    no longer says the terms allowed processing "by external services". The earlier notes in §2.2 (AI-seeded
+    suggestions) conflict with this; Pedro's statement is the current one. Method gained one sentence on the two
+    robustness checks (questions resampled; single runs). Provider terms checked (training excluded unless the
+    customer opts in, for OpenAI, Anthropic, DeepInfra, Z.ai via OpenRouter pinned with allow_fallbacks false;
+    OpenAI batch files stay on OpenAI until deleted). Reproducibility package: `experiments/analysis/export_package.py`
+    -> `submission/reproducibility/grades.csv` + `recompute.py` (public and validation datasets only).
+  - **FIXED 2026-10-19 (Pedro: "sim"): QWK level rounding.** `_qwk_items`/`_levels` computed `(x*5).round()`; for
+    means exactly on a half (frequent on SAF and PT-CS short) a 1e-16 summation error decided the level, so the
+    stated rule (halves to the even level) was not what the engine did in 49 of 154 cells (up to 0.023 QWK). Now one
+    function, `phase5.to_levels` (x*5 rounded to 9 decimals, then half to even), is used by every engine,
+    `metrics.to_ordinal`, the figures, and `submission/reproducibility/recompute.py` (53 rows checked against the
+    engine, 0 differ). Paper numbers that moved, all regenerated and the prose re-audited (every decimal in the
+    text found in the engine outputs; no vanished value left): RQ1 **5 of 20** significant (Qwen PT-CS short +0.101,
+    CI from -0.021, drops), Holm 3; guidance 13/15, Holm 12, **0.095 to 0.341**; Test 1 **33 better (59%), 23 no
+    difference (41%), none worse**; reasoning on better in 6 of 17 (4 Qwen); Test 2 PT-CS short gap 0.033, sampled
+    answers at most 0.043, Qwen fixed-model shortfall 0.12; RQ4 short spread 0.110, off 0.611-0.662, on-off -0.037
+    to +0.073, GLM 0.661 vs GPT 0.662; instruction PT-CS short -0.033 to -0.008 (none significant); SAF guide
+    0.62-0.72, no guidance -0.16 to -0.30, strict GLM -0.059 / Claude -0.036, reasoning +0.092 each; HARMOGEN
+    DeepSeek criterion +0.087, Qwen reasoning +0.250; K sensitivity 0.056 ("more than 0.06"). Questions resampled:
+    RQ1 4/20 (Holm 2), guidance 11/15 (Holm 10), Test 1 28 better and 1 worse (Claude strict, PT-CS short, +0.033).
+  - **Ethics footnote:** providers' terms sentence added (training excluded unless the customer opts in; checked on
+    the official pages of OpenAI, Anthropic, DeepInfra, OpenRouter and Z.ai). No retention or location claim: the
+    OpenAI batch files stay on OpenAI until deleted.
+  - **Data Availability:** a supplementary file (the reproducibility package) holds every grade on the public and
+    validation datasets and a script that recomputes the reported values; the rest of the code on request.
+  - **Submission folder (Pedro):** `submission/` holds `cover_letter.tex` (simple, no response letter: first
+    submission), `reproducibility/` (README, `recompute.py`; `grades.csv` regenerated by
+    `experiments.analysis.export_package`) and `build.sh`, which builds manuscript, supplement, cover letter and
+    `reproducibility_package.zip` and copies them to `~/Desktop/artigo_2_submissao/`. Run it at every new version.
+  - PDFs: `~/Desktop/artigo_2_access_revisto11[_alteracoes]_2026-10-19.pdf` (marked against the final version,
+    commit 4fa3e36: no annotated PDF in this round) and `artigo_2_access_suplementar_revisto10_2026-10-19.pdf`
+    (10 pages). 19 pages, 0 float errors. Not committed.
 - **Ethics statement facts (Pedro, 2026-10-18):** PT-CS comes from exams of the UpSkill professional
   requalification course at Iscte, graded on the platform for real, with the answers reused later. The
   platform's terms said answers could be used for research; students knew it was an academic platform and that

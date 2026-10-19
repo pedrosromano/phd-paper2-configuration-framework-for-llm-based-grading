@@ -200,6 +200,24 @@ def zero_rates():
               f"   | on its zeroed items ({len(zz)}) the teachers gave {100 * zz.gold.mean():.0f}% of the marks")
 
 
+def rubric_zeros():
+    """Discussion (second independent review, 2026-10-19): share of exact-zero grades without guidance and with the
+    rubric, strict instruction, reasoning off, one question per call, holistic, on the code sets (PT-CS = validated
+    answers); and on HARMOGEN-R, no guidance against the guide and the strict instruction (validation runs). On rubrics
+    that score separate steps (RIAYN, HARMOGEN-R) the rubric can raise the zeros; on PT-CS code it lowers them."""
+    from experiments.analysis import verification
+    df = phase5.load_main()
+    d = df[(df.reasoning == "off") & (df.scope == "question_by_question") & (df.decomposition == "holistic")
+           & (df.domain == "code")]
+    d = d[(d.dataset != "ptcs") | d.item_id.isin(_INTERV)]
+    print("\n=== Zeros without guidance and with the rubric (Discussion) ===")
+    t = d.assign(z=d.pred_norm < 1e-9).groupby(["dataset", "model", "context_level"]).z.mean().unstack().mul(100)
+    print(t.dropna().round(1).to_string())
+    v = verification.load()
+    v = v[v.dataset == "harmogenr"]
+    print(v.assign(z=v.pred_norm < 1e-9).groupby(["model", "kind"]).z.mean().unstack().mul(100).round(1).to_string())
+
+
 def overflow():
     """RQ1 overflow exclusion (Section IV-A): reasoning-on runs whose output never parsed because the
     reasoning overflowed the token ceiling, with PT-CS restricted to its validated answers (the paper's
@@ -245,7 +263,7 @@ def k_sensitivity():
     mx = 0.0
     for _, g in b.groupby(["dataset", "domain", "model"]):
         s = g.groupby("item_id").agg(p=("pred_norm", "mean"), g=("gold_norm", "mean"))
-        q = {K: cohen_kappa_score((s.g * K).round().clip(0, K).astype(int), (s.p * K).round().clip(0, K).astype(int),
+        q = {K: cohen_kappa_score(phase5.to_levels(s.g, K), phase5.to_levels(s.p, K),
                                   weights="quadratic", labels=list(range(K + 1))) for K in (4, 5, 6)}
         mx = max(mx, abs(q[4] - q[5]), abs(q[6] - q[5]))
     print(f"\n=== QWK binning sensitivity (Section III-E) ===\n  largest baseline change with K=4 or K=6: {mx:.3f}")
@@ -402,6 +420,7 @@ def main() -> int:
     rq3_cost()
     zero_collapse()
     zero_rates()
+    rubric_zeros()
     overflow()
     temp0_variation()
     k_sensitivity()

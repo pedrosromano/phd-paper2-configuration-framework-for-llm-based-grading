@@ -58,6 +58,25 @@ def load() -> pd.DataFrame:
     return d
 
 
+def glm_providers() -> dict:
+    """GLM-5.1 on RIAYN, strict instruction, through DeepInfra (main store) and OpenRouter (re-run in this
+    experiment): QWK on each, and the share of identical grades between two runs of the same answer within each
+    provider and across the two (supplementary material, Table of the instruction levels)."""
+    import itertools
+    main = phase5.load_main()
+    a = main[(main.model == "glm-5.1") & (main.reasoning == "off") & (main.context_level == "with_guidance")
+             & (main.scope == "question_by_question") & (main.decomposition == "holistic") & (main.dataset == "riayn")]
+    b = load()
+    b = b[(b.model == "glm-5.1-or") & (b.dataset == "riayn") & (b.instruction == "standard") & (b.source == "instruction")]
+    P, Q = (x.pivot_table(index="item_id", columns="run_index", values="pred_norm", aggfunc="first") for x in (a, b))
+    same = lambda x, y: float(np.mean(np.isclose(x, y)))
+    it = P.index.intersection(Q.index)
+    return {"qwk_deepinfra": _qwk_items(a)[0], "qwk_openrouter": _qwk_items(b)[0],
+            "same_deepinfra": np.mean([same(P[i], P[j]) for i, j in itertools.combinations(P.columns, 2)]),
+            "same_openrouter": np.mean([same(Q[i], Q[j]) for i, j in itertools.combinations(Q.columns, 2)]),
+            "same_across": np.mean([same(P.loc[it, i], Q.loc[it, j]) for i in P.columns for j in Q.columns])}
+
+
 def levels(d: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for (ds, dom, m, v), g in d.groupby(["dataset", "domain", "model", "instruction"]):

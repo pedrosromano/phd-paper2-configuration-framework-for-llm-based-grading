@@ -151,10 +151,22 @@ def instruction_section() -> str:
                                                    else r.dataset, r.dataset), iname[r.instruction], int(r.N),
               f"{r.QWK:.3f}", f"{r.zero_pct:.1f}\\%", f"{r.teacher_zero_pct:.1f}\\%"]
              for r in lv.sort_values(["model", "dataset", "domain", "instruction"]).itertuples()]
+    dr = instruction.drift(instruction.load())
+    dr = dr[dr.model.isin(["qwen3.5", "deepseek-v4-flash"])]
+    gp = instruction.glm_providers()
     out.append(r"\section{Grading instruction (follow-up experiment)}" + "\n" + _table(
         "Grading instruction (Fig. 6 of the paper): agreement (QWK) and share of grades that are exactly zero under each "
-        "instruction, per model and dataset, reasoning off, with the teachers' share of zeros. GPT-5.1's strict cells "
-        "are its runs of the main comparison.",
+        "instruction, per model and dataset, reasoning off, with the teachers' share of zeros. Qwen3.5 and "
+        "DeepSeek-V4-Flash graded the strict instruction again in this experiment, as a control, and their strict "
+        "cells are those runs: their QWK stayed within "
+        f"{(dr.QWK_rerun - dr.QWK_original).abs().max():.3f} of the strict runs of the main comparison, with the same "
+        f"grade in {dr.same_grade_pct.min():.0f} to {dr.same_grade_pct.max():.0f}\\% of the answer and repetition "
+        "pairs. GPT-5.1's strict cells are its runs of the main comparison. GLM-5.1's partial-credit runs went through "
+        "OpenRouter; its strict cells are the OpenRouter runs on RIAYN and the DeepInfra runs of the main comparison "
+        "on PT-CS code. On RIAYN, where it graded the strict instruction on both providers, the QWK was "
+        f"{gp['qwk_deepinfra']:.3f} (DeepInfra) and {gp['qwk_openrouter']:.3f} (OpenRouter), and two runs of the same "
+        f"answer gave the same grade in {100 * gp['same_across']:.0f}\\% of the pairs across providers, against "
+        f"{100 * gp['same_deepinfra']:.0f}\\% and {100 * gp['same_openrouter']:.0f}\\% within each.",
         ["Model", "Dataset", "Instruction", "N", "QWK", "Zeros", "Teachers' zeros"], lrows, "llp{3.2cm}rrrr"))
     ins = instruction.contrasts(instruction.load())
     rows = [[MNAME.get(r.model, r.model), DNAME.get("ptcs-short" if (r.dataset == "ptcs" and r.domain == "short_answer")
@@ -237,20 +249,55 @@ def verification_section() -> str:
     for r in t.itertuples():
         if r.kind == "guide":
             rows.append([MNAME.get(r.model, r.model), r.set.split(" (")[0], "guide", int(r.N), f"{r.QWK:.3f}", "", "",
-                         f"{r.SD:.3f}", f"{100 * r.zeros:.0f}\\%"])
+                         "", f"{r.SD:.3f}", f"{100 * r.zeros:.0f}\\%"])
         else:
+            ni = "" if r.kind == "reasoning on" else ("yes" if r.noninferior else "no")
             rows.append([MNAME.get(r.model, r.model), r.set.split(" (")[0], _esc(r.kind), int(r.N), f"{r.QWK:.3f}",
-                         _sg(r.dQWK), f"[{_sg(r.lo)}, {_sg(r.hi)}]", f"{r.SD:.3f}", f"{100 * r.zeros:.0f}\\%"])
+                         _sg(r.dQWK), f"[{_sg(r.lo)}, {_sg(r.hi)}]", ni, f"{r.SD:.3f}", f"{100 * r.zeros:.0f}\\%"])
     ins = verification.instructors()
     cap = ("Validation of the guide on SAF and HARMOGEN-R, which played no part in building it (Fig. 10 of the paper), "
            r"every configuration: agreement (QWK), the change against the guide on the same answers ($\Delta$QWK, 95\% "
-           "bootstrap interval), the within-answer standard deviation across the three repetitions, and the share of "
+           "bootstrap interval), whether the guide is non-inferior to the alternative (Non-inf.: the upper bound of the "
+           r"90\% interval of $\Delta$QWK is below the $+0.05$ margin fixed in advance; alternatives without reasoning), "
+           "the within-answer standard deviation across the three repetitions, and the share of "
            "grades that are exactly zero. On HARMOGEN-R the four instructors agree with each other at "
            f"{ins['pairs_min']:.3f} to {ins['pairs_max']:.3f} QWK (every pair) and give zero to "
            f"{100 * ins['gold_zeros']:.0f}\\% of the answers.")
     return r"\section{Validation of the guide}" + "\n" + _table(
-        cap, ["Model", "Dataset", "Configuration", "N", "QWK", r"$\Delta$QWK", "95\\% CI", "SD", "Zeros"], rows,
-        "lllrrrllr")
+        cap, ["Model", "Dataset", "Configuration", "N", "QWK", r"$\Delta$QWK", "95\\% CI", "Non-inf.", "SD", "Zeros"],
+        rows, "lllrrrlclr")
+
+
+def robustness_section() -> str:
+    from experiments.analysis import robustness
+    ct = robustness.cluster_table()
+    hol = lambda x: "--" if pd.isna(x) else str(int(x))
+    rows = [[_esc(r.result), int(r.of), int(r.sig_answers), hol(r.holm_answers), int(r.sig_questions),
+             hol(r.holm_questions)] for r in ct.itertuples()]
+    out = [r"\section{Robustness checks}" + "\n" + _table(
+        "Resampling whole questions instead of answers. The paper's intervals resample the answers; answers to the "
+        "same question may be alike, so here the questions of the compared answers are resampled with replacement "
+        "(10,000 times, same seed). Counts of significant results (95\\% interval excluding zero) and of those that "
+        "survive Holm's correction in their family. Criterion scoring counts its significant changes in either "
+        "direction (a gain for GPT-5.1 on RIAYN and a loss for DeepSeek-V4-Flash on PT-CS code). The validation is "
+        "not recomputed this way: HARMOGEN-R has only three questions.",
+        ["Result", "Of", "Answers", "Holm", "Questions", "Holm"], rows, "p{6.4cm}rrrrr")]
+    sr = robustness.single_run()
+    sm = robustness.single_summary(sr)
+    rows = [[r.part, _esc(r.kind), int(r.n), _sg(r.d_k), _sg(r.d_1), int(r.flips)] for r in sm.itertuples()]
+    gu = sr.drop_duplicates(["part", "model", "set"])
+    gap = gu.guide_k - gu.guide_1
+    fl_ = sr[(sr.d_k > 0) != (sr.d_1 > 0)]
+    fl = float(fl_[["d_k", "d_1"]].abs().to_numpy().max()) if len(fl_) else 0.0
+    out.append(_table(
+        "QWK on single runs. The paper computes QWK on the mean of the repeated grades of each answer, while the guide "
+        "makes one call per answer. Here the guide and each alternative are scored run by run (each run against the "
+        "same run of the other) and the differences averaged over the runs: the mean $\\Delta$QWK (alternative minus "
+        "guide) on the mean of the grades and on single runs, per alternative, and the comparisons whose sign "
+        f"differs. On single runs the guide's QWK is {gap.mean():.3f} lower on average ({_sg(gap.min())} to "
+        f"{_sg(gap.max())}); the comparisons whose sign differs are all within {fl:.3f} of zero.",
+        ["Part", "Alternative", "N", r"Mean of $k$", "Single run", "Sign differs"], rows, "llrrrr"))
+    return "\n".join(out)
 
 
 def main() -> int:
@@ -263,9 +310,13 @@ def main() -> int:
            "metrics and bootstrap of the paper (QWK on six levels of the mean of the repeated grades; 10,000 resamples of "
            r"the answers; 95\% intervals). The values of Fig.~1 are in Table~3 of the paper; Figs.~2 to~6, 9, and~10 "
            "have their own tables below, each naming its figure; Figs.~7 and~8 show the guide and its prompt, whose "
-           "templates are given in Section~1.",
+           "templates are given in Section~1. Section~13 gives two robustness checks: resampling whole questions instead "
+           "of answers, and QWK on single runs instead of the mean of the repeated grades. A separate supplementary file "
+           "holds every grade the models gave on the public and validation datasets, with a script that recomputes the "
+           "reported agreement values and intervals from them.",
            prompts_section(), models_section(), parse_section(), contrasts_sections(), rq4_section(),
-           conversation_section(), instruction_section(), test1_section(), test2_section(), verification_section(), r"\end{document}"]
+           conversation_section(), instruction_section(), test1_section(), test2_section(), verification_section(), robustness_section(),
+           r"\end{document}"]
     OUT.write_text("\n\n".join(doc) + "\n")
     print(f"wrote {OUT}")
     return 0

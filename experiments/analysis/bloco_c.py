@@ -38,7 +38,7 @@ def _paper(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _bins(x):
-    return (np.asarray(x) * K).round().clip(0, K).astype(int)
+    return phase5.to_levels(x, K)
 
 
 def _qwk(p, g):

@@ -100,11 +100,12 @@
 % Iscte does not review studies after the fact, so this gives the explanation; it never claims an exemption.
 \tfootnote{This work involved human subjects in its research. Its PT-CS dataset consists of existing exam
 answers from a course at Iscte, graded for the course and reused for this study, with no intervention on
-the students and no effect on their grades; the study was therefore not submitted to an ethics committee. The students accepted the grading platform's terms of
-use, which stated that their answers could be used for research and processed by external services; no
+the students and no effect on their grades; the study was therefore not submitted to an ethics committee. The students accepted the platform's terms of
+use, which stated that their answers could be used for research; no
 further consent was sought. Direct identifiers were removed before the analysis, the answers were checked
 for names, e-mail addresses, and numbers, only the question, the answer, and the grading material were
-sent to the model providers, and no student-level data are published or released.}
+sent to the model providers, through their paid APIs, whose terms do not allow the submitted data to be used to
+train models unless the customer opts in, which we did not do. No student-level data are published or released.}
 
 % Register: CLAUDE.md S9.2 (no em/en dashes as prose punctuation). RQ1: 6 of 20 significant, 3 after Holm.
 % Numbers: tab_rq1_values, bloco_c (C9), instruction.py, guide_eval.py (the guide is model-agnostic; its tests
@@ -112,28 +113,28 @@ sent to the model providers, and no student-level data are published or released
 % (Pedro, 2026-10-19): "validation" only for the two datasets that played no part in building the guide; the
 % comparisons on the study's own data are "tests". At most 250 words.
 \begin{abstract}
-Instructors adopting large language model (LLM) graders face several questions. Should the model reason
+Instructors adopting large language model graders face four questions. Should the model reason
 before scoring? What guidance should it receive, and how should it apply it? Should a whole exam be graded
 in one call? Which configuration is worth its cost? In computer science, we vary reasoning, evaluation
 guidance, the grading instruction, grading scope, rubric decomposition, model family, and conversation state
-under one protocol, on four short-answer and code datasets, including new Portuguese exams. The cheap
+on four short-answer and code datasets, including new Portuguese exams. The cheap
 changes were the effective ones: adding a rubric or reference answer raised agreement with teachers
-(quadratic weighted kappa, QWK, where 1 is perfect) significantly in thirteen of fifteen combinations, by
-0.095 to 0.336, and asking for partial credit raised code agreement by up to 0.11. Reasoning raised
-agreement significantly in six of twenty combinations, three after multiple-comparison correction, at 9 to
+(quadratic weighted kappa, where 1 is perfect) significantly in thirteen of fifteen combinations, by
+0.095 to 0.341, and asking for partial credit raised code agreement by up to 0.11. Reasoning raised
+agreement significantly in five of twenty combinations, three after multiple-comparison correction, at 9 to
 925 times the output tokens, and made grades less consistent in most; its large code gains came for models
 scoring many partially correct answers as zero (zero-collapse). Whole-exam grading never helped;
 criterion-by-criterion scoring helped in only one of six combinations. From these results we built a
 model-independent configuration guide: the rubric or reference answer, partial credit, reasoning off, and
-one question per call. Within each model, it agreed significantly better than 32 of 56 alternatives without
-reasoning, and worse than one. On two new datasets, used only for validation, no alternative without
-reasoning agreed significantly better than the guide on short answers, with any of five models, or on code,
+one question per call. Within each model, it agreed significantly better than 33 of 56 alternatives without
+reasoning, and significantly worse than none. On two new validation datasets, no alternative without
+reasoning agreed significantly better than the guide on short answers, with all five models, or on code,
 with four.
 \end{abstract}
 
 \begin{keywords}
-Automated grading, large language models, learning analytics, computer science education,
-short-answer grading, code assessment, configuration guidelines.
+Automated grading, code assessment, computer science education, configuration guidelines,
+large language models, learning analytics, short-answer grading.
 \end{keywords}
 
 \titlepgskip=-21pt
@@ -151,10 +152,14 @@ short-answer grading, code assessment, configuration guidelines.
 
 % AI-use statement required by IEEE (acknowledgments section; identify the system, the parts, and the level of use).
 % Final wording: Pedro's own (2026-10-18). Do not change it without asking him.
-% Data availability (independent review, 2026-10-18, M7). Pedro (2026-10-19): code on request, no public release.
+% Data availability (independent review, 2026-10-18, M7). Pedro (2026-10-19): the harness on request; a minimal
+% package (every grade on the public and validation datasets + a script that recomputes the reported values) is
+% submitted as a supplementary file (experiments/analysis/export_package.py, submission/reproducibility/).
 \section*{Data Availability}
-The prompt templates and the models' settings are given in the supplementary material, and the code is
-available from the corresponding author on request. Mohler, SemEval-2013 Task~7, Rubric Is All You Need,
+The prompt templates and the models' settings are given in the supplementary material. A supplementary file
+holds every grade the models gave on the public and validation datasets, with a script that recomputes the
+reported agreement values and intervals from them; the rest of the code is available from the corresponding
+author on request. Mohler, SemEval-2013 Task~7, Rubric Is All You Need,
 SAF, and HARMOGEN-R are public datasets. PT-CS consists of students' exam answers and is not released.
 
 \section*{Acknowledgment}

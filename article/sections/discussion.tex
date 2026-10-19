@@ -16,7 +16,7 @@ expensive one. Turning reasoning on, paying for a closed model, grading a whole 
 scoring a rubric criterion by criterion cost more or saved little, and none of them reliably brought the
 grades closer to the teachers'.
 
-Reasoning is the expensive setting that most often disappointed. It raised agreement in only six of twenty
+Reasoning is the expensive setting that most often disappointed. It raised agreement in only five of twenty
 model-dataset combinations, three after correction, while multiplying the output tokens by up to 925 and
 making grades less consistent in most combinations. The consistency loss is only partly mechanical: longer
 outputs give a non-deterministic backend more room to diverge, but length explained the variability only
@@ -36,7 +36,7 @@ answer. An instruction to award partial credit reduced the zeros of the closed m
 those of Qwen3.5, while reasoning, which works through the rubric before scoring, roughly halved Qwen3.5's
 zeros. The collapse is therefore a property of the model with
 reasoning off, which the instruction can soften but not always remove, and the dependable remedy is to
-grade with a model that does not show it. Model size may also play a part. Five of the six significant
+grade with a model that does not show it. Model size may also play a part. Four of the five significant
 reasoning gains belong to Qwen3.5-35B-A3B, which activates only about 3B parameters per token, and the
 gains of thinking reported for LLM judges were measured on Qwen3 models of 0.6B to
 4B parameters~\cite{jayarao_explicit_2025}. With a single small model in the study, the effect of its size
@@ -44,7 +44,7 @@ cannot be separated from that of its zero-collapse.
 
 Evaluation guidance and the grading instruction are the opposite case: cheap and effective. Guidance raised
 agreement significantly in 13 of 15 model-dataset combinations across three model families, by 0.095 to
-0.336 QWK; on short answers it added more than the whole 0.11 spread between the eight model and reasoning
+0.341 QWK; on short answers it added more than the whole 0.11 spread between the eight model and reasoning
 configurations in eight of the nine combinations. Asking for partial credit then added up to 0.11 on code,
 for a few extra input tokens, and changed nothing on short answers. The
 simplest shape of the request also won: one question per call with a single holistic score was never beaten
@@ -60,7 +60,7 @@ cheapest model, DeepSeek-V4-Flash, graded code as well as GLM-5.1, the strongest
 at about a tenth of its cost. On code, the closed models bought little for their price: the best
 configuration, GPT-5.1 with reasoning, agreed 0.031 better than GLM-5.1 without reasoning at 34 times the
 cost. Claude Sonnet 4.6 graded the science and PT-CS short answers best, at 43 to 53 times the cost of
-DeepSeek-V4-Flash. Absolute levels should be read against the
+the guide with DeepSeek-V4-Flash. Absolute levels should be read against the
 agreement between humans: on Mohler the models' agreement with each teacher (0.39 to 0.75) brackets the two
 teachers' agreement with each other (0.49), so the remaining disagreement between model and teacher is of the
 size that separates two human graders.
