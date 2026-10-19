@@ -356,8 +356,8 @@ def main() -> int:
          "grade counts with the grade the same model gave that answer with reasoning off. Bold marks a 95\\% "
          "bootstrap confidence interval that excludes zero. Holm marks the gains that stay significant after Holm's "
          "correction for the 20 comparisons. Tokens is how many times more output tokens reasoning used, "
-         "and SD is the mean within-item standard deviation across repetitions (lower is more consistent); "
-         "both use all paired items. A bold SD with reasoning on marks a change whose 95\\% bootstrap interval "
+         "computed on all paired items, and SD is the mean within-item standard deviation across repetitions "
+         "(lower is more consistent), computed on the model's own grades, so runs that fell back are left out. A bold SD with reasoning on marks a change whose 95\\% bootstrap interval "
          "excludes zero.",
          "tab:rq1values", star=True, colspec="llrrrrcrr", size="\\footnotesize")
 
@@ -497,14 +497,9 @@ def main() -> int:
     scope_saving = 100 * (1 - eur_per_q(we_calls) / eur_per_q(qb_calls))
     # per model (2026-10-15 audit: the Qwen-only figure had been stated for both models): whole-exam cost
     # per question relative to one call per question, on each model's own whole-exam questions
-    scope_cost = {}
-    for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]:
-        w_m = df[(df.scope == "whole_exam") & (df.model == m)]; it_m = set(w_m.item_id)
-        q_m = df[(df.model == m) & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.domain == "code")
-                 & (df.context_level == "with_guidance") & (df.scope == "question_by_question")
-                 & (df.decomposition == "holistic") & df.item_id.isin(it_m)]
-        e = lambda d: pd.to_numeric(d.cost_eur, errors="coerce").sum() / d.run_index.nunique() / len(it_m)
-        scope_cost[m] = 100 * (e(phase5.dedupe_call_groups(w_m)) / e(q_m) - 1)
+    # 2026-10-19: on the questions graded both ways, the whole-exam call's cost split over its questions
+    # (phase5.scope_cost_change); the earlier basis had left GPT-5.1's uncovered questions out of one side only
+    scope_cost = {m: phase5.scope_cost_change(df, m) for m in ["qwen3.5", "deepseek-v4-flash", "gpt-5.1"]}
     print("  scope cost per question, whole exam vs one call per question (%):",
           {k: round(v, 1) for k, v in scope_cost.items()})
     # bloco C literals, derived from the engine (dim_contrasts, conversation_stats), never typed by hand

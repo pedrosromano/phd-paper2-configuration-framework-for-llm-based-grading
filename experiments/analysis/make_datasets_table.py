@@ -25,15 +25,15 @@ STRATA = REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet"
 # (set key, label, domain and language, human grade, guidance, published result)
 ROWS = [
     ("mohler:short_answer", "Mohler", "CS short answers (EN)", "0--5, mean of two teachers",
-     "reference answer", r"QWK 0.902~\cite{aminah_evaluating_2025}"),
+     "reference answer", r"QWK 0.902, DeepSeek~\cite{aminah_evaluating_2025}"),
     ("semeval:short_answer", "SemEval", "science short answers (EN)", "correct or incorrect",
-     "reference answer", r"QWK 0.767~\cite{chen_cemft_2026}"),
+     "reference answer", r"QWK 0.767, fine-tuned~\cite{chen_cemft_2026}"),
     ("riayn:code", "RIAYN", "data-structures code (EN)", "rubric steps, two graders",
      "rubric", r"Pearson $r$ 0.825~\cite{pathak_rubric_2025}"),
     ("ptcs:code", "PT-CS code", "Java code (PT)", "final grade, two teachers",
-     "rubric", "none (new)"),
+     "rubric", "none"),
     ("ptcs:short_answer", "PT-CS short", "theory short answers (PT)", "final grade, two teachers",
-     "rubric", "none (new)"),
+     "rubric", "none"),
 ]
 
 

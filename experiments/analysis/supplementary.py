@@ -94,7 +94,8 @@ def models_section() -> str:
                      switch, f"{p['input_per_1m_usd']:.2f}", f"{p['output_per_1m_usd']:.2f}", f"{n:,}"])
     cap = ("Models, backends, and prices. Prices are the providers' standard rates in US dollars per million input and "
            f"output tokens, converted at {eur:.2f} euros per dollar; batch discounts are not applied. Calls counts every "
-           "graded call in the study and the validation. All calls were made between June and October 2026. Sampling, "
+           "graded call in the study and the validation, including calls on PT-CS answers outside the 379 analysed "
+           "(the reasoning samples and the whole-exam and conversation calls were drawn from the course's exams). All calls were made between June and October 2026. Sampling, "
            "the same in every experiment: temperature 0 for the open models and Claude Sonnet 4.6 (GPT-5.1 accepts no "
            "temperature and samples at its fixed default); output capped at 4,096 tokens with reasoning off and 32,768 "
            "with reasoning on.")
@@ -147,7 +148,9 @@ def instruction_section() -> str:
     lv = lv[lv.instruction.isin(["standard", "partial_credit", "partial_credit_justified"])]
     iname = {"standard": "strict", "partial_credit": "partial credit", "partial_credit_justified": "partial credit, "
              "justification first"}
-    lrows = [[MNAME.get(r.model, r.model), DNAME.get("ptcs-short" if (r.dataset == "ptcs" and r.domain == "short_answer")
+    lab = lambda r: ("GLM-5.1 (DeepInfra)" if (r.model == "glm-5.1-or" and r.instruction == "standard" and r.dataset == "ptcs")
+                     else MNAME.get(r.model, r.model))      # GLM-5.1's strict PT-CS code cells are the main DeepInfra runs
+    lrows = [[lab(r), DNAME.get("ptcs-short" if (r.dataset == "ptcs" and r.domain == "short_answer")
                                                    else r.dataset, r.dataset), iname[r.instruction], int(r.N),
               f"{r.QWK:.3f}", f"{r.zero_pct:.1f}\\%", f"{r.teacher_zero_pct:.1f}\\%"]
              for r in lv.sort_values(["model", "dataset", "domain", "instruction"]).itertuples()]
@@ -217,8 +220,11 @@ def test1_section() -> str:
                      f"{r.cost_x:.2f}", f"{r.sd_alt:.3f} / {r.sd_guide:.3f}"])
     cap = ("Test 1 (Fig. 9a of the paper): every other configuration of the same model against the guide's configuration, on the answers both "
            r"graded. $\Delta$QWK is the alternative minus the guide (95\% bootstrap interval, no correction); Cost is the "
-           "alternative's cost per grade relative to the guide's; SD is the within-answer standard deviation across "
-           "repetitions, alternative / guide.")
+           "alternative's cost per grade relative to the guide's, with both priced at the guide's provider rates (for "
+           "GLM-5.1, OpenRouter's) and a whole-exam call's cost split over its questions; SD is the within-answer "
+           "standard deviation across repetitions, alternative / guide, on the model's own grades (reasoning runs that "
+           "fell back to the reasoning-off grade are left out). The strict instruction is the strict runs of the main "
+           "comparison.")
     return r"\section{Test 1 of the guide}" + "\n" + _table(
         cap, ["Model", "Dataset", "Alternative", "N", r"$\Delta$QWK", "95\\% CI", "Cost", "SD"], rows,
         "llp{3.1cm}rrlrl")
@@ -297,6 +303,28 @@ def robustness_section() -> str:
         f"differs. On single runs the guide's QWK is {gap.mean():.3f} lower on average ({_sg(gap.min())} to "
         f"{_sg(gap.max())}); the comparisons whose sign differs are all within {fl:.3f} of zero.",
         ["Part", "Alternative", "N", r"Mean of $k$", "Single run", "Sign differs"], rows, "llrrrr"))
+    fb = robustness.fallback_sensitivity()
+    rows = [[MNAME.get(r.model, r.model), DNAME.get("ptcs-short" if (r.dataset == "ptcs" and r.domain == "short_answer")
+                                                  else r.dataset, r.dataset), f"{r.fallback_pct:.1f}\\%",
+             _sg(r.d_with), f"[{_sg(r.lo_with)}, {_sg(r.hi_with)}]", _sg(r.d_own), f"[{_sg(r.lo_own)}, {_sg(r.hi_own)}]"]
+            for r in fb.itertuples()]
+    out.append(_table(
+        "Reasoning runs that reached the output limit. In the paper such a run takes the grade the same model gave "
+        "that answer with reasoning off (With fallback); here those runs are left out and each answer's reasoning-on "
+        "grade is the mean of its other runs (Own runs only). Only Qwen3.5 had such runs in the main comparison. "
+        r"$\Delta$QWK is reasoning on minus off, with its 95\% bootstrap interval.",
+        ["Model", "Dataset", "Fallback runs", r"$\Delta$QWK, with fallback", "95\\% CI", r"$\Delta$QWK, own runs only",
+         "95\\% CI"], rows, "llrrlrl"))
+    dz = robustness.discretisation()
+    nice = lambda c: ", ".join(MNAME.get(x.split(" ")[0], x.split(" ")[0]) + " " + DNAME.get(
+        {"ptcs-code": "ptcs", "ptcs-short_answer": "ptcs-short"}.get(x.split(" ")[1], x.split(" ")[1].split("-")[0]),
+        x.split(" ")[1]) for x in c.split(", "))
+    rows = [[_esc(r.rule), int(r.significant), int(r.holm), _esc(nice(r.cells))] for r in dz.itertuples()]
+    out.append(_table(
+        "Discretisation of the agreement measure. Reasoning on against off (RQ1, 20 combinations) with QWK computed "
+        "on six levels and halves rounded to the even level (the paper), with halves rounded up, and on five or seven "
+        "levels: the number of significant gains, those that survive Holm's correction, and which they are.",
+        ["Rule", "Significant", "Holm", "Significant gains"], rows, "p{3.6cm}rrp{8.4cm}"))
     return "\n".join(out)
 
 
@@ -310,8 +338,9 @@ def main() -> int:
            "metrics and bootstrap of the paper (QWK on six levels of the mean of the repeated grades; 10,000 resamples of "
            r"the answers; 95\% intervals). The values of Fig.~1 are in Table~3 of the paper; Figs.~2 to~6, 9, and~10 "
            "have their own tables below, each naming its figure; Figs.~7 and~8 show the guide and its prompt, whose "
-           "templates are given in Section~1. Section~13 gives two robustness checks: resampling whole questions instead "
-           "of answers, and QWK on single runs instead of the mean of the repeated grades. A separate supplementary file "
+           "templates are given in Section~1. Section~13 gives four robustness checks: resampling whole questions instead "
+           "of answers, QWK on single runs instead of the mean of the repeated grades, reasoning runs that reached the "
+           "output limit left out, and other discretisations of the agreement measure. A separate supplementary file "
            "holds every grade the models gave on the public and validation datasets, with a script that recomputes the "
            "reported agreement values and intervals from them.",
            prompts_section(), models_section(), parse_section(), contrasts_sections(), rq4_section(),

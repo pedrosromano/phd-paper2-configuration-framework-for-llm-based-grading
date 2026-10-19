@@ -88,7 +88,12 @@ def apply_reasoning_fallback(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_main() -> pd.DataFrame:
-    return apply_reasoning_fallback(prepare(_read(RUNS)))
+    d = apply_reasoning_fallback(prepare(_read(RUNS)))
+    # questions covered by each whole-exam call, counted before any filtering (apportion_whole_exam)
+    we = d["scope"] == "whole_exam"
+    d["call_questions"] = np.nan
+    d.loc[we, "call_questions"] = d[we].groupby(["call_group", "config_hash", "run_index"]).item_id.transform("nunique")
+    return d
 
 
 def load_instruction() -> pd.DataFrame:
@@ -123,6 +128,34 @@ def dedupe_call_groups(df: pd.DataFrame) -> pd.DataFrame:
     rest = df[df["scope"] != "whole_exam"]
     we1 = we.drop_duplicates(["call_group", "config_hash", "run_index"])
     return pd.concat([rest, we1], ignore_index=True)
+
+
+def apportion_whole_exam(df: pd.DataFrame) -> pd.DataFrame:
+    """Per-question cost and tokens: a whole-exam call's cost (repeated on each of its question-rows) is split
+    equally over the questions of that call, so that a whole-exam row and a one-question call can be compared
+    question by question on the same questions (second independent review, 2026-10-19: dividing a deduplicated
+    call's cost by a subset of its questions had overstated the whole-exam cost per question)."""
+    out = df.copy()
+    we = out["scope"] == "whole_exam"
+    if we.any():
+        n = (out.loc[we, "call_questions"] if "call_questions" in out
+             else out[we].groupby(["call_group", "config_hash", "run_index"]).item_id.transform("nunique"))
+        for c in ["cost_eur", "prompt_tokens", "completion_tokens"]:
+            v = pd.to_numeric(out[c], errors="coerce").astype(float)
+            v.loc[we] = v.loc[we] / n
+            out[c] = v
+    return out
+
+
+def scope_cost_change(df: pd.DataFrame, model: str) -> float:
+    """Whole-exam cost per question relative to one call per question, in %, on the questions graded both ways
+    (reasoning off, with guidance, holistic)."""
+    w = apportion_whole_exam(df[(df.scope == "whole_exam") & (df.model == model)])
+    q = df[(df.model == model) & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.context_level == "with_guidance")
+           & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
+    items = set(w.item_id) & set(q.item_id)
+    mean = lambda d: pd.to_numeric(d[d.item_id.isin(items)].cost_eur, errors="coerce").mean()
+    return 100 * (mean(w) / mean(q) - 1)
 
 
 # --------------------------------------------------------------------------- §5.0 pairing subsets

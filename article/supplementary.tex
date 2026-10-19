@@ -16,7 +16,7 @@
 
 \maketitle
 
-This supplement gives the prompt templates, the models and their prices, the share of unparseable outputs, and tables with the values behind the figures of the paper. Every value is computed from the logged runs, with the metrics and bootstrap of the paper (QWK on six levels of the mean of the repeated grades; 10,000 resamples of the answers; 95\% intervals). The values of Fig.~1 are in Table~3 of the paper; Figs.~2 to~6, 9, and~10 have their own tables below, each naming its figure; Figs.~7 and~8 show the guide and its prompt, whose templates are given in Section~1. Section~13 gives two robustness checks: resampling whole questions instead of answers, and QWK on single runs instead of the mean of the repeated grades. A separate supplementary file holds every grade the models gave on the public and validation datasets, with a script that recomputes the reported agreement values and intervals from them.
+This supplement gives the prompt templates, the models and their prices, the share of unparseable outputs, and tables with the values behind the figures of the paper. Every value is computed from the logged runs, with the metrics and bootstrap of the paper (QWK on six levels of the mean of the repeated grades; 10,000 resamples of the answers; 95\% intervals). The values of Fig.~1 are in Table~3 of the paper; Figs.~2 to~6, 9, and~10 have their own tables below, each naming its figure; Figs.~7 and~8 show the guide and its prompt, whose templates are given in Section~1. Section~13 gives four robustness checks: resampling whole questions instead of answers, QWK on single runs instead of the mean of the repeated grades, reasoning runs that reached the output limit left out, and other discretisations of the agreement measure. A separate supplementary file holds every grade the models gave on the public and validation datasets, with a script that recomputes the reported agreement values and intervals from them.
 
 \section{Prompt templates}
 Every prompt is assembled from these blocks, in this order: the task, the guidance (omitted without guidance), the question and the student answer, and the output format. Placeholders written as \texttt{\$name} are filled for each answer. A whole-exam prompt lists every question of the exam, each with its maximum score, rubric, and student answer, after the task block. In a shared conversation the first answer is sent with the task block and every later answer as the next turn, with its question, guidance, answer, and output format. Reasoning is switched on or off through each model's settings and is never mentioned in the prompt.
@@ -102,7 +102,7 @@ question. Return ONLY a single JSON object and nothing else, with one entry per 
 \section{Models, backends, and prices}
 \begingroup\footnotesize
 \begin{longtable}{>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{1.9cm}>{\raggedright\arraybackslash}p{3.6cm}rrr}
-\caption{Models, backends, and prices. Prices are the providers' standard rates in US dollars per million input and output tokens, converted at 0.92 euros per dollar; batch discounts are not applied. Calls counts every graded call in the study and the validation. All calls were made between June and October 2026. Sampling, the same in every experiment: temperature 0 for the open models and Claude Sonnet 4.6 (GPT-5.1 accepts no temperature and samples at its fixed default); output capped at 4,096 tokens with reasoning off and 32,768 with reasoning on.}\\
+\caption{Models, backends, and prices. Prices are the providers' standard rates in US dollars per million input and output tokens, converted at 0.92 euros per dollar; batch discounts are not applied. Calls counts every graded call in the study and the validation, including calls on PT-CS answers outside the 379 analysed (the reasoning samples and the whole-exam and conversation calls were drawn from the course's exams). All calls were made between June and October 2026. Sampling, the same in every experiment: temperature 0 for the open models and Claude Sonnet 4.6 (GPT-5.1 accepts no temperature and samples at its fixed default); output capped at 4,096 tokens with reasoning off and 32,768 with reasoning on.}\\
 \hline
 Model & Served identifier & Provider & Reasoning switch (off / on) & In & Out & Calls \\ \hline
 \endfirsthead
@@ -301,7 +301,7 @@ DeepSeek-V4-Flash & RIAYN & strict & 149 & 0.668 & 9.1\% & 5.4\% \\
 DeepSeek-V4-Flash & SemEval & partial credit & 800 & 0.588 & 40.8\% & 59.1\% \\
 DeepSeek-V4-Flash & SemEval & strict & 800 & 0.598 & 45.1\% & 59.1\% \\
 GLM-5.1 (OpenRouter) & PT-CS code & partial credit & 295 & 0.653 & 10.1\% & 1.7\% \\
-GLM-5.1 (OpenRouter) & PT-CS code & strict & 295 & 0.672 & 13.4\% & 1.7\% \\
+GLM-5.1 (DeepInfra) & PT-CS code & strict & 295 & 0.672 & 13.4\% & 1.7\% \\
 GLM-5.1 (OpenRouter) & RIAYN & partial credit & 149 & 0.760 & 7.9\% & 5.4\% \\
 GLM-5.1 (OpenRouter) & RIAYN & strict & 149 & 0.726 & 9.8\% & 5.4\% \\
 GPT-5.1 & Mohler & partial credit & 2273 & 0.647 & 8.5\% & 1.0\% \\
@@ -377,7 +377,7 @@ Qwen3.5-35B-A3B & SemEval & partial credit vs strict & 800 & $-$0.015 & [$-$0.03
 \section{Test 1 of the guide}
 \begingroup\footnotesize
 \begin{longtable}{ll>{\raggedright\arraybackslash}p{3.1cm}rrlrl}
-\caption{Test 1 (Fig. 9a of the paper): every other configuration of the same model against the guide's configuration, on the answers both graded. $\Delta$QWK is the alternative minus the guide (95\% bootstrap interval, no correction); Cost is the alternative's cost per grade relative to the guide's; SD is the within-answer standard deviation across repetitions, alternative / guide.}\\
+\caption{Test 1 (Fig. 9a of the paper): every other configuration of the same model against the guide's configuration, on the answers both graded. $\Delta$QWK is the alternative minus the guide (95\% bootstrap interval, no correction); Cost is the alternative's cost per grade relative to the guide's, with both priced at the guide's provider rates (for GLM-5.1, OpenRouter's) and a whole-exam call's cost split over its questions; SD is the within-answer standard deviation across repetitions, alternative / guide, on the model's own grades (reasoning runs that fell back to the reasoning-off grade are left out). The strict instruction is the strict runs of the main comparison.}\\
 \hline
 Model & Dataset & Alternative & N & $\Delta$QWK & 95\% CI & Cost & SD \\ \hline
 \endfirsthead
@@ -399,7 +399,7 @@ DeepSeek-V4-Flash & PT-CS code & reasoning on & 67 & $-$0.115 & [$-$0.239, +0.02
 DeepSeek-V4-Flash & PT-CS code & shared conversation, reverse order & 104 & $-$0.075 & [$-$0.145, +0.000] & 2.63 & 0.031 / 0.029 \\
 DeepSeek-V4-Flash & PT-CS code & shared conversation, exam order & 104 & $-$0.061 & [$-$0.130, +0.016] & 2.18 & 0.021 / 0.029 \\
 DeepSeek-V4-Flash & PT-CS code & strict instruction & 295 & $-$0.066 & [$-$0.105, $-$0.029] & 0.93 & 0.026 / 0.028 \\
-DeepSeek-V4-Flash & PT-CS code & whole exam & 295 & $-$0.090 & [$-$0.139, $-$0.043] & 1.08 & 0.039 / 0.028 \\
+DeepSeek-V4-Flash & PT-CS code & whole exam & 295 & $-$0.090 & [$-$0.139, $-$0.043] & 0.87 & 0.039 / 0.028 \\
 DeepSeek-V4-Flash & PT-CS short & no guidance & 84 & $-$0.139 & [$-$0.390, +0.091] & 0.61 & 0.025 / 0.021 \\
 DeepSeek-V4-Flash & PT-CS short & reasoning on & 32 & $-$0.175 & [$-$0.451, +0.106] & 3.53 & 0.066 / 0.026 \\
 DeepSeek-V4-Flash & PT-CS short & strict instruction & 84 & $-$0.021 & [$-$0.072, +0.024] & 0.86 & 0.025 / 0.021 \\
@@ -424,7 +424,7 @@ GPT-5.1 & PT-CS code & criterion scoring & 295 & $-$0.074 & [$-$0.121, $-$0.030]
 GPT-5.1 & PT-CS code & no guidance & 295 & $-$0.269 & [$-$0.329, $-$0.208] & 0.71 & 0.033 / 0.066 \\
 GPT-5.1 & PT-CS code & reasoning on & 67 & $-$0.034 & [$-$0.172, +0.104] & 22.56 & 0.060 / 0.066 \\
 GPT-5.1 & PT-CS code & strict instruction & 295 & $-$0.077 & [$-$0.110, $-$0.047] & 0.94 & 0.061 / 0.066 \\
-GPT-5.1 & PT-CS code & whole exam & 295 & $-$0.214 & [$-$0.260, $-$0.168] & 1.03 & 0.049 / 0.066 \\
+GPT-5.1 & PT-CS code & whole exam & 295 & $-$0.214 & [$-$0.260, $-$0.168] & 0.84 & 0.049 / 0.066 \\
 GPT-5.1 & PT-CS short & no guidance & 84 & $-$0.197 & [$-$0.379, $-$0.021] & 0.70 & 0.036 / 0.053 \\
 GPT-5.1 & PT-CS short & reasoning on & 32 & $-$0.016 & [$-$0.163, +0.116] & 9.22 & 0.078 / 0.077 \\
 GPT-5.1 & PT-CS short & strict instruction & 84 & +0.019 & [$-$0.041, +0.094] & 0.88 & 0.063 / 0.053 \\
@@ -445,7 +445,7 @@ Qwen3.5-35B-A3B & PT-CS code & reasoning on & 67 & +0.107 & [+0.015, +0.201] & 5
 Qwen3.5-35B-A3B & PT-CS code & shared conversation, reverse order & 104 & $-$0.102 & [$-$0.158, $-$0.048] & 2.52 & 0.029 / 0.022 \\
 Qwen3.5-35B-A3B & PT-CS code & shared conversation, exam order & 104 & $-$0.051 & [$-$0.113, +0.011] & 2.11 & 0.033 / 0.022 \\
 Qwen3.5-35B-A3B & PT-CS code & strict instruction & 295 & $-$0.035 & [$-$0.064, $-$0.008] & 0.94 & 0.019 / 0.019 \\
-Qwen3.5-35B-A3B & PT-CS code & whole exam & 295 & $-$0.126 & [$-$0.172, $-$0.082] & 1.24 & 0.020 / 0.019 \\
+Qwen3.5-35B-A3B & PT-CS code & whole exam & 295 & $-$0.126 & [$-$0.172, $-$0.082] & 1.00 & 0.020 / 0.019 \\
 Qwen3.5-35B-A3B & PT-CS short & no guidance & 84 & $-$0.331 & [$-$0.627, $-$0.045] & 0.65 & 0.016 / 0.024 \\
 Qwen3.5-35B-A3B & PT-CS short & reasoning on & 32 & +0.112 & [$-$0.005, +0.234] & 92.37 & 0.040 / 0.030 \\
 Qwen3.5-35B-A3B & PT-CS short & strict instruction & 84 & +0.011 & [$-$0.036, +0.064] & 0.87 & 0.024 / 0.024 \\
@@ -524,16 +524,16 @@ PT-CS code & DeepSeek-V4-Flash & guidance; strict; per question; holistic & 295 
 PT-CS code & DeepSeek-V4-Flash & guidance; partial credit, justification first; per question; holistic & 295 & 0.606 & 0.092 &  \\
 PT-CS code & GPT-5.1 & guidance; strict; per question; per criterion & 295 & 0.587 & 2.013 &  \\
 PT-CS code & GPT-5.1 & guidance; strict; per question; holistic & 295 & 0.584 & 0.925 &  \\
-PT-CS code & DeepSeek-V4-Flash & guidance; strict; whole exam; holistic & 295 & 0.584 & 0.080 &  \\
+PT-CS code & DeepSeek-V4-Flash & guidance; strict; whole exam; holistic & 295 & 0.584 & 0.065 &  \\
 PT-CS code & DeepSeek-V4-Flash & guidance; strict; per question; per criterion & 295 & 0.536 & 0.105 &  \\
 PT-CS code & Qwen3.5-35B-A3B & guidance; partial credit, justification first; per question; holistic & 295 & 0.527 & 0.179 &  \\
 PT-CS code & Qwen3.5-35B-A3B & guidance; partial credit; per question; holistic & 295 & 0.502 & 0.108 & yes \\
 PT-CS code & Qwen3.5-35B-A3B & guidance; strict; per question; holistic & 295 & 0.468 & 0.101 &  \\
 PT-CS code & DeepSeek-V4-Flash & no guidance; strict; per question; holistic & 295 & 0.456 & 0.051 &  \\
-PT-CS code & GPT-5.1 & guidance; strict; whole exam; holistic & 295 & 0.447 & 1.018 &  \\
+PT-CS code & GPT-5.1 & guidance; strict; whole exam; holistic & 295 & 0.447 & 0.825 &  \\
 PT-CS code & Qwen3.5-35B-A3B & guidance; strict; per question; per criterion & 295 & 0.445 & 0.313 &  \\
 PT-CS code & GPT-5.1 & no guidance; strict; per question; holistic & 295 & 0.392 & 0.706 &  \\
-PT-CS code & Qwen3.5-35B-A3B & guidance; strict; whole exam; holistic & 295 & 0.376 & 0.134 &  \\
+PT-CS code & Qwen3.5-35B-A3B & guidance; strict; whole exam; holistic & 295 & 0.376 & 0.109 &  \\
 PT-CS code & Qwen3.5-35B-A3B & no guidance; strict; per question; holistic & 295 & 0.319 & 0.076 &  \\
 PT-CS short & Claude Sonnet 4.6 & guidance; strict; per question; holistic & 84 & 0.791 & 1.496 &  \\
 PT-CS short & Claude Sonnet 4.6 & guidance; partial credit; per question; holistic & 84 & 0.758 & 1.659 & yes \\
@@ -649,6 +649,41 @@ Validation & no guidance & 10 & $-$0.183 & $-$0.179 & 0 \\
 Validation & strict instruction & 10 & $-$0.030 & $-$0.029 & 0 \\
 Validation & reasoning on & 8 & +0.093 & +0.092 & 0 \\
 Validation & criterion scoring & 4 & +0.031 & +0.029 & 1 \\
+\hline
+\end{longtable}
+\endgroup
+
+\begingroup\footnotesize
+\begin{longtable}{llrrlrl}
+\caption{Reasoning runs that reached the output limit. In the paper such a run takes the grade the same model gave that answer with reasoning off (With fallback); here those runs are left out and each answer's reasoning-on grade is the mean of its other runs (Own runs only). Only Qwen3.5 had such runs in the main comparison. $\Delta$QWK is reasoning on minus off, with its 95\% bootstrap interval.}\\
+\hline
+Model & Dataset & Fallback runs & $\Delta$QWK, with fallback & 95\% CI & $\Delta$QWK, own runs only & 95\% CI \\ \hline
+\endfirsthead
+\hline
+Model & Dataset & Fallback runs & $\Delta$QWK, with fallback & 95\% CI & $\Delta$QWK, own runs only & 95\% CI \\ \hline
+\endhead
+Qwen3.5-35B-A3B & Mohler & 12.7\% & +0.056 & [+0.021, +0.089] & +0.058 & [+0.019, +0.095] \\
+Qwen3.5-35B-A3B & PT-CS code & 1.8\% & +0.172 & [+0.045, +0.310] & +0.170 & [+0.036, +0.316] \\
+Qwen3.5-35B-A3B & PT-CS short & 6.2\% & +0.101 & [$-$0.021, +0.223] & +0.080 & [$-$0.053, +0.192] \\
+Qwen3.5-35B-A3B & RIAYN & 2.8\% & +0.221 & [+0.110, +0.331] & +0.210 & [+0.080, +0.331] \\
+Qwen3.5-35B-A3B & SemEval & 16.6\% & +0.062 & [+0.002, +0.124] & +0.052 & [$-$0.020, +0.123] \\
+\hline
+\end{longtable}
+\endgroup
+
+\begingroup\footnotesize
+\begin{longtable}{>{\raggedright\arraybackslash}p{3.6cm}rr>{\raggedright\arraybackslash}p{8.4cm}}
+\caption{Discretisation of the agreement measure. Reasoning on against off (RQ1, 20 combinations) with QWK computed on six levels and halves rounded to the even level (the paper), with halves rounded up, and on five or seven levels: the number of significant gains, those that survive Holm's correction, and which they are.}\\
+\hline
+Rule & Significant & Holm & Significant gains \\ \hline
+\endfirsthead
+\hline
+Rule & Significant & Holm & Significant gains \\ \hline
+\endhead
+six levels, halves to even (paper) & 5 & 3 & Qwen3.5-35B-A3B Mohler, Qwen3.5-35B-A3B PT-CS code, GPT-5.1 RIAYN, Qwen3.5-35B-A3B RIAYN, Qwen3.5-35B-A3B SemEval \\
+six levels, halves up & 7 & 4 & Qwen3.5-35B-A3B Mohler, Qwen3.5-35B-A3B PT-CS code, Qwen3.5-35B-A3B PT-CS short, GLM-5.1 RIAYN, GPT-5.1 RIAYN, Qwen3.5-35B-A3B RIAYN, GPT-5.1 SemEval \\
+five levels & 7 & 4 & Qwen3.5-35B-A3B Mohler, Qwen3.5-35B-A3B PT-CS code, Qwen3.5-35B-A3B PT-CS short, GLM-5.1 RIAYN, GPT-5.1 RIAYN, Qwen3.5-35B-A3B RIAYN, Qwen3.5-35B-A3B SemEval \\
+seven levels & 6 & 3 & Qwen3.5-35B-A3B Mohler, Qwen3.5-35B-A3B PT-CS code, Qwen3.5-35B-A3B PT-CS short, GLM-5.1 RIAYN, GPT-5.1 RIAYN, Qwen3.5-35B-A3B RIAYN \\
 \hline
 \end{longtable}
 \endgroup

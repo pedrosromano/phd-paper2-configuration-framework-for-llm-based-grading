@@ -157,8 +157,8 @@ def rq3_cost():
                    for c in ["prompt_tokens", "completion_tokens", "cost_eur"]}
             print(f"  {m:18} {name:12} in={tot['prompt_tokens']:.0f}  out={tot['completion_tokens']:.0f}  "
                   f"EUR/question={tot['cost_eur']:.6f}")
-        eur = lambda d: pd.to_numeric(d.cost_eur, errors="coerce").sum() / d.run_index.nunique() / len(items)
-        print(f"  {m:18} -> whole exam changes the cost per question by {100 * (eur(calls) / eur(qb) - 1):+.1f}%")
+        print(f"  {m:18} -> whole exam changes the cost per question by {phase5.scope_cost_change(df, m):+.1f}% "
+              "(same questions, call cost split over its questions)")
     dd = df[(df.model == "qwen3.5") & (df.reasoning == "off") & (df.dataset == "ptcs") & (df.domain == "code")
             & (df.context_level == "with_guidance") & (df.scope == "question_by_question")]
     for dec, g in dd.groupby("decomposition"):
@@ -277,6 +277,19 @@ def sd_length():
     t = phase5.sd_length_spearman(df[(df.dataset != "ptcs") | df.item_id.isin(_INTERV)])
     print("\n=== Length vs grade variability, Spearman per model-dataset (Section IV-A) ===")
     print(f"  median {t.spearman.median():.2f}, range {t.spearman.min():.2f} to {t.spearman.max():.2f} over {len(t)}")
+
+
+def total_cost():
+    """Method (second independent review, 2026-10-19): what all the experiments cost at the providers' standard
+    rates (phase5.prepare re-prices every call): the main comparisons (whole exam counted once per call), the
+    conversation sub-study, the follow-up instruction experiment and the validation. The paper's earlier EUR 158.7
+    predated the validation runs."""
+    from experiments.analysis import verification
+    parts = {"main": phase5.dedupe_call_groups(phase5.load_main()), "conversation": phase5.load_conversation(),
+             "instruction": phase5.load_instruction(), "validation": verification.load()}
+    eur = {k: float(pd.to_numeric(d.cost_eur, errors="coerce").sum()) for k, d in parts.items()}
+    print("\n=== Total cost of all experiments at standard rates (Method) ===")
+    print("  " + ", ".join(f"{k} EUR {v:.2f}" for k, v in eur.items()) + f"; total EUR {sum(eur.values()):.1f}")
 
 
 def cost_by_period():
@@ -426,6 +439,7 @@ def main() -> int:
     k_sensitivity()
     sd_length()
     cost_by_period()
+    total_cost()
     rq4_winners()
     rq6_transfer()
     rq4()

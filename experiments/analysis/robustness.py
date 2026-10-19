@@ -10,6 +10,11 @@ sentence each in the paper's Threats:
      the validation, the guide and each alternative are scored run by run (run r against run r) and the differences
      averaged over the runs.
 
+  3. Reasoning runs that fell back (third independent review, 2026-10-19): the RQ1 contrast with the runs that
+     reached the output limit left out, instead of carrying the same model's reasoning-off grade.
+  4. Discretisation of the agreement measure: RQ1 significance with halves rounded up instead of to the even
+     level, and with five or seven levels instead of six.
+
   python -m experiments.analysis.robustness
 """
 
@@ -161,6 +166,59 @@ def single_summary(s: pd.DataFrame) -> pd.DataFrame:
             .agg(n=("d_k", "size"), d_k=("d_k", "mean"), d_1=("d_1", "mean"), flips=("flip", "sum")).reset_index())
 
 
+def fallback_sensitivity() -> pd.DataFrame:
+    """RQ1 cells with fallback runs: dQWK and 95% CI with the fallback grades (as published) and on the model's own
+    reasoning-on runs only."""
+    df = phase5.load_main()
+    df = df[(df.dataset != "ptcs") | df.item_id.isin(guide_eval._INTERV)]
+    b = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
+    rows = []
+    for (ds, dom, m), g in b.groupby(["dataset", "domain", "model"]):
+        on = g[g.reasoning == "on"]
+        if on.empty or not on["fallback"].astype(bool).any():
+            continue
+        off = g[(g.reasoning == "off") & g.item_id.isin(set(on.item_id))]
+        own = on[~on["fallback"].astype(bool)]
+        _, sA = mpt._qwk_items(off)
+        r = {"dataset": ds, "domain": dom, "model": m, "fallback_pct": 100 * float(on["fallback"].astype(bool).mean())}
+        for key, d in [("with", on), ("own", own)]:
+            _, sB = mpt._qwk_items(d)
+            dist = mpt._boot_dist(sA, sB)
+            lo, hi = np.percentile(dist, [2.5, 97.5])
+            r.update({f"d_{key}": mpt._point(sA, sB), f"lo_{key}": lo, f"hi_{key}": hi})
+        rows.append(r)
+    return pd.DataFrame(rows)
+
+
+@contextmanager
+def discretised(levels: int, half_up: bool = False):
+    """Run the engines with another number of QWK levels or with halves rounded up, then restore."""
+    old = (mpt.K, mpt._W, phase5.to_levels)
+    k = levels - 1
+    mpt.K = k
+    mpt._W = (np.subtract.outer(np.arange(k + 1), np.arange(k + 1)) ** 2).astype(float)
+    if half_up:
+        phase5.to_levels = lambda x, kk=k: np.floor(np.round(np.asarray(x, float) * kk, 9) + 0.5).clip(0, kk).astype(int)
+    try:
+        yield
+    finally:
+        mpt.K, mpt._W, phase5.to_levels = old
+
+
+def discretisation() -> pd.DataFrame:
+    """RQ1 under the paper's rule and three alternatives: significant gains (and after Holm), and which cells."""
+    df = phase5.load_main()
+    rows = []
+    for label, lv, up in [("six levels, halves to even (paper)", 6, False), ("six levels, halves up", 6, True),
+                          ("five levels", 5, False), ("seven levels", 7, False)]:
+        with discretised(lv, up):
+            r = mpt.rq1_cells(df, guide_eval._INTERV)
+        s = r[(r.lo > 0)]
+        rows.append({"rule": label, "significant": len(s), "holm": int((r.sig_holm & (r.dQWK > 0)).sum()),
+                     "cells": ", ".join(f"{m} {d}" for m, d in zip(s.model, s.dataset + "-" + s.domain))})
+    return pd.DataFrame(rows)
+
+
 def main() -> int:
     pd.set_option("display.width", 220)
     print("=== resampling answers (published) vs resampling questions ===")
@@ -173,6 +231,10 @@ def main() -> int:
           f"({(gu.guide_k - gu.guide_1).min():.3f} to {(gu.guide_k - gu.guide_1).max():.3f}); "
           f"|change in dQWK| {np.abs(s.d_1 - s.d_k).mean():.3f} on average; sign changes {int((np.sign(s.d_k) != np.sign(s.d_1)).sum())} of {len(s)}")
     print(s[np.sign(s.d_k) != np.sign(s.d_1)].round(3).to_string(index=False))
+    print("\n=== RQ1 with the fallback runs left out ===")
+    print(fallback_sensitivity().round(3).to_string(index=False))
+    print("\n=== RQ1 under other discretisations ===")
+    print(discretisation().to_string(index=False))
     return 0
 
 

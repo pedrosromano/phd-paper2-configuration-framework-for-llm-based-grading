@@ -28,7 +28,7 @@ The zero-collapse explains where reasoning did pay. Its large gains came on code
 scored many partially correct answers as zero. Graders that are too severe have been described before:
 the authors of RIAYN measure a grader's leniency against the experts~\cite{pathak_rubric_2025}, strict
 and lenient prompts have been compared~\cite{venkatraman_llmbased_2026}, and in a concurrent study a
-lenient prompt that awards partial credit lowered the grading error of every model family on a
+lenient prompt that awards partial credit lowered the question-level grading error of every model family on a
 mathematics exam~\cite{sapkota_math_2026}. The zero-collapse is a specific, measurable form of that
 severity, revealed by a share of zeros far above the teachers'. The written justifications show what goes wrong: the
 collapsing model sees what the student did right and still gives no marks, as if any error voided the
@@ -43,13 +43,12 @@ gains of thinking reported for LLM judges were measured on Qwen3 models of 0.6B 
 cannot be separated from that of its zero-collapse.
 
 Evaluation guidance and the grading instruction are the opposite case: cheap and effective. Guidance raised
-agreement significantly in 13 of 15 model-dataset combinations across three model families, by 0.095 to
-0.341 QWK; on short answers it added more than the whole 0.11 spread between the eight model and reasoning
+agreement significantly in 13 of 15 combinations, by up to 0.341 QWK; on short answers it added more than the whole 0.11 spread between the eight model and reasoning
 configurations in eight of the nine combinations. Asking for partial credit then added up to 0.11 on code,
 for a few extra input tokens, and changed nothing on short answers. The
 simplest shape of the request also won: one question per call with a single holistic score was never beaten
 by the whole exam, and criterion scoring beat it only for GPT-5.1 on RIAYN, where it made a model that gives
-too many zeros credit the rubric step by step; neither alternative saved more than 6\% of the cost. A clean
+too many zeros credit the rubric step by step; neither alternative saved more than 11\% of the cost. A clean
 conversation per answer
 removes the small pull of a shared history and the effect of an answer's position, so it is also the fairer
 choice: a student's grade should not depend on where an answer fell in a session.
@@ -57,10 +56,10 @@ choice: a student's grade should not depend on where an answer fell in a session
 Model choice mattered more on code than on short answers: on code the configurations spread about twice
 as widely, largely according to whether a model showed the zero-collapse. Asking for partial credit also changes which model is worth paying for: with it, the
 cheapest model, DeepSeek-V4-Flash, graded code as well as GLM-5.1, the strongest grader without reasoning,
-at about a tenth of its cost. On code, the closed models bought little for their price: the best
-configuration, GPT-5.1 with reasoning, agreed 0.031 better than GLM-5.1 without reasoning at 34 times the
-cost. Claude Sonnet 4.6 graded the science and PT-CS short answers best, at 43 to 53 times the cost of
-the guide with DeepSeek-V4-Flash. Absolute levels should be read against the
+at about a tenth of its cost. The closed models bought little for their price: GPT-5.1 with reasoning,
+the best code configuration, cost 34 times as much as GLM-5.1 without it for 0.031 more, and Claude Sonnet
+4.6, the best on the science and PT-CS short answers, 43 to 53 times as much as the guide with
+DeepSeek-V4-Flash. Absolute levels should be read against the
 agreement between humans: on Mohler the models' agreement with each teacher (0.39 to 0.75) brackets the two
 teachers' agreement with each other (0.49), so the remaining disagreement between model and teacher is of the
 size that separates two human graders.

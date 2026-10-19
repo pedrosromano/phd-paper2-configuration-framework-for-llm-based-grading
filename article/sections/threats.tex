@@ -10,17 +10,24 @@ public datasets, whose human grades are independent of the authors. PT-CS is the
 exams, so grading scope and the conversation sub-study rest
 on it alone; none of the public datasets links answers into exams. The PT-CS exams are short, so the scope
 result holds for exams of a few questions. The PT-CS grades are a joint teacher decision with no
-per-teacher record, so no agreement ceiling between teachers can be computed on PT-CS.
+per-teacher record, so no agreement ceiling between teachers can be computed on PT-CS. They were set by
+two of the authors when they taught the course, before the study was designed, so they could not be
+shaped by its results; the public datasets, graded by others, give the independent check.
 
-Two checks of the statistics, given in the supplementary material, move a few counts but no conclusion. The intervals
+Four checks of the statistics, given in the supplementary material, move a few counts but no conclusion. The intervals
 resample answers, although answers to the same question may be alike; resampling whole questions instead
 leaves slightly fewer significant results: reasoning raises agreement significantly in four of the twenty
 combinations rather than five, guidance in eleven of fifteen rather than thirteen, and the guide agrees
-significantly better than 28 of the 56 alternatives without reasoning rather than 33, while one alternative,
+significantly better in 28 of the 56 comparisons without reasoning rather than 33, while one alternative,
 Claude Sonnet 4.6 with the strict instruction on the 84 PT-CS short answers, then agrees better, by 0.033.
 Agreement is computed on the mean
 of the repeated grades, while the guide makes one call per answer; on single runs the guide's QWK is about
-0.01 lower, and the only differences that change sign are within 0.02 of zero.
+0.01 lower, and the only differences that change sign are within 0.02 of zero. Leaving out the reasoning
+runs that reached the output limit, instead of giving them the reasoning-off grade, makes Qwen3.5's gain on
+SemEval not significant ($+0.052$, CI from $-0.020$) and changes no other combination. Rounding halves up,
+or using five or seven levels instead of six, makes reasoning significant in six or seven combinations
+instead of five; Qwen3.5 on Mohler, RIAYN, and PT-CS code and GPT-5.1 on RIAYN are significant under every
+rule.
 
 The results are conditional on the served backends, whose quantisation, inference software, and hardware
 differ across providers, so what carries over to another backend is the comparison between

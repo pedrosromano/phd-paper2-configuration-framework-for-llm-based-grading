@@ -117,7 +117,7 @@ def _per_grade(g: pd.DataFrame, price: dict | None = None) -> float:
     """Euros per grade: whole-exam calls counted once (phase5.dedupe_call_groups); with `price`, re-priced from the
     tokens at that model's rate, else at each row's own provider rate (phase5's cost_eur)."""
     n = len(g)
-    c = phase5.dedupe_call_groups(g) if (g.scope == "whole_exam").any() else g
+    c = phase5.apportion_whole_exam(g)        # a whole-exam call's cost split over its questions (2026-10-19)
     if price is None:
         return float(pd.to_numeric(c.cost_eur, errors="coerce").sum()) / n
     tin = pd.to_numeric(c.prompt_tokens, errors="coerce").fillna(0)

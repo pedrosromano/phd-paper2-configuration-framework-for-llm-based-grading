@@ -96,20 +96,21 @@ incorrect; it is the most widely used short-answer benchmark, and its subject ch
 findings are not specific to CS. It is far larger than our other corpora, so we use a fixed-seed random
 sample of 800 answers from all its subsets, with every reference answer a question has.
 \emph{Rubric Is All You Need} (RIAYN)~\cite{pathak_rubric_2025} provides data-structures-and-algorithms
-submissions to a practice website, all but one in Java, whose question-specific rubrics mark each step of
+submissions to a practice website (149 of 150; one lacks a grade), all but one in Java, whose question-specific rubrics mark each step of
 one or more accepted solution paths; two graders scored each submission in consensus.
 
-\emph{PT-CS} is a new dataset of Java exams in Portuguese from a course at Iscte, graded on a
+\emph{PT-CS} consists of Java exams in Portuguese from a course at Iscte, graded on a
 digital platform; the answers were graded for the
 course and reused afterwards for this study. Each question has its own rubric and no reference solution.
-Two teachers set the final grade of each answer jointly. PT-CS consists of 379 answers: 295 code answers
+Two of the authors, who taught the course, set the final grade of each answer jointly, for the course and
+before this study was designed. PT-CS consists of 379 answers: 295 code answers
 and 84 short answers on theory, from 97 of the course's exams. The final grade is a joint decision with no per-teacher
 record, so inter-rater agreement cannot be computed on PT-CS.
 
 Two experiments need complete exams rather than single answers: whole-exam grading (scope) and the
 conversation sub-study. The scope contrast is scored only on the PT-CS answers within those exams. The
-conversation sub-study compares the model's grades with one another, never with a teacher's, so it
-needs no teacher grade and can use any of the course's exams.
+conversation sub-study compares the model's grades with one another, so it needs no teacher grade and
+can use any of the course's exams.
 
 \subsection{Models and Backends}
 \label{sec:models}
@@ -122,7 +123,7 @@ needs no teacher grade and can use any of the course's exams.
 For the four models graded with reasoning both off and on, reasoning is switched within the same model,
 so the reasoning comparison holds the model fixed and flips only its thinking mode; Claude Sonnet 4.6,
 added in the follow-up experiment, was graded with reasoning off only. The model families follow prior studies of LLM
-grading of student answers, in which Claude~\cite{cipriano_leveraging_2025,moazzez_assessing_2024},
+grading of student answers, in which Claude~\cite{cipriano_leveraging_2025},
 GPT~\cite{li_study_2025,sessler_canai_2025}, DeepSeek~\cite{aminah_evaluating_2025,li_study_2025},
 and Qwen~\cite{jiang_eipe_2026,havare_ai-based_2025} models were among the best graders tested.
 GLM-5.1, without a comparable grading record, was added as the strongest open model for code when the
@@ -183,7 +184,7 @@ penalises large disagreements between grader and human grade more than small one
 perfect agreement and 0 at chance, and can in principle fall below 0 when a grader disagrees more than
 chance would; all the values we report are positive. QWK needs discrete, ordered grades, while the model
 produces a continuous score. We therefore average each item's $k$ grades, round the mean to the nearest of
-six ordered levels (0 to 5, the resolution of Mohler's native grades; a value exactly halfway between two
+six ordered levels (0 to 5, the points of a Mohler question; a value exactly halfway between two
 levels goes to the even one), and compute QWK on these levels.
 Using the same six levels for every dataset makes the QWK values comparable. We fixed this scale in
 advance; recomputing on five or seven levels changes no baseline QWK by more than 0.06.
@@ -193,7 +194,7 @@ human grade, and a lower value means more reproducible grading. The reasoning pr
 output tokens with reasoning on to output tokens with reasoning off, computed within each model. Costs in
 euros are computed from each call's logged input and output tokens at the providers' standard per-token
 rates, ignoring discounts for cached input or batched requests, so they are an upper bound; at these
-rates, all the experiments together cost \euro{}158.7. Rank correlations use Spearman's $\rho$.
+rates, all the experiments together cost \euro{}219.0. Rank correlations use Spearman's $\rho$.
 
 SemEval's human grade is binary, so we also turn the model's score into a correct or incorrect label at
 a fixed cutoff of 0.5, set in advance, and report accuracy, the share of answers labelled as the
@@ -230,8 +231,8 @@ a paired test of the per-answer differences (the Wilcoxon signed-rank test).
 The tests of the configuration guide use the answers it was built from, so we also graded two datasets that
 played no part in building it, as validation datasets. \emph{SAF}~\cite{filighera_saf_2022} provides English short answers on
 communication networks, each scored with partial credit by two trained annotators in consensus and paired
-with a reference answer; we use a fixed-seed random sample of 300 of its 2981 answers, covering its 31
-questions. \emph{HARMOGEN-R}~\cite{mendonca_harmogenr_2026} provides C++ code answers from a data-structures
+with a reference answer; we use a fixed-seed random sample of 300 of its 2981 answers~\cite{saf_release_2022}, covering
+its 31 questions. \emph{HARMOGEN-R}~\cite{mendonca_harmogenr_2026} provides C++ code answers from a data-structures
 course, in Portuguese, each graded by four instructors independently and blind with their own rubric of
 separately scored criteria (we do not use the dataset's rubrics written by LLMs); we use all 129 non-empty
 answers to its three code questions, with the instructors' mean as the human grade. On both, the guide's configuration is compared with alternatives that

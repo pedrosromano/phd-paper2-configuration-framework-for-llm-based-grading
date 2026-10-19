@@ -50,7 +50,7 @@ The study runs on four datasets in two domains. Three are public, so the results
 be checked beyond our own students: the Mohler corpus of graded computer-science short
 answers~\cite{mohler_text_2009,mohler_learning_2011}, the SemEval-2013 Task~7 corpus of graded science
 short answers~\cite{dzikovska_semeval_2013}, and the Rubric Is All You Need corpus of rubric-graded
-Java code~\cite{pathak_rubric_2025}. The fourth, PT-CS, is a new dataset we collected: teacher-graded
+Java code~\cite{pathak_rubric_2025}. The fourth, PT-CS, comes from a course at our institution: teacher-graded
 Java code and short answers in Portuguese, from complete exams. Because it keeps each student's whole
 exam, it is the only one of the four on which grading a whole exam in one call and the conversation
 state can be studied.
@@ -79,7 +79,7 @@ configuration, which the comparisons confirm one at a time; the sixth, the reque
 comes from the follow-up experiment. We then evaluate the guide in two ways. The \emph{tests} use the four
 datasets the guide was built from: with each of the five models, they compare the guide with every other
 configuration of the same model and with the best configuration of any model, on agreement, consistency,
-and cost. The \emph{validation} uses two new datasets, one of short answers and one of code, that played
+and cost. The \emph{validation} uses two further public datasets, one of short answers and one of code, that played
 no part in building the guide, and checks it against a criterion fixed before they were graded.
 
 The overall contribution of this paper is threefold. First, a configuration guide for LLM grading in CS,
@@ -87,9 +87,9 @@ tested on five models against every configuration in the study and validated on 
 no part in building it. Second, for grading in CS, the effect of each configuration choice (reasoning,
 evaluation guidance, the grading instruction, grading scope, rubric decomposition, and conversation state),
 isolated within the same model and measured jointly on agreement, consistency, and cost.
-Third, PT-CS, a new dataset of 379 teacher-graded answers from complete computer-science exams in
-Portuguese, which repeats every comparison outside the public corpora and alone supports the comparisons
-that need complete exams.
+Third, evidence from 379 teacher-graded answers of complete computer-science exams in Portuguese, which
+repeats every comparison outside the public corpora and alone supports the comparisons that need complete
+exams.
 
 The paper is organised as follows. Section~\ref{sec:related} reviews the related work.
 Section~\ref{sec:method} describes the configuration choices, datasets, models, grading harness, and

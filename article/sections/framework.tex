@@ -16,23 +16,10 @@
 \section{The Configuration Guide}
 \label{sec:framework}
 
-An instructor who sets up an LLM grader must settle every configuration choice at once, while each
-comparison in the results changed one choice and kept the others fixed. The configuration guide combines
-those comparisons into a single configuration that can be used with any model, so that the instructor
-does not have to weigh the evidence choice by choice. Every choice was judged on the three measures used
-throughout: agreement with the teachers (QWK), consistency across repeated gradings, and cost per grade.
-One rule decided each setting: keep the option that raised agreement reliably, and where no option did,
-keep the cheaper and more consistent one. Five of the six settings are those of the baseline
-configuration, which the comparisons confirmed one at a time; the sixth, the request for partial credit,
-came from the follow-up experiment. The guide was then tested on the data it was built from and validated
-on two datasets that played no part in building it.
-
-\subsection{The Guide}
-\label{sec:guide}
-
-%% Table 4 and Fig. 7 are defined right after the heading, before the paragraph that first refers to them, so
-%% that both can take the bottom of that page (float rule exception, CLAUDE.md S9). If this heading ever falls
-%% on the page before its paragraph, move them back after the paragraph (check_floats.py will flag it).
+%% Table 4 and Fig. 7 are defined right after the section heading, before the paragraphs that first refer to them
+%% (in subsection A), so that both can take the bottom of that page (float rule exception, CLAUDE.md S9; moved up
+%% from the subsection heading on 2026-10-19 when the text above grew). check_floats.py confirms they land after
+%% their first reference.
 \input{tables/tab_framework}
 
 \begin{figure*}[!tb]
@@ -95,6 +82,21 @@ the student answer, and the rubric or reference answer that exists for it. The m
 returns one holistic score in a clean conversation, and the process repeats until every question is graded.}
 \label{fig:frameworkdiagram}
 \end{figure*}
+
+An instructor who sets up an LLM grader must settle every configuration choice at once, while each
+comparison in the results changed one choice and kept the others fixed. The configuration guide combines
+those comparisons into a single configuration that can be used with any model, so that the instructor
+does not have to weigh the evidence choice by choice. Every choice was judged on the three measures used
+throughout: agreement with the teachers (QWK), consistency across repeated gradings, and cost per grade.
+One rule decided each setting: keep the option that raised agreement reliably, and where no option did,
+keep the cheaper and more consistent one. Five of the six settings are those of the baseline
+configuration, which the comparisons confirmed one at a time; the sixth, the request for partial credit,
+came from the follow-up experiment. The guide was then tested on the data it was built from and validated
+on two datasets that played no part in building it.
+
+\subsection{The Guide}
+\label{sec:guide}
+
 
 The guide has six settings (Table~\ref{tab:framework}), and Fig.~\ref{fig:frameworkdiagram} shows it at
 work on one exam. Two settings raise agreement: give the model the rubric or the reference answer, and ask
@@ -199,7 +201,8 @@ Fig.~\ref{fig:guidetests} gives the results of both tests.
 Of the 56 comparisons without reasoning, the guide agreed significantly better with the teachers than
 the alternative in 33 (59\%) and showed no significant difference in the other 23 (41\%); no alternative
 without reasoning agreed significantly better than the guide for any model (Fig.~\ref{fig:guidetests}a). Most alternatives also made grades less consistent (34 of the 56 comparisons),
-and every alternative except dropping the guidance or the partial-credit request cost more per grade.
+and only three alternatives cost less per grade: dropping the guidance, dropping the partial-credit request,
+and grading the whole exam in one call, each of which agreed worse with the teachers or no better.
 
 Reasoning is the one setting in which the guide gives something up. With reasoning on, agreement rose
 significantly in 6 of 17 comparisons, four of them for Qwen3.5, the model with the strongest

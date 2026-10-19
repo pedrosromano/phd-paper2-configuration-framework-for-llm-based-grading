@@ -116,18 +116,18 @@ train models unless the customer opts in, which we did not do. No student-level 
 Instructors adopting large language model graders face four questions. Should the model reason
 before scoring? What guidance should it receive, and how should it apply it? Should a whole exam be graded
 in one call? Which configuration is worth its cost? In computer science, we vary reasoning, evaluation
-guidance, the grading instruction, grading scope, rubric decomposition, model family, and conversation state
-on four short-answer and code datasets, including new Portuguese exams. The cheap
+guidance, the grading instruction, scope, rubric decomposition, model family, and conversation state
+on four short-answer and code datasets, including Portuguese exams. The cheap
 changes were the effective ones: adding a rubric or reference answer raised agreement with teachers
 (quadratic weighted kappa, where 1 is perfect) significantly in thirteen of fifteen combinations, by
 0.095 to 0.341, and asking for partial credit raised code agreement by up to 0.11. Reasoning raised
-agreement significantly in five of twenty combinations, three after multiple-comparison correction, at 9 to
+agreement significantly in five of twenty combinations, three after correction, at 9 to
 925 times the output tokens, and made grades less consistent in most; its large code gains came for models
 scoring many partially correct answers as zero (zero-collapse). Whole-exam grading never helped;
-criterion-by-criterion scoring helped in only one of six combinations. From these results we built a
-model-independent configuration guide: the rubric or reference answer, partial credit, reasoning off, and
-one question per call. Within each model, it agreed significantly better than 33 of 56 alternatives without
-reasoning, and significantly worse than none. On two new validation datasets, no alternative without
+scoring per criterion helped in only one of six combinations. From these results we built a
+configuration guide that leaves the choice of model open: the rubric or reference answer, partial credit, reasoning off, and
+one question per call. Within each model, it agreed significantly better in 33 of 56 comparisons without reasoning,
+and significantly worse in none. On two held-out datasets, no alternative without
 reasoning agreed significantly better than the guide on short answers, with all five models, or on code,
 with four.
 \end{abstract}

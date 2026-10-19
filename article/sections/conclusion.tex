@@ -21,7 +21,7 @@ dataset, both saved little or nothing, and on code the closed models bought litt
 Putting together the options that worked best in each comparison, we built a configuration guide that
 leaves the choice of model open: give the model the rubric or reference answer and ask it for partial
 credit, and grade one question per call, with reasoning off, a single holistic score, and a clean
-conversation for each answer. Tested on five models against the 56 other configurations of the same
+conversation for each answer. Tested on five models in 56 comparisons with the other configurations of the same
 models without reasoning, the guide agreed significantly better with the teachers in 59\% of the
 comparisons and showed no significant difference in the other 41\%; none agreed significantly better. With the model best suited
 to each dataset, it matched or came within 0.05 QWK of the best configuration in the study, and with the
@@ -29,7 +29,8 @@ cheapest model no cheaper configuration graded better, apart from a difference o
 dataset. Validated on two datasets that played no part in building it, the guide met the criterion fixed
 in advance on short answers with every model. On code it met it with four of the five models: with GLM-5.1
 and GPT-5.1 it graded nearly as well as the instructors agree with each other, while Qwen3.5 and
-DeepSeek-V4-Flash showed the zero-collapse under it.
+DeepSeek-V4-Flash scored many answers as zero under the guide's rubric, and reasoning restored their
+agreement. The guide sets the configuration; the choice of model remains the user's.
 
 Three directions for future work follow. The zero-collapse, a specific form of the severity that earlier
 work measured as leniency, deserves study in its own right, to detect it and to prevent it without paying

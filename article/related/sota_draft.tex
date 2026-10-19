@@ -23,8 +23,8 @@ should use, the question this paper addresses.
 Prompted LLMs now match or approach human raters on well-specified short-answer and essay
 tasks~\cite{aminah_evaluating_2025,sessler_canai_2025,henkel_roars_2025}, yet their reliability is the
 recurring caveat. Agreement is strong but depends on the model and the prompt, and consistency varies
-sharply between systems: four LLMs grading the same algorithm answers with one rubric ranged from 0.29
-to 0.83 in intraclass correlation (ICC), the standard index of agreement between repeated
+sharply between systems: four LLMs grading one program seeded with errors, repeatedly and with one rubric, ranged from
+0.29 to 0.83 in intraclass correlation (ICC), the standard index of agreement between repeated
 measurements~\cite{moazzez_assessing_2024}. Repeated scoring also drifts over time~\cite{pack_large_2024},
 and minimally-prompted grading can stay within one rubric point of teachers yet still show low exact
 agreement with them~\cite{tate_can_2024}. Single scores are unstable enough that the variance across
@@ -49,9 +49,12 @@ measure it in general judging or in adjacent generation tasks. Closest to gradin
 short-answer grading as a move ``from memorization to reasoning'' and examines fine-tuning and
 rubric-based prompting~\cite{cong_memorization_2026}. In essay scoring, two reasoning models agreed less
 with expert raters, and less consistently, than a model without reasoning~\cite{yoshida_reasoning_2025},
-but that comparison sets different models against each other. To our knowledge, no study has isolated
-the effect of reasoning on grading itself, holding the model fixed and measuring quality, consistency,
-and cost together. This paper does so with an on/off switch within each model (RQ1).
+but that comparison sets different models against each other. Within one model, prompted chain-of-thought
+improved scoring accuracy only together with the item stem and rubric~\cite{lee_cot_2024}, and higher
+reasoning effort raised accuracy in mathematics scoring by amounts that varied by model family, at higher
+cost~\cite{frohn_reasoning_2026}. Neither study measured how a native thinking mode affects the consistency
+of repeated grades, or covered code. This paper switches the native thinking mode off and on within each
+of four models and measures agreement, run-to-run consistency, and cost together (RQ1).
 
 \subsection{Rubrics and Reference Answers}
 What the grader is given to grade against matters. In short-answer grading the usual material is a
@@ -76,8 +79,8 @@ and feedback among its core application areas~\cite{manorat_artificial_2025}.
 
 How the model is told to apply the guidance has received less attention: one study compared a lenient
 and a strict prompt for two LLMs grading geography worksheets~\cite{venkatraman_llmbased_2026}, and a
-concurrent study found that a lenient prompt awarding partial credit lowered the grading error of every
-model family on a mathematics exam~\cite{sapkota_math_2026}. Each of
+concurrent study found that a lenient prompt awarding partial credit lowered the question-level grading
+error of every model family on a mathematics exam~\cite{sapkota_math_2026}. Each of
 these studies examines one kind of task. We measure the guidance and the instruction for applying it under
 one protocol, on five models and four datasets of code and short answers.
 

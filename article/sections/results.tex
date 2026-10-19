@@ -18,7 +18,7 @@ consistency across repeated gradings, and cost.
 With reasoning on, a model writes out its thinking before it gives the grade. We compare each model with
 reasoning off and on over the sampled items, each graded five times in each mode. Fig.~\ref{fig:rq1} shows, for each model on each dataset, the agreement with the teachers in
 both modes (a), the change in agreement against the extra output tokens it cost (b), and the change in
-consistency (c); Table~\ref{tab:rq1values} gives the values. Only Qwen3.5 ever reached the output limit
+consistency (c); Table~\ref{tab:rq1values} gives the values. In these comparisons, only Qwen3.5 reached the output limit
 with reasoning on without returning a grade, in 13\% of its runs on Mohler, 17\% on SemEval, and 2 to 6\%
 on RIAYN and the two PT-CS sets. Each of those runs counts with the grade Qwen3.5 gave the same answer
 with reasoning off, as a grading system would fall back to a cheaper call.
@@ -157,12 +157,12 @@ changes ran from $-0.072$ (DeepSeek-V4-Flash on PT-CS code, significant after co
 (Qwen3.5 on RIAYN, not significant).
 
 Cost does not favour the alternatives either. Per question, grading the whole exam in one call cost 7\%
-more for Qwen3.5 and 9\% more for GPT-5.1 than one call per question, and saved DeepSeek-V4-Flash only 6\%;
+more for Qwen3.5 than one call per question, and saved DeepSeek-V4-Flash 6\% and GPT-5.1 11\%;
 scoring criterion by criterion cost 1.3 to 3.1 times as much per answer as a single holistic score, because
 the per-criterion breakdown lengthens the output.
 
 Overall, the whole exam never helped and lowered agreement for two of the three models, while changing
-the cost per question by $-6$ to $+9$\%. Criterion scoring helped only GPT-5.1 on RIAYN, where, like
+the cost per question by $-11$ to $+7$\%. Criterion scoring helped only GPT-5.1 on RIAYN, where, like
 reasoning, it made a model that gives too many zeros credit the rubric step by step; for the models that
 grade soundly it brought nothing or a loss, at 1.3 to 3.1 times the cost. Question-by-question, holistic
 grading is therefore the default.
@@ -282,14 +282,13 @@ session.
 
 The zero-collapse raised a practical question: can a change of wording, rather than reasoning, stop a
 model from scoring partially correct answers as zero? The baseline prompt tells the model to grade
-strictly, awarding and deducting marks exactly as the rubric specifies, and to return only the score. We
-therefore designed a follow-up experiment in which the prompt asks for partial credit explicitly: the
-model gives the marks for every rubric item or part of the reference answer that the student answer
-meets, even when the answer is incomplete or the code would not compile, and gives zero only when nothing
-earns marks. On code, where the zero-collapse occurs, all five models graded with both instructions, and
-Qwen3.5 and DeepSeek-V4-Flash also with a justification of at most two sentences written before the
-score. On short answers, the other four models graded with both instructions, to check that asking for
-partial credit does no harm there. All runs used reasoning off, with each answer graded five times
+strictly, exactly as the rubric specifies, and to return only the score. In a follow-up experiment the
+prompt instead asks for partial credit: the model gives the marks for every rubric item or part of the
+reference answer that the answer meets, even when it is incomplete or the code would not compile, and
+gives zero only when nothing earns marks. On code, where the zero-collapse occurs, all five models graded
+with both instructions, and Qwen3.5 and DeepSeek-V4-Flash also with a justification of at most two
+sentences written before the score. On short answers, the other four models graded with both, to check
+that partial credit does no harm there. All runs used reasoning off, with each answer graded five times
 (Fig.~\ref{fig:rq6}).
 
 %% Defined right after the paragraph that first cites it (float rule, CLAUDE.md S9).

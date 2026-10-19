@@ -445,7 +445,7 @@ unchanged in spirit — keep the matrix affordable — but the lever is **token 
     `make_datasets_table`) write these options.
   - Exception for full-width floats: one may be defined just before that paragraph, after the heading of the
     same subsection, so it can still reach the bottom of that page. This is done for Fig. 6, for Table 4 and
-    Fig. 7 (after the heading "The Guide") and for Fig. 9 (after the heading "Test Results", `[!tb]`). It only
+    Fig. 7 (after the heading of Section VI, "The Configuration Guide", since 2026-10-19) and for Fig. 9 (after the heading "Test Results", `[!tb]`). It only
     works while the heading is on the same page as the paragraph: on the morning of 2026-10-19 the heading of
     "The Guide" fell on the page before, Table 4 and Fig. 7 were queued from there and landed above their
     reference, and they went back after the paragraph until Pedro's fourth review moved the text again. The
@@ -1511,6 +1511,40 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
   - PDFs: `~/Desktop/artigo_2_access_revisto11[_alteracoes]_2026-10-19.pdf` (marked against the final version,
     commit 4fa3e36: no annotated PDF in this round) and `artigo_2_access_suplementar_revisto10_2026-10-19.pdf`
     (10 pages). 19 pages, 0 float errors. Not committed.
+- 🔧 **Third independent review (2026-10-19, "IEEE Access review — Configuring LLM-Based Grading in CS" in
+  `~/Downloads`, mock review, "Reject, updates required"): groups 1-3 and M1, M3, M7 applied (Pedro), version 12
+  awaiting validation.**
+  - **Real errors fixed:** (1) total cost EUR 158.7 predated the validation runs; all experiments EUR **219.0**
+    (`audit_pct_baselines.total_cost`). (2) Whole-exam cost per question: a whole-exam call's cost is now split over
+    its questions (`phase5.apportion_whole_exam`, `call_questions` counted in `load_main` before any filter;
+    `phase5.scope_cost_change` on identical questions): Qwen3.5 +7%, DeepSeek-V4-Flash -6%, **GPT-5.1 -11%** (was
+    +9%); Test 1 whole-exam cost 0.84-1.00x the guide (was 1.03-1.24x), so "every alternative except ... cost
+    more" became "only three alternatives cost less ... each agreed worse or no better". (3) Table 3 caption: SD
+    uses the model's own grades (fallback runs left out). (4) "Only Qwen3.5 ever reached the output limit" ->
+    "In these comparisons". (5) Table 2: QWK 0.902 is DeepSeek's in [20]; 0.767 is fine-tuned. (6) [29]
+    question-level error. (7) SAF counts from the Hugging Face release (new @misc saf_release_2022). (8) SAS-Bench
+    cited as Neural Networks 203 (2026). (9) Moazzez only for consistency (one program seeded with errors). (10)
+    RIAYN 149 of 150 (one lacks a grade). (11) bib export artefacts cleaned. Wording: "comparisons" not
+    "alternatives"; "held-out"/"further public" datasets; Mohler six levels = the points of a Mohler question;
+    Supplement Table 8 labels GLM-5.1 (DeepInfra) strict PT-CS code; Supp. Table 1 calls include PT-CS answers
+    outside the 379; Supp. Table 10 costs at the guide's provider rates.
+  - **Novelty narrowed:** Lee et al. 2024 (prompted CoT within GPT-3.5/4) and Frohn 2026 (arXiv:2604.26954, reasoning
+    effort within OpenAI/Google models, accuracy and cost) exist; the claim is now native thinking mode on/off +
+    run-to-run consistency + code (related/sota_draft.tex).
+  - **Robustness added (robustness.py, supplement Section 13, Threats):** fallback runs left out -> Qwen3.5 SemEval
+    +0.052 [-0.020, +0.123], not significant, nothing else changes; discretisation: 5 (paper), 7 (halves up), 7
+    (five levels), 6 (seven levels) significant RQ1 gains; Qwen Mohler/RIAYN/PT-CS code and GPT RIAYN under every rule.
+  - **Layout:** Table 4 and Fig. 7 now defined after the Section VI heading (the text above grew); the follow-up
+    intro and two Discussion sentences were condensed so Fig. 6 and Fig. 9 stay at their nearest place. 19 pages,
+    0 float errors; abstract 241 words (248 split at hyphens).
+  - **Facts from Pedro (2026-10-19):** PT-CS was graded by two of the authors, who taught the course; the platform
+    has no link to AppX. Pre-tests in the guide are excluded (again).
+  - **M1, M3, M7 applied (Pedro):** Method and Threats say the PT-CS grades were set by two of the authors when they
+    taught the course, before the study was designed; the cover letter declares no competing interests. The
+    abstract says "a configuration guide that leaves the choice of model open" (no "model-independent"), and the
+    Conclusion ends the validation with "the guide sets the configuration; the choice of model remains the
+    user's". PT-CS is no longer offered as a dataset: contribution 3 is "evidence from 379 teacher-graded answers",
+    the Introduction and Method no longer say "new dataset", Table 2 says "none" (Pedro: the dataset is not given).
 - **Ethics statement facts (Pedro, 2026-10-18):** PT-CS comes from exams of the UpSkill professional
   requalification course at Iscte, graded on the platform for real, with the answers reused later. The
   platform's terms said answers could be used for research; students knew it was an academic platform and that
