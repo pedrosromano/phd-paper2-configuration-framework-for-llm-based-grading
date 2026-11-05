@@ -1,7 +1,7 @@
 # Reproducibility package
 
-Supplementary file of *Configuring LLM-Based Grading in Computer Science: An Empirical Study of Reasoning,
-Guidance, Scope, and Cost* (IEEE Access).
+Supplementary file of *What Should an LLM Grader Be Given? Reasoning, Guidance, Scope, and Cost in
+Computer-Science Grading* (IEEE Access).
 
 ## Contents
 

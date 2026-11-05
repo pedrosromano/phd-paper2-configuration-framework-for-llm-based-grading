@@ -14,12 +14,14 @@ per-teacher record, so no agreement ceiling between teachers can be computed on 
 two of the authors when they taught the course, before the study was designed, so they could not be
 shaped by its results; the public datasets, graded by others, give the independent check.
 
-Four checks of the statistics, given in the supplementary material, move a few counts but no conclusion. The intervals
+Four checks of the statistics, given in the supplementary material, move a few counts and weaken two
+statements, but change no recommendation. The intervals
 resample answers, although answers to the same question may be alike; resampling whole questions instead
 leaves slightly fewer significant results: reasoning raises agreement significantly in four of the twenty
 combinations rather than five, guidance in eleven of fifteen rather than thirteen, and the guide agrees
-significantly better in 28 of the 56 comparisons without reasoning rather than 33, while one alternative,
-Claude Sonnet 4.6 with the strict instruction on the 84 PT-CS short answers, then agrees better, by 0.033.
+significantly better in 30 of the 56 comparisons without reasoning rather than 34, while one alternative,
+Claude Sonnet 4.6 with the strict instruction on the 84 PT-CS short answers, then agrees better, by 0.033,
+and GPT-5.1's gain from criterion scoring on RIAYN no longer survives Holm's correction.
 Agreement is computed on the mean
 of the repeated grades, while the guide makes one call per answer; on single runs the guide's QWK is about
 0.01 lower, and the only differences that change sign are within 0.02 of zero. Leaving out the reasoning
@@ -35,10 +37,13 @@ configurations rather than the absolute scores; temperature 0 does not make grad
 Reasoning token counts come from each provider's own accounting, so they are best
 compared within a model. The follow-up experiment on the grading instruction was designed after the zero-collapse had been
 found, so its wordings were chosen with that failure in mind; the wordings and the rule for adopting one
-were fixed before they were run, and other wordings may do better or worse.
+were fixed before they were run, and other wordings may do better or worse. On rubric-graded sets the
+partial-credit wording also drops the baseline's request to grade strictly, so the two changes are measured
+together.
 
 The guide was built on the four datasets of this study and validated on two more, with the same five models;
-with other models and data its standing may differ. Mohler, SemEval, and SAF have been public for years and
+with other models and data its standing may differ. The held-out code set has only three questions, so its
+result rests on few rubrics. Mohler, SemEval, and SAF have been public for years and
 may be in the models' training data, which could raise the agreement measured on
 them~\cite{sainz_contamination_2023}; the comparisons between configurations also hold on PT-CS, which is not
 public. The prompts were written in English for every dataset, and prompts in Portuguese might grade the

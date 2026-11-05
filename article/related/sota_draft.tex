@@ -19,7 +19,7 @@ consistency), and the evidence reviewed below shows that a strong result on one 
 others. Here we focus on what the most recent evidence implies for which configuration a grader
 should use, the question this paper addresses.
 
-\subsection{LLMs as Graders: Capable but Inconsistent}
+\subsection{LLMs as Graders}
 Prompted LLMs now match or approach human raters on well-specified short-answer and essay
 tasks~\cite{aminah_evaluating_2025,sessler_canai_2025,henkel_roars_2025}, yet their reliability is the
 recurring caveat. Agreement is strong but depends on the model and the prompt, and consistency varies
@@ -28,7 +28,10 @@ sharply between systems: four LLMs grading one program seeded with errors, repea
 measurements~\cite{moazzez_assessing_2024}. Repeated scoring also drifts over time~\cite{pack_large_2024},
 and minimally-prompted grading can stay within one rubric point of teachers yet still show low exact
 agreement with them~\cite{tate_can_2024}. Single scores are unstable enough that the variance across
-repeated runs should be reported alongside the score~\cite{pack_large_2024}. Reliability matters beyond
+repeated runs should be reported alongside the score~\cite{pack_large_2024}. The same run-to-run
+unreliability appears when LLMs write code for engineering and scientific tasks: across repeated runs only a
+few models produced correct code every time~\cite{fachada_gpt41_2025,fachada_abm_2026}, while some small
+local models came close to the largest ones~\cite{fernandes_lorawan_2025}. Reliability matters beyond
 measurement: grading errors can themselves harm learning, as false positives and negatives distort how
 students revise their work~\cite{li_am_2023}. These observations motivate our repeated grading of every
 answer, which measures consistency throughout.
@@ -44,17 +47,18 @@ variant~\cite{larionov_deepseek_2025}. Studies of overthinking, where reasoning 
 traces than a task needs, add that these traces carry verbose, redundant
 computation~\cite{sui_stop_2025}. Grading a student answer is a different kind of task: the rubric bounds
 what counts as correct, and the hard part is placing the score on the scale, which long deliberation may
-not help. Whether reasoning helps or hurts here is therefore uncertain, and the three studies above
-measure it in general judging or in adjacent generation tasks. Closest to grading, one study frames
-short-answer grading as a move ``from memorization to reasoning'' and examines fine-tuning and
-rubric-based prompting~\cite{cong_memorization_2026}. In essay scoring, two reasoning models agreed less
+not help. Whether reasoning helps or hurts here is therefore uncertain: Jayarao et al.~\cite{jayarao_explicit_2025},
+Larionov et al.~\cite{larionov_deepseek_2025}, and Sui et al.~\cite{sui_stop_2025} measured it in general
+judging or in adjacent generation tasks. Closest to grading, Cong et al.~\cite{cong_memorization_2026} frame
+short-answer grading as a move ``from memorization to reasoning'' and examine fine-tuning and
+rubric-based prompting. In essay scoring, two reasoning models agreed less
 with expert raters, and less consistently, than a model without reasoning~\cite{yoshida_reasoning_2025},
 but that comparison sets different models against each other. Within one model, prompted chain-of-thought
 improved scoring accuracy only together with the item stem and rubric~\cite{lee_cot_2024}, and higher
 reasoning effort raised accuracy in mathematics scoring by amounts that varied by model family, at higher
 cost~\cite{frohn_reasoning_2026}. Neither study measured how a native thinking mode affects the consistency
 of repeated grades, or covered code. This paper switches the native thinking mode off and on within each
-of four models and measures agreement, run-to-run consistency, and cost together (RQ1).
+of four models and measures agreement, run-to-run consistency, and cost together.
 
 \subsection{Rubrics and Reference Answers}
 What the grader is given to grade against matters. In short-answer grading the usual material is a
@@ -90,6 +94,11 @@ submissions~\cite{jukiewicz_comparison_2026}, assignments in a bioinformatics
 course~\cite{policar_automated_2025}, and
 multi-model frameworks emphasising transparency and reproducibility~\cite{anghel_graderassist_2025}.
 Dedicated benchmarks for LLM short-answer scoring are also beginning to appear~\cite{lai_sasbench_2026}.
+These comparisons rank models under a fixed prompt, yet the same model's agreement with teachers shifts with
+the prompt and the guidance it receives~\cite{tate_can_2024,pathak_rubric_2025}, so a ranking alone does not
+tell an instructor how to set up the grader. Evidence exists for single settings, such as a simplified
+rubric~\cite{yoshida_detailed_2025} or a prompt that asks for partial credit~\cite{sapkota_math_2026}, but
+not for the combination of settings and its cost.
 Where these studies compare which model grades best, we ask which configuration a grading task calls
 for. Our contribution is a \emph{configuration guide}: an empirically grounded recommendation of how to
 configure an LLM grader for computer-science exams, with the evidence and the cost behind each setting.

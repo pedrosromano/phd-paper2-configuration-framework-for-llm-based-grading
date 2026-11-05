@@ -65,7 +65,17 @@ def main(argv=None) -> int:
     ap.add_argument("--models", default=",".join(MODELS),
                     help="comma-separated; C4 (2026-10-15) uses qwen3.5,deepseek-v4-flash because GLM-5.1's "
                          "reasoning can no longer be disabled on DeepInfra")
+    ap.add_argument("--exams", choices=["sample", "dataset"], default="dataset",
+                    help="dataset = the 97 PT-CS exams of the paper's dataset, every exam holding at least one of "
+                         "the 379 answers (Pedro, 2026-11-04: the sub-study uses only the dataset's exams); "
+                         "sample = the former seeded draw of 80 from all of the course's exams")
+    ap.add_argument("--store", default=None,
+                    help="write to this file under data/processed/runs/ instead of conversation.jsonl, so that two "
+                         "providers can run at once; merge it into conversation.jsonl afterwards")
     args = ap.parse_args(argv)
+    global CONV_FILE
+    if args.store:
+        CONV_FILE = CONV_FILE.parent / args.store
     models = [m.strip() for m in args.models.split(",") if m.strip()]
 
     spec = yaml.safe_load(MATRIX.read_text())
@@ -77,7 +87,15 @@ def main(argv=None) -> int:
     import random
     subs = sorted(submap)
     random.Random(SEED).shuffle(subs)
-    subs = subs[: (args.limit or n_subs)]
+    if args.exams == "dataset":
+        strata = pd.read_parquet(REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
+        keep = set(strata.query("stratum=='intervened'").item_id.astype(str))
+        allpt = corpus[(corpus.dataset == "ptcs") & corpus.submission_id.notna()]
+        ds_exams = set(allpt[allpt.item_id.astype(str).isin(keep)].submission_id)
+        subs = [s for s in subs if s in ds_exams]
+        subs = subs[: args.limit] if args.limit else subs
+    else:
+        subs = subs[: (args.limit or n_subs)]
 
     seen: set = set()
     if CONV_FILE.exists():

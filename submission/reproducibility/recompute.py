@@ -1,5 +1,5 @@
 """Recompute the agreement values and confidence intervals of
-"Configuring LLM-Based Grading in Computer Science" from grades.csv.
+"What Should an LLM Grader Be Given?" from grades.csv.
 
 grades.csv holds every grade the models gave on the public datasets (Mohler, SemEval, RIAYN) and on the two
 validation datasets (SAF, HARMOGEN-R), one row per answer, configuration and repetition, with the human grade.

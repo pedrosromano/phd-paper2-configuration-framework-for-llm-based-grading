@@ -53,8 +53,8 @@
 \makeatother
 % hyperref: clickable \href (ORCID), \cite, \ref, \url. The class loads it only in JTEHM mode.
 \usepackage[hidelinks]{hyperref}
-\hypersetup{pdftitle={Configuring LLM-Based Grading in Computer Science: An Empirical Study of Reasoning, Guidance, Scope, and Cost},
-  pdfauthor={Pedro S. Romano, Daniel F. S. Fernandes, Pedro J. A. Sebastiao}}
+\hypersetup{pdftitle={What Should an LLM Grader Be Given? Reasoning, Guidance, Scope, and Cost in Computer-Science Grading},
+  pdfauthor={Pedro S. Romano, Daniel Fernandes, Pedro J. A. Sebastiao}}
 
 % --- ORCID icon (coauthor request) ---
 % scalerel.sty is absent from this BasicTeX install; \orcidicon scales the logo with \resizebox
@@ -80,18 +80,18 @@
 \history{Date of publication xxxx 00, 0000, date of current version xxxx 00, 0000.}
 \doi{10.1109/ACCESS.2026.0000000}
 
-\title{Configuring LLM-Based Grading in Computer Science: An Empirical Study of Reasoning, Guidance, Scope, and Cost}
+\title{What Should an LLM Grader Be Given? Reasoning, Guidance, Scope, and Cost in Computer-Science Grading}
 
 \author{\uppercase{Pedro S. Romano}\authorrefmark{1}~\orcidicon{0009-0002-2566-851X},
-\uppercase{Daniel F. S. Fernandes}\authorrefmark{1,2}~\orcidicon{0000-0002-1356-9349}, AND
+\uppercase{Daniel Fernandes}\authorrefmark{1,2}~\orcidicon{0000-0002-1356-9349}, AND
 \uppercase{Pedro J. A. Sebasti\~ao}\authorrefmark{1,2}~\orcidicon{0000-0001-7729-4033}}
 
 \address[1]{Iscte -- Instituto Universit\'ario de Lisboa, 1649-026 Lisbon, Portugal}
 \address[2]{Instituto de Telecomunica\c{c}\~oes, 1049-001 Lisbon, Portugal}
 
 \markboth
-{Romano \headeretal: Configuring LLM-Based Grading in Computer Science}
-{Romano \headeretal: Configuring LLM-Based Grading in Computer Science}
+{Romano \headeretal: What Should an LLM Grader Be Given?}
+{Romano \headeretal: What Should an LLM Grader Be Given?}
 
 \corresp{Corresponding author: Pedro S. Romano (e-mail: Pedro\_Romano@iscte-iul.pt).}
 
@@ -113,23 +113,23 @@ train models unless the customer opts in, which we did not do. No student-level 
 % (Pedro, 2026-10-19): "validation" only for the two datasets that played no part in building the guide; the
 % comparisons on the study's own data are "tests". At most 250 words.
 \begin{abstract}
-Instructors adopting large language model graders face four questions. Should the model reason
-before scoring? What guidance should it receive, and how should it apply it? Should a whole exam be graded
-in one call? Which configuration is worth its cost? In computer science, we vary reasoning, evaluation
+Instructors adopting large language model graders in computer science face four questions. Should the model reason
+before scoring? What guidance should it receive? Should a whole exam be graded
+in one call? Which configuration is worth its cost? We vary reasoning, evaluation
 guidance, the grading instruction, scope, rubric decomposition, model family, and conversation state
 on four short-answer and code datasets, including Portuguese exams. The cheap
-changes were the effective ones: adding a rubric or reference answer raised agreement with teachers
+changes were the effective ones: adding a rubric or reference answer raised agreement with human graders
 (quadratic weighted kappa, where 1 is perfect) significantly in thirteen of fifteen combinations, by
 0.095 to 0.341, and asking for partial credit raised code agreement by up to 0.11. Reasoning raised
 agreement significantly in five of twenty combinations, three after correction, at 9 to
 925 times the output tokens, and made grades less consistent in most; its large code gains came for models
 scoring many partially correct answers as zero (zero-collapse). Whole-exam grading never helped;
-scoring per criterion helped in only one of six combinations. From these results we built a
-configuration guide that leaves the choice of model open: the rubric or reference answer, partial credit, reasoning off, and
-one question per call. Within each model, it agreed significantly better in 33 of 56 comparisons without reasoning,
-and significantly worse in none. On two held-out datasets, no alternative without
-reasoning agreed significantly better than the guide on short answers, with all five models, or on code,
-with four.
+scoring per criterion helped in one of six combinations. We then built a low-cost
+configuration guide that leaves the choice of model open: the rubric or reference answer, partial credit,
+reasoning off, and one question per call. On two held-out datasets, the guide met its preset criterion (no alternative
+without reasoning significantly better) on short answers with all five models and on code with four.
+On them, reasoning raised agreement in six of eight comparisons, at 3.5 to 55 times the cost: on code, it is
+the upgrade to consider.
 \end{abstract}
 
 \begin{keywords}
@@ -175,12 +175,12 @@ authors checked all results and take full responsibility for the content.
 received the M.Sc. degree in telecommunications and computer engineering from Iscte -- Instituto
 Universit\'ario de Lisboa, Lisbon, Portugal, where he is currently pursuing the Ph.D. degree. He has 11
 years of experience in teaching and in mobile and web development. He is currently a University Teacher at
-Iscte -- Instituto Universit\'ario de Lisboa, and an Executive Partner at AppX. His research focuses on
+Iscte -- Instituto Universit\'ario de Lisboa. His research focuses on
 machine learning and artificial intelligence, on which he has published peer-reviewed machine-learning
 studies; his interests also include mobile networks and software engineering.
 \end{IEEEbiography}
 
-\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{bios/fernandes.jpeg}}]{Daniel F. S. Fernandes}
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{bios/fernandes.jpeg}}]{Daniel Fernandes}
 received the B.S. and M.S. degrees in telecommunications and computer engineering and the Ph.D. degree in
 information science and technology from Iscte -- Instituto Universit\'ario de Lisboa, in 2012, 2017, and
 2021, respectively. He is an Assistant Professor at Iscte -- Instituto Universit\'ario de Lisboa, and a

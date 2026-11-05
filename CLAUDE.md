@@ -424,7 +424,9 @@ unchanged in spirit — keep the matrix affordable — but the lever is **token 
   `article/access-template/`; `article/latexmkrc` adds that folder to the TeX search paths). Author photos in
   `article/bios/`. The class redefines the `\year` primitive: the shim at the top of `main.tex` must stay or
   tikz/pgf fail. Bib via BibTeX + `IEEEtran.bst`. Figure widths in `experiments/figures/phase6.py` follow the
-  Access column (85.29 mm) and text width (177.53 mm).
+  Access column (85.29 mm) and text width (177.53 mm). The figures' LaTeX run measures text in the paper's own font (Formata medium,
+  via `pgf.preamble` and the template font paths set in `phase6.py`, 2026-11-04); without it, legend text ran past
+  its frame in the paper.
 - Compile:
   ```bash
   eval "$(/usr/libexec/path_helper)"
@@ -444,8 +446,8 @@ unchanged in spirit — keep the matrix affordable — but the lever is **token 
     (one column) or `[!tb]` (full width). The generators (`make_phase5_tables._tex`, `write_guide_table`,
     `make_datasets_table`) write these options.
   - Exception for full-width floats: one may be defined just before that paragraph, after the heading of the
-    same subsection, so it can still reach the bottom of that page. This is done for Fig. 6, for Table 4 and
-    Fig. 7 (after the heading of Section VI, "The Configuration Guide", since 2026-10-19) and for Fig. 9 (after the heading "Test Results", `[!tb]`). It only
+    same subsection, so it can still reach the bottom of that page. This is done for Fig. 6 and for Fig. 9 (after the heading "Test Results", `[!tb]`). Since 2026-11-04 Table 4
+    is at the end of the Results, and Fig. 7 is again defined after the Section VI heading. It only
     works while the heading is on the same page as the paragraph: on the morning of 2026-10-19 the heading of
     "The Guide" fell on the page before, Table 4 and Fig. 7 were queued from there and landed above their
     reference, and they went back after the paragraph until Pedro's fourth review moved the text again. The
@@ -1545,6 +1547,71 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
     Conclusion ends the validation with "the guide sets the configuration; the choice of model remains the
     user's". PT-CS is no longer offered as a dataset: contribution 3 is "evidence from 379 teacher-graded answers",
     the Introduction and Method no longer say "new dataset", Table 2 says "none" (Pedro: the dataset is not given).
+- ✅ **Advisor review by Daniel Fernandes (2026-11-03, 34 PDF comments on the submitted version) and Pedro's final
+  reading (2026-11-04, 5 comments): implemented, the submission folder rebuilt (`~/Desktop/artigo_2_submissao/`).**
+  Decisions, do not regress them:
+  - **Title:** *What Should an LLM Grader Be Given? Reasoning, Guidance, Scope, and Cost in Computer-Science
+    Grading*; running head "What Should an LLM Grader Be Given?". The co-author is "Daniel Fernandes" (no "F. S.").
+  - **Table 1 is a map of the comparisons** (Pedro's main criticism: models and datasets "disappear"): a
+    `table*` with the choices against 5 sets x 5 models; shaded check mark = compared (Pedro: check marks, not
+    crosses), -- = not applicable, a letter = not
+    compared, with its reason in the legend (a-i). The reasons were taken from the project records (matrix.yaml,
+    PHASES.md): Claude reasoning off only (costliest), DeepInfra stopped serving GLM-5.1 with reasoning off before
+    guidance/scope/decomposition ran and a second provider came only for the follow-up, GLM partial credit on code
+    only (each legend letter is one plain sentence with its reason, no disclaimers; Pedro), PT-CS short answers few per exam with rubrics of at most three criteria,
+    the conversation sub-study planned on the open models. One Method sentence states the model coverage
+    ("Each choice was compared on at least three of the five models ...").
+  - **Filling the gaps was costed and NOT run (Pedro, 2026-11-04: "the experiments are solid enough; if the paper
+    is rejected we will see").** The GLM-5.1 gaps through OpenRouter cost about EUR 24 (b, d, h); everything about
+    EUR 150. Smoke-test rows were removed from the stores.
+  - **Table 4 is the "Summary of the Results"** (new last subsection of the Results; columns Choice | What the
+    comparisons showed | Setting); the guide section refers back to it.
+  - **Daniel's three papers** (Fernandes et al. 2025 Electronics; Fachada et al. 2025 Future Internet; Fachada
+    et al. 2026 Ecological Modelling) are cited once, neutrally, in the second paragraph of the Introduction
+    (LLMs benchmarked on writing code for engineering and scientific tasks), never as the opening. Article 1 is
+    still not cited.
+  - Text: the fallback rule is justified ("to keep these hard answers in the comparison"); holistic is glossed
+    at first use; RIAYN is "148 in Java and one in Python"; the follow-up is motivated in Method; contributions
+    lead with the guide; Related Work names the authors and II-D gained two sentences (rankings depend on prompt
+    and guidance; evidence exists only for single settings); the Discussion notes that the Portuguese answers
+    were graded with English prompts and the effects held; Fig. 1 explains off/on inside panel (a), and the lower half is one row per model and
+    dataset across three aligned panels: (b) the change, reasoning on minus off, with its CI; the token multiplier
+    as a bar on a log axis; (c) SD off (open circle) and on (filled). Legends kept apart (Pedro): (a) and (c) carry
+    their own inside the panel, the legend below holds only the models. This replaced the scatter plots Pedro
+    found unreadable; the map's letters are bold; all figure
+    legends larger (6.2 pt); Fig. 8 has blocks 1, 3, 4 on the left and 2 on the right.
+  - 20 pages (the last holds only the last biography), 0 float errors; supplement 11 pages.
+- ✅ **Fourth independent review (2026-11-04, "Revisão IEEE Access — What Should an LLM Grader Be Given" on the
+  Desktop, mock review, "Reject, updates required"): verified point by point; Pedro approved fixing it by text and
+  re-analyses, plus one run (the conversation sub-study on the dataset's exams).** Decisions, do not regress them:
+  - **PT-CS has two levels (Pedro, after a long discussion):** 97 complete exams with 634 answers; two of the
+    authors manually graded 379 of them (295 code, 84 short), which are the only human grades used. The grades of
+    the other 255 "could not be verified, so they are not used"; those answers appear only in whole-exam grading
+    and the conversation sub-study, because that is the only way to grade complete exams. The 181 exams of the
+    platform are never mentioned. (The 379 are the stratum whose final grade differs from the sum of the
+    per-criterion scores, i.e. with evidence of teacher revision; the paper does not state this criterion.)
+  - **Conversation sub-study re-run on the 97 exams** (every code answer, k=5) with Qwen3.5, DeepSeek-V4-Flash
+    (DeepInfra) and GLM-5.1 (OpenRouter, mapped to glm-5.1 in phase5.load_conversation; runner option
+    `--exams dataset`). Intervals resample whole exams (phase6.conversation_effects). Results: shared history
+    -0.018 (Qwen, sig), -0.014 (DeepSeek, sig), -0.008 (GLM, ns); order 6-8% of the marks, 2.1-2.9x repetition
+    noise; the exam's own order scores slightly higher (DeepSeek, GLM sig). Map letter h removed.
+  - **Stores cleaned (Pedro: delete data outside the dataset):** PT-CS one-answer-per-call rows kept only for the
+    379; whole-exam rows only for the 88 exams with a reviewed code answer; conversation rows only for the 97 exams
+    and the new GLM run. Total cost of all experiments EUR 211.4; Test 1: 34 better, 22 no difference, 0 worse
+    (questions resampled: 30 and 1).
+  - **Claims reworded:** reasoning off is the guide's low-cost setting and, on code, reasoning is "the upgrade to
+    consider" (validation: reasoning better in 6 of 8 in QWK, 7 of 8 in MAE); the abstract no longer gives Test 1
+    counts; the validation states that the criterion failed on code with DeepSeek-V4-Flash; zero-collapse depends
+    on model, rubric and instruction; "strictly" and partial credit are measured together (Threats).
+  - **New engine-backed analyses** (robustness.mae_rq1, mae_validation, instructors_loo; supplement Tables 17-19):
+    MAE and signed bias (reasoning lowers MAE in 8 of 20); HARMOGEN-R ceiling is each instructor against the mean
+    of the other three (0.90-0.93; GLM-5.1 0.90-0.92), also in Fig. 10.
+  - Text: "human graders" where the graders are not teachers; [23] is QWK 0.948 (LLaMA3-70B, abstract); [37]
+    SciEntsBank; GPT-5.1 "called without a temperature setting"; no "lowest-priced" claim (Gemini 3 Pro cannot
+    switch reasoning off); the biography has no AppX; Daniel's three papers in Related Work II-A (run-to-run
+    unreliability and model differences in code generation); Zhou 2026 and Xu 2026 added to RQ5.
+  - Figures measure text in the paper's font (Formata) so legends fit; Fig. 7 is again defined after the
+    Section VI heading.
 - **Ethics statement facts (Pedro, 2026-10-18):** PT-CS comes from exams of the UpSkill professional
   requalification course at Iscte, graded on the platform for real, with the answers reused later. The
   platform's terms said answers could be used for research; students knew it was an academic platform and that

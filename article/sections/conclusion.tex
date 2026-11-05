@@ -12,25 +12,29 @@ model-dataset combinations, by 0.095 to 0.341 QWK, for 1.2 to 1.8 times the cost
 model to award partial credit raised code agreement by up to 0.11 QWK for a few extra input tokens. Reasoning raised
 agreement significantly in five of twenty combinations, three after correcting for multiple comparisons, while
 multiplying output tokens by up to 925 and usually making grades less consistent. Its clearest gains came on
-code, for models that scored many partially correct answers as zero. This zero-collapse is a property of the
-model with reasoning off: asking for partial credit reduced it in GPT-5.1, but not in Qwen3.5, which names
-what the student did right and still gives no marks.
+code, for models that scored many partially correct answers as zero. This zero-collapse depends on the model
+together with the rubric and the instruction: asking for partial credit reduced it in GPT-5.1, but not in
+Qwen3.5, which names what the student did right and still gives no marks, and on held-out code a rubric
+brought it out in DeepSeek-V4-Flash.
 Grading a whole exam in one call never helped, scoring criterion by criterion helped only GPT-5.1 on one
 dataset, both saved little or nothing, and on code the closed models bought little for their price.
 
 Putting together the options that worked best in each comparison, we built a configuration guide that
 leaves the choice of model open: give the model the rubric or reference answer and ask it for partial
 credit, and grade one question per call, with reasoning off, a single holistic score, and a clean
-conversation for each answer. Tested on five models in 56 comparisons with the other configurations of the same
-models without reasoning, the guide agreed significantly better with the teachers in 59\% of the
-comparisons and showed no significant difference in the other 41\%; none agreed significantly better. With the model best suited
+conversation for each answer. Against the other configurations of the same five models without reasoning, the guide agreed
+significantly better with the human graders in 34 of 56 comparisons and was rarely, if ever, beaten,
+although most of those alternatives also used the strict instruction, so this test describes the
+configurations that were run rather than isolating each setting. With the model best suited
 to each dataset, it matched or came within 0.05 QWK of the best configuration in the study, and with the
 cheapest model no cheaper configuration graded better, apart from a difference of 0.001 QWK on one
 dataset. Validated on two datasets that played no part in building it, the guide met the criterion fixed
-in advance on short answers with every model. On code it met it with four of the five models: with GLM-5.1
-and GPT-5.1 it graded nearly as well as the instructors agree with each other, while Qwen3.5 and
-DeepSeek-V4-Flash scored many answers as zero under the guide's rubric, and reasoning restored their
-agreement. The guide sets the configuration; the choice of model remains the user's.
+in advance on short answers with every model and on code with four of the five; with DeepSeek-V4-Flash,
+scoring per criterion agreed significantly better. With GLM-5.1 and GPT-5.1 it graded the held-out code
+close to the instructors' level, while Qwen3.5 and DeepSeek-V4-Flash scored many answers as zero under the
+rubric. On those datasets, already asking for partial credit, turning reasoning on raised agreement in six
+of eight comparisons, at 3.5 to 55 times the cost per grade: reasoning off is the low-cost setting, and on
+code reasoning is the upgrade worth its cost when the budget allows. The guide sets the configuration; the choice of model remains the user's.
 
 Three directions for future work follow. The zero-collapse, a specific form of the severity that earlier
 work measured as leniency, deserves study in its own right, to detect it and to prevent it without paying
@@ -41,5 +45,6 @@ against it on agreement, consistency, and cost.
 
 For the instructor the introduction began with, the answer is a short routine: supply the rubric or
 reference answer, ask for partial credit, and grade one question per call with reasoning off, in a clean
-conversation; with an inexpensive model this costs under 0.10 euros per thousand grades, and on code
-the model must be one that does not collapse to zeros.
+conversation; with an inexpensive model this costs under 0.10 euros per thousand grades. On code, the model
+must be one that does not collapse to zeros, and turning reasoning on buys more agreement for its extra
+cost.

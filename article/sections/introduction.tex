@@ -19,7 +19,7 @@ teachers varies sharply between models and prompts~\cite{tate_can_2024}. An inst
 LLM grader therefore makes several decisions at once: whether the model should reason before scoring,
 what evaluation guidance to place in the prompt and how the model should apply it, whether to grade a
 whole exam in one call or question by question, whether to score a rubric criterion by criterion or
-holistically, and which model to run or pay for.
+holistically, as one overall grade, and which model to run or pay for.
 
 The literature answers these questions only in fragments. Reasoning is the clearest example. A
 reasoning model writes out its thinking before it answers, and this improves general LLM-as-a-judge
@@ -82,18 +82,18 @@ configuration of the same model and with the best configuration of any model, on
 and cost. The \emph{validation} uses two further public datasets, one of short answers and one of code, that played
 no part in building the guide, and checks it against a criterion fixed before they were graded.
 
-The overall contribution of this paper is threefold. First, a configuration guide for LLM grading in CS,
-tested on five models against every configuration in the study and validated on two datasets that played
-no part in building it. Second, for grading in CS, the effect of each configuration choice (reasoning,
-evaluation guidance, the grading instruction, grading scope, rubric decomposition, and conversation state),
-isolated within the same model and measured jointly on agreement, consistency, and cost.
-Third, evidence from 379 teacher-graded answers of complete computer-science exams in Portuguese, which
-repeats every comparison outside the public corpora and alone supports the comparisons that need complete
-exams.
+The main contribution of this paper is the configuration guide for LLM grading in CS: a single
+recommended configuration that leaves the choice of model open, tested on five models against the other
+configurations they graded and validated on two datasets that played no part in building it. Two further contributions
+support it. The first is the effect of each configuration choice for grading in CS (reasoning, evaluation
+guidance, the grading instruction, grading scope, rubric decomposition, and conversation state), isolated
+within the same model and measured jointly on agreement, consistency, and cost. The second is evidence
+from 97 complete computer-science exams in Portuguese, with 379 teacher-reviewed grades, which repeats every
+comparison outside the public corpora and alone supports the comparisons that need complete exams.
 
 The paper is organised as follows. Section~\ref{sec:related} reviews the related work.
 Section~\ref{sec:method} describes the configuration choices, datasets, models, grading harness, and
-statistics. Section~\ref{sec:results} reports the results by research question and then the follow-up
-experiment, and Section~\ref{sec:discussion} discusses them. Section~\ref{sec:framework} presents, tests,
+statistics. Section~\ref{sec:results} reports the results by research question and the follow-up
+experiment and summarises them, and Section~\ref{sec:discussion} discusses them. Section~\ref{sec:framework} presents, tests,
 and validates the configuration guide, Section~\ref{sec:threats} states the threats to validity, and
 Section~\ref{sec:conclusion} concludes.

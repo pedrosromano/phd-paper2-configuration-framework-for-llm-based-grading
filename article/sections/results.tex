@@ -9,34 +9,34 @@
 \label{sec:results}
 
 This section answers the research questions in turn and then reports the follow-up experiment. Each
-subsection changes one configuration choice from the baseline and compares agreement with the teachers,
+subsection changes one configuration choice from the baseline and compares agreement with the human graders,
 consistency across repeated gradings, and cost.
 
 \subsection{RQ1: Reasoning}
 \label{sec:rq1}
 
-With reasoning on, a model writes out its thinking before it gives the grade. We compare each model with
-reasoning off and on over the sampled items, each graded five times in each mode. Fig.~\ref{fig:rq1} shows, for each model on each dataset, the agreement with the teachers in
-both modes (a), the change in agreement against the extra output tokens it cost (b), and the change in
-consistency (c); Table~\ref{tab:rq1values} gives the values. In these comparisons, only Qwen3.5 reached the output limit
-with reasoning on without returning a grade, in 13\% of its runs on Mohler, 17\% on SemEval, and 2 to 6\%
-on RIAYN and the two PT-CS sets. Each of those runs counts with the grade Qwen3.5 gave the same answer
-with reasoning off, as a grading system would fall back to a cheaper call.
+With reasoning on, a model writes out its thinking before it gives the grade. We compare the four models
+graded in both modes (Claude Sonnet 4.6 was graded with reasoning off only) with reasoning off and on over
+the sampled items, each graded five times in each mode. Fig.~\ref{fig:rq1} shows, for each model on each dataset, the agreement with the human graders in
+both modes (a), the change in agreement with the extra output tokens it cost (b), and the change in
+consistency (c); Table~\ref{tab:rq1values} gives the values.
 
 \begin{figure*}[!tb]
 \centering
 \input{figures/fig_rq1.pgf}
 \caption{Reasoning off versus on, per model and dataset. (a) Agreement with the human grade (QWK)
 with reasoning off (light bars) and on (hatched bars), on a 0 to 1 scale shared with Figs.~\ref{fig:rq2}
-and~\ref{fig:rq3}. (b) The change in agreement (on minus off, with 95\% confidence intervals) against how
-many times more output tokens reasoning used, on a log scale; the shaded band is the $\pm0.05$ margin
-within which two settings count as equivalent. (c) Consistency: the within-item standard deviation across
-repetitions with reasoning on against off; points above the diagonal are less consistent with reasoning.
-Every sampled item; Table~\ref{tab:rq1values} lists the values.}
+and~\ref{fig:rq3}. (b) One row per model and dataset: the change in agreement, reasoning on minus off, with its 95\% CI;
+the shaded band is the $\pm0.05$ equivalence margin. Middle: how many times more output tokens reasoning
+used. (c) The within-item standard deviation across repetitions with reasoning off (open circle) and on
+(filled); filled to the right means less consistent. Every sampled item; Table~\ref{tab:rq1values} lists the values.}
 \label{fig:rq1}
 \end{figure*}
 
 \input{tables/tab_rq1_values}
+
+In these comparisons, only Qwen3.5 reached the output limit with reasoning on without returning a grade,
+in 13\% of its runs on Mohler, 17\% on SemEval, and 2 to 6\% on RIAYN and the two PT-CS sets.
 
 In most combinations reasoning left agreement almost where it was. In fifteen of the twenty
 model-dataset combinations the change was not significant, and for GLM-5.1 and GPT-5.1 on Mohler it was
@@ -47,17 +47,23 @@ combinations, four of them for Qwen3.5: by 0.056 QWK on Mohler (from a reasoning
 0.062 on SemEval (from 0.538), 0.221 on RIAYN (from 0.544), and 0.172 on PT-CS code (from 0.440). On
 SemEval the 95\% interval starts at +0.002, so that gain is only barely significant. The fifth is GPT-5.1
 on RIAYN, by 0.230 (from 0.561). After Holm's correction for the twenty
-comparisons, three remain significant: Qwen3.5 on Mohler and on RIAYN, and GPT-5.1 on RIAYN.
+comparisons, three remain significant: Qwen3.5 on Mohler and on RIAYN, and GPT-5.1 on RIAYN. Measured as
+mean absolute error on the 0 to 1 scale, reasoning lowered the error significantly in eight combinations and
+raised it in none: four of the five gains above (not Qwen3.5 on SemEval), and also GLM-5.1 on RIAYN and
+SemEval, GPT-5.1 on PT-CS code, and Qwen3.5 on the PT-CS short answers (supplementary material). With
+reasoning off, the models graded Mohler, RIAYN, and PT-CS code below the human graders, by up to 0.27 of the
+scale, and SemEval and the PT-CS short answers slightly above.
 
-These gains came at a high price in tokens (Fig.~\ref{fig:rq1}b). Reasoning multiplied the output tokens
-by 9 to 925 times. For GLM-5.1, DeepSeek-V4-Flash, and GPT-5.1 the multiplier was 9 to 62 on short
-answers and 109 to 211 on code; Qwen3.5 used 666 to 925 times as many tokens on every dataset. Across this
-whole range of cost, most points stay inside or near the $\pm0.05$ band; the points well above it are
-Qwen3.5 on code and on PT-CS short answers, and GPT-5.1 on RIAYN.
+These gains came at a high price in tokens. Reasoning multiplied the output tokens by 9 to 925 times:
+by 9 to 62 on short answers and 109 to 211 on code for GLM-5.1, DeepSeek-V4-Flash, and GPT-5.1, and by
+666 to 925 on every dataset for Qwen3.5. Fig.~\ref{fig:rq1}b gives each combination's change in agreement
+with its multiplier beside it, as a bar. However many tokens reasoning used, most changes stay inside or near the
+shaded $\pm0.05$ band, where the change is too small to matter; only Qwen3.5 on RIAYN, PT-CS code, and the
+PT-CS short answers, and GPT-5.1 on RIAYN, rise well above it.
 
 Reasoning also made grading less consistent. Graded five times, the same answer received more varied
-grades with reasoning on in 17 of the 20 combinations (Fig.~\ref{fig:rq1}c, points above the diagonal),
-significantly in 10; only GPT-5.1 on RIAYN became significantly more consistent. For Qwen3.5 on RIAYN,
+grades with reasoning on in 17 of the 20 combinations (Fig.~\ref{fig:rq1}c, filled circle to the right),
+two of them by less than 0.001, and the increase was significant in 10; only GPT-5.1 on RIAYN became significantly more consistent. For Qwen3.5 on RIAYN,
 for example, the within-item standard deviation rose from 0.011 to 0.055 of the scale. Grades varied across repetitions even at temperature 0: with reasoning off, the open models gave
 different grades across repetitions to 9 to 56\% of the items, depending on the model and dataset. Part
 of the extra
@@ -74,7 +80,7 @@ partial credit receive the same score as an empty answer, so the grader can no l
 apart. The zeros are genuine, parseable scores, and they recur whether the exam is graded whole or one
 question at a time. GPT-5.1 shows a milder form, scoring 32\% of the PT-CS code answers and 17\% of
 RIAYN's as zero with reasoning off, and Qwen3.5 scores 16\% of RIAYN's as zero, against 2\% and 5\% for the
-teachers and 9 to 13\% for GLM-5.1 and DeepSeek-V4-Flash. Graded with reasoning off over all the code
+human graders and 9 to 13\% for GLM-5.1 and DeepSeek-V4-Flash. Graded with reasoning off over all the code
 answers, these two models were also the two weakest code graders: 0.544 and 0.561 QWK on RIAYN and 0.468
 and 0.584 on PT-CS code, against 0.61 to 0.73 for the other two. Reasoning roughly halved Qwen3.5's zeros
 on the sampled PT-CS code answers (from 47\% to 25\%), and the significant code gains all belong to the
@@ -93,7 +99,7 @@ at most 0.06. Reasoning repairs a collapsing code grader and adds little to a so
 Evaluation guidance adds the reference answer or the rubric to the question and student answer: a
 reference answer on Mohler and SemEval, and a rubric on RIAYN and on both parts of PT-CS. We measured it
 on three models, Qwen3.5, DeepSeek-V4-Flash, and GPT-5.1, each with reasoning off, on all five sets
-(Fig.~\ref{fig:rq2}).
+(Fig.~\ref{fig:rq2}); GLM-5.1 was no longer offered with reasoning off when this comparison was run.
 
 \begin{figure}[!htb]
 \centering
@@ -107,7 +113,7 @@ ways.}
 
 Guidance raised agreement significantly in 13 of the 15 model-dataset combinations, and 12 of these
 gains remain significant after Holm's correction; the thirteenth is GPT-5.1 on the 84 PT-CS short answers.
-Without guidance the models agreed with the teachers
+Without guidance the models agreed with the human graders
 at 0.32 to 0.57 QWK; the significant gains run from 0.095 (DeepSeek-V4-Flash on Mohler, from 0.523) to
 0.341 (Qwen3.5 on PT-CS short answers, from 0.319). They are as large on PT-CS as on the public data: on the 295 PT-CS code answers the rubric adds 0.149 for Qwen3.5, 0.152 for
 DeepSeek-V4-Flash, and 0.192 for GPT-5.1. Of the two exceptions, DeepSeek-V4-Flash on PT-CS short
@@ -156,16 +162,12 @@ was unchanged ($+0.002$, equivalent to zero within the $\pm0.05$ margin). For th
 changes ran from $-0.072$ (DeepSeek-V4-Flash on PT-CS code, significant after correction) to $+0.030$
 (Qwen3.5 on RIAYN, not significant).
 
-Cost does not favour the alternatives either. Per question, grading the whole exam in one call cost 7\%
-more for Qwen3.5 than one call per question, and saved DeepSeek-V4-Flash 6\% and GPT-5.1 11\%;
-scoring criterion by criterion cost 1.3 to 3.1 times as much per answer as a single holistic score, because
-the per-criterion breakdown lengthens the output.
-
 Overall, the whole exam never helped and lowered agreement for two of the three models, while changing
-the cost per question by $-11$ to $+7$\%. Criterion scoring helped only GPT-5.1 on RIAYN, where, like
-reasoning, it made a model that gives too many zeros credit the rubric step by step; for the models that
-grade soundly it brought nothing or a loss, at 1.3 to 3.1 times the cost. Question-by-question, holistic
-grading is therefore the default.
+the cost per question by only $-11$ to $+7$\%: 7\% more for Qwen3.5, and 6\% and 11\% less for
+DeepSeek-V4-Flash and GPT-5.1. Criterion scoring helped only GPT-5.1 on RIAYN, where, like reasoning, it
+made a model that gives too many zeros credit the rubric step by step; for the models that grade soundly
+it brought nothing or a loss, at 1.3 to 3.1 times the cost per answer, because the per-criterion breakdown
+lengthens the output.
 
 \subsection{RQ4: Models and Cost}
 \label{sec:cost}
@@ -186,18 +188,19 @@ with reasoning off (0.676).
 \caption{Agreement versus cost, one point per model and reasoning mode: (a) short answers (mean QWK
 over Mohler, SemEval, and the PT-CS short answers), (b) code (mean QWK over RIAYN and PT-CS code).
 Agreement is computed on the sampled items all eight configurations graded. The horizontal axis is the cost of 1000 grades in euros,
-on a log scale because costs span more than three orders of magnitude. Points up and to the left are
+on a log scale. Points up and to the left are
 better.}
 \label{fig:costquality}
 \end{figure}
 
-These absolute levels are best read against the agreement between humans. Mohler gives two teachers'
-grades for every answer, and the two agree with each other at QWK 0.49 over its 2273 answers. On the
-same answers, the four models with reasoning off agree with the teachers' mean at 0.62 to 0.64, with the
-first teacher at 0.73 to 0.75, and with the second at 0.39 to 0.41. The models' agreement with each
-teacher brackets the teachers' agreement with each other, so the remaining disagreement between model
-and teacher on Mohler is of the size that separates two human graders. On SemEval, whose human grade is
-only correct or incorrect, the models with reasoning off gave the teachers' label to 76 to 79\% of the
+These absolute levels depend on the human reference. Mohler gives two teachers' grades for every answer,
+and the two agree with each other at QWK 0.49 over its 2273 answers. On the same answers, the four models
+with reasoning off agree with the teachers' mean at 0.62 to 0.64, with the first teacher at 0.73 to 0.75,
+and with the second at 0.39 to 0.41: the two teachers use the scale differently, so a model's agreement
+depends on whose grades it is compared with. Most of the models' remaining error on Mohler is a constant
+severity: their grades correlate with the teachers' mean at about 0.80 but lie about 0.15 of the scale
+below it. On SemEval, whose human grade is
+only correct or incorrect, the models with reasoning off gave the human label to 76 to 79\% of the
 answers, against 59\% for a grader that marks every answer incorrect.
 
 The configuration mattered more on code than on short answers. On short answers the eight
@@ -213,12 +216,12 @@ and GLM-5.1 (0.661 at \euro{}0.20) agree best. On code (Fig.~\ref{fig:costqualit
 agreement by 0.196 for Qwen3.5 and 0.144 for GPT-5.1, the two models that show the zero-collapse, and
 changed it by $-0.007$ and $+0.017$ for DeepSeek-V4-Flash and GLM-5.1. Without reasoning, GLM-5.1 leads
 (0.701 at \euro{}0.80). With reasoning, GPT-5.1 agrees best (0.732), but at \euro{}27 per thousand grades,
-against 0.718 for GLM-5.1 with reasoning (\euro{}5.9) and 0.701 for GLM-5.1 without it, at a 34th of the
+against 0.718 for GLM-5.1 with reasoning (\euro{}5.9) and 0.701 for GLM-5.1 without it, at 1/34 of the
 cost.
 
 The second closed model, Claude Sonnet 4.6, was graded with reasoning off only, in the follow-up
 experiment. Over all the answers, no configuration without reasoning agreed better
-with the teachers on SemEval (0.634) or on the PT-CS short answers (0.791), but on code it stayed below
+with the human graders on SemEval (0.634) or on the PT-CS short answers (0.791), but on code it stayed below
 GLM-5.1 without reasoning (0.676 against 0.726 on RIAYN and 0.620 against 0.672 on PT-CS code) at about
 four times the cost.
 
@@ -237,25 +240,24 @@ How the whole grading session is run can also shape the grades. This sub-study v
 or inside one shared conversation that accumulates across that student's exam. Within the shared
 conversation it also varies the order in which the answers are presented: the exam's own question
 order, or the reverse. It needs complete multi-question exams, which only PT-CS provides.
-Qwen3.5 and DeepSeek-V4-Flash graded 80 complete exams, drawn at random from the PT-CS exams with code
-answers, five times each; GLM-5.1 graded the first 20 of these exams three times. Everything else is held
-at the baseline configuration.
+Qwen3.5, DeepSeek-V4-Flash, and GLM-5.1 graded the 97 PT-CS exams five times each. Everything else is
+held at the baseline configuration.
 
-Grading inside one shared, accumulating conversation lowered grades for every model
-(Fig.~\ref{fig:conversation}a), but only slightly: by 0.012 of the scale for Qwen3.5 (paired test of
-the per-answer differences, $p=.03$), 0.010 for DeepSeek-V4-Flash ($p=.18$, not significant), and 0.027
-for GLM-5.1 ($p=.003$).
+Grading inside one shared, accumulating conversation lowered grades slightly
+(Fig.~\ref{fig:conversation}a): by 0.018 of the scale for Qwen3.5 and 0.014 for DeepSeek-V4-Flash, both
+significant, and by 0.008 for GLM-5.1, not significant (95\% intervals that resample whole exams).
 Answer order mattered more for individual grades (Fig.~\ref{fig:conversation}b): the same answer scored
-differently depending on its position, by 8\% of the question's marks on average for Qwen3.5 and
-DeepSeek-V4-Flash and 10\% for GLM-5.1. That is 1.8 to 3.4 times the change between two gradings of the
-same answer in the same order (2 to 6\% of the marks), so position adds more than repetition noise, as LLM
-judges are known to be swayed by the order of what they compare~\cite{wang_fair_2024}. A shared history
-left grades about as consistent across repetitions as clean grading. On the 80 exams the order also shifted the average grade a
-little, but in opposite directions for the two models: the exam's own order scored 0.013 higher for
-DeepSeek-V4-Flash ($p<.001$) and 0.015 lower for Qwen3.5 ($p=.004$), while GLM-5.1 showed no shift on
-its 20 exams. Position therefore adds variation with no general direction. Because Qwen3.5's
-zero-collapse can hide order effects (an answer scored zero cannot move down), the other two models are
-the cleaner read.
+differently depending on its position, by 6 to 8\% of the question's marks on average. That is 2.1 to 2.9
+times the change between two gradings of the same answer in the same order (2 to 4\% of the marks), so
+position adds more than repetition noise, as LLM judges are known to be swayed by the order of what they
+compare~\cite{wang_fair_2024} and by the position of the score options in a rubric~\cite{xu_pointwise_2026};
+a continuous grading history has also been reported to pull LLM grades away from the human
+ones~\cite{zhou_histories_2026}. The order also shifted the average grade a little: the exam's own order
+scored 0.015 higher for DeepSeek-V4-Flash and 0.014 for GLM-5.1, both significant, and 0.010 for Qwen3.5,
+not significant. A shared history changed consistency across repetitions little (within-answer standard
+deviation 0.016 to 0.022 for Qwen3.5, slightly lower for the other two). Because Qwen3.5's zero-collapse
+can hide order effects (an answer scored zero cannot move down), the other two models are the cleaner
+read.
 
 \begin{figure}[!htb]
 \centering
@@ -263,14 +265,14 @@ the cleaner read.
 \caption{Conversation sub-study, per model, with 95\% confidence intervals: (a) mean grade in one shared,
 accumulating conversation minus the mean grade with a clean conversation per answer; (b) answer order
 within the shared conversation, as the mean absolute change per answer between the exam's own order and
-the reverse (solid) and the mean signed change (hatched). Grades as a fraction of the scale. Qwen3.5 and
-DeepSeek-V4-Flash: 80 code exams, $k=5$; GLM-5.1: the first 20 of those exams, $k=3$.}
+the reverse (solid) and the mean signed change (hatched). Grades as a fraction of the scale; intervals
+resample whole exams. The 97 PT-CS exams, every code answer, $k=5$.}
 \label{fig:conversation}
 \end{figure}
 
 Overall, how the session is run matters, more for individual grades than for averages. A shared history
-pulled grades slightly down, and answer order moved individual grades by 8 to 10\% of the question's
-marks, in a direction that depended on the model. Grading each answer in a clean conversation avoids both, which
+pulled grades slightly down, and answer order moved individual grades by 6 to 8\% of the question's
+marks, with a small lift for answers met in the exam's own order. Grading each answer in a clean conversation avoids both, which
 recommends it on fairness grounds: a student's grade should not depend on where an answer fell in the
 session.
 
@@ -299,7 +301,7 @@ that partial credit does no harm there. All runs used reasoning off, with each a
 with the human grade (QWK)
 with the strict instruction (light bars) and with explicit partial credit (hatched bars), on the 0 to
 1 scale of Figs.~\ref{fig:rq1}--\ref{fig:rq3}. (b) Share of code grades that are exactly zero under each
-instruction; the dashed lines mark the teachers' share.}
+instruction; the dashed lines mark the human graders' share.}
 \label{fig:rq6}
 \end{figure*}
 
@@ -320,11 +322,11 @@ zero grades fell from 32\% to 20\% on PT-CS code and from 17\% to 12\% on RIAYN.
 answers this took it above its own reasoning-on agreement (0.706 against 0.672) at about a twentieth of the
 cost, although on RIAYN reasoning stayed ahead (0.791 against 0.667). Qwen3.5 barely changed: with partial
 credit requested it still scored 46\% of the PT-CS code answers as zero (49\% with the strict instruction, 2\%
-for the teachers). Its written justifications show why: on the answers it scored zero, Qwen3.5 named what
+for the teachers), and on RIAYN its share of zeros rose from 16\% to 20\%. Its written justifications show why: on the answers it scored zero, Qwen3.5 named what
 the student had done correctly and still gave no marks. On an answer that the teachers gave 60\% of the
-marks, all five of its justifications said, in nearly the same words, that ``the student correctly
-iterates through objects to check passability but fails to explicitly iterate through `rogueObjects' and
-`enemies' as required by the rubric''. Asking for the justification halved its zeros (to 25\%) and raised its PT-CS code
+marks, all five of its justifications said, in nearly the same words, that the student iterated correctly
+through the objects to check whether a position was free but did not iterate explicitly through the two
+further lists of objects the rubric required. Asking for the justification halved its zeros (to 25\%) and raised its PT-CS code
 agreement by 0.053, significant before correction only, but reasoning did more on the same answers (0.612
 against 0.524). For DeepSeek-V4-Flash the justification was unstable: it added 0.042 on RIAYN over partial
 credit alone but lost 0.068 on PT-CS code, and for both models it made grades 2 to 5.5 times more variable
@@ -332,9 +334,19 @@ across repetitions while multiplying the output tokens by about ten.
 
 On short answers the instruction changed nothing that matters. On Mohler and SemEval every change for the
 four models lay inside the $\pm0.05$ equivalence margin, the largest being a gain of 0.030 for GPT-5.1 on
-Mohler, and on the 84 PT-CS short answers the changes ($-0.033$ to $-0.008$) were not significant.
+Mohler, and on the 84 PT-CS short answers the changes ($-0.033$ to $-0.008$) were not significant. On SemEval, whose answers are only correct or incorrect, it raised the mean
+absolute error slightly, by 0.010 for Qwen3.5 and 0.015 for DeepSeek-V4-Flash, so the request is meant for
+questions worth several points.
 
 Overall, asking for partial credit is a near-free improvement on code: it raised agreement significantly
 for two of the five models, by 0.06 to 0.11, lowered it significantly for none, and left short-answer grading
 essentially unchanged. It softened GPT-5.1's zero-collapse but not Qwen3.5's, for which reasoning remained
 the most effective remedy.
+
+\subsection{Summary of the Results}
+\label{sec:summary}
+
+Table~\ref{tab:framework} brings the results together: for each configuration choice, what the
+comparisons showed and the setting they point to.
+
+\input{tables/tab_framework}

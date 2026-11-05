@@ -219,6 +219,92 @@ def discretisation() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _mae_boot(a: pd.DataFrame, b: pd.DataFrame, nb=mpt.NB):
+    """Paired bootstrap over answers of MAE(b) - MAE(a) on item means (0-1 scale); a and b are item tables p, g."""
+    items = a.index.intersection(b.index)
+    ea = (a.loc[items, "p"] - a.loc[items, "g"]).abs().to_numpy()
+    eb = (b.loc[items, "p"] - b.loc[items, "g"]).abs().to_numpy()
+    rng = np.random.default_rng(mpt.SEED)
+    idx = rng.integers(0, len(items), (nb, len(items)))
+    dist = (eb[idx] - ea[idx]).mean(1)
+    lo, hi = np.percentile(dist, [2.5, 97.5])
+    return len(items), float(ea.mean()), float(eb.mean()), float(eb.mean() - ea.mean()), float(lo), float(hi)
+
+
+def mae_rq1() -> pd.DataFrame:
+    """Fourth independent review (2026-11-04): a continuous metric beside QWK. RQ1 per combination on the paper's
+    basis (rq1_cells: the sampled items, a reasoning run that fell back carries the reasoning-off grade): mean
+    absolute error with reasoning off and on, its change with a 95% paired bootstrap interval, the signed bias
+    (model minus human) with reasoning off, and on SemEval the accuracy at the 0.5 cut-off."""
+    df = phase5.load_main()
+    dv = df[(df.dataset != "ptcs") | df.item_id.isin(guide_eval._INTERV)]
+    rp = phase5.reasoning_paired(dv)
+    base = rp[(rp.context_level == "with_guidance") & (rp.scope == "question_by_question") & (rp.decomposition == "holistic")]
+    rows = []
+    for (ds, dom, m), g in base.groupby(["dataset", "domain", "model"]):
+        o, n = g[g.reasoning == "off"], g[g.reasoning == "on"]
+        if o.empty or n.empty:
+            continue
+        items = set(n.item_id.unique())
+        _, sA = mpt._qwk_items(o[o.item_id.isin(items)]); _, sB = mpt._qwk_items(n[n.item_id.isin(items)])
+        N, m_off, m_on, d, lo, hi = _mae_boot(sA, sB)
+        r = {"dataset": ds, "domain": dom, "model": m, "N": N, "MAE_off": m_off, "MAE_on": m_on, "dMAE": d,
+             "lo": lo, "hi": hi, "sig": bool(lo > 0 or hi < 0), "bias_off": float((sA.p - sA.g).mean())}
+        if ds == "semeval":
+            acc = lambda t: float(((t.p >= 0.5) == (t.g >= 0.5)).mean())
+            r.update({"acc_off": acc(sA), "acc_on": acc(sB)})
+        rows.append(r)
+    return pd.DataFrame(rows)
+
+
+def mae_validation() -> pd.DataFrame:
+    """The validation contrasts (guide against each alternative, per model and dataset) in mean absolute error."""
+    d = verification.load()
+    rows = []
+    for ds, dom, lbl in verification.SETS:
+        for m in verification.MODELS:
+            s = d[(d.dataset == ds) & (d.domain == dom) & (d.model == m)]
+            G = s[s.kind == "guide"]
+            if G.empty:
+                continue
+            _, sG = mpt._qwk_items(G)
+            for k in verification.ALTS:
+                A = s[s.kind == k]
+                if A.empty:
+                    continue
+                _, sA = mpt._qwk_items(A)
+                N, mg, ma, dd, lo, hi = _mae_boot(sG, sA)
+                rows.append({"set": lbl, "model": m, "kind": k, "N": N, "MAE_guide": mg, "MAE_alt": ma, "dMAE": dd,
+                             "lo": lo, "hi": hi, "alt_better": bool(hi < 0), "alt_worse": bool(lo > 0),
+                             "bias_guide": float((sG.p - sG.g).mean())})
+    return pd.DataFrame(rows)
+
+
+def instructors_loo() -> pd.DataFrame:
+    """HARMOGEN-R ceiling on a comparable basis (fourth review, M6): each instructor against the mean of the other
+    three, and each model's guide grades against that same mean."""
+    import json
+    from sklearn.metrics import cohen_kappa_score
+    c = pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "corpus_verification.parquet")
+    h = c[c.dataset == "harmogenr"].reset_index(drop=True)
+    sc = pd.DataFrame([json.loads(x)["instructor_scores"] for x in h.source_meta]).div(h.gold_scale_max.to_numpy(), axis=0)
+    sc.index = h.item_id
+    lv = lambda x: phase5.to_levels(x, mpt.K)
+    q = lambda a, b: cohen_kappa_score(lv(a), lv(b), weights="quadratic", labels=list(range(mpt.K + 1)))
+    d = verification.load()
+    guide = {m: g.groupby("item_id").pred_norm.mean() for m, g in
+             d[(d.dataset == "harmogenr") & (d.kind == "guide") & d.pred_norm.notna()].groupby("model")}
+    rows = []
+    for col in sc.columns:
+        rest = sc.drop(columns=col).mean(axis=1)
+        r = {"held_out": col, "instructor_vs_rest": q(sc[col], rest)}
+        for m, p in guide.items():
+            it = p.index.intersection(rest.index)
+            r[m] = q(p.loc[it], rest.loc[it])
+        rows.append(r)
+    return pd.DataFrame(rows)
+
+
 def main() -> int:
     pd.set_option("display.width", 220)
     print("=== resampling answers (published) vs resampling questions ===")
@@ -235,6 +321,12 @@ def main() -> int:
     print(fallback_sensitivity().round(3).to_string(index=False))
     print("\n=== RQ1 under other discretisations ===")
     print(discretisation().to_string(index=False))
+    print("\n=== RQ1 in mean absolute error ===")
+    print(mae_rq1().round(3).to_string(index=False))
+    print("\n=== validation in mean absolute error ===")
+    print(mae_validation().round(3).to_string(index=False))
+    print("\n=== HARMOGEN-R ceiling, leave one instructor out ===")
+    print(instructors_loo().round(3).to_string(index=False))
     return 0
 
 

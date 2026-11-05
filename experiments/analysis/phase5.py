@@ -103,7 +103,11 @@ def load_instruction() -> pd.DataFrame:
 
 
 def load_conversation() -> pd.DataFrame:
-    return prepare(_read(CONV))
+    # Since 2026-11-04 the sub-study grades the 97 exams of the PT-CS dataset with all three open models at k=5;
+    # GLM-5.1 ran through OpenRouter (Z.ai), the same model the paper treats as one backend with DeepInfra's.
+    d = prepare(_read(CONV))
+    d["model"] = d.model.replace({"glm-5.1-or": "glm-5.1"})
+    return d
 
 
 def to_levels(x, k: int = QWK_K) -> np.ndarray:

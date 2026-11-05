@@ -147,7 +147,12 @@ def instructors() -> dict:
     lv = lambda x: phase5.to_levels(x, 5)
     pairs = [cohen_kappa_score(lv(sc[a]), lv(sc[b]), weights="quadratic", labels=list(range(6)))
              for a, b in itertools.combinations(sc.columns, 2)]
-    return {"pairs_min": min(pairs), "pairs_max": max(pairs), "gold_zeros": float((h.gold_norm == 0).mean()),
+    # each instructor against the mean of the other three (fourth review, M6): a ceiling comparable with the models,
+    # which are scored against a mean of instructors
+    loo = [cohen_kappa_score(lv(sc[a]), lv(sc.drop(columns=a).mean(axis=1)), weights="quadratic", labels=list(range(6)))
+           for a in sc.columns]
+    return {"pairs_min": min(pairs), "pairs_max": max(pairs), "loo_min": min(loo), "loo_max": max(loo),
+            "gold_zeros": float((h.gold_norm == 0).mean()),
             "N": len(h)}
 
 

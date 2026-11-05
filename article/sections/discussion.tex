@@ -11,10 +11,11 @@
 Read together, the five research questions and the follow-up experiment point to one practical message:
 what the grader is given, and how it is told to use it, mattered more than how long it thinks or how much
 it costs. The two cheap changes, supplying
-a rubric or a reference answer and asking for partial credit, raised agreement more reliably than any
-expensive one. Turning reasoning on, paying for a closed model, grading a whole exam in one call, and
+a rubric or a reference answer and asking for partial credit, gave the clearest gains for the money:
+guidance raised agreement in almost every combination, partial credit helped on code for a few extra
+tokens, and neither lowered agreement significantly anywhere. Turning reasoning on, paying for a closed model, grading a whole exam in one call, and
 scoring a rubric criterion by criterion cost more or saved little, and none of them reliably brought the
-grades closer to the teachers'.
+grades closer to the human graders'.
 
 Reasoning is the expensive setting that most often disappointed. It raised agreement in only five of twenty
 model-dataset combinations, three after correction, while multiplying the output tokens by up to 925 and
@@ -30,13 +31,14 @@ the authors of RIAYN measure a grader's leniency against the experts~\cite{patha
 and lenient prompts have been compared~\cite{venkatraman_llmbased_2026}, and in a concurrent study a
 lenient prompt that awards partial credit lowered the question-level grading error of every model family on a
 mathematics exam~\cite{sapkota_math_2026}. The zero-collapse is a specific, measurable form of that
-severity, revealed by a share of zeros far above the teachers'. The written justifications show what goes wrong: the
+severity, revealed by a share of zeros far above the human graders'. The written justifications show what goes wrong: the
 collapsing model sees what the student did right and still gives no marks, as if any error voided the
 answer. An instruction to award partial credit reduced the zeros of the closed model GPT-5.1, but not
 those of Qwen3.5, while reasoning, which works through the rubric before scoring, roughly halved Qwen3.5's
-zeros. The collapse is therefore a property of the model with
-reasoning off, which the instruction can soften but not always remove, and the dependable remedy is to
-grade with a model that does not show it. Model size may also play a part. Four of the five significant
+zeros. The collapse therefore depends on the model together with the rubric and the
+instruction: the instruction can soften it but not always remove it, and a rubric can bring it out, as it
+did for DeepSeek-V4-Flash on the held-out code, which it graded with few zeros without one. The dependable
+remedies are a model that does not show it and, where the budget allows, reasoning. Model size may also play a part. Four of the five significant
 reasoning gains belong to Qwen3.5-35B-A3B, which activates only about 3B parameters per token, and the
 gains of thinking reported for LLM judges were measured on Qwen3 models of 0.6B to
 4B parameters~\cite{jayarao_explicit_2025}. With a single small model in the study, the effect of its size
@@ -59,12 +61,14 @@ cheapest model, DeepSeek-V4-Flash, graded code as well as GLM-5.1, the strongest
 at about a tenth of its cost. The closed models bought little for their price: GPT-5.1 with reasoning,
 the best code configuration, cost 34 times as much as GLM-5.1 without it for 0.031 more, and Claude Sonnet
 4.6, the best on the science and PT-CS short answers, 43 to 53 times as much as the guide with
-DeepSeek-V4-Flash. Absolute levels should be read against the
-agreement between humans: on Mohler the models' agreement with each teacher (0.39 to 0.75) brackets the two
-teachers' agreement with each other (0.49), so the remaining disagreement between model and teacher is of the
-size that separates two human graders.
+DeepSeek-V4-Flash. Absolute levels also depend on the human reference: on Mohler the two teachers use the
+scale differently, and the models' remaining error there is mostly a constant severity, which a simple
+calibration on a few graded answers might reduce.
 
 The PT-CS answers, graded by teachers in Portuguese, reproduced the effects found on the public datasets:
 guidance helped as much, the same models scored too many code answers as zero, and partial credit raised
-the agreement of DeepSeek-V4-Flash and GPT-5.1 on PT-CS code as it did on RIAYN. Taken together, the results support one configuration built from
+the agreement of DeepSeek-V4-Flash and GPT-5.1 on PT-CS code as it did on RIAYN. The prompts were in English
+for every dataset, so these Portuguese answers were graded with prompts in another language, and the
+effects still held; the guide also met its validation criterion on the Portuguese HARMOGEN-R answers with
+four of the five models. Taken together, the results support one configuration built from
 the cheap settings, which the next section presents, tests, and validates.

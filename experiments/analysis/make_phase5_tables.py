@@ -486,7 +486,7 @@ def main() -> int:
     # guidance + scope literals, derived from the T2 engine contrasts (not hand-typed)
     riayn_ctx = float(ctx_by["riayn"]["dQWK"]); ptcs_ctx_full = float(ctx_by["ptcs"]["dQWK"])
     ptcs_ctx_ver = float(ctx_by["ptcs"]["dQWK-V [CI] (N$_V$)"].split()[0]); scope_ver = float(scope_row["dQWK-V [CI] (N$_V$)"].split()[0])
-    R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "9--925", "109--192", "2.5--5"   # composite; verified by the test (SD excludes fallback grades, 2026-10-16)
+    R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK = "9--925", "109--192", "4--5"   # composite; verified by the test (SD excludes fallback grades, 2026-10-16)
     # scope cost per question: whole exam in one call vs one call per question, on the 252 whole-exam
     # questions (whole-exam cost deduplicated by call_group); backs the 'one question per call' row
     we_items = set(df[WQ].item_id)
@@ -578,7 +578,7 @@ def write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_h
          f"{i_win.dQWK.min():.2f} to {i_win.dQWK.max():.2f} QWK, for {min(extra_tok):.0f} to {max(extra_tok):.0f} "
          f"extra input tokens ({min(extra_pct):.0f} to {max(extra_pct):.0f}\\% of the cost); "
          + ("on Mohler and SemEval every change lay within $\\pm0.05$" if short_equiv else "mixed on short answers")),
-        ("Reasoning", "Off",
+        ("Reasoning", "Off (low-cost); on for code if the budget allows",
          f"Turning it on raised agreement in {r_sig} of {r_n} combinations ({r_holm} after correction), made grades "
          f"less consistent in {r_less}, and multiplied the output tokens by {p_lo:.0f} to {p_hi:.0f}"),
         ("Scope", "One question per call",
@@ -595,15 +595,16 @@ def write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_h
              # [!tb]: every float follows its first reference, at the bottom of that page or the top of
              # the next (Pedro, 2026-10-18; checked by article/tools/check_floats.py).
              r"\begin{table*}[!tb]\centering\footnotesize",
-             r"\caption{The configuration guide: its six settings and the evidence behind each, from the comparisons of "
-             r"the results. Changes in agreement are in QWK and come from comparisons against the baseline "
-             r"configuration, with reasoning off unless stated.}\label{tab:framework}",
+             # Placed at the end of the Results as their synthesis (Daniel, 2026-11-03; Pedro agreed).
+             r"\caption{Summary of the results: for each configuration choice, what the comparisons showed and the "
+             r"setting they point to, which the configuration guide adopts. Changes in agreement are in QWK and come "
+             r"from comparisons against the baseline configuration, with reasoning off unless stated.}\label{tab:framework}",
              r"\setlength{\tabcolsep}{5pt}",
-             r"\begin{tabular}{p{2.6cm}p{3.6cm}p{10.4cm}}",
+             r"\begin{tabular}{p{2.6cm}p{10.4cm}p{3.6cm}}",
              r"\hline",
-             r"Setting & The guide & Evidence \\",
+             r"Choice & What the comparisons showed & Setting \\",
              r"\hline"]
-    lines += [f"{s} & {g} & {e} \\\\[2pt]" for s, g, e in rows]
+    lines += [f"{s} & {e} & {g} \\\\[2pt]" for s, g, e in rows]
     lines += [r"\hline", r"\end{tabular}", r"\end{table*}"]
     (TABLES / "tab_framework.tex").write_text("\n".join(lines) + "\n")
     print("  wrote tab_framework.tex (the configuration guide)")

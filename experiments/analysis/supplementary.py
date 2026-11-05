@@ -94,10 +94,11 @@ def models_section() -> str:
                      switch, f"{p['input_per_1m_usd']:.2f}", f"{p['output_per_1m_usd']:.2f}", f"{n:,}"])
     cap = ("Models, backends, and prices. Prices are the providers' standard rates in US dollars per million input and "
            f"output tokens, converted at {eur:.2f} euros per dollar; batch discounts are not applied. Calls counts every "
-           "graded call in the study and the validation, including calls on PT-CS answers outside the 379 analysed "
-           "(the reasoning samples and the whole-exam and conversation calls were drawn from the course's exams). All calls were made between June and October 2026. Sampling, "
-           "the same in every experiment: temperature 0 for the open models and Claude Sonnet 4.6 (GPT-5.1 accepts no "
-           "temperature and samples at its fixed default); output capped at 4,096 tokens with reasoning off and 32,768 "
+           "graded call in the study and the validation; on PT-CS, the whole-exam and conversation calls also grade "
+           "the answers of those exams whose grades are not used. All calls were made between June and November 2026. "
+           "Sampling, "
+           "the same in every experiment: temperature 0 for the open models and Claude Sonnet 4.6 (GPT-5.1 was called "
+           "without a temperature setting and samples at its default); output capped at 4,096 tokens with reasoning off and 32,768 "
            "with reasoning on.")
     return (r"\section{Models, backends, and prices}" + "\n"
             + _table(cap, ["Model", "Served identifier", "Provider", "Reasoning switch (off / on)", "In", "Out", "Calls"],
@@ -202,8 +203,9 @@ def conversation_section() -> str:
     cap = ("Conversation state (Fig. 5 of the paper), PT-CS code, baseline configuration, grades as a fraction of the "
            "scale: the mean grade in a shared conversation minus that with a clean conversation per answer (over "
            "answers), and, within the shared conversation, the mean absolute and the mean signed change between the "
-           "exam's own order and the reverse (over answer and repetition pairs), with 95\\% bootstrap intervals. "
-           "Qwen3.5 and DeepSeek-V4-Flash: 80 exams, $k=5$; GLM-5.1: the first 20 of those exams, $k=3$.")
+           "exam's own order and the reverse (over answer and repetition pairs), with 95\\% bootstrap intervals that "
+           "resample whole exams. The 97 exams of PT-CS, every code answer, $k=5$, for the three open models; N is "
+           "the number of exams.")
     return r"\section{Conversation state (RQ5)}" + "\n" + _table(
         cap, ["Model", "Effect", "N", "Mean", "95\\% CI"], rows, "llrrl")
 
@@ -266,8 +268,9 @@ def verification_section() -> str:
            "bootstrap interval), whether the guide is non-inferior to the alternative (Non-inf.: the upper bound of the "
            r"90\% interval of $\Delta$QWK is below the $+0.05$ margin fixed in advance; alternatives without reasoning), "
            "the within-answer standard deviation across the three repetitions, and the share of "
-           "grades that are exactly zero. On HARMOGEN-R the four instructors agree with each other at "
-           f"{ins['pairs_min']:.3f} to {ins['pairs_max']:.3f} QWK (every pair) and give zero to "
+           "grades that are exactly zero. On HARMOGEN-R each instructor agrees with the mean of the other three at "
+           f"{ins['loo_min']:.3f} to {ins['loo_max']:.3f} QWK ({ins['pairs_min']:.3f} to {ins['pairs_max']:.3f} between "
+           "pairs of instructors), and they give zero to "
            f"{100 * ins['gold_zeros']:.0f}\\% of the answers.")
     return r"\section{Validation of the guide}" + "\n" + _table(
         cap, ["Model", "Dataset", "Configuration", "N", "QWK", r"$\Delta$QWK", "95\\% CI", "Non-inf.", "SD", "Zeros"],
@@ -325,13 +328,45 @@ def robustness_section() -> str:
         "on six levels and halves rounded to the even level (the paper), with halves rounded up, and on five or seven "
         "levels: the number of significant gains, those that survive Holm's correction, and which they are.",
         ["Rule", "Significant", "Holm", "Significant gains"], rows, "p{3.6cm}rrp{8.4cm}"))
+    # fourth independent review (2026-11-04): a continuous metric and the signed bias beside QWK
+    mr = robustness.mae_rq1()
+    dn = lambda r: DNAME.get("ptcs-short" if (r.dataset == "ptcs" and r.domain == "short_answer") else r.dataset, r.dataset)
+    rows = [[dn(r), MNAME.get(r.model, r.model), int(r.N), f"{r.MAE_off:.3f}", f"{r.MAE_on:.3f}", _sg(r.dMAE),
+             f"[{_sg(r.lo)}, {_sg(r.hi)}]", _sg(r.bias_off),
+             (f"{100 * r.acc_off:.0f}\\% / {100 * r.acc_on:.0f}\\%" if r.dataset == "semeval" else "")]
+            for r in mr.itertuples()]
+    out.append(_table(
+        "Reasoning (RQ1) in mean absolute error. The same answers and grades as Table 3 of the paper (a reasoning run "
+        "that reached the output limit carries the reasoning-off grade), scored as the mean absolute error between "
+        "the mean of an answer's grades and the human grade on the 0 to 1 scale, with reasoning off and on, its "
+        r"change (on minus off; negative is better) with a 95\% paired bootstrap interval, the signed bias with "
+        "reasoning off (model minus human; negative is more severe), and on SemEval the accuracy at the 0.5 cut-off.",
+        ["Dataset", "Model", "N", "MAE off", "MAE on", r"$\Delta$MAE", "95\\% CI", "Bias off", "Accuracy off / on"],
+        rows, "llrrrrlrr"))
+    mv = robustness.mae_validation()
+    rows = [[r.set.split(" (")[0], MNAME.get(r.model, r.model), _esc(r.kind), int(r.N), f"{r.MAE_guide:.3f}",
+             f"{r.MAE_alt:.3f}", _sg(r.dMAE), f"[{_sg(r.lo)}, {_sg(r.hi)}]"] for r in mv.itertuples()]
+    out.append(_table(
+        "Validation of the guide (Fig. 10 of the paper) in mean absolute error: the guide and each alternative on the "
+        r"same answers, the change (alternative minus guide; negative means the alternative errs less) with a 95\% "
+        "paired bootstrap interval.",
+        ["Dataset", "Model", "Alternative", "N", "MAE guide", "MAE alt.", r"$\Delta$MAE", "95\\% CI"],
+        rows, "lllrrrrl"))
+    lo = robustness.instructors_loo()
+    mods = [c for c in lo.columns if c not in ("held_out", "instructor_vs_rest")]
+    rows = [[f"Instructor {i + 1}",
+             f"{r['instructor_vs_rest']:.3f}"] + [f"{r[m]:.3f}" for m in mods] for i, (_, r) in enumerate(lo.iterrows())]
+    out.append(_table(
+        "HARMOGEN-R ceiling on a comparable basis: each instructor's grades against the mean of the other three, and "
+        "each model's grades under the guide against that same mean (QWK, six levels).",
+        ["Held out", "Instructor"] + [MNAME.get(m, m) for m in mods], rows, "l" + "r" * (1 + len(mods))))
     return "\n".join(out)
 
 
 def main() -> int:
     doc = [r"\documentclass[10pt]{article}", r"\usepackage[margin=2cm]{geometry}", r"\usepackage[T1]{fontenc}",
            r"\usepackage{array,longtable,fancyvrb}", r"\usepackage{mathptmx}",
-           r"\title{Configuring LLM-Based Grading in Computer Science: Supplementary Material}", r"\date{}",
+           r"\title{What Should an LLM Grader Be Given? Supplementary Material}", r"\date{}",
            r"\begin{document}", r"\maketitle",
            "This supplement gives the prompt templates, the models and their prices, the share of unparseable outputs, and "
            "tables with the values behind the figures of the paper. Every value is computed from the logged runs, with the "

@@ -19,6 +19,25 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 matplotlib.rcParams["pgf.texsystem"] = "pdflatex"
+# Measure the text with the font the paper prints it in (Pedro, 2026-11-04: legend text ran past its frame).
+# Inside the IEEE Access class \sffamily is Formata (T1) at the default medium series; matplotlib's own LaTeX run
+# must use the same font, so it gets the vendored template fonts on its search paths and the same definitions.
+import os as _os
+_TPL = str(Path(__file__).resolve().parents[2] / "article" / "access-template") + "//:"
+for _v in ("TEXINPUTS", "TFMFONTS", "T1FONTS", "TEXFONTMAPS", "ENCFONTS"):
+    _os.environ[_v] = _TPL + _os.environ.get(_v, "")
+matplotlib.rcParams["pgf.rcfonts"] = False
+matplotlib.rcParams["pgf.preamble"] = "\n".join([
+    r"\usepackage[T1]{fontenc}",
+    r"\DeclareFontFamily{T1}{formata}{}",
+    r"\DeclareFontShape{T1}{formata}{m}{n}{<-> t1-formata-medium}{}",
+    r"\DeclareFontShape{T1}{formata}{m}{it}{<-> t1-formata-mediumitalic}{}",
+    r"\DeclareFontShape{T1}{formata}{n}{n}{<-> t1-formata-regular}{}",
+    r"\DeclareFontShape{T1}{formata}{b}{n}{<-> t1-formata-bold}{}",
+    r"\renewcommand{\sfdefault}{formata}",
+    r"\renewcommand{\familydefault}{\sfdefault}",
+    r"\usepackage{amssymb}",
+])
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import numpy as np
@@ -49,7 +68,7 @@ def load_verified() -> pd.DataFrame:
 
 def _style():
     plt.rcParams.update({"font.size": 7, "axes.titlesize": 8, "axes.labelsize": 7.5,
-                         "legend.fontsize": 5.4, "xtick.labelsize": 6.5, "ytick.labelsize": 6.5,
+                         "legend.fontsize": 6.2, "xtick.labelsize": 6.5, "ytick.labelsize": 6.5,
                          "axes.grid": True, "grid.alpha": 0.25, "figure.dpi": 150, "savefig.bbox": "tight"})
 
 
@@ -254,58 +273,72 @@ def _level_legend(fig, models, start, changed, y=0.0, ncol=None):
     h += [Patch(facecolor="#bbb", alpha=0.45, edgecolor="k", lw=0.3, label=start),
           Patch(facecolor="#888", edgecolor="k", lw=0.3, hatch="///", label=changed)]
     fig.legend(handles=h, loc="upper center", ncol=ncol or len(h), bbox_to_anchor=(0.5, y), framealpha=0.9,
-               handlelength=1.4, columnspacing=0.9)
+               handlelength=1.4, columnspacing=1.6)
 
 
 def fig_rq1(rc):
-    """RQ1 in one row (Pedro's review 2026-10-16; replaces fig_rq1_panels): (a) agreement with reasoning off
-    and on, absolute QWK on the 0-1 axis shared with the RQ2, RQ3 and RQ6 figures; (b) what the change cost,
-    the agreement change (95% CI) against the output-token multiplier on a log axis, with the +/-0.05
-    equivalence band shaded; (c) consistency, within-item SD with reasoning on against off (above the
-    diagonal = less consistent with reasoning). Values from rq1_cells: every sampled item, a reasoning run
-    that overflowed carries the reasoning-off grade."""
+    """RQ1. (a) agreement with reasoning off and on, absolute QWK on the 0-1 axis shared with the RQ2, RQ3 and
+    RQ6 figures. Below it (Pedro, 2026-11-04), one row per model and dataset, read across three aligned panels:
+    (b) the change in agreement, reasoning on minus off, with its 95% CI and the +/-0.05 equivalence band; the
+    token multiplier as a bar on a log axis with its value; (c) the spread of the grades across repetitions with
+    reasoning off (open circle) and on (filled). Legends are kept apart: (a) and (c) carry their own inside the
+    panel, and the legend below holds only the models, common to every panel. Values from rq1_cells: every
+    sampled item, a reasoning run that overflowed carries the reasoning-off grade."""
+    from matplotlib.patches import Patch
     models = list(MARK)
-    # Two rows (Pedro's review 2026-10-18, comment #26: one row was too compressed): (a) across the full
-    # width, (b) and (c) side by side below it.
-    fig = plt.figure(figsize=(WIDE, COL * 1.24))
-    gs = fig.add_gridspec(2, 2, height_ratios=[1, 1.15], hspace=0.48, wspace=0.32)
+    fig = plt.figure(figsize=(WIDE, COL * 1.46))
+    gs = fig.add_gridspec(2, 3, height_ratios=[0.72, 2.0], width_ratios=[1.25, 0.55, 1], hspace=0.5, wspace=0.12)
     cell = lambda ds, dom, m: rc[(rc.dataset == ds) & (rc.domain == dom) & (rc.model == m)]
     get = lambda g, m: (lambda r: (float(r.QWK_off.iloc[0]), float(r.QWK_on.iloc[0])) if len(r) else None)(
         cell(g[0], g[1], m))
     ax = fig.add_subplot(gs[0, :])
     _paired_levels(ax, SETS, models, get)
     ax.set_xticklabels(["Mohler", "SemEval", "RIAYN", "PT-CS\ncode", "PT-CS\nshort"])
-    ax.set_title("(a) agreement with the teachers", loc="left", fontsize=7)
-    bx = fig.add_subplot(gs[1, 0])
-    bx.axhspan(-0.05, 0.05, color="#e3e3e3", lw=0, zorder=0)
-    bx.axhline(0, color="k", lw=0.5)
-    for r in rc.itertuples():
-        bx.errorbar(r.premium_x, r.dQWK, yerr=[[r.dQWK - r.lo], [r.hi - r.dQWK]],
-                    fmt="o" if r.domain == "short_answer" else "s", color=MCOL[r.model], mec="k", mew=0.3,
-                    ms=3.6, elinewidth=0.5, capsize=1, zorder=3)
-    bx.set_xscale("log")
-    bx.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
-    bx.set_xlabel("output tokens, on/off ($\\times$)")
-    bx.set_ylabel("agreement change ($\\Delta$QWK)")
-    bx.set_title("(b) gain against cost", loc="left", fontsize=7)
-    cx = fig.add_subplot(gs[1, 1])
-    lim = float(max(rc.SDk_off.max(), rc.SDk_on.max())) * 1.12
-    cx.plot([0, lim], [0, lim], color="k", lw=0.5)
-    for r in rc.itertuples():
-        cx.scatter(r.SDk_off, r.SDk_on, marker="o" if r.domain == "short_answer" else "s", color=MCOL[r.model],
-                   edgecolor="k", lw=0.3, s=14, zorder=3)
-    cx.set_xlim(0, lim); cx.set_ylim(0, lim); cx.set_aspect("equal")
-    cx.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(3)); cx.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(3))
-    cx.set_xlabel("SD$_k$, reasoning off"); cx.set_ylabel("SD$_k$, reasoning on")
-    cx.set_title("(c) consistency", loc="left", fontsize=7)
-    from matplotlib.patches import Patch
+    ax.set_title("(a) agreement with the human graders, reasoning off and on", loc="left", fontsize=7)
+    ax.legend(handles=[Patch(facecolor="#d9d9d9", edgecolor="k", lw=0.3, label="light: reasoning off"),
+                       Patch(facecolor="#888", edgecolor="k", lw=0.3, hatch="///", label="hatched: reasoning on")],
+              loc="upper left", ncol=2, framealpha=0.95, handlelength=1.6, columnspacing=1.4)
+    rows, y, ticks = [], 0.0, []
+    for g in SETS:
+        ticks.append(y + (len(models) - 1) / 2)
+        for m in models:
+            r = cell(g[0], g[1], m)
+            if len(r):
+                rows.append((y, m, r.iloc[0]))
+            y += 1
+        y += 0.8
+    bx = fig.add_subplot(gs[1, 0]); tx = fig.add_subplot(gs[1, 1], sharey=bx); cx = fig.add_subplot(gs[1, 2], sharey=bx)
+    bx.axvspan(-0.05, 0.05, color="#e3e3e3", lw=0, zorder=0)
+    bx.axvline(0, color="k", lw=0.5)
+    for yy, m, r in rows:
+        bx.errorbar(r.dQWK, yy, xerr=[[r.dQWK - r.lo], [r.hi - r.dQWK]], fmt="o", color=MCOL[m], mec="k",
+                    mew=0.3, ms=3.6, elinewidth=0.7, capsize=1.2, zorder=3)
+        tx.barh(yy, r.premium_x, height=0.7, left=1, color=MCOL[m], edgecolor="k", lw=0.3, zorder=3)
+        tx.text(r.premium_x * 1.15, yy, f"{r.premium_x:.0f}", va="center", ha="left", fontsize=5.4)
+        cx.plot([r.SDk_off, r.SDk_on], [yy, yy], color=MCOL[m], lw=0.9, zorder=2)
+        cx.scatter([r.SDk_off], [yy], facecolor="white", edgecolor=MCOL[m], lw=0.9, s=16, zorder=3)
+        cx.scatter([r.SDk_on], [yy], color=MCOL[m], edgecolor="k", lw=0.3, s=16, zorder=3)
+    bx.set_yticks(ticks); bx.set_yticklabels([g[2] for g in SETS]); bx.invert_yaxis()
+    for a in (bx, tx, cx):
+        a.tick_params(axis="y", length=0); a.grid(axis="y", visible=False)
+    plt.setp(tx.get_yticklabels(), visible=False); plt.setp(cx.get_yticklabels(), visible=False)
+    bx.set_xlabel("$\\Delta$QWK with 95% CI")
+    bx.set_title("(b) change in agreement:\nreasoning on minus off", loc="left", fontsize=7)
+    tx.set_xscale("log"); tx.set_xlim(1, 6000)
+    tx.xaxis.set_major_locator(matplotlib.ticker.FixedLocator([1, 10, 100, 1000]))
+    tx.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    tx.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    tx.set_xlabel("times more (log scale)")
+    tx.set_title("output tokens\nwith reasoning", loc="left", fontsize=7)
+    cx.set_xlim(0, None)
+    cx.set_xlabel("spread of the grades (SD$_k$)")
+    cx.set_title("(c) consistency across repetitions\n(lower is better)", loc="left", fontsize=7)
+    cx.legend(handles=[plt.Line2D([], [], marker="o", color="grey", mfc="white", ls="", label="reasoning off"),
+                       plt.Line2D([], [], marker="o", color="grey", mec="k", mew=0.3, ls="", label="reasoning on")],
+              loc="upper right", framealpha=0.95, handletextpad=0.3)
     h = [Patch(facecolor=MCOL[m], edgecolor="k", lw=0.3, label=MNAME[m]) for m in models]
-    h += [Patch(facecolor="#bbb", alpha=0.45, edgecolor="k", lw=0.3, label="reasoning off"),
-          Patch(facecolor="#888", edgecolor="k", lw=0.3, hatch="///", label="reasoning on"),
-          plt.Line2D([], [], marker="o", color="grey", ls="", mec="k", mew=0.3, label="short answers"),
-          plt.Line2D([], [], marker="s", color="grey", ls="", mec="k", mew=0.3, label="code")]
-    fig.legend(handles=h, loc="upper center", ncol=8, bbox_to_anchor=(0.5, 0.02), framealpha=0.9,
-               handlelength=1.6, columnspacing=1.2)
+    fig.legend(handles=h, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 0.035), framealpha=0.9,
+               handlelength=1.6, columnspacing=1.6, title="models (all panels)", title_fontsize=6.2)
     _save(fig, "fig_rq1")
 
 
@@ -378,7 +411,7 @@ def fig_rq6_instruction():
     ax = fig.add_subplot(gs[0])
     _paired_levels(ax, SETS, models, get)
     ax.set_xticklabels(["Mohler", "SemEval", "RIAYN", "PT-CS\ncode", "PT-CS\nshort"])
-    ax.set_title("(a) agreement with the teachers", loc="left", fontsize=7)
+    ax.set_title("(a) agreement with the human graders", loc="left", fontsize=7)
     bx = fig.add_subplot(gs[1])
     code = [("riayn", "RIAYN"), ("ptcs", "PT-CS code")]
     x = np.arange(len(code)); nb = 2 * len(models); w = 0.84 / nb
@@ -394,7 +427,7 @@ def fig_rq6_instruction():
         bx.hlines(t, k - 0.45, k + 0.45, color="k", lw=1.0, ls="--")
     bx.set_xticks(x); bx.set_xticklabels([lbl for _, lbl in code])
     bx.set_ylabel("grades of exactly zero (\\%)")
-    bx.set_title("(b) zeros on code (dashed: teachers)", loc="left", fontsize=7)
+    bx.set_title("(b) zeros on code (dashed: human graders)", loc="left", fontsize=7)
     _level_legend(fig, models, "strict instruction", "partial credit", y=-0.02, ncol=len(models) + 2)
     _save(fig, "fig_rq6_instruction")
 
@@ -602,7 +635,7 @@ def fig_guide_tests():
 def fig_guide_validation():
     """The guide's validation on SAF and HARMOGEN-R, which played no part in building it (Section VI-D), drawn as the
     tests: (a) each alternative against the guide within each model; (b) the guide with each model against the best
-    configuration without reasoning; the hatched band is the four HARMOGEN-R instructors' agreement with each other.
+    configuration without reasoning; the hatched band is each HARMOGEN-R instructor's agreement with the mean of the other three.
     Values from experiments/analysis/verification."""
     from experiments.analysis import verification
     t = verification.contrasts(verification.load())
@@ -614,8 +647,8 @@ def fig_guide_validation():
         groups.append({"label": lbl.split(" (")[0], "guide": {r.model: r.QWK for r in g[g.kind == "guide"].itertuples()},
                        "best": g.QWK.max(), "lo": g.QWK.min(), "hi": g.QWK.max()})
     ins = verification.instructors()
-    band = {"label": "HARMOGEN-R", "lo": ins["pairs_min"], "hi": ins["pairs_max"],
-            "text": "instructors' agreement with each other"}
+    band = {"label": "HARMOGEN-R", "lo": ins["loo_min"], "hi": ins["loo_max"],
+            "text": "each instructor against the other three"}
     with plt.rc_context({"hatch.linewidth": 0.8}):     # a hatch that still shows once the pgf is in the paper
         _guide_figure(_outcome_rows(a, kinds), groups, "fig_guide_validation", COL * 0.66, band)
 
@@ -711,17 +744,26 @@ def fig4(df):
 
 def conversation_effects() -> pd.DataFrame:
     """The values of the conversation figure (also printed in the supplementary material), per model, as fractions of
-    the scale with 95% bootstrap intervals (10,000 resamples): shared minus clean conversation (item-mean grade);
-    the typical size of the order effect, mean |natural minus inverse|; and its average shift, mean (natural minus
-    inverse), over (item, run) pairs of the shared conversation."""
+    the scale with 95% bootstrap intervals (10,000 resamples of the EXAMS, the experimental unit: answers of one
+    exam and repetitions of one answer are not independent; fourth independent review, 2026-11-04): shared minus
+    clean conversation (item-mean grade); the typical size of the order effect, mean |natural minus inverse|; and its
+    average shift, mean (natural minus inverse), over (item, run) pairs of the shared conversation. N is the number
+    of exams; a p-value is twice the share of resamples on the other side of zero."""
     cv = phase5.load_conversation()
     cv = cv[cv.pred_norm.notna()]
-    rng = np.random.default_rng(20260610)
+    exam = dict(zip(cv.item_id, cv.submission_id))
 
-    def boot(v):
-        v = np.asarray(v, dtype=float)
-        b = v[rng.integers(0, len(v), (10_000, len(v)))].mean(axis=1)
-        return float(v.mean()), *map(float, np.percentile(b, [2.5, 97.5])), len(v)
+    def boot(v: pd.Series):
+        ex = pd.Series([exam[i if not isinstance(i, tuple) else i[0]] for i in v.index], index=v.index)
+        groups = [np.flatnonzero((ex == e).to_numpy()) for e in pd.unique(ex)]
+        vals = v.to_numpy(dtype=float)
+        rng = np.random.default_rng(20260610)
+        sums = np.array([vals[g].sum() for g in groups]); cnts = np.array([len(g) for g in groups])
+        idx = rng.integers(0, len(groups), (10_000, len(groups)))
+        b = sums[idx].sum(axis=1) / cnts[idx].sum(axis=1)
+        mu = float(vals.mean())
+        p = float(min(1.0, 2 * min((b <= 0).mean(), (b >= 0).mean())))
+        return mu, *map(float, np.percentile(b, [2.5, 97.5])), len(groups), p
 
     rows = []
     for m in ["qwen3.5", "deepseek-v4-flash", "glm-5.1"]:
@@ -732,8 +774,8 @@ def conversation_effects() -> pd.DataFrame:
         for k, v in [("shared minus clean", pv["shared"] - pv["clean"]),
                      ("order, typical size", (po["natural"] - po["inverse"]).abs()),
                      ("order, average shift", po["natural"] - po["inverse"])]:
-            mu, lo, hi, n = boot(v)
-            rows.append({"model": m, "effect": k, "mean": mu, "lo": lo, "hi": hi, "N": n})
+            mu, lo, hi, n, p = boot(v)
+            rows.append({"model": m, "effect": k, "mean": mu, "lo": lo, "hi": hi, "N": n, "p": p})
     return pd.DataFrame(rows)
 
 
@@ -742,11 +784,11 @@ def fig5(df):
     (a) shared minus clean conversation (item-mean grade; below 0 = shared history lowers grades);
     (b) answer order within the shared conversation: the typical size of the change, mean |natural minus
     inverse| (solid), and the average shift, mean (natural minus inverse) (hatched).
-    Qwen3.5 and DeepSeek-V4-Flash: 80 exams, k=5 (2026-10-15); GLM-5.1: the first 20 of those exams, k=3
-    (June 2026). PT-CS code, baseline configuration; no teacher grades are involved."""
+    The 97 exams of the PT-CS dataset, every code answer, k=5, for the three open models (2026-11-04). PT-CS code,
+    baseline configuration; no teacher grades are involved."""
     ce = conversation_effects()
     mods = list(ce.model.unique())
-    lab = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "glm-5.1": "GLM-5.1 (20 exams)"}
+    lab = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "glm-5.1": "GLM-5.1"}
     pick = lambda k: [tuple(ce[(ce.model == m) & (ce.effect == k)][["mean", "lo", "hi"]].iloc[0]) for m in mods]
     st, oa, osg = pick("shared minus clean"), pick("order, typical size"), pick("order, average shift")
     fig, axes = plt.subplots(1, 2, figsize=(COL, COL * 0.62), gridspec_kw={"width_ratios": [1, 1.2]})
@@ -767,7 +809,7 @@ def fig5(df):
     axes[1].axhline(0, color="k", lw=0.6)
     axes[1].set_title("(b) answer order", loc="left", fontsize=7)
     axes[1].set_ylim(-0.03, 0.16)
-    axes[1].legend(loc="upper left", framealpha=0.9, fontsize=5, ncol=2)
+    axes[1].legend(loc="upper left", framealpha=0.9, fontsize=6, ncol=1)
     for ax in axes:
         ax.set_xticks(x); ax.set_xticklabels([lab[m] for m in mods], rotation=30, ha="right", fontsize=5.5)
     fig.tight_layout()
