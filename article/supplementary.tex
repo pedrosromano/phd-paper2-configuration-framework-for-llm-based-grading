@@ -271,12 +271,12 @@ GLM-5.1 & order, average shift & 97 & +0.0140 & [+0.0014, +0.0268] \\
 \section{Grading instruction (follow-up experiment)}
 \begingroup\footnotesize
 \begin{longtable}{ll>{\raggedright\arraybackslash}p{3.2cm}rrrr}
-\caption{Grading instruction (Fig. 6 of the paper): agreement (QWK) and share of grades that are exactly zero under each instruction, per model and dataset, reasoning off, with the teachers' share of zeros. Qwen3.5 and DeepSeek-V4-Flash graded the strict instruction again in this experiment, as a control, and their strict cells are those runs: their QWK stayed within 0.028 of the strict runs of the main comparison, with the same grade in 81 to 94\% of the answer and repetition pairs. GPT-5.1's strict cells are its runs of the main comparison. GLM-5.1's partial-credit runs went through OpenRouter; its strict cells are the OpenRouter runs on RIAYN and the DeepInfra runs of the main comparison on PT-CS code. On RIAYN, where it graded the strict instruction on both providers, the QWK was 0.726 (DeepInfra) and 0.726 (OpenRouter), and two runs of the same answer gave the same grade in 77\% of the pairs across providers, against 85\% and 90\% within each.}\\
+\caption{Grading instruction (Fig. 6 of the paper): agreement (QWK) and share of grades that are exactly zero under each instruction, per model and dataset, reasoning off, with the human graders' share of zeros. Qwen3.5 and DeepSeek-V4-Flash graded the strict instruction again in this experiment, as a control, and their strict cells are those runs: their QWK stayed within 0.028 of the strict runs of the main comparison, with the same grade in 81 to 94\% of the answer and repetition pairs. GPT-5.1's strict cells are its runs of the main comparison. GLM-5.1's partial-credit runs went through OpenRouter; its strict cells are the OpenRouter runs on RIAYN and the DeepInfra runs of the main comparison on PT-CS code. On RIAYN, where it graded the strict instruction on both providers, the QWK was 0.726 (DeepInfra) and 0.726 (OpenRouter), and two runs of the same answer gave the same grade in 77\% of the pairs across providers, against 85\% and 90\% within each.}\\
 \hline
-Model & Dataset & Instruction & N & QWK & Zeros & Teachers' zeros \\ \hline
+Model & Dataset & Instruction & N & QWK & Zeros & Human graders' zeros \\ \hline
 \endfirsthead
 \hline
-Model & Dataset & Instruction & N & QWK & Zeros & Teachers' zeros \\ \hline
+Model & Dataset & Instruction & N & QWK & Zeros & Human graders' zeros \\ \hline
 \endhead
 Claude Sonnet 4.6 & Mohler & partial credit & 800 & 0.595 & 5.6\% & 0.6\% \\
 Claude Sonnet 4.6 & Mohler & strict & 800 & 0.583 & 8.1\% & 0.6\% \\

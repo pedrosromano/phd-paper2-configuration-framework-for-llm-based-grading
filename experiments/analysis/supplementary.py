@@ -160,7 +160,7 @@ def instruction_section() -> str:
     gp = instruction.glm_providers()
     out.append(r"\section{Grading instruction (follow-up experiment)}" + "\n" + _table(
         "Grading instruction (Fig. 6 of the paper): agreement (QWK) and share of grades that are exactly zero under each "
-        "instruction, per model and dataset, reasoning off, with the teachers' share of zeros. Qwen3.5 and "
+        "instruction, per model and dataset, reasoning off, with the human graders' share of zeros. Qwen3.5 and "
         "DeepSeek-V4-Flash graded the strict instruction again in this experiment, as a control, and their strict "
         "cells are those runs: their QWK stayed within "
         f"{(dr.QWK_rerun - dr.QWK_original).abs().max():.3f} of the strict runs of the main comparison, with the same "
@@ -171,7 +171,7 @@ def instruction_section() -> str:
         f"{gp['qwk_deepinfra']:.3f} (DeepInfra) and {gp['qwk_openrouter']:.3f} (OpenRouter), and two runs of the same "
         f"answer gave the same grade in {100 * gp['same_across']:.0f}\\% of the pairs across providers, against "
         f"{100 * gp['same_deepinfra']:.0f}\\% and {100 * gp['same_openrouter']:.0f}\\% within each.",
-        ["Model", "Dataset", "Instruction", "N", "QWK", "Zeros", "Teachers' zeros"], lrows, "llp{3.2cm}rrrr"))
+        ["Model", "Dataset", "Instruction", "N", "QWK", "Zeros", "Human graders' zeros"], lrows, "llp{3.2cm}rrrr"))
     ins = instruction.contrasts(instruction.load())
     rows = [[MNAME.get(r.model, r.model), DNAME.get("ptcs-short" if (r.dataset == "ptcs" and r.domain == "short_answer")
                                                   else r.dataset, r.dataset), _esc(r.contrast), int(r.N), _sg(r.dQWK),
