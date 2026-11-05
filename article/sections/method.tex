@@ -134,8 +134,8 @@ one or more accepted solution paths; two graders scored each submission in conse
 
 \emph{PT-CS} consists of 97 complete Java exams in Portuguese from a course at Iscte, with 634 answers.
 Each question has its own rubric and no reference solution. Two of the authors, who taught the course,
-manually graded 379 of these answers (295 code answers and 84 short answers on theory) before this study
-was designed; these are PT-CS's human grades. Each is a joint decision with no per-teacher record, so
+manually graded 379 of these answers, those whose final grade they set by hand, as recorded on the platform
+(295 code answers and 84 short answers on theory), before this study was designed; these are PT-CS's human grades. Each is a joint decision with no per-teacher record, so
 inter-rater agreement cannot be computed on PT-CS. The grades recorded for the other answers could not be
 verified, so they are not used. Those answers appear only in the two experiments that need whole exams,
 grading a whole exam in one call and the conversation sub-study: keeping them is the only way to grade
@@ -248,8 +248,8 @@ raises the bar for each comparison so that the chance of any false positive in t
 non-significant difference does not show that two settings are equivalent. Where equivalence matters, we
 test it directly: two settings count as equivalent when the 90\% CI of their difference lies within
 $\pm0.05$ QWK (the two one-sided tests procedure, TOST), a margin we fixed in advance as too small to
-change any recommendation. The conversation sub-study compares two grades of the same answer, so it uses
-a paired test of the per-answer differences (the Wilcoxon signed-rank test).
+change any recommendation. The conversation sub-study compares two grades of the same answer; its intervals
+resample whole exams, because the answers of one exam, graded in one conversation, are not independent.
 
 \subsection{Configuration Guide Validation}
 \label{sec:validmethod}

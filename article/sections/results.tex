@@ -87,11 +87,12 @@ on the sampled PT-CS code answers (from 47\% to 25\%), and the significant code 
 two collapsing models. For GLM-5.1 and DeepSeek-V4-Flash, which grade code soundly without reasoning, it
 changed agreement by $-0.044$ to $+0.077$, none of it significant, at 109 to 192 times the tokens.
 
-Overall, reasoning seldom justified its cost. It raised agreement in only five of twenty combinations,
-three after Holm's correction, while multiplying output tokens by 9 to 925 and making grades less
-consistent in seventeen. The largest gains, 0.17 to 0.23 QWK, came on code and only for the two models
-that show the zero-collapse; on short answers the gains were at most 0.10, and on the public short-answer sets
-at most 0.06. Reasoning repairs a collapsing code grader and adds little to a sound one.
+Overall, reasoning bought modest gains at a high price. It raised agreement significantly but only in five
+of twenty combinations, three after Holm's correction, and lowered the absolute error in eight, never
+making either worse, while multiplying output tokens by 9 to 925 and making grades less consistent in
+seventeen out of twenty combinations. The largest gains, 0.17 to 0.23 QWK, came on code for the two models
+that show the zero-collapse; on short answers they were at most 0.10. Reasoning repairs a collapsing code
+grader and refines a sound one a little, at a cost the low-cost configuration avoids.
 
 \subsection{RQ2: Evaluation Guidance}
 \label{sec:rq2}

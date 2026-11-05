@@ -14,12 +14,13 @@ it costs. The two cheap changes, supplying
 a rubric or a reference answer and asking for partial credit, gave the clearest gains for the money:
 guidance raised agreement in almost every combination, partial credit helped on code for a few extra
 tokens, and neither lowered agreement significantly anywhere. Turning reasoning on, paying for a closed model, grading a whole exam in one call, and
-scoring a rubric criterion by criterion cost more or saved little, and none of them reliably brought the
-grades closer to the human graders'.
+scoring a rubric criterion by criterion cost more or saved little; of these, only reasoning brought the
+grades closer to the human graders' with any regularity, and mostly on code.
 
-Reasoning is the expensive setting that most often disappointed. It raised agreement in only five of twenty
-model-dataset combinations, three after correction, while multiplying the output tokens by up to 925 and
-making grades less consistent in most combinations. The consistency loss is only partly mechanical: longer
+Reasoning is the expensive setting with the most uneven return. It raised agreement significantly in only
+five of twenty model-dataset combinations, three after correction, and lowered the absolute error in eight,
+never making either worse, while multiplying the output tokens by up to 925 and making grades less
+consistent in most combinations. The consistency loss is only partly mechanical: longer
 outputs give a non-deterministic backend more room to diverge, but length explained the variability only
 moderately and unevenly, so part of the loss behaves like a property of reasoning itself. Consistency is
 not the same as quality either: the most reproducible grader with reasoning off, Qwen3.5, was also the one

@@ -177,6 +177,12 @@ configurations with reasoning on.
 
 %% The figure is defined before the paragraph that first cites it, so that it can take the bottom of that page,
 %% or else the top of the next (float rule, CLAUDE.md S9; check_floats.py confirms it follows the reference).
+
+
+These two tests use the data the guide was built from, so they show how it fares where its settings were
+chosen; the validation at the end of this section judges it on answers that played no part in building it.
+Fig.~\ref{fig:guidetests} gives the results of both tests.
+
 \begin{figure*}[!tb]
 \centering
 \input{figures/fig_guide_tests.pgf}
@@ -191,10 +197,6 @@ and the range of all of them, on the answers they all graded (Mohler: the 800 ev
 GLM-5.1 graded only the code sets with the guide's configuration.}
 \label{fig:guidetests}
 \end{figure*}
-
-These two tests use the data the guide was built from, so they show how it fares where its settings were
-chosen; the validation at the end of this section judges it on answers that played no part in building it.
-Fig.~\ref{fig:guidetests} gives the results of both tests.
 
 Of the 56 comparisons without reasoning, the guide agreed significantly better with the human graders
 than the alternative in 34 and showed no significant difference in the other 22; no alternative without

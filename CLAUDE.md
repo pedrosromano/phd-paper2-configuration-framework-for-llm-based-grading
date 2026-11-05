@@ -446,7 +446,7 @@ unchanged in spirit — keep the matrix affordable — but the lever is **token 
     (one column) or `[!tb]` (full width). The generators (`make_phase5_tables._tex`, `write_guide_table`,
     `make_datasets_table`) write these options.
   - Exception for full-width floats: one may be defined just before that paragraph, after the heading of the
-    same subsection, so it can still reach the bottom of that page. This is done for Fig. 6 and for Fig. 9 (after the heading "Test Results", `[!tb]`). Since 2026-11-04 Table 4
+    same subsection, so it can still reach the bottom of that page. This is done for Fig. 6; Fig. 9 follows the paragraph that first refers to it (2026-11-05). Since 2026-11-04 Table 4
     is at the end of the Results, and Fig. 7 is again defined after the Section VI heading. It only
     works while the heading is on the same page as the paragraph: on the morning of 2026-10-19 the heading of
     "The Guide" fell on the page before, Table 4 and Fig. 7 were queued from there and landed above their
@@ -1612,6 +1612,11 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
     unreliability and model differences in code generation); Zhou 2026 and Xu 2026 added to RQ5.
   - Figures measure text in the paper's font (Formata) so legends fit; Fig. 7 is again defined after the
     Section VI heading.
+  - Follow-up (2026-11-05): PT-CS's 379 are "those whose final grade they set by hand, as recorded on the
+    platform"; always "manually graded" (never "teacher-reviewed"). RQ1 "Overall" and the Discussion no longer say
+    reasoning "seldom justified its cost": modest gains at a high price (QWK 5/20, MAE 8/20, never worse). The
+    conversation statistics are exam-resampled intervals (no Wilcoxon). No comparison between paper versions
+    anywhere: reviewers only see this one.
 - **Ethics statement facts (Pedro, 2026-10-18):** PT-CS comes from exams of the UpSkill professional
   requalification course at Iscte, graded on the platform for real, with the answers reused later. The
   platform's terms said answers could be used for research; students knew it was an academic platform and that
