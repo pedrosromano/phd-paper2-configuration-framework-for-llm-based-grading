@@ -437,14 +437,14 @@ Qwen3.5-35B-A3B & SemEval & partial credit vs strict & 800 & $-$0.015 & [$-$0.03
 These tables give the values behind the second part of the follow-up experiment (Fig.~1 of the paper). A zero is counted as undeserved when the human graders gave the answer at least 20\% of its marks. The candidate prompts were developed on PT-CS code and RIAYN with Qwen3.5 and DeepSeek-V4-Flash, each against the partial-credit prompt graded in the same batch; all five models then graded every set of the study that has a rubric with the code prompt.
 \begingroup\footnotesize
 \begin{longtable}{rr>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.0cm}>{\raggedright\arraybackslash}p{3.0cm}}
-\caption{Written justifications behind undeserved zeros (partial credit with a justification first; Qwen3.5 and DeepSeek-V4-Flash on PT-CS code and RIAYN): the share that name something the answer does correctly, and the reasons given for withholding every mark (keyword counts; one justification can give several reasons).}\\
+\caption{Written justifications behind undeserved zeros (partial credit with a justification first; Qwen3.5 and DeepSeek-V4-Flash on PT-CS code and RIAYN): the share that name something the answer does correctly, and the reasons given for withholding every mark (keyword counts; one justification can give several reasons; ``incorrect'' and negated mentions, such as ``does not ... correctly'', do not count as naming something correct).}\\
 \hline
 Justifications & Name something correct & Another approach, other names, or not as the rubric specifies & Missing or incomplete parts & Syntax errors, or would not compile \\ \hline
 \endfirsthead
 \hline
 Justifications & Name something correct & Another approach, other names, or not as the rubric specifies & Missing or incomplete parts & Syntax errors, or would not compile \\ \hline
 \endhead
-439 & 91\% & 74\% & 57\% & 49\% \\
+439 & 52\% & 74\% & 57\% & 49\% \\
 \hline
 \end{longtable}
 \endgroup

@@ -1938,6 +1938,18 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
     run stores (`supplementary._STORES`; instruction_substance and verification_variant were missing; they add no
     unparsed output, the 0.6% maximum per configuration holds: 0.52%). Fig. 9 printed `"credit": <at most two sentences>`
     while the prompt sent `"credit": "<at most two sentences>"`; fixed with Pedro's approval (2026-11-06).
+  - **Justification count corrected (2026-11-06, after an external review; Pedro chose the minimal fix, option 1).**
+    The "names something correct" share of the 439 justifications behind undeserved zeros was 91% because the keyword
+    pattern matched "correct" inside "incorrect(ly)". `zero_collapse._names_correct` now excludes "incorrect" and
+    negated mentions ("does not ... correctly") within the clause: **52% (229 of 439)**. Every earlier "91%" in this file
+    is superseded. Paper: Results "we examined the 439 justifications ..., counting with keywords what they mention. In
+    about half of them (52%)"; Method "We examined ... and counted, with keywords, the reasons they gave"; Fig. 1 box
+    "Examine the justifications"; Discussion and Conclusion "often named". The reasons (74/57/49%) are unchanged keyword
+    counts, never validated by hand. The external review's other requests (reword "almost as good as reasoning"; read
+    a sample by hand) were rejected by Pedro: the text stays as it is. Results now says the models "often treated each rubric item as all or
+    nothing" (twice; Pedro approved after a check: undeserved zeros are mostly Qwen3.5's, 42% vs 4-15% for the others
+    under partial credit on PT-CS code; prompt A, aimed directly at item-level all-or-nothing, only cut Qwen3.5 from 42% to
+    32%, while credit-first cut it to 9%; in 30 justifications read at random the pattern appears but is not the rule).
 - **Ethics statement facts (Pedro, 2026-10-18):** PT-CS comes from exams of the UpSkill professional
   requalification course at Iscte, graded on the platform for real, with the answers reused later. The
   platform's terms said answers could be used for research; students knew it was an academic platform and that

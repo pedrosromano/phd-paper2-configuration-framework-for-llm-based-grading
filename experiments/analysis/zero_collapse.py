@@ -77,6 +77,21 @@ def _vs(A: pd.DataFrame, B: pd.DataFrame) -> dict:
             "dMAE": mae(sB) - mae(sA)}
 
 
+_NEG = re.compile(r"\b(not|fails?|failing|without|n't|never|nor|unable)\b")
+
+
+def _names_correct(t: str) -> bool:
+    """A justification names something the answer does correctly: "correct(ly)", "identif..." or "properly", not as
+    part of "incorrect(ly)" and not negated in the six words before it within the same clause ("does not ... correctly",
+    "fails to implement ... correctly"). Fixed 2026-11-06: the published count matched "correct" anywhere, so
+    "incorrectly" counted as naming something correct (90.9% instead of 52.2%)."""
+    for m in re.finditer(r"(?<!in)correct\w*|identif\w*|properly", t):
+        before = re.split(r"[.;,]| but | and | however ", " ".join(t[:m.start()].split()[-6:]))[-1]
+        if not _NEG.search(before):
+            return True
+    return False
+
+
 def diagnosis() -> dict:
     """Zeros on answers the teachers credited (>= 20% of the marks), in the partial-credit-with-justification runs."""
     rows = []
@@ -99,7 +114,7 @@ def diagnosis() -> dict:
             j = str(r.get("raw"))
         rows.append({"model": r["model"], "dataset": r["dataset"], "text": j.lower()})
     d = pd.DataFrame(rows)
-    out = {"runs": len(d), "names_something_correct": 100 * float(d.text.str.contains(r"correct|identif|properly").mean())}
+    out = {"runs": len(d), "names_something_correct": 100 * float(d.text.map(_names_correct).mean())}
     out.update({k: 100 * float(d.text.str.contains(p).mean()) for k, p in REASONS.items()})
     out["by_model_set"] = d.groupby(["model", "dataset"]).size().to_dict()
     return out

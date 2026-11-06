@@ -19,7 +19,7 @@ comparisons, while multiplying the output tokens by up to 925 and usually making
 clearest gains came on code, for models that scored many partially correct answers as zero.
 
 This zero-collapse came from how the models applied the rubric, and prompt engineering removed most of it. The
-models' own justifications named what the student had done right and still gave no marks, as if each rubric item
+models' own justifications often named what the student had done right and still gave no marks, as if each rubric item
 were all or nothing. Asking for partial credit raised code agreement by up to 0.11 QWK for a few extra tokens, but
 did not stop the collapse. A code prompt aimed at its cause, which has the grader credit each rubric item on its
 own and state what earns marks before the score, removed most of the undeserved zeros without reasoning. It

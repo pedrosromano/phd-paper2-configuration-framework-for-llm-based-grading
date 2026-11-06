@@ -283,7 +283,9 @@ def zero_collapse_section() -> str:
     out.append(_table(
         "Written justifications behind undeserved zeros (partial credit with a justification first; Qwen3.5 and "
         "DeepSeek-V4-Flash on PT-CS code and RIAYN): the share that name something the answer does correctly, and the "
-        "reasons given for withholding every mark (keyword counts; one justification can give several reasons).",
+        "reasons given for withholding every mark (keyword counts; one justification can give several reasons; "
+        "``incorrect'' and negated mentions, such as ``does not ... correctly'', do not count as naming something "
+        "correct).",
         ["Justifications", "Name something correct"] + [k[0].upper() + k[1:] for k in ZC.REASONS],
         [[dg["runs"], f"{dg['names_something_correct']:.0f}\\%"] + [f"{dg[k]:.0f}\\%" for k in ZC.REASONS]],
         "rrp{3.6cm}p{3.0cm}p{3.0cm}"))

@@ -272,13 +272,12 @@ DeepSeek-V4-Flash it was unstable ($+0.042$ on RIAYN, $-0.068$ on PT-CS code).
 
 Because partial credit left Qwen3.5's zero-collapse in place, the second part of the follow-up turned to prompt
 engineering, starting from the justifications, which show why the zeros persisted. We call a zero \emph{undeserved} when the human graders had given
-the answer at least 20\% of its marks, and we read the 439 justifications behind such zeros. In 91\% of them, the
-model named something the answer did correctly and still gave no marks. The reasons given for withholding every
+the answer at least 20\% of its marks, and we examined the 439 justifications behind such zeros,
+counting with keywords what they mention. In about half of them (52\%), the model named something the answer did correctly and still gave no marks. The reasons given for withholding every
 mark were that the answer departed from the rubric's letter, by another approach or other names (74\%), that
 parts were missing (57\%), or that the code would not compile (49\%). On one answer that the teachers gave 60\%
 of the marks, all five of Qwen3.5's justifications said that the student correctly checked whether a position was
-free but did not iterate explicitly through two further lists that the rubric required. The models treated each
-rubric item as all or nothing.
+free but did not iterate explicitly through two further lists that the rubric required. The models often treated each rubric item as all or nothing.
 
 The candidate prompts, each aimed at one of these reasons (Fig.~\ref{fig:promptexp}), were compared with the
 partial-credit prompt graded again at the same time, under which Qwen3.5 gave zero to 47\% of the PT-CS code
@@ -306,8 +305,7 @@ the models gave almost no zeros there (0 to 3\%, against 9.5\% for the teachers)
 generous.
 
 Overall, the prompt alone removed most of the zero-collapse on code. Asking for partial credit is a near-free gain
-on code for some models but left the collapse of Qwen3.5 in place, because the models treated each rubric item as
-all or nothing. The code prompt, aimed at that cause, removed most of the undeserved zeros without reasoning and
+on code for some models but left the collapse of Qwen3.5 in place, because the models often treated each rubric item as all or nothing. The code prompt, aimed at that cause, removed most of the undeserved zeros without reasoning and
 raised code agreement in nine of ten comparisons, at a small fraction of what reasoning costs. Because it made
 short theory answers too generous, the guide uses it for code only.
 

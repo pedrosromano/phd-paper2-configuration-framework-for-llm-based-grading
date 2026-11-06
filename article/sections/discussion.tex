@@ -26,7 +26,7 @@ reproducible grader, Qwen3.5, had the strongest zero-collapse.
 The zero-collapse explains where reasoning paid, and the follow-up showed that the prompt can remove most of it.
 Graders that are too severe have been described
 before~\cite{pathak_rubric_2025,venkatraman_llmbased_2026,sapkota_math_2026}, and the zero-collapse is a specific,
-measurable form of that severity. The models' own justifications show its cause: they named what the student had done right,
+measurable form of that severity. The models' own justifications show its cause: they often named what the student had done right,
 then withheld every mark because the answer departed from the letter of a rubric item, as if each item were a
 pass-or-fail test. A prompt that tells the grader to credit each item on its own, as a teacher grades a written
 exam, and to state what earns marks before the score removed most of these zeros without reasoning. Much of what

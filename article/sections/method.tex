@@ -272,7 +272,7 @@ rubric specifies};
 for every rubric item the answer meets, even when it is incomplete; 0 only when nothing earns marks};
 \draw[arr] (s) -- node[right, lbl, xshift=0.6mm] {first results: the zero-collapse on code} (p1);
 \node[font=\scriptsize\bfseries, below=5.5mm of p1.south, anchor=north, xshift=7.5mm] (p2t) {Part 2. Prompt engineering, on code};
-\node[pstep, below=1.5mm of p2t] (d) {Read the justifications behind the zeros given\\to answers that the human graders had credited};
+\node[pstep, below=1.5mm of p2t] (d) {Examine the justifications behind the zeros given\\to answers that the human graders had credited};
 \node[pstep, below=of d] (r1) {Round 1: five candidate prompts, one technique each\\[1pt]
   \begin{tabular}{@{}r@{\hspace{4pt}}l@{}}
   A & judge each rubric item on its own\\
@@ -306,7 +306,7 @@ credit and a justification of at most two sentences, written before the score.
 
 The second part uses prompt engineering aimed at the cause of the zeros. We took every zero that Qwen3.5 and
 DeepSeek-V4-Flash gave, in the runs with a justification, to an answer that the human graders had credited with at
-least 20\% of its marks. We read the justification behind each of these zeros and noted the reasons it gave. We then wrote five candidate prompts, A to E in
+least 20\% of its marks. We examined the justifications behind these zeros and counted, with keywords, the reasons they gave. We then wrote five candidate prompts, A to E in
 Fig.~\ref{fig:promptexp}. Prompt A tells the grader to judge each rubric item on its own: an item earns its marks
 when the answer achieves what it asks for, even with another approach, other names, or code that would not
 compile, and part of its marks when the answer achieves part of it. Prompts B to E each add one technique to A,
