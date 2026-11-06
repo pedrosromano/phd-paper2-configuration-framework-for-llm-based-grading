@@ -1,0 +1,62 @@
+# Further grading-instruction variants against the zero-collapse (2026-11-05; protocol, variants and selection rule
+# fixed in CLAUDE.md before any call). Each variant's blocks REPLACE the same-named blocks of the partial-credit
+# instruction (prompts_instruction.yaml), which replace those of prompts.yaml. Only rubric items are affected: the
+# reference block stays the partial-credit one. Each targets one mechanism seen in the justifications behind zeros on
+# half-right code answers (the grader names what is correct and still gives 0; items treated as all-or-nothing).
+# Never edit this file after runs exist: it enters the config_hash of these cells.
+
+partial_credit_items:          # itemised output: the marks of each rubric item before the total
+  grounding:
+    rubric: |
+      Use the following question-specific rubric to award marks. Treat each rubric item on its own: give its marks
+      when the answer achieves what the item asks for, even with a different approach, different names, or code that
+      would not compile, and give part of its marks when the answer achieves part of it. Mistakes in one part do not
+      cancel the marks earned in another. Apply any deductions the rubric specifies and do not invent criteria. Give 0
+      only when nothing in the answer earns marks.
+      RUBRIC:
+      $grounding_body
+  output:
+    question_by_question__holistic: |
+      Return ONLY a single JSON object and nothing else (no markdown, no commentary), listing the marks the answer
+      earns on each rubric item and then the total score:
+      {"items": [{"item": "<short label>", "marks": <number>}], "score": <number between 0 and $max>}
+
+partial_credit_credit_first:   # what earns marks first, and a score bound to it
+  grounding:
+    rubric: |
+      Use the following question-specific rubric to award marks. Treat each rubric item on its own: give its marks
+      when the answer achieves what the item asks for, even with a different approach, different names, or code that
+      would not compile, and give part of its marks when the answer achieves part of it. Mistakes in one part do not
+      cancel the marks earned in another. Apply any deductions the rubric specifies and do not invent criteria. Give 0
+      only when nothing in the answer earns marks.
+      RUBRIC:
+      $grounding_body
+  output:
+    question_by_question__holistic: |
+      First state, in at most two short sentences, what the answer does correctly and which rubric items it earns
+      marks for; then give the score. If you name anything that earns marks, the score must be above 0. Return ONLY a
+      single JSON object and nothing else (no markdown, no commentary), with the statement first:
+      {"credit": "<at most two sentences>", "score": <number between 0 and $max>}
+
+partial_credit_subtractive:    # start from the full marks and take away what is not earned
+  grounding:
+    rubric: |
+      Use the following question-specific rubric to grade the answer. Start from the full marks and take away only the
+      marks the answer does not earn: an item keeps its marks when the answer achieves what it asks for, even with a
+      different approach, different names, or code that would not compile, and keeps part of them when the answer
+      achieves part of it. Mistakes in one part do not cancel the marks earned in another. Apply any deductions the
+      rubric specifies and do not invent criteria. The score is 0 only when the answer earns none of the marks.
+      RUBRIC:
+      $grounding_body
+
+partial_credit_teacher:        # calibration: how a teacher grades a written exam
+  grounding:
+    rubric: |
+      Use the following question-specific rubric to award marks, as a teacher grades a written exam. Treat each rubric
+      item on its own: give its marks when the answer achieves what the item asks for, even with a different approach,
+      different names, or code that would not compile, and give part of its marks when the answer achieves part of it.
+      Mistakes in one part do not cancel the marks earned in another. An answer with the right idea but incomplete or
+      faulty code still earns a substantial part of the marks. Apply any deductions the rubric specifies and do not
+      invent criteria. Give 0 only to an answer that is blank, irrelevant, or wrong throughout.
+      RUBRIC:
+      $grounding_body

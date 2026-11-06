@@ -1,7 +1,8 @@
 """The guide's validation (2026-10-18): two datasets that played no part in building it. Called the "additional
 verification" until Pedro's review of 2026-10-19, which keeps the word "validation" for this alone; the module name
-stayed. Its figure is phase6.fig_guide_validation, drawn like the tests' figure; the former table (Table 5) left the
-paper, and its values are in the supplementary material (supplementary.verification_section).
+stayed. Since 2026-11-06 the paper shows the guide against the baseline and reasoning on here in the lower part of
+Fig. 10 (guide_eval.references, phase6.fig_guide_refs); every configuration is in the supplementary material
+(supplementary.verification_section).
 
 Protocol fixed in CLAUDE.md S11 before any call. SAF (300 English short answers; reasoning on the first 150) and
 HARMOGEN-R (129 C++ code answers in Portuguese), five models, k = 3, store runs/verification.jsonl, arms v_* in
@@ -34,33 +35,50 @@ from experiments.analysis.bloco_c import MARGIN
 from experiments.analysis.make_phase5_tables import _boot_dist, _point, _qwk_items
 
 VERIF = phase5.REPO_ROOT / "data" / "processed" / "runs" / "verification.jsonl"
+# Since 2026-11-05 (Pedro, after the step-2 runs) the guide's wording on code is the zero-collapse instruction
+# (prompts_instruction_variants2.yaml); its HARMOGEN-R rows, and the criterion alternative with the same wording, are in
+# verification_variant.jsonl. The earlier partial-credit wording becomes an alternative on code; the reasoning-on runs
+# keep the earlier wording (no reasoning run with the new wording; Pedro: the guide does not use reasoning).
+VARIANT = phase5.REPO_ROOT / "data" / "processed" / "runs" / "verification_variant.jsonl"
+CODE_WORDING = "partial_credit_teacher_credit_first"
 SETS = [("saf", "short_answer", "SAF (short answers)"), ("harmogenr", "code", "HARMOGEN-R (code)")]
 MODELS = ["qwen3.5", "deepseek-v4-flash", "glm-5.1", "gpt-5.1", "claude-sonnet-4-6"]
-ALTS = ["no guidance", "strict instruction", "criterion scoring", "reasoning on"]
+ALTS = ["no guidance", "strict instruction", "earlier wording", "criterion scoring", "reasoning on"]
 
 
 def _kind(r) -> str:
+    """Each row's role. The guide's wording is the code wording on code and partial credit on short answers; on code
+    the earlier partial-credit wording is an alternative; the criterion alternative uses the guide's own wording."""
+    wording = CODE_WORDING if r.domain == "code" else "partial_credit"
     if r.reasoning == "on":
-        return "reasoning on"
+        return "reasoning on" if r.instruction == "partial_credit" else "unused"
     if r.context_level == "none":
         return "no guidance"
-    if r.decomposition == "criterion":
-        return "criterion scoring"
     if r.instruction == "standard":
         return "strict instruction"
-    return "guide"
+    if r.decomposition == "criterion":
+        return "criterion scoring" if r.instruction == wording else "unused"
+    if r.instruction == wording:
+        return "guide"
+    if r.domain == "code" and r.instruction == "partial_credit":
+        return "earlier wording"
+    return "unused"
 
 
 def load() -> pd.DataFrame:
-    d = phase5.prepare(phase5._read(VERIF))
+    v = phase5.prepare(phase5._read(VARIANT))
+    v = v[v.instruction == CODE_WORDING]                  # its partial-credit rows repeat the October guide cells
+    d = pd.concat([phase5.prepare(phase5._read(VERIF)), v], ignore_index=True)
     d["model"] = d.model.replace({"glm-5.1-or": "glm-5.1"})          # GLM-5.1 served through OpenRouter
     d["kind"] = d.apply(_kind, axis=1)
+    d = d[d.kind != "unused"]
     # a reasoning-on run that returned no grade (at the output limit, or GLM-5.1 output that does not parse) takes
     # the guide's grade for the same answer and run, as in the study; a failed call is left out (none remain:
     # the 84 DeepInfra read timeouts were all re-graded with regrade_errors)
     d["fallback"] = False
     keys = ["dataset", "domain", "model", "item_id", "run_index"]
-    guide = d[(d.kind == "guide") & d.pred_norm.notna()].drop_duplicates(keys).set_index(keys)
+    base = d[d.kind.isin(["guide", "earlier wording"]) & (d.instruction == "partial_credit") & d.pred_norm.notna()]
+    guide = base.drop_duplicates(keys).set_index(keys)     # the earlier wording without reasoning (the runs' own wording)
     e = d["error"].fillna("").astype(str) if "error" in d else pd.Series("", index=d.index)
     bad = (d.kind == "reasoning on") & d.pred_norm.isna() & (e.str.len() == 0)
     if bad.any():
@@ -105,7 +123,10 @@ def contrasts(d: pd.DataFrame) -> pd.DataFrame:
                              "SD": _sd(Ai), "SD_guide": _sd(Gi), "zeros": float((A.pred_norm < 1e-9).mean()),
                              "cost_x": pd.to_numeric(Ai.cost_eur, errors="coerce").mean()
                              / pd.to_numeric(Gi.cost_eur, errors="coerce").mean(),
-                             "fallback_pct": 100 * float(A.fallback.mean())})
+                             "fallback_pct": 100 * float(A.fallback.mean()),
+                             "QWK_common": _qwk_items(Ai)[0], "QWK_guide_common": _qwk_items(Gi)[0],
+                             "eur_common": 1000 * pd.to_numeric(Ai.cost_eur, errors="coerce").mean(),
+                             "eur_guide_common": 1000 * pd.to_numeric(Gi.cost_eur, errors="coerce").mean()})
     return pd.DataFrame(rows)
 
 

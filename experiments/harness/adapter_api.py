@@ -209,6 +209,10 @@ def result_from_body(resp: dict, config, guard: CostGuard | None, latency: float
 
 SCORE_SCHEMA = {"type": "object", "properties": {"score": {"type": "number"}}, "required": ["score"],
                 "additionalProperties": False}
+# The round-2 instruction (2026-11-05) asks for a short statement of what earns marks before the score; its schema keeps
+# that statement first, as the prompt asks.
+CREDIT_SCHEMA = {"type": "object", "properties": {"credit": {"type": "string"}, "score": {"type": "number"}},
+                 "required": ["credit", "score"], "additionalProperties": False}
 
 
 def build_anthropic_payload(mcfg: dict, prompt: str, config) -> dict:
@@ -225,7 +229,9 @@ def build_anthropic_payload(mcfg: dict, prompt: str, config) -> dict:
         raise ValueError("Anthropic models run holistic, one question per call, score-only prompts here")
     return {"model": mcfg["model_id"], "max_tokens": config.max_tokens, "temperature": config.temperature,
             "messages": [{"role": "user", "content": prompt}],
-            "output_config": {"format": {"type": "json_schema", "schema": SCORE_SCHEMA}}}
+            "output_config": {"format": {"type": "json_schema",
+                                         "schema": CREDIT_SCHEMA if getattr(config, "instruction", "standard")
+                                         == "partial_credit_teacher_credit_first" else SCORE_SCHEMA}}}
 
 
 @retry(stop=stop_after_delay(900), wait=wait_random_exponential(multiplier=1, max=60),

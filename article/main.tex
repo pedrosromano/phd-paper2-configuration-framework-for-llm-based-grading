@@ -78,6 +78,7 @@
 
 \begin{document}
 \history{Date of publication xxxx 00, 0000, date of current version xxxx 00, 0000.}
+\vol{XX}
 \doi{10.1109/ACCESS.2026.0000000}
 
 \title{What Should an LLM Grader Be Given? Reasoning, Guidance, Scope, and Cost in Computer-Science Grading}
@@ -112,24 +113,26 @@ train models unless the customer opts in, which we did not do. No student-level 
 % on the study's data, Fig. 9) and verification.py (its validation on SAF and HARMOGEN-R, Fig. 10). Naming
 % (Pedro, 2026-10-19): "validation" only for the two datasets that played no part in building the guide; the
 % comparisons on the study's own data are "tests". At most 250 words.
+% Rewritten 2026-11-05 after Pedro's comments on the marked PDF (clear sentences; the guide introduced before it is
+% described; the prompt engineering against the zero-collapse as the main improvement). 2026-11-06 (Pedro): the guide
+% against the baseline and reasoning on (guide_eval.references): "almost as good as reasoning, much cheaper and more
+% consistent" is the message.
 \begin{abstract}
-Instructors adopting large language model graders in computer science face four questions. Should the model reason
-before scoring? What guidance should it receive? Should a whole exam be graded
-in one call? Which configuration is worth its cost? We vary reasoning, evaluation
-guidance, the grading instruction, scope, rubric decomposition, model family, and conversation state
-on four short-answer and code datasets, including Portuguese exams. The cheap
-changes were the effective ones: adding a rubric or reference answer raised agreement with human graders
-(quadratic weighted kappa, where 1 is perfect) significantly in thirteen of fifteen combinations, by
-0.095 to 0.341, and asking for partial credit raised code agreement by up to 0.11. Reasoning raised
-agreement significantly in five of twenty combinations, three after correction, at 9 to
-925 times the output tokens, and made grades less consistent in most; its large code gains came for models
-scoring many partially correct answers as zero (zero-collapse). Whole-exam grading never helped;
-scoring per criterion helped in one of six combinations. We then built a low-cost
-configuration guide that leaves the choice of model open: the rubric or reference answer, partial credit,
-reasoning off, and one question per call. On two held-out datasets, the guide met its preset criterion (no alternative
-without reasoning significantly better) on short answers with all five models and on code with four.
-On them, reasoning raised agreement in six of eight comparisons, at 3.5 to 55 times the cost: on code, it is
-the upgrade to consider.
+Instructors adopting large language model graders in computer science must choose whether the model reasons, what
+guidance it receives, and which configuration is worth its cost. We varied these choices with five models on four
+short-answer and code datasets, including a new dataset of Portuguese exams. The cheap changes worked best. A rubric or reference
+answer significantly raised agreement (quadratic weighted kappa) with human graders in thirteen of fifteen
+combinations, by 0.095 to 0.341, and asking for partial credit raised code agreement by up to 0.11. Whole-exam
+grading never helped. Reasoning helped significantly in five of twenty combinations, three after correction, at 9
+to 925 times the output tokens, and made grades less consistent in most. Its largest gains came on code, for models
+that scored many partially correct answers as zero (zero-collapse).
+Through prompt engineering, we wrote a code prompt that removed most of the zero-collapse without reasoning,
+raising code agreement in nine of ten comparisons. We then built a configuration guide for any model: rubric or reference
+answer, partial credit (code prompt on code), reasoning off, one question per call. Against the baseline configuration, on
+the study's data and two separate validation datasets, the guide agreed significantly better in 16 of 32
+comparisons and worse in none. It was almost as good as reasoning, which agreed significantly better in only 8
+of 25 comparisons, while costing 2.6 to 179 times as much per grade and making
+grades less consistent in general.
 \end{abstract}
 
 \begin{keywords}

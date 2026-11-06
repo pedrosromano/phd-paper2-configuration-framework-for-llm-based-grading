@@ -200,6 +200,37 @@ def zero_rates():
               f"   | on its zeroed items ({len(zz)}) the teachers gave {100 * zz.gold.mean():.0f}% of the marks")
 
 
+def zero_rates_short():
+    """Fifth review (2026-11-05, M3): the same zero shares as zero_rates, on the short-answer sets (reasoning off,
+    with guidance, strict instruction, one question per call, holistic; PT-CS = its manually graded answers).
+    On Mohler every model scores far more answers as zero than the teachers, so the zero-collapse is not
+    confined to code; it is strongest there."""
+    df = phase5.load_main()
+    d = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question") & (df.decomposition == "holistic")
+           & (df.domain == "short_answer") & (df.reasoning == "off")]
+    d = d[(d.dataset != "ptcs") | d.item_id.isin(_INTERV)]
+    print("\n=== Zero rates with reasoning off on short answers (fifth review, M3) ===")
+    for (ds, m), g in d.groupby(["dataset", "model"]):
+        gold = g.groupby("item_id").gold_norm.first()
+        it = g.groupby("item_id").agg(z=("pred_norm", lambda s: (s < 1e-9).mean()), gold=("gold_norm", "first"))
+        zz = it[it.z >= 0.6]
+        print(f"  {ds:7} {m:18} model zeros {100 * (g.pred_norm < 1e-9).mean():5.1f}%   teachers {100 * (gold < 1e-9).mean():4.1f}%"
+              f"   | on its zeroed items ({len(zz)}) the teachers gave {100 * zz.gold.mean():.0f}% of the marks")
+
+
+def reasoning_cost_abs():
+    """Fifth review (2026-11-05, M1): RQ1 cost per thousand grades with reasoning off and on, per model and dataset
+    (with guidance, strict, one question per call, holistic; PT-CS = its manually graded answers). The RQ1 'Overall'
+    quotes the cheapest and the dearest combination."""
+    df = phase5.load_main()
+    d = df[(df.context_level == "with_guidance") & (df.scope == "question_by_question") & (df.decomposition == "holistic")]
+    d = d[(d.dataset != "ptcs") | d.item_id.isin(_INTERV)]
+    t = (d.assign(c=pd.to_numeric(d.cost_eur, errors="coerce")).groupby(["dataset", "domain", "model", "reasoning"]).c
+         .mean().mul(1000).unstack())
+    print("\n=== RQ1 cost per thousand grades, reasoning off and on (fifth review, M1) ===")
+    print(t.round(3).to_string())
+
+
 def rubric_zeros():
     """Discussion (second independent review, 2026-10-19): share of exact-zero grades without guidance and with the
     rubric, strict instruction, reasoning off, one question per call, holistic, on the code sets (PT-CS = validated
@@ -285,8 +316,12 @@ def total_cost():
     conversation sub-study, the follow-up instruction experiment and the validation. The paper's earlier EUR 158.7
     predated the validation runs."""
     from experiments.analysis import verification
+    runs = phase5.REPO_ROOT / "data" / "processed" / "runs"
     parts = {"main": phase5.dedupe_call_groups(phase5.load_main()), "conversation": phase5.load_conversation(),
-             "instruction": phase5.load_instruction(), "validation": verification.load()}
+             "instruction": phase5.load_instruction(), "validation": phase5.prepare(phase5._read(verification.VERIF)),
+             # the zero-collapse follow-up (2026-11-05): every wording, control and check, used or not
+             "zero-collapse": pd.concat([phase5.prepare(phase5._read(runs / f)) for f in
+                                         ("instruction_substance.jsonl", "verification_variant.jsonl")])}
     eur = {k: float(pd.to_numeric(d.cost_eur, errors="coerce").sum()) for k, d in parts.items()}
     print("\n=== Total cost of all experiments at standard rates (Method) ===")
     print("  " + ", ".join(f"{k} EUR {v:.2f}" for k, v in eur.items()) + f"; total EUR {sum(eur.values()):.1f}")
@@ -433,6 +468,8 @@ def main() -> int:
     rq3_cost()
     zero_collapse()
     zero_rates()
+    zero_rates_short()
+    reasoning_cost_abs()
     rubric_zeros()
     overflow()
     temp0_variation()

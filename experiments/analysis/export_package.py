@@ -18,8 +18,13 @@ OUT = phase5.REPO_ROOT / "submission" / "reproducibility" / "grades.csv"
 PUBLIC = ["mohler", "semeval", "riayn"]
 MODEL = {"qwen3.5": "Qwen3.5-35B-A3B", "deepseek-v4-flash": "DeepSeek-V4-Flash", "glm-5.1": "GLM-5.1",
          "glm-5.1-or": "GLM-5.1", "gpt-5.1": "GPT-5.1", "claude-sonnet-4-6": "Claude Sonnet 4.6"}
-INSTR = {"standard": "strict", "partial_credit": "partial_credit", "partial_credit_justified": "partial_credit_justified"}
-COLS = ["experiment", "dataset", "question_id", "item_id", "model", "provider", "reasoning", "guidance", "instruction",
+INSTR = {"standard": "strict", "partial_credit": "partial_credit", "partial_credit_justified": "partial_credit_justified",
+         # the prompt engineering against the zero-collapse (2026-11-05): the code prompt the guide uses on code, and the
+         # round-1 candidate prompts A to E (Fig. 1 of the paper)
+         "partial_credit_teacher_credit_first": "code_prompt", "partial_credit_substance": "candidate_A",
+         "partial_credit_items": "candidate_B", "partial_credit_credit_first": "candidate_C",
+         "partial_credit_subtractive": "candidate_D", "partial_credit_teacher": "candidate_E"}
+COLS = ["experiment", "dataset", "question_id", "item_id", "model", "provider", "reasoning", "guidance", "prompt",
         "decomposition", "run", "human_grade", "model_grade", "fallback", "output_tokens", "cost_eur"]
 
 
@@ -28,7 +33,7 @@ def _frame(d: pd.DataFrame, experiment: str) -> pd.DataFrame:
         "experiment": experiment, "dataset": d.dataset, "question_id": d.question_id.astype(str), "item_id": d.item_id,
         "model": d.model.map(MODEL), "provider": d.provider, "reasoning": d.reasoning,
         "guidance": d.context_level.map({"none": "none", "with_guidance": "rubric_or_reference"}),
-        "instruction": d["instruction"].fillna("standard").map(INSTR), "decomposition": d.decomposition,
+        "prompt": d["instruction"].fillna("standard").map(INSTR), "decomposition": d.decomposition,
         "run": d.run_index.astype(int), "human_grade": d.gold_norm, "model_grade": d.pred_norm,
         "fallback": d["fallback"].fillna(False).astype(bool) if "fallback" in d else False,
         "output_tokens": pd.to_numeric(d.completion_tokens, errors="coerce"),
@@ -40,15 +45,16 @@ def build() -> pd.DataFrame:
     m = m[m.dataset.isin(PUBLIC) & (m.scope == "question_by_question")]
     i = instruction.load()
     i = i[i.dataset.isin(PUBLIC) & (i.source == "instruction")]
-    v = verification.load()
-    v = v.assign(context_level=v.kind.map(lambda k: "none" if k == "no guidance" else "with_guidance"),
-                 instruction=v.kind.map(lambda k: "standard" if k == "strict instruction" else
-                                        (None if k == "no guidance" else "partial_credit")))
-    parts = [_frame(m, "main"), _frame(i, "follow_up_instruction"), _frame(v, "validation")]
+    z = phase5.prepare(phase5._read(phase5.REPO_ROOT / "data" / "processed" / "runs" / "instruction_substance.jsonl"))
+    z = z[z.dataset.isin(PUBLIC)]                                  # RIAYN: every candidate prompt, its same-batch controls too
+    v = verification.load()                                        # each row keeps its own instruction
+    v = v.assign(context_level=v.kind.map(lambda k: "none" if k == "no guidance" else "with_guidance"))
+    parts = [_frame(m, "main"), _frame(i, "follow_up_partial_credit"), _frame(z, "follow_up_prompt_engineering"),
+             _frame(v, "validation")]
     out = pd.concat(parts, ignore_index=True)
-    out.loc[out.guidance == "none", "instruction"] = "none"     # without guidance the prompt has no instruction block
+    out.loc[out.guidance == "none", "prompt"] = "none"          # without guidance the prompt has no instruction block
     out = out[out.model_grade.notna()]                           # unparseable outputs are left out, as in the paper
-    return out[COLS].sort_values(["experiment", "dataset", "model", "reasoning", "guidance", "instruction",
+    return out[COLS].sort_values(["experiment", "dataset", "model", "reasoning", "guidance", "prompt",
                                   "decomposition", "item_id", "run"]).reset_index(drop=True)
 
 

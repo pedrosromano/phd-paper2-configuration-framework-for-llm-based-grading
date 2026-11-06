@@ -1,50 +1,50 @@
 %% sections/conclusion.tex -- closes the loop the Introduction opened (CLAUDE.md S9.2). Rewritten 2026-10-16
 %% (Pedro's review): one guide, tested on five models, no deployment or transfer angle. Second pass 2026-10-16:
 %% every model's partial-credit results in; the recipe names its model.
+%% Rewritten 2026-11-05 (Pedro: the conclusion was weak and descriptive; underline that the guide works, and
+%% integrate the prompt engineering against the zero-collapse into the story). Numbers: as in the Results and the guide.
 
 \section{Conclusions}
 \label{sec:conclusion}
 
-An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them only
-in fragments. We tested them together for computer-science grading under one controlled protocol. The
-central finding is that the cheap changes were the effective ones. Supplying a rubric or a reference answer raised agreement significantly in thirteen of fifteen
-model-dataset combinations, by 0.095 to 0.341 QWK, for 1.2 to 1.8 times the cost per grade, and asking the
-model to award partial credit raised code agreement by up to 0.11 QWK for a few extra input tokens. Reasoning raised
-agreement significantly in five of twenty combinations, three after correcting for multiple comparisons, while
-multiplying output tokens by up to 925 and usually making grades less consistent. Its clearest gains came on
-code, for models that scored many partially correct answers as zero. This zero-collapse depends on the model
-together with the rubric and the instruction: asking for partial credit reduced it in GPT-5.1, but not in
-Qwen3.5, which names what the student did right and still gives no marks, and on held-out code a rubric
-brought it out in DeepSeek-V4-Flash.
-Grading a whole exam in one call never helped, scoring criterion by criterion helped only GPT-5.1 on one
-dataset, both saved little or nothing, and on code the closed models bought little for their price.
+An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them only in
+fragments. We tested them together for computer-science grading, under one protocol, with five models on four
+datasets. The cheap changes were the effective ones, and the configuration guide built from them works without
+reasoning, with agreement very close to that of reasoning.
 
-Putting together the options that worked best in each comparison, we built a configuration guide that
-leaves the choice of model open: give the model the rubric or reference answer and ask it for partial
-credit, and grade one question per call, with reasoning off, a single holistic score, and a clean
-conversation for each answer. Against the other configurations of the same five models without reasoning, the guide agreed
-significantly better with the human graders in 34 of 56 comparisons and was rarely, if ever, beaten,
-although most of those alternatives also used the strict instruction, so this test describes the
-configurations that were run rather than isolating each setting. With the model best suited
-to each dataset, it matched or came within 0.05 QWK of the best configuration in the study, and with the
-cheapest model no cheaper configuration graded better, apart from a difference of 0.001 QWK on one
-dataset. Validated on two datasets that played no part in building it, the guide met the criterion fixed
-in advance on short answers with every model and on code with four of the five; with DeepSeek-V4-Flash,
-scoring per criterion agreed significantly better. With GLM-5.1 and GPT-5.1 it graded the held-out code
-close to the instructors' level, while Qwen3.5 and DeepSeek-V4-Flash scored many answers as zero under the
-rubric. On those datasets, already asking for partial credit, turning reasoning on raised agreement in six
-of eight comparisons, at 3.5 to 55 times the cost per grade: reasoning off is the low-cost setting, and on
-code reasoning is the upgrade worth its cost when the budget allows. The guide sets the configuration; the choice of model remains the user's.
+What the grader is given mattered most. Supplying a rubric or a reference answer raised agreement significantly
+in thirteen of fifteen model-dataset combinations, by 0.095 to 0.341 QWK, for 1.2 to 1.8 times the cost per grade.
+Reasoning raised agreement significantly in only five of twenty combinations, three after correcting for multiple
+comparisons, while multiplying the output tokens by up to 925 and usually making grades less consistent. Its
+clearest gains came on code, for models that scored many partially correct answers as zero.
 
-Three directions for future work follow. The zero-collapse, a specific form of the severity that earlier
-work measured as leniency, deserves study in its own right, to detect it and to prevent it without paying
-for reasoning. The code evidence rests on three Java and C++ datasets, two of them from single courses, so
-the guide should be tested on other programming languages, institutions, and student populations. Two options were left
-out of the guide, few-shot examples of already-graded answers and fine-tuning, and each should be weighed
-against it on agreement, consistency, and cost.
+This zero-collapse came from how the models applied the rubric, and prompt engineering removed most of it. The
+models' own justifications named what the student had done right and still gave no marks, as if each rubric item
+were all or nothing. Asking for partial credit raised code agreement by up to 0.11 QWK for a few extra tokens, but
+did not stop the collapse. A code prompt aimed at its cause, which has the grader credit each rubric item on its
+own and state what earns marks before the score, removed most of the undeserved zeros without reasoning. It
+raised code agreement in nine of ten comparisons, at a small fraction of what reasoning costs. Much of what
+reasoning bought on code can therefore be had through the prompt. On short theory answers the same prompt made
+grading too generous, so it is used for code only.
 
-For the instructor the introduction began with, the answer is a short routine: supply the rubric or
-reference answer, ask for partial credit, and grade one question per call with reasoning off, in a clean
-conversation; with an inexpensive model this costs under 0.10 euros per thousand grades. On code, the model
-must be one that does not collapse to zeros, and turning reasoning on buys more agreement for its extra
-cost.
+From these results we built a configuration guide that leaves the choice of model open, and the guide was validated.
+Against the baseline configuration it agreed significantly better with
+the human graders in 16 of 32 comparisons and worse in none, on the study's data and on two datasets that played no
+part in building it. It was almost as good as reasoning, at a small fraction of the cost: reasoning agreed
+significantly better in only 8 of 25 comparisons, five of them for Qwen3.5, the smallest model, while costing 2.6
+to 179 times as much per grade and making grades less consistent in 18 of 25. On the two validation datasets the guide
+met the criterion fixed in advance with every model on short answers and with three of the five on code, and with
+GLM-5.1 it graded the code as closely as an instructor agrees with the other three. The guide sets the
+configuration; the choice of model remains the user's.
+
+Three directions for future work follow. Whether one prompt can remove the zero-collapse on code without making
+short-answer grading too generous, and why the smallest model kept more zeros than the others, remain open. The code
+evidence rests on three Java and C++ datasets, two of them from single courses, so the guide should be tested on
+other programming languages, institutions, and student populations. Two options were left out of the guide,
+few-shot examples of already-graded answers and fine-tuning, and each should be weighed against it on agreement,
+consistency, and cost.
+
+For the instructor described in the introduction, the answer is a short routine: supply the rubric or reference
+answer, ask for partial credit, with the code prompt when grading code, and grade one question per call with
+reasoning off, in a clean conversation. With an inexpensive model, this costs at most 0.12 euros per thousand
+grades.

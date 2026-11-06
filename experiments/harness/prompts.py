@@ -25,8 +25,13 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROMPTS = REPO_ROOT / "experiments" / "configs" / "prompts.yaml"
 PROMPTS_INSTRUCTION = REPO_ROOT / "experiments" / "configs" / "prompts_instruction.yaml"
+PROMPTS_INSTRUCTION_SUBSTANCE = REPO_ROOT / "experiments" / "configs" / "prompts_instruction_substance.yaml"
+PROMPTS_INSTRUCTION_VARIANTS = REPO_ROOT / "experiments" / "configs" / "prompts_instruction_variants.yaml"
+PROMPTS_INSTRUCTION_VARIANTS2 = REPO_ROOT / "experiments" / "configs" / "prompts_instruction_variants2.yaml"
+_VBLOCKS: dict | None = None
 _BLOCKS: dict | None = None
 _IBLOCKS: dict | None = None
+_SBLOCKS: dict | None = None
 
 
 def _blocks() -> dict:
@@ -42,6 +47,23 @@ def _iblocks() -> dict:
     if _IBLOCKS is None:
         _IBLOCKS = yaml.safe_load(PROMPTS_INSTRUCTION.read_text())
     return _IBLOCKS
+
+
+def _sblocks() -> dict:
+    """Pilot instruction "partial_credit_substance" (2026-11-05): its rubric block replaces the partial-credit one."""
+    global _SBLOCKS
+    if _SBLOCKS is None:
+        _SBLOCKS = yaml.safe_load(PROMPTS_INSTRUCTION_SUBSTANCE.read_text())
+    return _SBLOCKS
+
+
+def _vblocks() -> dict:
+    """The four further pilot variants (2026-11-05), keyed by instruction name."""
+    global _VBLOCKS
+    if _VBLOCKS is None:                             # round 1 and round 2 (2026-11-05), distinct names
+        _VBLOCKS = {**yaml.safe_load(PROMPTS_INSTRUCTION_VARIANTS.read_text()),
+                    **yaml.safe_load(PROMPTS_INSTRUCTION_VARIANTS2.read_text())}
+    return _VBLOCKS
 
 
 def _instruction(config) -> str:
@@ -85,6 +107,10 @@ def _grounding(config, item) -> str:
     b = _blocks()["grounding"]
     if _instruction(config) != "standard":
         b = {**b, **_iblocks()["grounding"]}
+    if _instruction(config) == "partial_credit_substance":
+        b = {**b, **_sblocks()["grounding"]}
+    if _instruction(config) in _vblocks():
+        b = {**b, **_vblocks()[_instruction(config)].get("grounding", {})}
     rubric = item.get("rubric_json")
     ref = item.get("reference_answer")
     if _has(rubric):
@@ -120,6 +146,8 @@ def render_turn(config, item, first: bool = True) -> str:
     out_key = f"{config.scope}__{config.decomposition}"
     out_block = (_iblocks()["output"][f"{out_key}__justified"] if _instruction(config) == "partial_credit_justified"
                  else b["output"][out_key])
+    if _instruction(config) in _vblocks():           # a variant may replace the output block (2026-11-05)
+        out_block = _vblocks()[_instruction(config)].get("output", {}).get(out_key, out_block)
     output = Template(out_block).safe_substitute(max=_fmt(item.get("gold_scale_max", 1)))
     parts = ([b["instruction"][config.domain]] if first else []) + [grounding, body, output]
     return _join(*parts)

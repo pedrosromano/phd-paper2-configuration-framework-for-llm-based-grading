@@ -352,11 +352,11 @@ def main() -> int:
                                                  else f"{c.SDk_off:.3f} $\\to$ {c.SDk_on:.3f}")})
     _tex(pd.DataFrame(vrows), "tab_rq1_values.tex",
          "Reasoning off versus on, per model and dataset. $\\Delta$QWK is QWK with reasoning on minus QWK "
-         "off, on the N sampled items; a reasoning run that reached the output limit without returning a "
+         "off, on the N sampled answers; a reasoning run that reached the output limit without returning a "
          "grade counts with the grade the same model gave that answer with reasoning off. Bold marks a 95\\% "
          "bootstrap confidence interval that excludes zero. Holm marks the gains that stay significant after Holm's "
          "correction for the 20 comparisons. Tokens is how many times more output tokens reasoning used, "
-         "computed on all paired items, and SD is the mean within-item standard deviation across repetitions "
+         "computed on all paired answers, and SD is the mean within-answer standard deviation across repetitions "
          "(lower is more consistent), computed on the model's own grades, so runs that fell back are left out. A bold SD with reasoning on marks a change whose 95\\% bootstrap interval "
          "excludes zero.",
          "tab:rq1values", star=True, colspec="llrrrrcrr", size="\\footnotesize")
@@ -520,8 +520,7 @@ def main() -> int:
     # --- T5: the configuration guide (Pedro's second review, 2026-10-18, comments #39-#48): Table 4 is the guide
     #     itself, its six settings with the evidence for each, every number derived here from the engines above
     #     (dim_contrasts, rq1_cells, instruction.contrasts, conversation_stats, the logged costs). Its tests are
-    #     plotted from experiments/analysis/guide_eval.py in phase6.fig_guide_tests, and its validation from
-    #     verification.py in phase6.fig_guide_validation. The composite ranges quoted in RQ1 stay guarded. ---
+    #     plotted from experiments/analysis/guide_eval.references in phase6.fig_guide_refs (tests and validation). The composite ranges quoted in RQ1 stay guarded. ---
     _assert_framework_ranges(prem_by, sdk_by, R_OVERALL, R_DISCRIM_CODE, R_QWEN_SDK)
     write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_hi, st_d, or_a)
     print("done.")
@@ -558,10 +557,20 @@ def write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_h
         extra_tok.append(pd.to_numeric(b.prompt_tokens, errors="coerce").mean() - pd.to_numeric(a.prompt_tokens, errors="coerce").mean())
         extra_pct.append(100 * (guide_eval._per_grade(b, pr) / guide_eval._per_grade(a, pr) - 1))
     short_equiv = bool(pc_short[pc_short.dataset != "ptcs"].equivalent.all())
+    # the code prompt (prompt engineering against the zero-collapse, 2026-11-05): against the partial-credit instruction,
+    # all five models, on the study's sets only (HARMOGEN-R is a validation dataset, reported with the validation)
+    from experiments.analysis import zero_collapse as ZC
+    zc = ZC.all_models()
+    zc = zc[zc.dataset != "harmogenr"]
+    zc_code, zc_short = zc[zc.domain == "code"], zc[zc.domain == "short_answer"]
+    assert (zc_short.dQWK < 0).all(), "the row says the code prompt lowered short-answer agreement for every model"
     # reasoning: RQ1 cells (every sampled item)
     r_sig, r_holm, r_n = int(cells.sig.sum()), int(cells.sig_holm.sum()), len(cells)
     r_less = int((cells.SDk_on > cells.SDk_off).sum())
     p_lo, p_hi = float(cells.prem_x.min()), float(cells.prem_x.max())
+    top3 = cells.sort_values("dQWK", ascending=False).head(3)
+    assert (top3.domain == "code").all() and set(top3.model) <= {"qwen3.5", "gpt-5.1"}, \
+        "the reasoning row says its largest gains came on code, for the two models with the zero-collapse"
     # scope and decomposition
     s_low = int((sc_.sig_holm & (sc_.dQWK < 0)).sum()); s_up = int((sc_.sig & (sc_.dQWK > 0)).sum())
     d_up = int((dd_.sig_holm & (dd_.dQWK > 0)).sum())
@@ -573,14 +582,21 @@ def write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_h
          f"Raised agreement in {len(g_sig)} of {len(gd)} model-dataset combinations ({len(g_ok)} after correction), "
          f"by {g_sig.dQWK.min():.3f} to {g_sig.dQWK.max():.3f} QWK, for {g_cost.min():.1f} to {g_cost.max():.1f} times "
          f"the cost per grade"),
-        ("Grading instruction", "Ask for partial credit",
-         f"Raised code agreement for {i_win.model.nunique()} of {pc_code.model.nunique()} models, by "
-         f"{i_win.dQWK.min():.2f} to {i_win.dQWK.max():.2f} QWK, for {min(extra_tok):.0f} to {max(extra_tok):.0f} "
-         f"extra input tokens ({min(extra_pct):.0f} to {max(extra_pct):.0f}\\% of the cost); "
-         + ("on Mohler and SemEval every change lay within $\\pm0.05$" if short_equiv else "mixed on short answers")),
-        ("Reasoning", "Off (low-cost); on for code if the budget allows",
-         f"Turning it on raised agreement in {r_sig} of {r_n} combinations ({r_holm} after correction), made grades "
-         f"less consistent in {r_less}, and multiplied the output tokens by {p_lo:.0f} to {p_hi:.0f}"),
+        ("Prompt", "The partial-credit prompt",
+         f"Asking for partial credit instead of strict grading raised code agreement for {i_win.model.nunique()} of "
+         f"{pc_code.model.nunique()} models, by {i_win.dQWK.min():.2f} to {i_win.dQWK.max():.2f} QWK, for "
+         f"{min(extra_tok):.0f} to {max(extra_tok):.0f} extra input tokens"
+         + ("; on Mohler and SemEval every change lay within $\\pm0.05$" if short_equiv else "; mixed on short answers")),
+        ("Code prompt", "On code, the code prompt",
+         f"Prompt engineering aimed at the zero-collapse produced the code prompt. On the two code sets it raised "
+         f"agreement over partial credit in {int((zc_code.dQWK > 0).sum())} of {len(zc_code)} model-dataset comparisons "
+         f"({int(zc_code.higher.sum())} significantly), lowered it significantly in "
+         f"{int(zc_code.lower.sum()) or 'none'}, and cut the zeros; on the PT-CS short answers it lowered agreement for "
+         f"every model"),
+        ("Reasoning", "Off",
+         f"Turning it on raised agreement in {r_sig} of {r_n} combinations ({r_holm} after correction), most of all on "
+         f"code for the two models with the zero-collapse; it made grades less consistent in {r_less} and multiplied "
+         f"the output tokens by {p_lo:.0f} to {p_hi:.0f}"),
         ("Scope", "One question per call",
          f"The whole exam in one call never raised agreement, lowered it for {s_low} of {len(sc_)} models, and "
          f"changed the cost per question by {sg(sc_lo)} to {sg(sc_hi)}"),
@@ -597,8 +613,9 @@ def write_guide_table(df, interv, cells, gd, sc_, dd_, scope_cost, dec_lo, dec_h
              r"\begin{table*}[!tb]\centering\footnotesize",
              # Placed at the end of the Results as their synthesis (Daniel, 2026-11-03; Pedro agreed).
              r"\caption{Summary of the results: for each configuration choice, what the comparisons showed and the "
-             r"setting they point to, which the configuration guide adopts. Changes in agreement are in QWK and come "
-             r"from comparisons against the baseline configuration, with reasoning off unless stated.}\label{tab:framework}",
+             r"setting they point to, which the configuration guide adopts. Changes in agreement are in QWK, with "
+             r"reasoning off unless stated; each comes from changing one setting of the baseline configuration (for the "
+             r"code prompt, of the partial-credit prompt).}\label{tab:framework}",
              r"\setlength{\tabcolsep}{5pt}",
              r"\begin{tabular}{p{2.6cm}p{10.4cm}p{3.6cm}}",
              r"\hline",

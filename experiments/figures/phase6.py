@@ -393,42 +393,78 @@ def fig_rq3_levels(full):
 
 
 def fig_rq6_instruction():
-    """RQ6 grading instruction (Pedro's review 2026-10-16): (a) QWK with the strict instruction (light) and with
-    explicit partial credit (hatched), per set and model, reasoning off, on the 0-1 axis shared with Figs.
-    rq1-rq3; (b) share of code grades that are exactly zero under each instruction, with the teachers' share.
-    Values from experiments.analysis.instruction (GPT-5.1's strict cells are its main-store rows)."""
+    """The follow-up experiment (Pedro's review 2026-10-16; the code prompt added to panel (a) on 2026-11-06, Pedro: the
+    section is about it, so it belongs in both panels): (a) QWK with the strict prompt (light), the partial-credit
+    prompt (hatched) and, on the sets with a rubric, the code prompt (solid), per set and model, reasoning off, on the
+    0-1 axis shared with Figs. rq1-rq3; (b) share of code grades that are exactly zero under the same three prompts,
+    with the human graders' share. Strict and partial credit from experiments.analysis.instruction (GPT-5.1's strict
+    cells are its main-store rows); the code prompt from zero_collapse.all_models (its "after" columns; GLM-5.1's strict
+    cell on the PT-CS short answers, where it has no partial-credit cell, is that table's "before")."""
     from experiments.analysis import instruction as I
+    from experiments.analysis import zero_collapse as ZC
     lv = I.levels(I.load())
     lv = lv[lv.instruction.isin(["standard", "partial_credit"])]
+    zc = ZC.all_models()
     models = [m for m in ["qwen3.5", "deepseek-v4-flash", "glm-5.1-or", "gpt-5.1", "claude-sonnet-4-6"]
               if ((lv.model == m) & (lv.instruction == "partial_credit")).any()]
+    PROMPTS = ["standard", "partial_credit", ZC.CODE_WORDING]
+    STYLE = {"alpha": (0.45, 1.0, 1.0), "lw": (0.3, 0.3, 0.6), "hatch": ("", "///", "")}
 
-    def get(g, m):
-        c = lv[(lv.dataset == g[0]) & (lv.domain == g[1]) & (lv.model == m)].set_index("instruction")
-        return (float(c.QWK["standard"]), float(c.QWK["partial_credit"])) if {"standard", "partial_credit"} <= set(c.index) else None
+    def _zc(ds, dom, m):
+        return zc[(zc.dataset == ds) & (zc.domain == dom) & (zc.model == I.MAIN_MODEL.get(m, m))]
+
+    def qwk(g, m, ins):
+        if ins == ZC.CODE_WORDING:
+            c = _zc(g[0], g[1], m)
+            return float(c.QWK_after.iloc[0]) if len(c) else np.nan
+        c = lv[(lv.dataset == g[0]) & (lv.domain == g[1]) & (lv.model == m) & (lv.instruction == ins)]
+        if len(c):
+            return float(c.QWK.iloc[0])
+        c = _zc(g[0], g[1], m)                       # GLM-5.1, PT-CS short: strict cell of the code-prompt comparison
+        return float(c.QWK_before.iloc[0]) if ins == "standard" and len(c) and c.against.iloc[0] == "strict" else np.nan
+
+    def bars(ax, groups, get):
+        x = np.arange(len(groups)); nb = 3 * len(models); w = 0.88 / nb
+        for i, m in enumerate(models):
+            for j, ins in enumerate(PROMPTS):
+                vals = np.array([get(g, m, ins) for g in groups], dtype=float)
+                pos = x + (3 * i + j - (nb - 1) / 2) * w; ok = np.isfinite(vals)
+                # a dense dot hatch made each LaTeX pass take over ten minutes (pgf draws it dot by dot): solid instead
+                ax.bar(pos[ok], vals[ok], w, color=MCOL[m], alpha=STYLE["alpha"][j], edgecolor="k",
+                       lw=STYLE["lw"][j], hatch=STYLE["hatch"][j])
+        ax.set_xticks(x)
+
     fig = plt.figure(figsize=(WIDE, COL * 0.80))
-    gs = fig.add_gridspec(1, 2, width_ratios=[2.6, 1], wspace=0.30)
+    gs = fig.add_gridspec(1, 2, width_ratios=[2.9, 1], wspace=0.25)
     ax = fig.add_subplot(gs[0])
-    _paired_levels(ax, SETS, models, get)
+    bars(ax, SETS, qwk)
+    ax.set_ylim(0, 1); ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.2))
+    ax.set_ylabel("agreement (QWK)")
     ax.set_xticklabels(["Mohler", "SemEval", "RIAYN", "PT-CS\ncode", "PT-CS\nshort"])
     ax.set_title("(a) agreement with the human graders", loc="left", fontsize=7)
     bx = fig.add_subplot(gs[1])
-    code = [("riayn", "RIAYN"), ("ptcs", "PT-CS code")]
-    x = np.arange(len(code)); nb = 2 * len(models); w = 0.84 / nb
-    for i, m in enumerate(models):
-        for j, ins in enumerate(["standard", "partial_credit"]):
-            vals = np.array([(lambda c: float(c.zero_pct.iloc[0]) if len(c) else np.nan)(
-                lv[(lv.dataset == ds) & (lv.domain == "code") & (lv.model == m) & (lv.instruction == ins)]) for ds, _ in code])
-            pos = x + (2 * i + j - (nb - 1) / 2) * w; ok = np.isfinite(vals)
-            bx.bar(pos[ok], vals[ok], w, color=MCOL[m], alpha=0.45 if j == 0 else 1.0,
-                   edgecolor="k", lw=0.3, hatch="" if j == 0 else "///")
-    for k, (ds, _) in enumerate(code):
-        t = lv[(lv.dataset == ds) & (lv.domain == "code")].teacher_zero_pct.iloc[0]
+    code = [("riayn", "code", "RIAYN"), ("ptcs", "code", "PT-CS code")]
+
+    def zeros(g, m, ins):
+        if ins == ZC.CODE_WORDING:
+            c = _zc(g[0], g[1], m)
+            return float(c.zeros_after.iloc[0]) if len(c) else np.nan
+        c = lv[(lv.dataset == g[0]) & (lv.domain == g[1]) & (lv.model == m) & (lv.instruction == ins)]
+        return float(c.zero_pct.iloc[0]) if len(c) else np.nan
+    bars(bx, code, zeros)
+    for k, (ds, dom, _) in enumerate(code):
+        t = lv[(lv.dataset == ds) & (lv.domain == dom)].teacher_zero_pct.iloc[0]
         bx.hlines(t, k - 0.45, k + 0.45, color="k", lw=1.0, ls="--")
-    bx.set_xticks(x); bx.set_xticklabels([lbl for _, lbl in code])
+    bx.set_xticklabels([lbl for _, _, lbl in code])
     bx.set_ylabel("grades of exactly zero (\\%)")
     bx.set_title("(b) zeros on code (dashed: human graders)", loc="left", fontsize=7)
-    _level_legend(fig, models, "strict instruction", "partial credit", y=-0.02, ncol=len(models) + 2)
+    from matplotlib.patches import Patch
+    h = [Patch(facecolor=MCOL[m], edgecolor="k", lw=0.3, label=MNAME[m]) for m in models]
+    h += [Patch(facecolor="#bbb", alpha=0.45, edgecolor="k", lw=0.3, label="strict prompt"),
+          Patch(facecolor="#888", edgecolor="k", lw=0.3, hatch="///", label="partial-credit prompt"),
+          Patch(facecolor="#555", edgecolor="k", lw=0.6, label="code prompt")]
+    fig.legend(handles=h, loc="upper center", ncol=4, bbox_to_anchor=(0.5, -0.02), framealpha=0.9,
+               handlelength=1.4, columnspacing=1.6)
     _save(fig, "fig_rq6_instruction")
 
 
@@ -514,143 +550,90 @@ def fig_rq4_cost(full):
 #     no correction), with the counts, and its cost per grade relative to the guide's.
 # (b) The guide's agreement with each model, against the best configuration of any model without reasoning and the
 #     range of all of them, on the same answers.
-OUTCOME = {"guide": "#3d3d3d", "same": "#cccccc", "alt": "#F0E442"}   # dark, light grey, Okabe-Ito yellow
 GUIDE_MODELS = ["qwen3.5", "deepseek-v4-flash", "glm-5.1", "gpt-5.1", "claude-sonnet-4-6"]
-ALT_LABEL = {"no guidance": "No guidance", "strict instruction": "Strict instruction",
-             "justification": "With a justification", "whole exam": "Whole exam in one call",
-             "criterion scoring": "Score per criterion", "shared conversation": "Shared conversation",
-             "reasoning on": "Reasoning on"}
+REF_STYLE = {"baseline": dict(marker="o", mfc="white", mec="0.2", ecolor="0.45", label="baseline: strict prompt, reasoning off"),
+             "reasoning on": dict(marker="^", mfc="#56B4E9", mec="k", ecolor="#3a8fc0", label="reasoning on")}
 
 
-def _xfmt(lo: float, hi: float) -> str:
-    f = lambda v: f"{v:.1f}" if v < 10 else f"{v:.0f}"
-    return f"{f(lo)}$\\times$" if f(lo) == f(hi) else f"{f(lo)}--{f(hi)}$\\times$"
-
-
-def _guide_figure(rows: list[dict], groups: list[dict], name: str, height: float, band: dict | None = None):
-    """rows: one per alternative, {kind, guide, same, alt, x_lo, x_hi}; groups: one per dataset, {label,
-    guide: {model: QWK}, best, lo, hi}; band: {label, lo, hi, text}, a human agreement range for one dataset."""
-    from matplotlib.patches import Patch
-    fig = plt.figure(figsize=(WIDE, height))
-    # fixed room for the row labels: LaTeX sets them in the paper's wider font, which tight layout does not see;
-    # the third, empty column holds the dataset labels of panel (b)
-    gs = fig.add_gridspec(1, 4, width_ratios=[1.0, 0.24, 0.30, 1.0], wspace=0.0, left=0.20, right=0.985, top=0.86,
-                          bottom=0.24 if len(rows) < 6 else 0.155)
-    ax, cx, bx = fig.add_subplot(gs[0]), fig.add_subplot(gs[1]), fig.add_subplot(gs[3])
-    ys = np.arange(len(rows))[::-1].astype(float)
-    ys[-1] -= 0.35                                    # reasoning on sits apart: the one trade-off the guide makes
-    for y, r in zip(ys, rows):
-        n, left = r["guide"] + r["same"] + r["alt"], 0.0
-        for k in ("guide", "same", "alt"):
-            if r[k]:
-                w = 100 * r[k] / n
-                ax.barh(y, w, left=left, color=OUTCOME[k], edgecolor="white", lw=0.6, height=0.62)
-                ax.text(left + w / 2, y, str(r[k]), ha="center", va="center", fontsize=6.5,
-                        color="white" if k == "guide" else "black")
-                left += w
-        cx.text(0.12, y, _xfmt(r["x_lo"], r["x_hi"]), va="center", fontsize=6.5)
-    for a in (ax, cx):
-        a.set_ylim(ys.min() - 0.6, ys.max() + 0.6)
-    ax.axhline((ys[-2] + ys[-1]) / 2, color="0.6", lw=0.5, ls=":")
-    ax.set_yticks(ys)
-    ax.set_yticklabels([f"{ALT_LABEL[r['kind']]} ({r['guide'] + r['same'] + r['alt']})" for r in rows], fontsize=6.5)
-    ax.tick_params(axis="y", length=0, pad=12)      # buffer for the wider LaTeX font of the paper
-    ax.set_xlim(0, 100); ax.set_xticks([0, 25, 50, 75, 100])
-    ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:.0f}\\%"))
-    ax.set_xlabel("share of the comparisons (model $\\times$ dataset)")
-    ax.grid(axis="y", visible=False)
-    ax.set_title("(a) against the other configurations\nof the same model", loc="left", fontsize=7)
-    cx.set_xticks([]); cx.set_yticks([]); cx.grid(False)
-    for s in cx.spines.values():
-        s.set_visible(False)
-    cx.set_title("  relative cost\n  per grade", loc="left", fontsize=6.5)
-    # (b): one block of five rows (the models) per dataset
-    yt, ylab, y0 = [], [], 0.0
-    for gi, g in enumerate(groups):
-        top, bot = y0 + 0.5, y0 - len(GUIDE_MODELS) + 0.5
-        bx.fill_between([g["lo"], g["hi"]], bot, top, color="#ececec", lw=0, zorder=0)
-        if band and g["label"] == band["label"]:
-            bx.fill_between([band["lo"], band["hi"]], bot, top, facecolor="#d9d9d9", edgecolor="0.2", hatch="////",
-                            lw=0, zorder=1)
-        bx.plot([g["best"], g["best"]], [bot, top], color="k", lw=1.1, zorder=2)
-        for j, m in enumerate(GUIDE_MODELS):
-            if m in g["guide"]:
-                bx.scatter(g["guide"][m], y0 - j, s=26, color=MCOL[m], edgecolor="k", lw=0.4, zorder=3)
-        yt.append(y0 - (len(GUIDE_MODELS) - 1) / 2); ylab.append(g["label"])
-        if gi < len(groups) - 1:
-            bx.axhline(bot - 0.5, color="0.75", lw=0.4)
-        y0 -= len(GUIDE_MODELS) + 1
-    bx.set_ylim(y0 + 0.5, 1.0)
-    bx.set_yticks(yt); bx.set_yticklabels(ylab, fontsize=6.5)
-    bx.tick_params(axis="y", length=0, pad=9)
-    bx.yaxis.set_label_position("left")
-    bx.grid(axis="y", visible=False)
-    bx.set_xlim(0.30, 1.0)
-    bx.set_xlabel("agreement with the human grade (QWK)")
-    bx.set_title("(b) against the best configuration\nof any model", loc="left", fontsize=7)
-    h = [Patch(color=OUTCOME["guide"], label="the guide agreed better"),
-         Patch(color=OUTCOME["same"], label="no significant difference"),
-         Patch(facecolor=OUTCOME["alt"], edgecolor="0.6", lw=0.4, label="the alternative agreed better")]
-    h += [plt.Line2D([], [], marker="o", ls="", color=MCOL[m], mec="k", mew=0.4, label=f"guide, {MNAME[m]}")
-          for m in GUIDE_MODELS]
-    h += [plt.Line2D([], [], color="k", lw=1.1, label="best configuration"),
-          Patch(color="#ececec", label="range of all configurations")]
-    if band:
-        h.append(Patch(facecolor="#d9d9d9", edgecolor="0.2", hatch="////", lw=0, label=band["text"]))
-    fig.legend(handles=h, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 0.0),
-               fontsize=5.8, columnspacing=1.0, handlelength=1.4, framealpha=0.9)
-    _save(fig, name)
-
-
-def _outcome_rows(t, kinds) -> list[dict]:
-    """t: one row per comparison with kind, better / worse (the alternative significantly better / worse than the
-    guide) and cost_x."""
-    out = []
-    for k in kinds:
-        g = t[t.kind == k]
-        b, w = g.better.astype(bool), g.worse.astype(bool)
-        out.append({"kind": k, "guide": int(w.sum()), "same": int((~b & ~w).sum()), "alt": int(b.sum()),
-                    "x_lo": float(g.cost_x.min()), "x_hi": float(g.cost_x.max())})
-    return out
-
-
-def fig_guide_tests():
-    """The guide's tests on the four datasets of the study (Section VI-C): (a) Test 1, within each model
-    (guide_eval.within_model); (b) Test 2, across models, every configuration without reasoning on the answers they
-    all graded (guide_eval.field, basis B)."""
+def fig_guide_refs():
+    """Section VI since Pedro's review of 2026-11-06 (it replaced the tests' and the validation's figures); redrawn the
+    same day with absolute values (Pedro: "this is the baseline's result, this is the guide's"). For each model and
+    answer set, two pairs joined by a line: the guide (black dot) against the baseline configuration (strict prompt,
+    reasoning off; open circle) and the guide against reasoning on (triangle), each pair on the answers both graded
+    (with reasoning on, the sampled answers, so the guide's two dots differ where reasoning was sampled). (a) QWK, with no
+    significance marks (Pedro, 2026-11-06: noise; the CIs are in the supplement); (b) within-answer SD;
+    (c) euros per 1000 grades, log scale. Tests on top, validation below. Values from guide_eval.references."""
     from experiments.analysis import guide_eval
-    d = guide_eval.rows()
-    t = guide_eval.within_model(d)
-    kinds = ["no guidance", "strict instruction", "justification", "whole exam", "criterion scoring",
-             "shared conversation", "reasoning on"]
-    f = guide_eval.field(d, "B")
-    groups = []
-    for _, _, lbl in guide_eval.SETS:
-        g = f[f.set == lbl]
-        groups.append({"label": lbl, "guide": {r.fam: r.QWK for r in g[g.guide].itertuples()},
-                       "best": g.QWK.max(), "lo": g.QWK.min(), "hi": g.QWK.max()})
-    _guide_figure(_outcome_rows(t, kinds), groups, "fig_guide_tests", COL * 0.95)
-
-
-def fig_guide_validation():
-    """The guide's validation on SAF and HARMOGEN-R, which played no part in building it (Section VI-D), drawn as the
-    tests: (a) each alternative against the guide within each model; (b) the guide with each model against the best
-    configuration without reasoning; the hatched band is each HARMOGEN-R instructor's agreement with the mean of the other three.
-    Values from experiments/analysis/verification."""
-    from experiments.analysis import verification
-    t = verification.contrasts(verification.load())
-    kinds = ["no guidance", "strict instruction", "criterion scoring", "reasoning on"]
-    a = t[t.kind != "guide"]
-    groups = []
-    for _, _, lbl in verification.SETS:
-        g = t[(t.set == lbl) & (t.kind != "reasoning on")]
-        groups.append({"label": lbl.split(" (")[0], "guide": {r.model: r.QWK for r in g[g.kind == "guide"].itertuples()},
-                       "best": g.QWK.max(), "lo": g.QWK.min(), "hi": g.QWK.max()})
-    ins = verification.instructors()
-    band = {"label": "HARMOGEN-R", "lo": ins["loo_min"], "hi": ins["loo_max"],
-            "text": "each instructor against the other three"}
-    with plt.rc_context({"hatch.linewidth": 0.8}):     # a hatch that still shows once the pgf is in the paper
-        _guide_figure(_outcome_rows(a, kinds), groups, "fig_guide_validation", COL * 0.66, band)
+    r = guide_eval.references()
+    parts = [("tests", "Tests", ["Mohler", "SemEval", "RIAYN", "PT-CS code", "PT-CS short"]),
+             ("validation", "Validation", ["SAF", "HARMOGEN-R"])]
+    rows_, heads, groups, y = [], [], [], 0.0      # model rows; part headers; (first y, last y, dataset)
+    for part, title, sets in parts:
+        heads.append((y, title)); y -= 1.25
+        for st in sets:
+            first = y
+            for m in GUIDE_MODELS:
+                g = r[(r.part == part) & (r.set == st) & (r.model == m)]
+                if len(g):
+                    rows_.append((y, MNAME[m], g)); y -= 1.0
+            groups.append((first, y + 1.0, st)); y -= 0.35
+        y -= 0.3
+    pitch = 0.104
+    H = pitch * (-y) + 0.95
+    fig = plt.figure(figsize=(WIDE, H))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.35, 0.9, 0.9], wspace=0.06, left=0.262, right=0.985,
+                          top=1 - 0.28 / H, bottom=0.66 / H)
+    ax, sx, cx = (fig.add_subplot(gs[k]) for k in range(3))
+    off = {"baseline": 0.22, "reasoning on": -0.22}
+    gkw = dict(marker="o", mfc="k", mec="k", mew=0.6, ms=3.0, ls="", zorder=4)
+    for yy, lab, g in rows_:
+        for rr in g.itertuples():
+            st, yo = REF_STYLE[rr.ref], yy + off[rr.ref]
+            kw = dict(marker=st["marker"], mfc=st["mfc"], mec=st["mec"], mew=0.6, ms=3.4, ls="", zorder=3)
+            for a, xr, xg in ((ax, rr.q_ref, rr.q_guide), (sx, rr.sd_ref, rr.sd_guide),
+                              (cx, rr.eur_ref, rr.eur_guide)):
+                a.plot([xg, xr], [yo, yo], color="0.65", lw=0.8, zorder=2)
+                a.plot(xg, yo, **gkw)
+                a.plot(xr, yo, **kw)
+    for a in (ax, sx, cx):
+        a.set_ylim(y + 0.55, 0.75)
+        a.grid(axis="y", visible=False)
+        a.tick_params(axis="y", length=0)
+        a.set_yticks([q[0] for q in rows_])
+        for first, last, st in groups[1:]:
+            if first not in [h[0] - 1.25 for h in heads]:
+                a.axhline(first + 0.67, color="0.8", lw=0.4, zorder=0)
+        for hy, title in heads[1:]:
+            a.axhline(hy + 0.55, color="0.35", lw=0.6, zorder=0)
+    ax.set_yticklabels([q[1] for q in rows_], fontsize=6.0)
+    plt.setp(sx.get_yticklabels(), visible=False); plt.setp(cx.get_yticklabels(), visible=False)
+    tr = matplotlib.transforms.blended_transform_factory(fig.transFigure, ax.transData)
+    for first, last, st in groups:                         # the dataset, left of its models
+        fig.text(0.012, (first + last) / 2, st, transform=tr, ha="left", va="center", fontsize=6.4, fontweight="bold")
+    for hy, title in heads:                                # the part, across the label column
+        fig.text(0.012, hy - 0.15, title, transform=tr, ha="left", va="center", fontsize=7, fontweight="bold")
+    ax.set_xlim(0.42, 0.98)
+    ax.xaxis.set_major_locator(matplotlib.ticker.FixedLocator([0.5, 0.6, 0.7, 0.8, 0.9]))
+    ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:.1f}"))
+    ax.set_xlabel("QWK with the human grades")
+    ax.set_title("(a) agreement: right is better", loc="left", fontsize=7)
+    sx.set_xlim(-0.004, 0.102)
+    sx.xaxis.set_major_locator(matplotlib.ticker.FixedLocator([0, 0.03, 0.06, 0.09]))
+    sx.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: "0" if abs(v) < 1e-9 else f"{v:.2f}"))
+    sx.set_xlabel("SD of the repeated grades")
+    sx.set_title("(b) consistency: left is better", loc="left", fontsize=7)
+    cx.set_xscale("log"); cx.set_xlim(0.007, 140)
+    cx.xaxis.set_major_locator(matplotlib.ticker.FixedLocator([0.01, 0.1, 1, 10, 100]))
+    cx.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    cx.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    cx.set_xlabel("EUR per 1000 grades (log)")
+    cx.set_title("(c) cost: left is cheaper", loc="left", fontsize=7)
+    h = [plt.Line2D([], [], **{**gkw, "ms": 4}, label="the guide")]
+    h += [plt.Line2D([], [], marker=st["marker"], mfc=st["mfc"], mec=st["mec"], mew=0.6, ms=4, ls="", label=st["label"])
+          for st in REF_STYLE.values()]
+    fig.legend(handles=h, loc="lower center", ncol=3, bbox_to_anchor=(0.6, 0.0), framealpha=0.9, handlelength=1.2,
+               columnspacing=1.6)
+    _save(fig, "fig_guide_refs")
 
 
 def fig_rq6_transfer(full):
@@ -837,8 +820,7 @@ def main() -> int:
     rc = rq1_cells(_full, _INTERV).rename(columns={"prem_x": "premium_x"})
     fig_rq1(rc); fig_rq2_levels(_full); fig_rq3_levels(_full); fig_rq4_cost(_full); fig5(df)
     fig_rq6_instruction()
-    fig_guide_tests()
-    fig_guide_validation()
+    fig_guide_refs()
     print("done.")
     return 0
 

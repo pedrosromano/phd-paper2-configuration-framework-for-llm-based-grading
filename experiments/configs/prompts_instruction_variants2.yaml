@@ -1,0 +1,22 @@
+# Round 2 of the zero-collapse pilot (2026-11-05; fixed in CLAUDE.md before any call, and declared there as designed
+# after seeing round 1 on the same development data). One variant: the teacher rubric block of round 1 (the best
+# ordering) with the credit-first output block of round 1 (the fewest zeros). Same layering as round 1: its blocks
+# replace the same-named blocks of the partial-credit instruction. Never edit this file after runs exist.
+
+partial_credit_teacher_credit_first:
+  grounding:
+    rubric: |
+      Use the following question-specific rubric to award marks, as a teacher grades a written exam. Treat each rubric
+      item on its own: give its marks when the answer achieves what the item asks for, even with a different approach,
+      different names, or code that would not compile, and give part of its marks when the answer achieves part of it.
+      Mistakes in one part do not cancel the marks earned in another. An answer with the right idea but incomplete or
+      faulty code still earns a substantial part of the marks. Apply any deductions the rubric specifies and do not
+      invent criteria. Give 0 only to an answer that is blank, irrelevant, or wrong throughout.
+      RUBRIC:
+      $grounding_body
+  output:
+    question_by_question__holistic: |
+      First state, in at most two short sentences, what the answer does correctly and which rubric items it earns
+      marks for; then give the score. If you name anything that earns marks, the score must be above 0. Return ONLY a
+      single JSON object and nothing else (no markdown, no commentary), with the statement first:
+      {"credit": "<at most two sentences>", "score": <number between 0 and $max>}

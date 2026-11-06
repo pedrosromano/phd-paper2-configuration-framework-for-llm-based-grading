@@ -87,9 +87,16 @@ def _counts(df, interv) -> pd.DataFrame:
         rows.append({"result": lbl, "of": len(g), "sig": int(sig.sum()), "holm": int((g.sig_holm & sig).sum())})
     t = guide_eval.within_model(guide_eval.rows())
     off = t[t.kind != "reasoning on"]
-    rows.append({"result": "Test 1, guide significantly better", "of": len(off), "sig": int(off.worse.sum()), "holm": None})
-    rows.append({"result": "Test 1, alternative significantly better", "of": len(off), "sig": int(off.better.sum()),
+    rows.append({"result": "Every other configuration of the same model, guide significantly better", "of": len(off), "sig": int(off.worse.sum()), "holm": None})
+    rows.append({"result": "Every other configuration of the same model, alternative significantly better", "of": len(off), "sig": int(off.better.sum()),
                  "holm": None})
+    # the paper's comparison of the guide since 2026-11-06: against the baseline and against reasoning on (tests)
+    for kind, ref in [("strict instruction", "the baseline"), ("reasoning on", "reasoning on")]:
+        g = t[t.kind == kind]
+        rows.append({"result": f"The guide against {ref}, guide significantly better", "of": len(g),
+                     "sig": int(g.worse.sum()), "holm": None})
+        rows.append({"result": f"The guide against {ref}, {ref} significantly better", "of": len(g),
+                     "sig": int(g.better.sum()), "holm": None})
     return pd.DataFrame(rows)
 
 
@@ -138,7 +145,7 @@ def single_run() -> pd.DataFrame:
                     continue
                 _, sA = mpt._qwk_items(A)
                 kind = guide_eval._kind(A.iloc[0])
-                out.append({"part": "Test 1", "model": fam, "set": lbl, "kind": kind,
+                out.append({"part": "Tests", "model": fam, "set": lbl, "kind": kind,
                             "guide_k": mpt._qwk_items(G[G.item_id.isin(sA.index)])[0], "guide_1": r[0],
                             "d_k": mpt._point(sG, sA), "d_1": r[1]})
     v = verification.load()

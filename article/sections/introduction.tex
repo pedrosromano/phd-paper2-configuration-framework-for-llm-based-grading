@@ -10,50 +10,48 @@
 \label{sec:intro}
 
 \PARstart{L}{arge} language models (LLMs) are moving from demonstrations to deployed graders in computer science
-(CS) courses. The promise for learning analytics is well documented: rubric-conditioned LLMs approach
-human raters on well-specified short-answer tasks, and they return criterion-level feedback at a scale
-no teaching team can match~\cite{sessler_canai_2025,henkel_roars_2025}. The risk is equally well
-documented. Grading errors distort how students revise their work~\cite{li_am_2023}, repeated scoring
-of the same answer is unstable~\cite{pack_large_2024,moazzez_assessing_2024}, and agreement with
-teachers varies sharply between models and prompts~\cite{tate_can_2024}. An instructor who adopts an
+(CS) courses. Rubric-conditioned LLMs approach human raters on well-specified short-answer tasks and return
+criterion-level feedback at a scale no teaching team can match~\cite{sessler_canai_2025,henkel_roars_2025}, but
+grading errors distort how students revise their work~\cite{li_am_2023}, repeated scoring of the same answer is
+unstable~\cite{pack_large_2024,moazzez_assessing_2024}, and agreement with teachers varies sharply between models
+and prompts~\cite{tate_can_2024}. An instructor who adopts an
 LLM grader therefore makes several decisions at once: whether the model should reason before scoring,
 what evaluation guidance to place in the prompt and how the model should apply it, whether to grade a
 whole exam in one call or question by question, whether to score a rubric criterion by criterion or
 holistically, as one overall grade, and which model to run or pay for.
 
-The literature answers these questions only in fragments. Reasoning is the clearest example. A
-reasoning model writes out its thinking before it answers, and this improves general LLM-as-a-judge
-accuracy~\cite{jayarao_explicit_2025}, but the effect depends on the task and the
-architecture~\cite{larionov_deepseek_2025}. Long reasoning traces also carry verbose, redundant
-computation~\cite{sui_stop_2025}. In essay scoring, two reasoning models agreed less with expert raters,
-and less consistently, than a model without reasoning~\cite{yoshida_reasoning_2025}, but that comparison
-sets different models against each other, so it cannot separate reasoning from the model. Models have been
-compared as graders of programming
-assignments~\cite{jukiewicz_comparison_2026} and of assignments in a bioinformatics
-course~\cite{policar_automated_2025}, and evaluation guidance has been studied for code
-grading~\cite{pathak_rubric_2025}, but, to our knowledge, no study compares guidance, the grading
-instruction, grading scope, rubric decomposition, and conversation state under one protocol. What is
-missing is an empirical answer to the instructor's question: for a given CS assessment task, which
-configuration should be used, and what does it cost?
+The literature answers these questions only in fragments. Reasoning is the clearest example. A reasoning model
+writes out its thinking before it answers, which improves the accuracy of LLMs used as judges of other models'
+outputs (LLM-as-a-judge)~\cite{jayarao_explicit_2025}, but the effect depends on the task and the
+architecture~\cite{larionov_deepseek_2025}, and the written-out thinking carries verbose, redundant
+computation~\cite{sui_stop_2025}. In essay scoring, two reasoning models agreed less with expert raters, and less
+consistently, than a model without reasoning~\cite{yoshida_reasoning_2025}, but that comparison sets different
+models against each other. Models have been compared as graders of programming
+assignments~\cite{jukiewicz_comparison_2026} and of bioinformatics assignments~\cite{policar_automated_2025},
+and evaluation guidance has been studied for code grading~\cite{pathak_rubric_2025}, but, to our knowledge, no
+study compares guidance, the prompt that tells the model how to apply it, grading scope, rubric decomposition,
+and conversation state under one protocol. What is missing is an empirical answer to the instructor's question:
+for a given CS assessment task, which configuration should be used, and what does it cost?
 
 This paper studies these configuration choices under one protocol and turns the results into a
 configuration guide. We vary reasoning (on or off), evaluation guidance (none versus a rubric or a
 reference answer), grading scope (a whole exam in one call versus one question per call), rubric
 decomposition (one holistic score versus a score per criterion), conversation state (a clean
 conversation per answer versus a shared history), and the model. In the first results, some models
-scored many partially correct code answers as zero, which we call zero-collapse, so a follow-up
-experiment varies the grading instruction: apply the guidance strictly, or award partial credit
-explicitly. Five models take part, three open-weight (Qwen3.5-35B-A3B, DeepSeek-V4-Flash, GLM-5.1) and two
-closed (GPT-5.1, Claude Sonnet 4.6). The first four are graded with reasoning both off and on within the
-same model, which separates the effect of reasoning from that of the model.
-The study runs on four datasets in two domains. Three are public, so the results can
-be checked beyond our own students: the Mohler corpus of graded computer-science short
-answers~\cite{mohler_text_2009,mohler_learning_2011}, the SemEval-2013 Task~7 corpus of graded science
-short answers~\cite{dzikovska_semeval_2013}, and the Rubric Is All You Need corpus of rubric-graded
-Java code~\cite{pathak_rubric_2025}. The fourth, PT-CS, comes from a course at our institution: teacher-graded
-Java code and short answers in Portuguese, from complete exams. Because it keeps each student's whole
-exam, it is the only one of the four on which grading a whole exam in one call and the conversation
-state can be studied.
+scored many partially correct code answers as zero, which we call zero-collapse. To address it, a follow-up
+experiment tests whether the prompt alone can prevent it: first by asking the model for partial credit instead
+of strict grading, and then by prompt engineering, writing prompts aimed at the reasons the models gave for
+their zeros. Five models take part in our study: three open-weight models (Qwen3.5-35B-A3B, DeepSeek-V4-Flash,
+GLM-5.1) and two closed ones (GPT-5.1, Claude Sonnet 4.6); the first four are graded with
+reasoning both off and on within the same model, which separates the effect of reasoning from that of the model.
+The study runs on four datasets in two domains. Three are public: the Mohler corpus of computer-science short
+answers~\cite{mohler_text_2009,mohler_learning_2011}, the SemEval-2013 Task~7 corpus of science short
+answers~\cite{dzikovska_semeval_2013}, and the Rubric Is All You Need (RIAYN) corpus of rubric-graded Java
+code~\cite{pathak_rubric_2025}. The fourth, PT-CS, holds teacher-graded Java code and short answers in Portuguese
+from complete exams of a course at our institution, and is the only one on which grading a whole exam in one
+call and the conversation state can be studied. Two further public datasets are used only to validate the
+configuration guide: SAF~\cite{filighera_saf_2022}, with short answers on communication networks, and
+HARMOGEN-R~\cite{mendonca_harmogenr_2026}, with C++ code in Portuguese.
 
 Five research questions structure the study:
 \begin{itemize}
@@ -64,36 +62,31 @@ Five research questions structure the study:
   \item \textbf{RQ3.} How do grading scope (whole exam versus question by question) and rubric
         decomposition (holistic versus criterion by criterion) affect agreement with the final
         grade?
-  \item \textbf{RQ4.} How do current-generation models compare as graders, and what is the
+  \item \textbf{RQ4.} How do models available in mid-2026 compare as graders, and what is the
         cost-quality trade-off between open-weight and closed models?
-  \item \textbf{RQ5.} Does conversation state (clean versus shared history) affect consistency and
-        fairness?
+  \item \textbf{RQ5.} Does conversation state (clean versus shared history) affect the grades, and does the
+        order in which answers are graded change them?
 \end{itemize}
-These five questions were set before the experiments. The follow-up experiment is reported apart from
-them because it was added only once the zero-collapse appeared: it tests whether an explicit request for
-partial credit changes agreement and cost, and whether it repairs the zero-collapse.
+These five questions were set before the experiments. The follow-up experiment was added once the
+zero-collapse appeared, so it is reported after the previous experiments. It asks whether a request for partial credit changes
+agreement and cost, why the models score partially correct answers as zero, and whether a prompt aimed
+at that cause removes the zero-collapse without reasoning.
 
-From these comparisons we build a configuration guide: one recommended configuration for LLM grading in
-CS, which leaves the choice of model open. Five of its six settings are those of the baseline
-configuration, which the comparisons confirm one at a time; the sixth, the request for partial credit,
-comes from the follow-up experiment. We then evaluate the guide in two ways. The \emph{tests} use the four
-datasets the guide was built from: with each of the five models, they compare the guide with every other
-configuration of the same model and with the best configuration of any model, on agreement, consistency,
-and cost. The \emph{validation} uses two further public datasets, one of short answers and one of code, that played
-no part in building the guide, and checks it against a criterion fixed before they were graded.
+From these comparisons we build a configuration guide: one recommended configuration for LLM grading in CS,
+which leaves the choice of model open. The \emph{tests} compare
+the guide, for each model, with the baseline configuration, from which every comparison starts, and with the same
+baseline with reasoning on, on the four datasets it was built from. The \emph{validation} repeats these comparisons on SAF and HARMOGEN-R, with a
+criterion fixed before they were graded.
 
-The main contribution of this paper is the configuration guide for LLM grading in CS: a single
-recommended configuration that leaves the choice of model open, tested on five models against the other
-configurations they graded and validated on two datasets that played no part in building it. Two further contributions
-support it. The first is the effect of each configuration choice for grading in CS (reasoning, evaluation
-guidance, the grading instruction, grading scope, rubric decomposition, and conversation state), isolated
-within the same model and measured jointly on agreement, consistency, and cost. The second is evidence
-from 97 complete computer-science exams in Portuguese, with 379 manually graded answers, which repeats every
+The main contribution of this paper is the configuration guide, tested on five models and validated on two
+datasets that played no part in building it. Three further contributions support it. The first is the effect of each configuration choice for grading in CS (reasoning,
+evaluation guidance, the prompt, grading scope, rubric decomposition, and conversation state),
+isolated within the same model and measured jointly on agreement, consistency, and cost. The second is a
+diagnosis of the zero-collapse, from the justifications the models wrote for their zeros, and a prompt for code,
+developed by prompt engineering and aimed at its cause. The third is evidence from 97 complete computer-science exams in Portuguese, with 379 manually graded answers, which repeats every
 comparison outside the public corpora and alone supports the comparisons that need complete exams.
 
-The paper is organised as follows. Section~\ref{sec:related} reviews the related work.
-Section~\ref{sec:method} describes the configuration choices, datasets, models, grading harness, and
-statistics. Section~\ref{sec:results} reports the results by research question and the follow-up
-experiment and summarises them, and Section~\ref{sec:discussion} discusses them. Section~\ref{sec:framework} presents, tests,
-and validates the configuration guide, Section~\ref{sec:threats} states the threats to validity, and
-Section~\ref{sec:conclusion} concludes.
+Section~\ref{sec:related} reviews the related work and Section~\ref{sec:method} describes the method.
+Section~\ref{sec:results} reports the results, which Section~\ref{sec:discussion} discusses.
+Section~\ref{sec:framework} presents, tests, and validates the guide, Section~\ref{sec:threats} states the threats
+to validity, and Section~\ref{sec:conclusion} concludes.

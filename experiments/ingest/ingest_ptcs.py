@@ -179,15 +179,32 @@ def report(out: pd.DataFrame, meta: dict, hve: dict) -> None:
         print(f"     A: {r.student_answer[:90]!r}")
 
 
+def keep_manual_grades_only(out: pd.DataFrame) -> pd.DataFrame:
+    """Only answers whose final grade the teachers set by hand have a grade (Pedro, 2026-11-05).
+
+    Every other answer keeps its text but has no grade (gold_score and gold_norm empty, never 0):
+    those grades were not given by the teachers, so they are not data. The manual answers are the
+    ones flagged in _ptcs_strata.parquet.
+    """
+    strata = pd.read_parquet(REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
+    manual = set(strata.loc[strata["intervened"], "item_id"])
+    gone = ~out["item_id"].isin(manual)
+    out = out.copy()
+    out["gold_score"] = out["gold_score"].astype("float64")
+    out.loc[gone, ["gold_score", "gold_norm"]] = None
+    return out
+
+
 def main() -> int:
     df_raw, parts = fetch()
     out, meta = build(df_raw)
     out = schema.validate(out, dataset="ptcs")
     hve = human_validation_evidence(out, df_raw, parts)
+    out = keep_manual_grades_only(out)
     schema.write_parquet(out, OUT)
     report(out, meta, hve)
     print(f"\nWrote {OUT.relative_to(REPO_ROOT)}")
-    print("NOTE: grades are a two-teacher CONSENSUS (AI-seeded, human-validated); "
+    print("NOTE: only the manually graded answers have a grade (two-teacher consensus); "
           "no per-teacher scores exist -> no inter-rater kappa / human ceiling.")
     return 0
 

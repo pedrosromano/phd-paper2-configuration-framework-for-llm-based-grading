@@ -337,6 +337,281 @@ arms:
     k: 5
     item_filter: ptcs_validated
 
+  # Pilot against the zero-collapse (2026-11-05; protocol and decision rule fixed in CLAUDE.md before any call): the
+  # rubric block of prompts_instruction_substance.yaml against the current guide's partial-credit instruction, re-run
+  # in the same batch as the control. Own store; HARMOGEN-R and SAF stay held out.
+  - name: i6_substance_pilot
+    store: instruction_substance.jsonl
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: [partial_credit, partial_credit_substance]
+    dataset: [ptcs, riayn]
+    domain: code
+    k: 5
+    item_filter: ptcs_validated
+
+  # Four further variants of the same pilot (2026-11-05; fixed in CLAUDE.md before any call). Their control is the
+  # same-batch partial-credit run of i6_substance_pilot (same store).
+  - name: i7_variants_pilot
+    store: instruction_substance.jsonl
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: [partial_credit_items, partial_credit_credit_first, partial_credit_subtractive, partial_credit_teacher]
+    dataset: [ptcs, riayn]
+    domain: code
+    k: 5
+    item_filter: ptcs_validated
+
+  # The same cells as i7_variants_pilot, split by model only to run the two models in parallel processes
+  # (the store and the spend journal take a file lock per line). Identical configs, identical hashes.
+  - name: i7_variants_pilot_qwen
+    store: instruction_substance.jsonl
+    model: qwen3.5
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: [partial_credit_items, partial_credit_credit_first, partial_credit_subtractive, partial_credit_teacher]
+    dataset: [ptcs, riayn]
+    domain: code
+    k: 5
+    item_filter: ptcs_validated
+  - name: i7_variants_pilot_deepseek
+    store: instruction_substance.jsonl
+    model: deepseek-v4-flash
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: [partial_credit_items, partial_credit_credit_first, partial_credit_subtractive, partial_credit_teacher]
+    dataset: [ptcs, riayn]
+    domain: code
+    k: 5
+    item_filter: ptcs_validated
+
+  # Round 2 (2026-11-05; fixed in CLAUDE.md before any call): the teacher rubric block with the credit-first output.
+  - name: i8_variants2_pilot
+    store: instruction_substance.jsonl
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: [ptcs, riayn]
+    domain: code
+    k: 5
+    item_filter: ptcs_validated
+
+  # Held-out check of the round-2 instruction on HARMOGEN-R (2026-11-05; criterion fixed in CLAUDE.md before any call):
+  # the variant against the guide's partial-credit instruction re-run in the same batch. Own store.
+  - name: v9_harm_variant_check
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: off
+    context_level: with_guidance
+    instruction: [partial_credit, partial_credit_teacher_credit_first]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: harmogenr
+    domain: code
+    k: 3
+
+  # v9 split by model only, to run the models in separate processes (identical configs and hashes).
+  - name: v9_harm_variant_check_qwen35
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: qwen3.5
+    reasoning: off
+    context_level: with_guidance
+    instruction: [partial_credit, partial_credit_teacher_credit_first]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: harmogenr
+    domain: code
+    k: 3
+  - name: v9_harm_variant_check_deepseek
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: deepseek-v4-flash
+    reasoning: off
+    context_level: with_guidance
+    instruction: [partial_credit, partial_credit_teacher_credit_first]
+    scope: question_by_question
+    decomposition: holistic
+    dataset: harmogenr
+    domain: code
+    k: 3
+
+  # Step 2 (2026-11-05; protocol and adoption rule fixed in CLAUDE.md before any call): the new instruction as the
+  # guide's wording for rubric items, on every rubric set, for every model; HARMOGEN-R alternatives of the new guide.
+  - name: s2_guide_glm
+    store: instruction_substance.jsonl
+    model: glm-5.1-or
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: [riayn, ptcs]
+    domain: [code, short_answer]
+    k: 5
+    item_filter: ptcs_validated
+  - name: s2_guide_gpt
+    store: instruction_substance.jsonl
+    model: gpt-5.1
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: [riayn, ptcs]
+    domain: [code, short_answer]
+    k: 5
+    item_filter: ptcs_validated
+  - name: s2_guide_claude
+    store: instruction_substance.jsonl
+    model: claude-sonnet-4-6
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: [riayn, ptcs]
+    domain: [code, short_answer]
+    k: 5
+    item_filter: ptcs_validated
+  - name: s2_guide_open_short
+    store: instruction_substance.jsonl
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: ptcs
+    domain: short_answer
+    k: 5
+    item_filter: ptcs_validated
+  - name: s2_harm_guide_glm
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: glm-5.1-or
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: harmogenr
+    domain: code
+    k: 3
+  - name: s2_harm_guide_gpt
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: gpt-5.1
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: harmogenr
+    domain: code
+    k: 3
+  - name: s2_harm_guide_claude
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: claude-sonnet-4-6
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: harmogenr
+    domain: code
+    k: 3
+  - name: s2_harm_criterion_open
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: criterion
+    instruction: partial_credit_teacher_credit_first
+    dataset: harmogenr
+    domain: code
+    k: 3
+  - name: s2_harm_criterion_glm
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: glm-5.1-or
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: criterion
+    instruction: partial_credit_teacher_credit_first
+    dataset: harmogenr
+    domain: code
+    k: 3
+  - name: s2_harm_criterion_gpt
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: gpt-5.1
+    reasoning: off
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: criterion
+    instruction: partial_credit_teacher_credit_first
+    dataset: harmogenr
+    domain: code
+    k: 3
+  - name: s2_harm_reasoning_open
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: [qwen3.5, deepseek-v4-flash]
+    reasoning: on
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: harmogenr
+    domain: code
+    k: 3
+    max_tokens: 32768
+  - name: s2_harm_reasoning_glm
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: glm-5.1-or
+    reasoning: on
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: harmogenr
+    domain: code
+    k: 3
+    max_tokens: 32768
+  - name: s2_harm_reasoning_gpt
+    store: verification_variant.jsonl
+    corpus: corpus_verification.parquet
+    model: gpt-5.1
+    reasoning: on
+    context_level: with_guidance
+    scope: question_by_question
+    decomposition: holistic
+    instruction: partial_credit_teacher_credit_first
+    dataset: harmogenr
+    domain: code
+    k: 3
+    max_tokens: 32768
+
   - name: i5_glm_riayn_strict
     store: instruction.jsonl
     model: glm-5.1-or

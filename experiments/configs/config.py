@@ -61,8 +61,19 @@ CONVERSATION_STATES = {"none", "clean", "shared"}
 # guidance. "standard" = the original templates (prompts.yaml); "partial_credit" = explicit partial
 # credit instead of "grade strictly"; "partial_credit_justified" = partial credit plus a short
 # justification written before the score. Variant blocks live in prompts_instruction.yaml.
-INSTRUCTIONS = {"standard", "partial_credit", "partial_credit_justified"}
+INSTRUCTION_VARIANTS = {"partial_credit_items", "partial_credit_credit_first", "partial_credit_subtractive",
+                        "partial_credit_teacher"}
+INSTRUCTION_VARIANTS2 = {"partial_credit_teacher_credit_first"}       # round 2 of the same pilot
+INSTRUCTIONS = ({"standard", "partial_credit", "partial_credit_justified", "partial_credit_substance"}
+                | INSTRUCTION_VARIANTS | INSTRUCTION_VARIANTS2)
 PROMPTS_INSTRUCTION = REPO_ROOT / "experiments" / "configs" / "prompts_instruction.yaml"
+# Pilot against the zero-collapse (2026-11-05): "partial_credit_substance" = partial credit with a rubric block that
+# credits each item in substance (another approach, other names, code that would not compile) and in part. Its own
+# file, so the two existing prompt files, and every cell hashed on them, stay untouched.
+PROMPTS_INSTRUCTION_SUBSTANCE = REPO_ROOT / "experiments" / "configs" / "prompts_instruction_substance.yaml"
+# Four more variants of the same pilot (2026-11-05), one block set each, in their own file.
+PROMPTS_INSTRUCTION_VARIANTS = REPO_ROOT / "experiments" / "configs" / "prompts_instruction_variants.yaml"
+PROMPTS_INSTRUCTION_VARIANTS2 = REPO_ROOT / "experiments" / "configs" / "prompts_instruction_variants2.yaml"
 
 # Cell-defining fields read straight off the Config. config_hash ALSO folds in the
 # resolved model_id+provider and the prompt-template version (see config_hash) so that
@@ -103,6 +114,16 @@ def instruction_prompts_version() -> str:
     """Short hash of prompts_instruction.yaml; enters config_hash only for non-standard instructions,
     so the original cells (and their cache) are untouched by edits to the variant templates."""
     return hashlib.sha1(PROMPTS_INSTRUCTION.read_bytes()).hexdigest()[:12]
+
+
+def substance_prompts_version() -> str:
+    """Short hash of prompts_instruction_substance.yaml; enters config_hash only for that instruction."""
+    return hashlib.sha1(PROMPTS_INSTRUCTION_SUBSTANCE.read_bytes()).hexdigest()[:12]
+
+
+def variants_prompts_version() -> str:
+    """Short hash of prompts_instruction_variants.yaml; enters config_hash only for those variants."""
+    return hashlib.sha1(PROMPTS_INSTRUCTION_VARIANTS.read_bytes()).hexdigest()[:12]
 
 
 def resolve_model_id(model: str) -> str:
@@ -178,7 +199,8 @@ class Config:
             raise ConfigError(f"model {self.model!r} has no reasoning toggle for reasoning=on")
         if self.instruction not in INSTRUCTIONS:
             raise ConfigError(f"bad instruction {self.instruction!r}")
-        criterion_ok = self.dataset in VERIFICATION_DATASETS and self.instruction == "partial_credit"
+        criterion_ok = self.dataset in VERIFICATION_DATASETS and self.instruction in (
+            "partial_credit", "partial_credit_teacher_credit_first")   # step 2 (2026-11-05): criterion alternative of the new guide
         if self.instruction != "standard" and (
                 self.context_level != "with_guidance" or self.scope != "question_by_question"
                 or (self.decomposition != "holistic" and not criterion_ok) or self.conversation_state != "none"):
@@ -200,6 +222,13 @@ class Config:
         if self.instruction != "standard":           # standard cells keep their original hash (cache-safe)
             payload["instruction"] = self.instruction
             payload["instruction_template_version"] = instruction_prompts_version()
+            if self.instruction == "partial_credit_substance":   # its rubric block lives in its own file
+                payload["substance_template_version"] = substance_prompts_version()
+            if self.instruction in INSTRUCTION_VARIANTS:          # so do the four further variants
+                payload["variants_template_version"] = variants_prompts_version()
+            if self.instruction in INSTRUCTION_VARIANTS2:         # and the round-2 variant
+                payload["variants2_template_version"] = hashlib.sha1(
+                    PROMPTS_INSTRUCTION_VARIANTS2.read_bytes()).hexdigest()[:12]
         blob = json.dumps(payload, sort_keys=True, separators=(",", ":"))
         return hashlib.sha1(blob.encode("utf-8")).hexdigest()[:16]
 

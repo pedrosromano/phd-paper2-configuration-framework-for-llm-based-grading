@@ -1,7 +1,10 @@
-"""The configuration guide and its tests (Section VI). Engine for the tests' figure, phase6.fig_guide_tests: panel
-(a) is Test 1 and panel (b) Test 2 (the figure replaced the Test 1 and Test 2 figures on 2026-10-19, Pedro's fourth
-review). "Validation" is kept for the two datasets that played no part in building the guide (verification.py).
-Table 4, the guide itself, is written by make_phase5_tables.write_guide_table.
+"""The configuration guide and its tests (Section VI). Since Pedro's review of 2026-11-06 the paper judges the guide
+model by model against the baseline (strict prompt, reasoning off) and against reasoning on, in agreement,
+consistency and cost: references() -> phase6.fig_guide_refs (Fig. 10), the supplementary table and the Section VI
+prose, on the study's data and on the validation datasets (verification.py). Tests 1 and 2 below are now only in the
+supplementary material, summarised in one sentence of the paper. "Validation" is kept for the two datasets that
+played no part in building the guide. Table 3, the summary of the results, is written by
+make_phase5_tables.write_guide_table.
 
 The guide is a configuration, not a model (Pedro's review 2026-10-16, second pass): the rubric or the reference
 answer, an explicit request for partial credit, reasoning off, one question per call, one holistic score, and a
@@ -45,14 +48,23 @@ MNAME = {"qwen3.5": "Qwen3.5", "deepseek-v4-flash": "DeepSeek-V4-Flash", "glm-5.
 FAMILY = {"glm-5.1-or": "glm-5.1"}                    # GLM-5.1 served by Z.ai through OpenRouter is the same model
 PRICE_KEY = {"glm-5.1": "glm-5.1-or"}                 # Test 1 prices both GLM-5.1 sides at the guide's provider
 GUIDE = {"reasoning": "off", "instruction": "partial_credit", "guid": "guid", "sc": "qbq", "dec": "hol", "conv": "clean"}
+# The guide's prompt depends on the answer type (Pedro, 2026-11-05, after the step-2 runs): on code the code prompt of
+# the prompt engineering against the zero-collapse (teacher anchor + credit statement first,
+# prompts_instruction_variants2.yaml); on short answers the partial-credit instruction. The candidate prompts tried while
+# developing it are reported in the follow-up, not here. (Internal kind keys keep the old "wording" names.)
+CODE_WORDING = "partial_credit_teacher_credit_first"
+DEV_WORDINGS = {"partial_credit_substance", "partial_credit_items", "partial_credit_credit_first",
+                "partial_credit_subtractive", "partial_credit_teacher"}
 # One block per setting of the guide and the alternatives tested against it (kind keys from _kind). Table 4 (the
 # guide) is written by make_phase5_tables.
 TABLE = [("Evaluation guidance", "The rubric or the reference answer", [("no guidance", "None")]),
-         ("Grading instruction", "Ask for partial credit", [("strict instruction", "Strict"),
-                                                            ("justification", "Partial credit, with a justification first")]),
+         ("Prompt", "Partial credit (on code, the code prompt)",
+          [("strict instruction", "Strict prompt"), ("earlier wording", "Partial-credit prompt on code"),
+           ("code wording on short answers", "Code prompt on short answers"),
+           ("justification", "Partial credit, with a justification first")]),
          ("Reasoning", "Off", [("reasoning on", "On")]),
          ("Scope", "One question per call", [("whole exam", "The whole exam in one call")]),
-         ("Decomposition", "One holistic score", [("criterion scoring", "A score per criterion, summed")]),
+         ("Decomposition", "One holistic score", [("criterion scoring", "A score per criterion, then the total")]),
          ("Conversation", "A clean conversation per answer", [("shared conversation", "One conversation per exam")])]
 _INTERV = set(pd.read_parquet(phase5.REPO_ROOT / "data" / "processed" / "_ptcs_strata.parquet")
               .query("stratum=='intervened'").item_id)
@@ -76,10 +88,12 @@ def rows() -> pd.DataFrame:
     ins = ins[(ins.instruction != "standard") | (ins.model == "claude-sonnet-4-6")]   # the same-batch strict re-runs
     ins = ins[~((ins.model == "glm-5.1-or") & (ins.domain != "code"))]              # of Qwen/DeepSeek duplicate main
     ins = _norm(ins)                                                                 # cells; GLM via OpenRouter: code
+    sub = phase5.prepare(phase5._read(phase5.REPO_ROOT / "data" / "processed" / "runs" / "instruction_substance.jsonl"))
+    sub = _norm(sub[sub.instruction == CODE_WORDING])         # the same-batch controls repeat instruction-store cells
     conv = phase5.load_conversation()
     conv = _norm(conv[conv.conversation_state == "shared"], instruction="standard")
     conv["conv"] = "shared-" + conv.order_id.astype(str)
-    d = pd.concat([main, ins, conv], ignore_index=True)
+    d = pd.concat([main, ins, sub, conv], ignore_index=True)
     d = d[(d.dataset != "ptcs") | d.item_id.isin(_INTERV)]
     d["fallback"] = d["fallback"].fillna(False).astype(bool) if "fallback" in d else False
     d["fam"] = d.model.replace(FAMILY)
@@ -91,7 +105,10 @@ def rows() -> pd.DataFrame:
 def _is_guide(d: pd.DataFrame) -> pd.Series:
     m = pd.Series(True, index=d.index)
     for k, v in GUIDE.items():
-        m &= d[k] == v
+        if k == "instruction":                       # the code wording on code, partial credit on short answers
+            m &= d[k] == np.where(d.domain == "code", CODE_WORDING, v)
+        else:
+            m &= d[k] == v
     return m
 
 
@@ -108,6 +125,10 @@ def _kind(r) -> str:
         return "shared conversation"
     if r.instruction == "partial_credit_justified":
         return "justification"
+    if r.instruction == "partial_credit" and r.domain == "code":
+        return "earlier wording"
+    if r.instruction == CODE_WORDING and r.domain != "code":
+        return "code wording on short answers"
     if r.instruction == "standard":
         return "strict instruction"
     return "other"
@@ -158,12 +179,63 @@ def within_model(d: pd.DataFrame) -> pd.DataFrame:
                 Ai, Gi = A[A.item_id.isin(items)], G[G.item_id.isin(items)]
                 r.update({"model": fam, "set": lbl, "kind": _kind(A.iloc[0]),
                           "cost_x": _per_grade(Ai, price) / _per_grade(Gi, price),
-                          "sd_alt": _sd(Ai), "sd_guide": _sd(Gi)})
+                          "sd_alt": _sd(Ai), "sd_guide": _sd(Gi),
+                          "q_alt": _qwk_items(Ai)[0], "q_guide": _qwk_items(Gi)[0],
+                          "eur_alt": 1000 * _per_grade(Ai, price), "eur_guide": 1000 * _per_grade(Gi, price)})
                 out.append(r)
     t = pd.DataFrame(out)
     t["better"] = t.ci95.map(lambda c: c[0] > 0)
     t["worse"] = t.ci95.map(lambda c: c[1] < 0)
     return t
+
+
+REF = {"strict instruction": "baseline", "reasoning on": "reasoning on"}
+
+
+def references(t: pd.DataFrame | None = None, v: pd.DataFrame | None = None) -> pd.DataFrame:
+    """The guide against its two references, per model and answer set (Section VI since Pedro's review of
+    2026-11-06, which replaced Tests 1 and 2 in the paper): the baseline configuration (the strict prompt, reasoning
+    off), which differs from the guide only in the prompt, and the baseline with reasoning on. On the study's data
+    (part "tests") these are the strict and reasoning-on rows of within_model; on SAF and HARMOGEN-R (part
+    "validation") the strict and reasoning-on rows of verification.contrasts, where reasoning on was graded with the
+    partial-credit prompt. dQWK = reference minus guide on the answers both graded (95% bootstrap CI, no correction);
+    better / worse: the reference agreed significantly better / worse than the guide; sd_ref, sd_guide: mean
+    within-answer SD on those answers (own grades only); cost_x: the reference's cost per grade relative to the
+    guide's. Feeds phase6.fig_guide_refs, the supplementary table and the Section VI prose."""
+    from experiments.analysis import verification
+    if t is None:
+        t = within_model(rows())
+    a = t[t.kind.isin(REF)].copy()
+    a = a.assign(part="tests", ref=a.kind.map(REF), lo=a.ci95.map(lambda c: c[0]), hi=a.ci95.map(lambda c: c[1]),
+                 sd_ref=a.sd_alt, q_ref=a.q_alt, eur_ref=a.eur_alt)
+    if v is None:
+        v = verification.contrasts(verification.load())
+    b = v[v.kind.isin(REF)].copy()
+    b = b.assign(part="validation", set=b.set.str.split(" (", regex=False).str[0], ref=b.kind.map(REF), sd_ref=b.SD,
+                 sd_guide=b.SD_guide, q_ref=b.QWK_common, q_guide=b.QWK_guide_common, eur_ref=b.eur_common,
+                 eur_guide=b.eur_guide_common)
+    cols = ["part", "set", "model", "ref", "N", "dQWK", "lo", "hi", "better", "worse", "sd_ref", "sd_guide", "cost_x",
+            "q_ref", "q_guide", "eur_ref", "eur_guide"]
+    out = pd.concat([a[cols], b[cols]], ignore_index=True)
+    out["better"] = out.better.astype(bool)
+    out["worse"] = out.worse.astype(bool)
+    out["N"] = out.N.astype(int)
+    return out
+
+
+def references_summary(r: pd.DataFrame) -> pd.DataFrame:
+    """The counts the Section VI prose quotes, per part, reference and task (code / short answers / all)."""
+    code = {"RIAYN", "PT-CS code", "HARMOGEN-R"}
+    out = []
+    for (part, ref), g in r.groupby(["part", "ref"], sort=False):
+        for task, h in [("all", g), ("code", g[g.set.isin(code)]), ("short answers", g[~g.set.isin(code)])]:
+            gain = -h.dQWK[h.worse] if ref == "baseline" else h.dQWK[h.better]
+            out.append({"part": part, "ref": ref, "task": task, "n": len(h),
+                        "guide better": int(h.worse.sum()), "reference better": int(h.better.sum()),
+                        "margin lo": gain.min() if len(gain) else np.nan, "margin hi": gain.max() if len(gain) else np.nan,
+                        "mean ref-guide": h.dQWK.mean(), "ref less consistent": int((h.sd_ref > h.sd_guide + 1e-12).sum()),
+                        "cost lo": h.cost_x.min(), "cost hi": h.cost_x.max()})
+    return pd.DataFrame(out)
 
 
 def departures(t: pd.DataFrame) -> pd.DataFrame:
@@ -249,6 +321,20 @@ def main() -> int:
     pd.set_option("display.width", 250); pd.set_option("display.max_columns", 30); pd.set_option("display.max_rows", 400)
     d = rows()
     t = within_model(d)
+    r = references(t)
+    print("=== The guide against the baseline and against reasoning on (Section VI; reference minus guide) ===")
+    print(r.round(3).to_string(index=False))
+    print(references_summary(r).round(3).to_string(index=False))
+    nq = r[(r.ref == "reasoning on") & (r.model != "qwen3.5")]
+    print(f"reasoning on, models other than Qwen3.5: n={len(nq)}, mean reference-guide {nq.dQWK.mean():+.3f}, "
+          f"reference better {int(nq.better.sum())}, guide better {int(nq.worse.sum())}, max {nq.dQWK.max():+.3f}")
+    rr = r[r.ref == "reasoning on"]
+    print(f"reasoning on, both parts: n={len(rr)}, reference better {int(rr.better.sum())} "
+          f"(Qwen3.5 {int((rr.better & (rr.model == 'qwen3.5')).sum())}), guide better {int(rr.worse.sum())}, "
+          f"less consistent {int((rr.sd_ref > rr.sd_guide + 1e-12).sum())}, cost x{rr.cost_x.min():.2f}-{rr.cost_x.max():.1f}")
+    bb = r[r.ref == "baseline"]
+    print(f"baseline, both parts: n={len(bb)}, guide better {int(bb.worse.sum())}, baseline better {int(bb.better.sum())}; "
+          f"guide cost per grade x{(1 / bb.cost_x).min():.2f}-{(1 / bb.cost_x).max():.2f} the baseline's")
     print("=== Test 1, within each model: alternative minus the guide (95% bootstrap CI, no correction) ===")
     print(t[["model", "set", "contrast", "N", "dQWK", "ci95", "better", "worse", "cost_x", "sd_alt", "sd_guide"]]
           .round(3).to_string(index=False))

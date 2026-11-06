@@ -1,56 +1,40 @@
 %% sections/threats.tex -- Register: CLAUDE.md S9.2 (containment first; one limitation per sentence; each
 %% limitation stated once, here). Rewritten 2026-10-16 (Pedro's review): no deployment or transfer angle,
 %% no 'tractable items' (the reasoning contrast keeps every item), the instruction experiment's design order.
+%% Condensed 2026-11-05 (Pedro: summarise, without repeating what Method and Results already say).
 
 \section{Threats to Validity}
 \label{sec:threats}
 
 Every setting of the guide except scope and conversation state is supported on at least one of the three
-public datasets, whose human grades are independent of the authors. PT-CS is the only source of complete
-exams, so grading scope and the conversation sub-study rest
-on it alone; none of the public datasets links answers into exams. The PT-CS exams are short, so the scope
-result holds for exams of a few questions. The PT-CS grades are a joint teacher decision with no
-per-teacher record, so no agreement ceiling between teachers can be computed on PT-CS. They were set by
-two of the authors when they taught the course, before the study was designed, so they could not be
-shaped by its results; the public datasets, graded by others, give the independent check.
+public datasets, whose human grades are independent of the authors. Scope and the conversation sub-study rest on
+PT-CS alone, the only source of complete exams, and its exams are short, so the scope result holds for exams of a
+few questions. The PT-CS grades were set jointly by two of the authors when they taught the course, before the
+study was designed: no agreement ceiling between teachers can be computed on them, but they could not be shaped
+by its results.
 
-Four checks of the statistics, given in the supplementary material, move a few counts and weaken two
-statements, but change no recommendation. The intervals
-resample answers, although answers to the same question may be alike; resampling whole questions instead
-leaves slightly fewer significant results: reasoning raises agreement significantly in four of the twenty
-combinations rather than five, guidance in eleven of fifteen rather than thirteen, and the guide agrees
-significantly better in 30 of the 56 comparisons without reasoning rather than 34, while one alternative,
-Claude Sonnet 4.6 with the strict instruction on the 84 PT-CS short answers, then agrees better, by 0.033,
-and GPT-5.1's gain from criterion scoring on RIAYN no longer survives Holm's correction.
-Agreement is computed on the mean
-of the repeated grades, while the guide makes one call per answer; on single runs the guide's QWK is about
-0.01 lower, and the only differences that change sign are within 0.02 of zero. Leaving out the reasoning
-runs that reached the output limit, instead of giving them the reasoning-off grade, makes Qwen3.5's gain on
-SemEval not significant ($+0.052$, CI from $-0.020$) and changes no other combination. Rounding halves up,
-or using five or seven levels instead of six, makes reasoning significant in six or seven combinations
-instead of five; Qwen3.5 on Mohler, RIAYN, and PT-CS code and GPT-5.1 on RIAYN are significant under every
-rule.
+Four checks of the statistics, given in the supplementary material, move a few counts but change no
+recommendation. Answers to the same question may be alike, and resampling whole questions instead of answers
+leaves slightly fewer significant results: reasoning helps in four combinations instead of five and guidance in eleven of fifteen instead of thirteen.
+The guide still agrees better than the baseline in 10 of 22 comparisons, but the baseline then agrees better once
+(Claude Sonnet 4.6 on the PT-CS short answers, by 0.033), and reasoning still beats the guide in four of 17. On single runs instead of the mean of the repeated grades, the guide's QWK is about 0.01
+lower. Leaving out the reasoning runs that reached the output limit makes Qwen3.5's gain on SemEval not
+significant. Other rounding rules or numbers of levels make reasoning significant in six or seven combinations
+instead of five; Qwen3.5 on Mohler, RIAYN, and PT-CS code and GPT-5.1 on RIAYN are significant under every rule.
 
-The results are conditional on the served backends, whose quantisation, inference software, and hardware
-differ across providers, so what carries over to another backend is the comparison between
-configurations rather than the absolute scores; temperature 0 does not make grading deterministic either.
-Reasoning token counts come from each provider's own accounting, so they are best
-compared within a model. The follow-up experiment on the grading instruction was designed after the zero-collapse had been
-found, so its wordings were chosen with that failure in mind; the wordings and the rule for adopting one
-were fixed before they were run, and other wordings may do better or worse. On rubric-graded sets the
-partial-credit wording also drops the baseline's request to grade strictly, so the two changes are measured
+The results depend on the providers that served the models, which differ in quantisation (the numeric precision
+at which a model is run), inference software, and hardware, so what carries over to another provider is the
+comparison between configurations rather than the absolute scores. The prompts of the follow-up experiment were
+written after the zero-collapse had been found, and other prompts may do better or worse. The code prompt was
+developed on two of the study's code sets with two models, and which prompt the guide uses for each type of answer
+was decided after seeing the results. On rubric-graded
+sets the partial-credit prompt also drops the request to grade strictly, so the two changes are measured
 together.
 
-The guide was built on the four datasets of this study and validated on two more, with the same five models;
-with other models and data its standing may differ. The held-out code set has only three questions, so its
-result rests on few rubrics. Mohler, SemEval, and SAF have been public for years and
-may be in the models' training data, which could raise the agreement measured on
-them~\cite{sainz_contamination_2023}; the comparisons between configurations also hold on PT-CS, which is not
-public. The prompts were written in English for every dataset, and prompts in Portuguese might grade the
-Portuguese answers differently. Across
-all experiments, code evidence is narrower than
-short-answer evidence, resting on two Java-centric datasets and one C++ dataset, so we draw the code conclusions more
-cautiously. The guidance contrast bundles two different interventions, a rubric (PT-CS, RIAYN) and a
-reference answer (Mohler, SemEval), which we report separately rather than as one combined effect. The
-expensive factors were varied one at a time rather than fully crossed, so interactions between them, such
-as reasoning with decomposition, are unmeasured.
+The guide was built on four datasets and validated on two more, with the same five models; with other models
+and data its standing may differ. The code evidence rests on two Java-centric datasets and one C++ dataset with
+only three questions, so we draw the code conclusions more cautiously. Mohler, SemEval, and SAF have been public
+for years and may be in the models' training data~\cite{sainz_contamination_2023}, although the comparisons
+between configurations also hold on PT-CS, which is not public. Prompts in Portuguese might grade the Portuguese
+answers differently. The expensive factors were varied one at a time, so interactions between them, such as
+reasoning with decomposition, are unmeasured.

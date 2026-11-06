@@ -91,7 +91,7 @@ def fmt(base, other):
 def main():
     g = pd.read_csv("grades.csv", dtype={"question_id": str})
     main_ = g[g.experiment == "main"]
-    base = dict(guidance="rubric_or_reference", instruction="strict", decomposition="holistic")
+    base = dict(guidance="rubric_or_reference", prompt="strict", decomposition="holistic")
 
     rows = []                                                # reasoning off -> on, on the sampled answers (RQ1)
     for (model, ds), d in main_.groupby(["model", "dataset"]):
@@ -100,7 +100,7 @@ def main():
             continue
         off = cell(d, reasoning="off", **base)
         rows.append([model, ds] + fmt(off[off.item_id.isin(set(on.item_id))], on))
-    show("Reasoning: off (before) and on (after), with guidance, strict instruction", rows)
+    show("Reasoning: off (before) and on (after), with guidance, strict prompt", rows)
 
     rows = []                                                # no guidance -> rubric or reference answer (RQ2)
     for (model, ds), d in main_.groupby(["model", "dataset"]):
@@ -112,12 +112,18 @@ def main():
 
     rows = []                                                # the guide against each alternative (validation)
     v = g[g.experiment == "validation"]
-    guide = dict(reasoning="off", guidance="rubric_or_reference", instruction="partial_credit", decomposition="holistic")
-    alternatives = {"no guidance": dict(reasoning="off", guidance="none"),
-                    "strict instruction": dict(guide, instruction="strict"),
-                    "criterion scoring": dict(guide, decomposition="criterion"),
-                    "reasoning on": dict(guide, reasoning="on")}
     for (ds, model), d in v.groupby(["dataset", "model"]):
+        # the guide asks for partial credit; on code (HARMOGEN-R) with the code prompt, against which the partial-credit
+        # prompt is one more alternative; reasoning on was graded with the partial-credit prompt
+        prompt = "code_prompt" if ds == "harmogenr" else "partial_credit"
+        guide = dict(reasoning="off", guidance="rubric_or_reference", prompt=prompt, decomposition="holistic")
+        alternatives = {"no guidance": dict(reasoning="off", guidance="none"),
+                        "strict prompt": dict(guide, prompt="strict"),
+                        "partial-credit prompt": dict(guide, prompt="partial_credit"),
+                        "criterion scoring": dict(guide, decomposition="criterion"),
+                        "reasoning on": dict(guide, reasoning="on", prompt="partial_credit")}
+        if ds != "harmogenr":
+            del alternatives["partial-credit prompt"]
         gd = cell(d, **guide)
         for name, conditions in alternatives.items():
             alt = cell(d, **conditions)

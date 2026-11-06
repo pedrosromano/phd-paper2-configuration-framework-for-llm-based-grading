@@ -19,10 +19,12 @@ including exams in Portuguese from a course two of us taught, and measured agree
 repeated runs, and cost together.
 
 The cheap changes proved the effective ones: giving the model a rubric or a reference answer, and asking it
-for partial credit. Reasoning rarely justified its cost; its large gains came on code, for models that score
-many partially correct answers as zero, a failure we describe and measure. From these results we built a
-simple configuration guide, tested it against every other configuration in the study, and validated it on
-two datasets that played no part in building it.
+for partial credit. Reasoning bought modest gains at a high price. Its large gains came on code, for models that score
+many partially correct answers as zero. The models' own justifications showed the cause, and a prompt for code that we
+developed by prompt engineering removed most of these zeros without reasoning, at a small fraction of its cost. From
+these results we built a simple configuration guide, with reasoning off. Against the configuration the study started
+from it never agreed worse, and it was almost as good as reasoning, with more consistent grades and at a small
+fraction of the cost, both on the study's data and on two datasets that played no part in building it.
 
 We believe the paper suits the broad engineering readership of IEEE Access: it gives practitioners who build
 or deploy grading systems a tested configuration and its cost. The supplementary material includes every

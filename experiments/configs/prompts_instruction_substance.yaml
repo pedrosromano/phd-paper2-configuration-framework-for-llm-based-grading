@@ -1,0 +1,20 @@
+# Grading-instruction variant "partial_credit_substance" (pilot against the zero-collapse, 2026-11-05; protocol
+# and decision rule in CLAUDE.md, fixed before any call). Its blocks REPLACE the same-named blocks of
+# prompts_instruction.yaml (partial credit), which in turn replace those of prompts.yaml; only the rubric block
+# changes, so reference-answer items get the partial-credit reference block unchanged.
+#
+# Motivation, from the justifications behind zeros on half-right code answers: the grader names what is correct and
+# still gives 0, because it treats each rubric item as all-or-nothing (another approach, other names, a missing part
+# or a syntax error fails the item). The reference block already says "judge semantic equivalence"; this rubric block
+# says the same for rubric items, allows part of an item's marks, and keeps one error from cancelling other marks.
+# Never edit this file after runs exist: it enters the config_hash of its cells.
+
+grounding:
+  rubric: |
+    Use the following question-specific rubric to award marks. Treat each rubric item on its own: give its marks
+    when the answer achieves what the item asks for, even with a different approach, different names, or code that
+    would not compile, and give part of its marks when the answer achieves part of it. Mistakes in one part do not
+    cancel the marks earned in another. Apply any deductions the rubric specifies and do not invent criteria. Give 0
+    only when nothing in the answer earns marks.
+    RUBRIC:
+    $grounding_body

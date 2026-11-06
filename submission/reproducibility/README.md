@@ -26,19 +26,19 @@ It runs in a few seconds and prints three tables.
 
 | Column | Meaning |
 |---|---|
-| `experiment` | `main` (the comparisons of RQ1 to RQ4), `follow_up_instruction` (the grading-instruction experiment), `validation` (SAF and HARMOGEN-R) |
+| `experiment` | `main` (the comparisons of RQ1 to RQ4), `follow_up_partial_credit` (the first part of the follow-up experiment: the strict and partial-credit prompts), `follow_up_prompt_engineering` (the prompts tried against the zero-collapse, RIAYN, with their same-batch partial-credit controls), `validation` (SAF and HARMOGEN-R) |
 | `dataset` | `mohler`, `semeval`, `riayn`, `saf`, `harmogenr` |
 | `question_id`, `item_id` | identifiers of the question and of the answer in this study |
 | `model` | Qwen3.5-35B-A3B, DeepSeek-V4-Flash, GLM-5.1, GPT-5.1, Claude Sonnet 4.6 |
 | `provider` | the API that served the call |
 | `reasoning` | `off` or `on` |
 | `guidance` | `none` or `rubric_or_reference` (the rubric for code, the reference answer for short answers) |
-| `instruction` | `strict`, `partial_credit`, `partial_credit_justified`, or `none` (no guidance, so no instruction) |
+| `prompt` | `strict`, `partial_credit`, `partial_credit_justified`, `code_prompt` (the guide's prompt on code), `candidate_A` to `candidate_E` (the first-round candidate prompts A to E of Fig. 1 of the paper), or `none` (no guidance, so nothing to apply) |
 | `decomposition` | `holistic` or `criterion` |
 | `run` | repetition index |
 | `human_grade` | the human grade, divided by the question's maximum mark (0 to 1) |
 | `model_grade` | the model's grade, divided by the question's maximum mark and clamped to 0 to 1 |
-| `fallback` | `True` when a reasoning run returned no grade and the grade shown is the one the same model gave that answer with reasoning off (in the validation, the guide's grade) |
+| `fallback` | `True` when a reasoning run returned no grade and the grade shown is the one the same model gave that answer with reasoning off and the same prompt |
 | `output_tokens`, `cost_eur` | output tokens of the call and its cost at the providers' standard rates |
 
 Unparseable outputs without reasoning are left out, as in the paper.

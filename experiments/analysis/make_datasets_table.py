@@ -50,8 +50,8 @@ def main() -> int:
              r"subset also graded with reasoning on. Published results come from different models, prompts, and "
              r"protocols, so they situate each dataset and are not compared with ours. QWK: quadratic weighted "
              r"kappa; EN, English; PT, Portuguese.}",
-             r"\label{tab:datasets}", r"\setlength{\tabcolsep}{4pt}",
-             r"\begin{tabular}{@{}l l r r l l l@{}}", r"\hline",
+             r"\label{tab:datasets}", r"\setlength{\tabcolsep}{3pt}",
+             r"\begin{tabular}{@{}l l r r l l >{\raggedright\arraybackslash}p{3.2cm}@{}}", r"\hline",
              r"Set & Domain & Answers & Sampled & Human grade & Guidance & Published \\",
              r"\hline"]
     exams = None
