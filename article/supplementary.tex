@@ -274,30 +274,30 @@ GPT-5.1 & PT-CS code & 295 & 0.584 & 0.587 & +0.002 & [$-$0.040, +0.046] &  \\
 
 \needspace{14\baselineskip}\section{Models and cost (RQ4)}
 \begingroup\footnotesize
-\begin{longtable}{llcrr}
-\caption{Cost and agreement by task (Fig. 5 of the paper): per model and reasoning mode, with guidance, one question per call, holistic, QWK averaged over the task's answer sets (short answers: Mohler, SemEval, PT-CS; code: RIAYN, PT-CS), on the answers every configuration graded, and the cost of 1000 grades in euros.}\\
+\begin{longtable}{llcrrr}
+\caption{Cost and agreement by task (Fig. 5 of the paper): per model and reasoning mode, with guidance, one question per call, holistic, QWK averaged over the task's answer sets (short answers: Mohler, SemEval, PT-CS; code: RIAYN, PT-CS), on the answers every configuration graded, the cost of 1000 grades in euros, and the agreement per euro (QWK divided by the cost of 1000 grades; panels c and d).}\\
 \hline
-Task & Model & Reasoning & QWK & Euros per 1000 \\ \hline
+Task & Model & Reasoning & QWK & Euros per 1000 & QWK per euro \\ \hline
 \endfirsthead
 \hline
-Task & Model & Reasoning & QWK & Euros per 1000 \\ \hline
+Task & Model & Reasoning & QWK & Euros per 1000 & QWK per euro \\ \hline
 \endhead
-short answers & Qwen3.5-35B-A3B & off & 0.611 & 0.032 \\
-short answers & Qwen3.5-35B-A3B & on & 0.684 & 6.169 \\
-short answers & GLM-5.1 & off & 0.661 & 0.204 \\
-short answers & GLM-5.1 & on & 0.655 & 1.209 \\
-short answers & DeepSeek-V4-Flash & off & 0.611 & 0.018 \\
-short answers & DeepSeek-V4-Flash & on & 0.574 & 0.061 \\
-short answers & GPT-5.1 & off & 0.662 & 0.344 \\
-short answers & GPT-5.1 & on & 0.648 & 1.827 \\
-code & Qwen3.5-35B-A3B & off & 0.492 & 0.114 \\
-code & Qwen3.5-35B-A3B & on & 0.688 & 6.211 \\
-code & GLM-5.1 & off & 0.701 & 0.798 \\
-code & GLM-5.1 & on & 0.718 & 5.905 \\
-code & DeepSeek-V4-Flash & off & 0.636 & 0.076 \\
-code & DeepSeek-V4-Flash & on & 0.628 & 0.325 \\
-code & GPT-5.1 & off & 0.588 & 1.027 \\
-code & GPT-5.1 & on & 0.732 & 27.478 \\
+short answers & Qwen3.5-35B-A3B & off & 0.611 & 0.032 & 19.2 \\
+short answers & Qwen3.5-35B-A3B & on & 0.684 & 6.169 & 0.111 \\
+short answers & GLM-5.1 & off & 0.661 & 0.204 & 3.23 \\
+short answers & GLM-5.1 & on & 0.655 & 1.209 & 0.541 \\
+short answers & DeepSeek-V4-Flash & off & 0.611 & 0.018 & 34.3 \\
+short answers & DeepSeek-V4-Flash & on & 0.574 & 0.061 & 9.36 \\
+short answers & GPT-5.1 & off & 0.662 & 0.344 & 1.92 \\
+short answers & GPT-5.1 & on & 0.648 & 1.827 & 0.354 \\
+code & Qwen3.5-35B-A3B & off & 0.492 & 0.114 & 4.31 \\
+code & Qwen3.5-35B-A3B & on & 0.688 & 6.211 & 0.111 \\
+code & GLM-5.1 & off & 0.701 & 0.798 & 0.878 \\
+code & GLM-5.1 & on & 0.718 & 5.905 & 0.122 \\
+code & DeepSeek-V4-Flash & off & 0.636 & 0.076 & 8.35 \\
+code & DeepSeek-V4-Flash & on & 0.628 & 0.325 & 1.93 \\
+code & GPT-5.1 & off & 0.588 & 1.027 & 0.572 \\
+code & GPT-5.1 & on & 0.732 & 27.478 & 0.0266 \\
 \hline
 \end{longtable}
 \endgroup
@@ -993,19 +993,19 @@ Validation & criterion scoring & 4 & $-$0.003 & $-$0.005 & 0 \\
 \endgroup
 
 \begingroup\footnotesize
-\begin{longtable}{llrrlrl}
-\caption{Reasoning runs that reached the output limit. In the paper such a run takes the grade the same model gave that answer with reasoning off (With fallback); here those runs are left out and each answer's reasoning-on grade is the mean of its other runs (Own runs only). Only Qwen3.5 had such runs in the main comparison. $\Delta$QWK is reasoning on minus off, with its 95\% bootstrap interval.}\\
+\begin{longtable}{llrrrlrl}
+\caption{Reasoning runs that reached the output limit. In the paper such a run takes the grade the same model gave that answer with reasoning off (fallback); here those runs are left out and each answer's reasoning-on grade is the mean of its other runs (own runs). Only Qwen3.5 had such runs in the main comparison. Tokens is those runs' share of the model's reasoning tokens (its output tokens with reasoning on). $\Delta$QWK is reasoning on minus off, with its 95\% bootstrap interval.}\\
 \hline
-Model & Dataset & Fallback runs & $\Delta$QWK, with fallback & 95\% CI & $\Delta$QWK, own runs only & 95\% CI \\ \hline
+Model & Dataset & Fallback runs & Tokens & $\Delta$QWK, fallback & 95\% CI & $\Delta$QWK, own runs & 95\% CI \\ \hline
 \endfirsthead
 \hline
-Model & Dataset & Fallback runs & $\Delta$QWK, with fallback & 95\% CI & $\Delta$QWK, own runs only & 95\% CI \\ \hline
+Model & Dataset & Fallback runs & Tokens & $\Delta$QWK, fallback & 95\% CI & $\Delta$QWK, own runs & 95\% CI \\ \hline
 \endhead
-Qwen3.5-35B-A3B & Mohler & 12.7\% & +0.056 & [+0.021, +0.089] & +0.058 & [+0.019, +0.095] \\
-Qwen3.5-35B-A3B & PT-CS code & 1.8\% & +0.172 & [+0.045, +0.310] & +0.170 & [+0.036, +0.316] \\
-Qwen3.5-35B-A3B & PT-CS short & 6.2\% & +0.101 & [$-$0.021, +0.223] & +0.080 & [$-$0.053, +0.192] \\
-Qwen3.5-35B-A3B & RIAYN & 2.8\% & +0.221 & [+0.110, +0.331] & +0.210 & [+0.080, +0.331] \\
-Qwen3.5-35B-A3B & SemEval & 16.6\% & +0.062 & [+0.002, +0.124] & +0.052 & [$-$0.020, +0.123] \\
+Qwen3.5-35B-A3B & Mohler & 12.7\% & 67.0\% & +0.056 & [+0.021, +0.089] & +0.058 & [+0.019, +0.095] \\
+Qwen3.5-35B-A3B & PT-CS code & 1.8\% & 9.3\% & +0.172 & [+0.045, +0.310] & +0.170 & [+0.036, +0.316] \\
+Qwen3.5-35B-A3B & PT-CS short & 6.2\% & 39.0\% & +0.101 & [$-$0.021, +0.223] & +0.080 & [$-$0.053, +0.192] \\
+Qwen3.5-35B-A3B & RIAYN & 2.8\% & 13.6\% & +0.221 & [+0.110, +0.331] & +0.210 & [+0.080, +0.331] \\
+Qwen3.5-35B-A3B & SemEval & 16.6\% & 73.3\% & +0.062 & [+0.002, +0.124] & +0.052 & [$-$0.020, +0.123] \\
 \hline
 \end{longtable}
 \endgroup

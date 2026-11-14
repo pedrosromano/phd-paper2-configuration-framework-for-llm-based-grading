@@ -99,13 +99,13 @@
 % Human-subjects statement, IEEE PSPB Operations Manual 8.1.1.E: either the review board's name or why no review
 % was conducted, and consent or why none was sought, in the first footnote. Facts: Pedro, 2026-10-18 (CLAUDE.md S11).
 % Iscte does not review studies after the fact, so this gives the explanation; it never claims an exemption.
-\tfootnote{This work involved human subjects in its research. Its PT-CS dataset consists of existing exam
-answers from a course at Iscte, graded for the course and reused for this study, with no intervention on
+\tfootnote{This work involved human subjects in its research. Its dataset of exam answers in Portuguese (PT-CS) consists of existing answers to exams of three course units at
+Iscte~--~University Institute of Lisbon, graded for those units and reused for this study, with no intervention on
 the students and no effect on their grades; the study was therefore not submitted to an ethics committee. The students accepted the platform's terms of
 use, which stated that their answers could be used for research; no
 further consent was sought. Direct identifiers were removed before the analysis, the answers were checked
 for names, e-mail addresses, and numbers, only the question, the answer, and the grading material were
-sent to the model providers, through their paid APIs, whose terms do not allow the submitted data to be used to
+sent to the model providers, through their paid application programming interfaces (APIs), whose terms do not allow the submitted data to be used to
 train models unless the customer opts in, which we did not do. No student-level data are published or released.}
 
 % Register: CLAUDE.md S9.2 (no em/en dashes as prose punctuation). RQ1: 6 of 20 significant, 3 after Holm.
@@ -118,21 +118,21 @@ train models unless the customer opts in, which we did not do. No student-level 
 % against the baseline and reasoning on (guide_eval.references): "almost as good as reasoning, much cheaper and more
 % consistent" is the message.
 \begin{abstract}
-Instructors adopting large language model graders in computer science must choose whether the model reasons, what
-guidance it receives, and which configuration is worth its cost. We varied these choices with five models on four
+Large language models are increasingly used to grade students' work in higher education. Instructors adopting
+them in computer science must choose whether the model reasons, what guidance it receives, and which configuration
+is worth its cost. We varied these choices with five models on four
 short-answer and code datasets, including a new dataset of Portuguese exams. The cheap changes worked best. A rubric or reference
 answer significantly raised agreement (quadratic weighted kappa) with human graders in thirteen of fifteen
 combinations, by 0.095 to 0.341, and asking for partial credit raised code agreement by up to 0.11. Whole-exam
 grading never helped. Reasoning helped significantly in five of twenty combinations, three after correction, at 9
 to 925 times the output tokens, and made grades less consistent in most. Its largest gains came on code, for models
 that scored many partially correct answers as zero (zero-collapse).
-Through prompt engineering, we wrote a code prompt that removed most of the zero-collapse without reasoning,
-raising code agreement in nine of ten comparisons. We then built a configuration guide for any model: rubric or reference
-answer, partial credit (code prompt on code), reasoning off, one question per call. Against the baseline configuration, on
-the study's data and two separate validation datasets, the guide agreed significantly better in 16 of 32
-comparisons and worse in none. It was almost as good as reasoning, which agreed significantly better in only 8
-of 25 comparisons, while costing 2.6 to 179 times as much per grade and making
-grades less consistent in general.
+Prompt engineering produced a code prompt that removed most of the zero-collapse without reasoning,
+raising code agreement in nine of ten comparisons. We then built a single configuration guide: rubric or reference
+answer, partial credit (code prompt on code), reasoning off, one question per call. Against the baseline configuration, on the study's data and two validation datasets, the guide agreed significantly better in 16 of 32
+comparisons and worse in none. Reasoning beat it significantly in only 8
+of 25 comparisons, gaining nothing on average on the study's data and 0.07 on validation, at 2.6 to 179 times
+the cost, with generally less consistent grades.
 \end{abstract}
 
 \begin{keywords}

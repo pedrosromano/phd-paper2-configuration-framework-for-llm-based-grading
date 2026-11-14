@@ -36,7 +36,7 @@ used. (c) The within-answer standard deviation across repetitions with reasoning
 
 In most combinations reasoning left agreement almost where it was (Fig.~\ref{fig:rq1}a). The change was not
 significant in fifteen of the twenty model-dataset combinations, and for GLM-5.1 and GPT-5.1 on Mohler it was
-demonstrably negligible: their 90\% intervals lie inside the $\pm0.05$ margin fixed in advance. On the three
+demonstrably negligible: their 90\% intervals lie inside the $\pm0.05$ margin defined in advance. On the three
 public datasets all twelve changes were positive, but seven stayed below 0.05. Reasoning raised agreement
 significantly in five combinations, four of them for Qwen3.5: by 0.056 QWK on Mohler (from 0.586), 0.062 on
 SemEval (from 0.538, an interval that starts at +0.002), 0.221 on RIAYN (from 0.544), and 0.172 on PT-CS code
@@ -45,7 +45,8 @@ comparisons, three remain: Qwen3.5 on Mohler and on RIAYN, and GPT-5.1 on RIAYN.
 reasoning lowered the error significantly in eight combinations and raised it in none.
 
 These gains came at a high price. Reasoning multiplied the output tokens by 9 to 925: by 9 to 62 on short
-answers and 109 to 211 on code for GLM-5.1, DeepSeek-V4-Flash, and GPT-5.1, and by 666 to 925 for Qwen3.5. Per
+answers and 109 to 211 on code for GLM-5.1, DeepSeek-V4-Flash, and GPT-5.1, and by 666 to 925 for Qwen3.5. For Qwen3.5 much of this is waste: the runs that reached the output limit
+without returning a grade, 2 to 17\% of its runs, account for up to 73\% of its reasoning tokens. Per
 thousand grades, the cost rose from \euro{}0.02 to \euro{}0.06 at the cheapest (DeepSeek-V4-Flash on Mohler) and
 from \euro{}1.2 to \euro{}30 at the dearest (GPT-5.1 on RIAYN). However many tokens reasoning used, most changes
 stay inside or near the $\pm0.05$ band (Fig.~\ref{fig:rq1}b).
@@ -157,8 +158,8 @@ configurations reach a mean QWK of 0.564 to 0.686, and the best one changes with
 \caption{Agreement versus cost, one point per model and reasoning mode: (a) short answers (mean QWK
 over Mohler, SemEval, and the PT-CS short answers), (b) code (mean QWK over RIAYN and PT-CS code).
 Agreement is computed on the sampled answers all eight configurations graded. The horizontal axis is the cost of 1000 grades in euros,
-on a log scale. Points up and to the left are
-better.}
+on a log scale; points up and to the left are better. (c, d) Agreement per euro: the QWK divided by the cost of 1000 grades, one point per model and reasoning
+mode, for (c) short answers and (d) code, on a log scale.}
 \label{fig:costquality}
 \end{figure}
 
@@ -171,7 +172,14 @@ multiplies the cost by 3 to 194; only Qwen3.5's gain on Mohler survives Holm's c
 (Fig.~\ref{fig:costquality}b), reasoning raised agreement by 0.196 for Qwen3.5 and 0.144 for GPT-5.1, the two
 models with the zero-collapse, and changed it by $-0.007$ and $+0.017$ for DeepSeek-V4-Flash and GLM-5.1. Without
 reasoning GLM-5.1 leads (0.701 at \euro{}0.80 per thousand grades); with reasoning GPT-5.1 agrees best (0.732, at
-\euro{}27), and GLM-5.1 reaches 0.718 (at \euro{}5.9).
+\euro{}27), and GLM-5.1 reaches 0.718 (at
+\euro{}5.9).
+
+Agreement per euro, the QWK divided by the cost of a thousand grades, separates the configurations by more than three
+orders of magnitude (Fig.~\ref{fig:costquality}c and~d). DeepSeek-V4-Flash without reasoning gives the most, 34 per euro on
+short answers and 8.3 on code, and GPT-5.1 with reasoning the least on code, 0.03. The measure rewards a low cost
+whatever the agreement: Qwen3.5 without reasoning comes second on code despite its zero-collapse, so it is read next
+to the agreement itself.
 
 Claude Sonnet 4.6, graded with reasoning off only, was the best configuration without reasoning over all the
 answers of SemEval (0.634) and of the PT-CS short answers (0.791), at about five times the cost of GLM-5.1. On
@@ -188,7 +196,9 @@ incorrect.
 Overall, GLM-5.1 was the best grader without reasoning on code, at under one euro per thousand grades, and on
 short answers it matched GPT-5.1 at about 60\% of its cost. Reasoning paid substantially only for the two
 collapsing models on code and for Qwen3.5 on short answers. The best code configuration on average over the two
-code sets, GPT-5.1 with reasoning, agreed 0.031 better than GLM-5.1 without reasoning, at 34 times the cost.
+code sets, GPT-5.1 with reasoning, agreed 0.031 better than GLM-5.1 without reasoning, at 34 times the cost:
+reasoning mostly repaired GPT-5.1's own zero-collapse (0.588 without it), while GLM-5.1 did not collapse, and it
+multiplied GPT-5.1's output tokens by 146 to 211 at a higher price per token.
 
 \subsection{RQ5: Conversation State}
 \label{sec:rq5}

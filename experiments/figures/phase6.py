@@ -281,8 +281,9 @@ def fig_rq1(rc):
     RQ6 figures. Below it (Pedro, 2026-11-04), one row per model and dataset, read across three aligned panels:
     (b) the change in agreement, reasoning on minus off, with its 95% CI and the +/-0.05 equivalence band; the
     token multiplier as a bar on a log axis with its value; (c) the spread of the grades across repetitions with
-    reasoning off (open circle) and on (filled). Legends are kept apart: (a) and (c) carry their own inside the
-    panel, and the legend below holds only the models, common to every panel. Values from rq1_cells: every
+    reasoning off (open circle) and on (filled). One legend below the figure, as in Fig. 3 (Pedro Sebastiao,
+    2026-11-10): the models, and reasoning off (light bar, open circle) and on (hatched bar, filled circle), common to
+    every panel. Values from rq1_cells: every
     sampled item, a reasoning run that overflowed carries the reasoning-off grade."""
     from matplotlib.patches import Patch
     models = list(MARK)
@@ -295,9 +296,6 @@ def fig_rq1(rc):
     _paired_levels(ax, SETS, models, get)
     ax.set_xticklabels(["Mohler", "SemEval", "RIAYN", "PT-CS\ncode", "PT-CS\nshort"])
     ax.set_title("(a) agreement with the human graders, reasoning off and on", loc="left", fontsize=7)
-    ax.legend(handles=[Patch(facecolor="#d9d9d9", edgecolor="k", lw=0.3, label="light: reasoning off"),
-                       Patch(facecolor="#888", edgecolor="k", lw=0.3, hatch="///", label="hatched: reasoning on")],
-              loc="upper left", ncol=2, framealpha=0.95, handlelength=1.6, columnspacing=1.4)
     rows, y, ticks = [], 0.0, []
     for g in SETS:
         ticks.append(y + (len(models) - 1) / 2)
@@ -333,12 +331,16 @@ def fig_rq1(rc):
     cx.set_xlim(0, None)
     cx.set_xlabel("spread of the grades (SD$_k$)")
     cx.set_title("(c) consistency across repetitions\n(lower is better)", loc="left", fontsize=7)
-    cx.legend(handles=[plt.Line2D([], [], marker="o", color="grey", mfc="white", ls="", label="reasoning off"),
-                       plt.Line2D([], [], marker="o", color="grey", mec="k", mew=0.3, ls="", label="reasoning on")],
-              loc="upper right", framealpha=0.95, handletextpad=0.3)
-    h = [Patch(facecolor=MCOL[m], edgecolor="k", lw=0.3, label=MNAME[m]) for m in models]
-    fig.legend(handles=h, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 0.035), framealpha=0.9,
-               handlelength=1.6, columnspacing=1.6, title="models (all panels)", title_fontsize=6.2)
+    from matplotlib.legend_handler import HandlerTuple
+    h = [Patch(facecolor=MCOL[m], edgecolor="k", lw=0.3) for m in models]
+    lab = [MNAME[m] for m in models]
+    h += [(Patch(facecolor="#bbb", alpha=0.45, edgecolor="k", lw=0.3),
+           plt.Line2D([], [], marker="o", color="grey", mfc="white", ls="")),
+          (Patch(facecolor="#888", edgecolor="k", lw=0.3, hatch="///"),
+           plt.Line2D([], [], marker="o", color="grey", mec="k", mew=0.3, ls=""))]
+    lab += ["reasoning off", "reasoning on"]
+    fig.legend(handles=h, labels=lab, loc="upper center", ncol=6, bbox_to_anchor=(0.5, 0.035), framealpha=0.9,
+               handlelength=2.2, columnspacing=1.6, handler_map={tuple: HandlerTuple(ndivide=None, pad=0.4)})
     _save(fig, "fig_rq1")
 
 
@@ -516,15 +518,20 @@ def rq4_points(full) -> pd.DataFrame:
 
 
 def fig_rq4_cost(full):
-    """RQ4 cost-quality BY TASK: QWK vs euro cost per 1000 grades (log), one point per model x
-    reasoning, in two panels (short-answer = Mohler+SemEval; code = RIAYN), shared y so the
-    short-answer cluster vs the code spread reads directly. QWK via the table generator's _qwk_items;
-    cost from the logged per-call cost_eur (engine-backed). Deterministic. Single column, side by side."""
+    """RQ4 cost-quality BY TASK: (a) short answers and (b) code, QWK vs euro cost per 1000 grades (log), one point per
+    model x reasoning; (c, d) agreement per euro (Pedro, 2026-11-12, after Pedro Sebastiao asked for effectiveness,
+    efficiency and cost together): QWK divided by the cost of 1000 grades, one point per model and reasoning mode, with
+    the markers of (a) and (b), (c) short answers and (d) code, log scale. 2026-11-13 (Pedro): the first panel (c) put
+    both tasks on one row joined by a line, which read as an interval; now one point per row and one panel per task.
+    Values from rq4_points (also in the supplementary material)."""
     pts = rq4_points(full)
+    pts["qpe"] = pts.QWK / pts.eur_1000
     models = ["qwen3.5", "glm-5.1", "deepseek-v4-flash", "gpt-5.1"]
     mk = {"off": "o", "on": "s"}
-    fig, axes = plt.subplots(2, 1, figsize=(COL, COL * 1.05), sharey=True, sharex=True)
-    for ax, (task, title, _) in zip(axes, RQ4_PANELS):
+    fig = plt.figure(figsize=(COL, COL * 1.68))
+    gs = fig.add_gridspec(4, 2, height_ratios=[1, 1, 0.22, 1.0], hspace=0.5, wspace=0.08)
+    a0 = fig.add_subplot(gs[0, :]); a1 = fig.add_subplot(gs[1, :], sharex=a0, sharey=a0)
+    for ax, (task, title, _) in zip((a0, a1), RQ4_PANELS):
         for r in pts[pts.task == task].itertuples():
             ax.scatter(r.eur_1000, r.QWK, s=30, marker=mk[r.reasoning], color=MCOL[r.model],
                        edgecolor="k", lw=0.3, alpha=0.9, zorder=3)
@@ -533,13 +540,37 @@ def fig_rq4_cost(full):
         ax.set_xticks([0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30])
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
         ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
-    axes[1].set_xlabel("cost of 1000 grades (euros, log scale)")
-    h1 = [plt.Line2D([], [], marker="o", color=MCOL[m], ls="", mec="k", mew=0.4, label=MNAME[m])
-          for m in models]
-    h2 = [plt.Line2D([], [], marker=mk[r], color="grey", ls="", mec="k", mew=0.4, label=f"reasoning {r}")
+    plt.setp(a0.get_xticklabels(), visible=False)
+    a1.set_xlabel("cost of 1000 grades (euros, log scale)")
+    # (c, d) agreement per euro: one point per model and reasoning mode, one panel per task
+    cx = fig.add_subplot(gs[3, 0]); dx = fig.add_subplot(gs[3, 1], sharey=cx, sharex=cx)
+    for ax, task, title in ((cx, "short answers", "(c) agreement per euro,\nshort answers"),
+                            (dx, "code", "(d) agreement per euro,\ncode")):
+        y, ticks = 0, []
+        for m in models:
+            ticks.append(y + 0.5)
+            for rs in ["off", "on"]:
+                g = pts[(pts.task == task) & (pts.model == m) & (pts.reasoning == rs)]
+                if len(g):
+                    ax.scatter(float(g.qpe.iloc[0]), y, s=30, marker=mk[rs], color=MCOL[m], edgecolor="k",
+                               lw=0.3, zorder=3)
+                y += 1
+            y += 0.6
+        ax.set_yticks(ticks); ax.tick_params(axis="y", length=0); ax.grid(axis="y", visible=False)
+        ax.set_title(title, loc="left", fontsize=7)
+    cx.set_yticklabels([MNAME[m] for m in models]); cx.invert_yaxis()
+    plt.setp(dx.get_yticklabels(), visible=False)
+    cx.set_xscale("log"); cx.set_xlim(0.015, 80)
+    cx.xaxis.set_major_locator(matplotlib.ticker.FixedLocator([0.1, 1, 10]))
+    cx.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    cx.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    for ax in (cx, dx):
+        ax.set_xlabel("QWK per euro (log)")
+    h = [plt.Line2D([], [], marker="o", color=MCOL[m], ls="", mec="k", mew=0.4, label=MNAME[m]) for m in models]
+    h += [plt.Line2D([], [], marker=mk[r], color="grey", ls="", mec="k", mew=0.4, label=f"reasoning {r}")
           for r in ["off", "on"]]
-    fig.tight_layout()
-    fig.legend(handles=h1 + h2, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 0.0), framealpha=0.9)
+    fig.legend(handles=h, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 0.04), framealpha=0.9,
+               columnspacing=1.2, handletextpad=0.3)
     _save(fig, "fig_rq4_cost")
 
 

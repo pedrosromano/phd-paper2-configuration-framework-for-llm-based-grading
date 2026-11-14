@@ -341,13 +341,14 @@ def zero_collapse_section() -> str:
 def rq4_section() -> str:
     from experiments.figures import phase6
     pts = phase6.rq4_points(phase5.load_main())
-    rows = [[r.task, MNAME.get(r.model, r.model), r.reasoning, f"{r.QWK:.3f}", f"{r.eur_1000:.3f}"]
-            for r in pts.itertuples()]
+    rows = [[r.task, MNAME.get(r.model, r.model), r.reasoning, f"{r.QWK:.3f}", f"{r.eur_1000:.3f}",
+             f"{r.QWK / r.eur_1000:.3g}"] for r in pts.itertuples()]
     cap = ("Cost and agreement by task (Fig. " + _n("fig:costquality") + " of the paper): per model and reasoning mode, with guidance, one question "
            "per call, holistic, QWK averaged over the task's answer sets (short answers: Mohler, SemEval, PT-CS; code: "
-           "RIAYN, PT-CS), on the answers every configuration graded, and the cost of 1000 grades in euros.")
+           "RIAYN, PT-CS), on the answers every configuration graded, the cost of 1000 grades in euros, and the agreement "
+           "per euro (QWK divided by the cost of 1000 grades; panels c and d).")
     return r"\section{Models and cost (RQ4)}" + "\n" + _table(
-        cap, ["Task", "Model", "Reasoning", "QWK", "Euros per 1000"], rows, "llcrr")
+        cap, ["Task", "Model", "Reasoning", "QWK", "Euros per 1000", "QWK per euro"], rows, "llcrrr")
 
 
 def conversation_section() -> str:
@@ -495,15 +496,17 @@ def robustness_section() -> str:
     fb = robustness.fallback_sensitivity()
     rows = [[MNAME.get(r.model, r.model), DNAME.get("ptcs-short" if (r.dataset == "ptcs" and r.domain == "short_answer")
                                                   else r.dataset, r.dataset), f"{r.fallback_pct:.1f}\\%",
+             f"{r.fallback_tok_pct:.1f}\\%",
              _sg(r.d_with), f"[{_sg(r.lo_with)}, {_sg(r.hi_with)}]", _sg(r.d_own), f"[{_sg(r.lo_own)}, {_sg(r.hi_own)}]"]
             for r in fb.itertuples()]
     out.append(_table(
         "Reasoning runs that reached the output limit. In the paper such a run takes the grade the same model gave "
-        "that answer with reasoning off (With fallback); here those runs are left out and each answer's reasoning-on "
-        "grade is the mean of its other runs (Own runs only). Only Qwen3.5 had such runs in the main comparison. "
+        "that answer with reasoning off (fallback); here those runs are left out and each answer's reasoning-on "
+        "grade is the mean of its other runs (own runs). Only Qwen3.5 had such runs in the main comparison. "
+        "Tokens is those runs' share of the model's reasoning tokens (its output tokens with reasoning on). "
         r"$\Delta$QWK is reasoning on minus off, with its 95\% bootstrap interval.",
-        ["Model", "Dataset", "Fallback runs", r"$\Delta$QWK, with fallback", "95\\% CI", r"$\Delta$QWK, own runs only",
-         "95\\% CI"], rows, "llrrlrl"))
+        ["Model", "Dataset", "Fallback runs", "Tokens", r"$\Delta$QWK, fallback", "95\\% CI",
+         r"$\Delta$QWK, own runs", "95\\% CI"], rows, "llrrrlrl"))
     dz = robustness.discretisation()
     nice = lambda c: ", ".join(MNAME.get(x.split(" ")[0], x.split(" ")[0]) + " " + DNAME.get(
         {"ptcs-code": "ptcs", "ptcs-short_answer": "ptcs-short"}.get(x.split(" ")[1], x.split(" ")[1].split("-")[0]),

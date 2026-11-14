@@ -10,7 +10,7 @@
 An instructor adopting an LLM grader faces several choices at once, and prior studies addressed them only in
 fragments. We tested them together for computer-science grading, under one protocol, with five models on four
 datasets. The cheap changes were the effective ones, and the configuration guide built from them works without
-reasoning, with agreement very close to that of reasoning.
+reasoning, with agreement close to that of reasoning.
 
 What the grader is given mattered most. Supplying a rubric or a reference answer raised agreement significantly
 in thirteen of fifteen model-dataset combinations, by 0.095 to 0.341 QWK, for 1.2 to 1.8 times the cost per grade.
@@ -27,13 +27,15 @@ raised code agreement in nine of ten comparisons, at a small fraction of what re
 reasoning bought on code can therefore be had through the prompt. On short theory answers the same prompt made
 grading too generous, so it is used for code only.
 
-From these results we built a configuration guide that leaves the choice of model open, and the guide was validated.
+From these results we built a configuration guide that leaves the choice of model open, and it held up on data it was not
+built from.
 Against the baseline configuration it agreed significantly better with
 the human graders in 16 of 32 comparisons and worse in none, on the study's data and on two datasets that played no
-part in building it. It was almost as good as reasoning, at a small fraction of the cost: reasoning agreed
+part in building it. On average it matched reasoning on the study's data and came within 0.07 QWK of it on the
+validation datasets, at a small fraction of the cost: reasoning agreed
 significantly better in only 8 of 25 comparisons, five of them for Qwen3.5, the smallest model, while costing 2.6
 to 179 times as much per grade and making grades less consistent in 18 of 25. On the two validation datasets the guide
-met the criterion fixed in advance with every model on short answers and with three of the five on code, and with
+met the criterion defined in advance with every model on short answers and with three of the five on code, and with
 GLM-5.1 it graded the code as closely as an instructor agrees with the other three. The guide sets the
 configuration; the choice of model remains the user's.
 
@@ -46,5 +48,5 @@ consistency, and cost.
 
 For the instructor described in the introduction, the answer is a short routine: supply the rubric or reference
 answer, ask for partial credit, with the code prompt when grading code, and grade one question per call with
-reasoning off, in a clean conversation. With an inexpensive model, this costs at most 0.12 euros per thousand
-grades.
+reasoning off, in a clean conversation. With an inexpensive model, this cost at most 0.27 euros per thousand
+grades on every dataset tested.

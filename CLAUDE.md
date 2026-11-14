@@ -1950,6 +1950,61 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
     nothing" (twice; Pedro approved after a check: undeserved zeros are mostly Qwen3.5's, 42% vs 4-15% for the others
     under partial credit on PT-CS code; prompt A, aimed directly at item-level all-or-nothing, only cut Qwen3.5 from 42% to
     32%, while credit-first cut it to 9%; in 30 justifications read at random the pattern appears but is not the rule).
+- ✅ **Review by Pedro Sebastiao (co-author, 2026-11-10; 24 PDF comments on the final version, commit 70480b3, plus an
+  e-mail). Implemented 2026-11-12, validated by Pedro and committed on 2026-11-14.** Decisions, do not regress them:
+  - **PT-CS comes from three course units (UCs), checked in the platform DB (tables teste, turma, curso; no student
+    data read):** "Programação em Linguagem Java" (4 tests, 273 answers, 62 exams), "Programação Concorrente" (2 tests,
+    81 answers, 28 exams) and "Avaliação Backend Java - Spring" (1 test, 25 answers, 7 exams), 2023-2025, in UPskill
+    classes ("Curso de Programação em JAVA" and one "Curso de Frontend" class). The paper says "three course units at
+    Iscte (Java programming, concurrent programming, and back-end development with Spring)"; UPskill is not named.
+    Footnote, Introduction, Method, Threats ("when they taught these units") and cover letter updated.
+  - Footnote: "Iscte - University Institute of Lisbon" (official English name; "Universitary" is not English),
+    "(PT-CS)" and "application programming interfaces (APIs)" expanded there, since the footnote comes first.
+  - Abstract opens with "Large language models are increasingly used to grade students' work in higher education."
+    (249 words, 253 split at hyphens; cuts: "Prompt engineering produced", "two validation datasets", "at 2.6 to 179
+    times the cost per grade and with less consistent grades in general").
+  - CI sentence (his doubt: interval vs confidence level): "Each difference is reported with a confidence interval
+    (CI) obtained by bootstrap: ... The CI is the range that holds the middle 95% of these 10,000 differences, so its
+    confidence level is 95%."
+  - "fixed in advance" -> "defined in advance" everywhere (margin, criterion); "The guide sets six of..."; Section VIII
+    "presents the main conclusions and directions for future work"; "(Table 1). Reasoning" space restored (a `%`
+    had swallowed it); "the four datasets, with PT-CS split into its code and short answers".
+  - **Fig. 2: one legend below, as in Fig. 3** (supersedes the "legends kept apart" decision of 2026-11-04): the four
+    models plus reasoning off (light bar, open circle) and on (hatched bar, filled circle).
+  - **Fig. 5 panel (c), agreement per euro (Pedro: "eficiência é a concordância", in the cost analysis):** QWK divided
+    by the cost of 1000 grades, per model and reasoning mode, filled = short answers, open = code, log scale;
+    `phase6.fig_rq4_cost`, values in the supplement's RQ4 table (new column). **Redrawn 2026-11-13 (Pedro: "porque é que cada coisa é um
+    intervalo?"):** the first version put both tasks on one row joined by a line, which read as an interval; now
+    panels (c) short answers and (d) code, one point per model and reasoning mode, with the markers of (a) and (b). RQ4 text: spread over three orders of
+    magnitude; DeepSeek-V4-Flash off highest (34 short, 8.3 code), GPT-5.1 on lowest on code (0.03); the measure
+    rewards low cost (Qwen3.5 off second on code despite its zero-collapse).
+  - RQ4 "Overall" explains why GPT-5.1 with reasoning is only 0.031 above GLM-5.1 without it at 34x the cost (his
+    question; Pedro: highlight it): reasoning repaired GPT-5.1's own zero-collapse (0.588 without it), GLM-5.1 does not
+    collapse, and reasoning multiplied GPT-5.1's output tokens by 146-211 at a higher price per token.
+  - 19 pages, 13 floats, 0 errors. Marked PDF: latexdiff from CTAN needs Pedro's permission to run (not in BasicTeX).
+- ✅ **External mock review (2026-11-13, "Accept (minor edits)", pasted by Pedro; text only).** Every number it cited
+  was checked against the engines. **Pedro: use the review's own wording, not Claude's rewrites ("a do agente era mais
+  clara e direta"); flag only what is factually wrong.** Applied with its wording: abstract last sentence ("Reasoning
+  beat it significantly in only 8 of 25 comparisons, gaining nothing on average on the study's data and 0.07 on
+  validation, ..."), "a single configuration guide"; VI "a single configuration"; VI-A "Reasoning stays off by default,
+  on code as on short answers" (Pedro); VI-B sentence on the strict prompt in the tests vs partial credit in the
+  validation; VI-D "was 0.067 QWK ahead on average"; Conclusion "close to that of reasoning", "On average it matched
+  reasoning on the study's data and came within 0.07 QWK of it on the validation datasets", "and it held up on data it
+  was not built from" (Pedro), "With an inexpensive model, this cost at most 0.27 euros per thousand grades on every
+  dataset tested"; RQ1 "For Qwen3.5 much of this is waste: ... 2 to 17% of its runs, account for up to 73% of its
+  reasoning tokens". VI-D last sentence (Pedro, later the same day): "The guide thus kept most of the agreement that
+  reasoning brought, without its cost."
+  - Numbers: supplement Table 20 "reasoning on" (tests -0.002, validation +0.067; +0.041 without Qwen3.5). The 73%:
+    `robustness.fallback_sensitivity` column `fallback_tok_pct`, supplement Table 21 column "Tokens" (Mohler 67,
+    SemEval 73, PT-CS short 39, RIAYN 14, PT-CS code 9%); 2 to 17% = its "Fallback runs" column (1.8-16.6%).
+    0.27 = DeepSeek-V4-Flash's guide on HARMOGEN-R (0.269, supplement Table 15); with Qwen3.5 the maximum is 0.40.
+  - Qwen3.5 card (Hugging Face, checked 2026-11-13): thinking mode temperature 1.0 with presence penalty 1.5 (general)
+    or 0.6 with no presence penalty (precise coding); non-thinking 0.7; output 32,768 tokens (our cap); no warning
+    against greedy decoding.
+  - Pedro's decisions on the two flagged sentences (both the review's wording with one fix): cover letter "within 0.07
+    QWK on average on those two datasets" (HARMOGEN-R alone is 0.071); Threats "recommends sampling in thinking mode
+    (temperature 0.6 to 1.0, and at 1.0 a presence penalty against repetition); with those settings fewer of its runs
+    might exhaust the output limit, and its reasoning cost would be lower".
 - **Ethics statement facts (Pedro, 2026-10-18):** PT-CS comes from exams of the UpSkill professional
   requalification course at Iscte, graded on the platform for real, with the answers reused later. The
   platform's terms said answers could be used for research; students knew it was an academic platform and that

@@ -15,7 +15,7 @@ Instructors and institutions adopting large language models to grade student wor
 whether the model should reason before scoring, what guidance it should receive, how much of an exam it
 should see at once, and which model is worth its cost. Prior studies have examined these choices one at a
 time. We compared them under one protocol, with five models on four datasets of short answers and code,
-including exams in Portuguese from a course two of us taught, and measured agreement with teachers, consistency across
+including exams in Portuguese from course units two of us taught, and measured agreement with teachers, consistency across
 repeated runs, and cost together.
 
 The cheap changes proved the effective ones: giving the model a rubric or a reference answer, and asking it
@@ -23,8 +23,9 @@ for partial credit. Reasoning bought modest gains at a high price. Its large gai
 many partially correct answers as zero. The models' own justifications showed the cause, and a prompt for code that we
 developed by prompt engineering removed most of these zeros without reasoning, at a small fraction of its cost. From
 these results we built a simple configuration guide, with reasoning off. Against the configuration the study started
-from it never agreed worse, and it was almost as good as reasoning, with more consistent grades and at a small
-fraction of the cost, both on the study's data and on two datasets that played no part in building it.
+from it never agreed worse, on the study's data and on two datasets that played no part in building it. It stayed
+close to reasoning (level with it on average on the study's data, within 0.07 QWK on average on those two
+datasets), with more consistent grades and at a small fraction of the cost.
 
 We believe the paper suits the broad engineering readership of IEEE Access: it gives practitioners who build
 or deploy grading systems a tested configuration and its cost. The supplementary material includes every

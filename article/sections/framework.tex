@@ -84,10 +84,10 @@ question is graded.}
 
 
 An instructor who sets up an LLM grader must settle every configuration choice at once. The configuration guide
-we present is a single configuration for any model, built from the best settings found in the previous sections and
+we present is a single configuration, built from the best settings found in the previous sections and
 judged on the three measures used throughout: agreement with the human graders
 (QWK), consistency across repeated gradings, and cost per grade. One rule decided each setting: keep the option
-that raised agreement, and where the options agreed equally well, the cheaper and more consistent one. The guide fixes six of
+that raised agreement, and where the options agreed equally well, the cheaper and more consistent one. The guide sets six of
 the seven configuration choices and leaves the seventh, the model, open. It was then tested on the data it was built from and validated on two datasets that
 played no part in building it.
 
@@ -100,7 +100,7 @@ Fig.~\ref{fig:frameworkdiagram} shows it at work on one exam. Two settings raise
 rubric or the reference answer, and ask for partial credit, with the code prompt when the answer is code and the
 partial-credit prompt otherwise. The other four keep grading cheap, consistent, and fair: reasoning off, one
 question per call, a single holistic score, and a clean conversation for each answer. Reasoning stays
-off on every task: its largest gains came from repairing the zero-collapse on code, which the code prompt does at
+off by default, on code as on short answers: its largest gains came from repairing the zero-collapse on code, which the code prompt does at
 a small fraction of the cost. The guide leaves the choice of model open, so we tested it on all five models. It
 returns a score and, on code, a statement of at most two sentences on what earned marks; fuller feedback for
 students needs a separate request. Fig.~\ref{fig:guideprompt} gives the guide's prompt as used in the
@@ -172,7 +172,9 @@ switched off through the model's settings, and the prompt does not mention it.}
 %% testes tambem").
 The guide leaves the model open, so it is judged model by model against two references from the results. The
 first is the baseline configuration, the starting point of every comparison, which differs from the guide only in
-its prompt: it grades strictly. The second is the same baseline with reasoning on, the most expensive setting. To be
+its prompt: it grades strictly. The second is the same baseline with reasoning on, the most expensive setting. It keeps the baseline's strict
+prompt, so the tests set the guide against reasoning as the study ran it; in the validation, reasoning on uses the
+partial-credit prompt, which is the closer comparison. To be
 considered good, the guide should agree better than the baseline and almost as well as reasoning, at a much lower cost. All three
 configurations come from runs already reported, so nothing was graded again. Each comparison uses the answers both
 configurations graded, which with reasoning on are the sampled answers, and the bootstrap of the results, without
@@ -240,11 +242,11 @@ against 0.90 to 0.93), and four of the five models gave zero to 5 to 10\% of the
 instructors' 7\%.
 
 Reasoning on agreed significantly better than the guide in 4 of the 8 comparisons: twice for Qwen3.5, by 0.092 and
-0.197 QWK, and once each for DeepSeek-V4-Flash and GPT-5.1, by 0.092 and 0.095. It never agreed worse and made grades
+0.197 QWK, and once each for DeepSeek-V4-Flash and GPT-5.1, by 0.092 and 0.095. It never agreed worse, was 0.067 QWK ahead on average, and made grades
 less consistent in 5 of the 8 comparisons. Its main drawback was the cost: 3.2 to 55 times as much per grade as the
 guide.
 
-The criterion fixed in advance asked the guide to agree at least as well as every alternative without reasoning,
+The criterion defined in advance asked the guide to agree at least as well as every alternative without reasoning,
 with every model; besides the baseline, these alternatives were no guidance and, on code, a score per criterion and
 the partial-credit prompt. It was met on SAF with every model and on HARMOGEN-R with three of the five: a score per
 criterion agreed better for GLM-5.1, by 0.025, and the partial-credit prompt for GPT-5.1, by 0.038 (supplementary
@@ -252,4 +254,4 @@ material).
 
 Overall, the guide held up on data it was not built from. It never did worse than the baseline, and with every model
 but Qwen3.5 it came within 0.1 QWK of reasoning, with no significant difference in four of those six comparisons.
-The guide thus kept almost all the agreement that reasoning brought, without its cost.
+The guide thus kept most of the agreement that reasoning brought, without its cost.

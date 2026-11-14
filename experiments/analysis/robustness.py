@@ -187,7 +187,11 @@ def fallback_sensitivity() -> pd.DataFrame:
         off = g[(g.reasoning == "off") & g.item_id.isin(set(on.item_id))]
         own = on[~on["fallback"].astype(bool)]
         _, sA = mpt._qwk_items(off)
-        r = {"dataset": ds, "domain": dom, "model": m, "fallback_pct": 100 * float(on["fallback"].astype(bool).mean())}
+        fbm = on["fallback"].astype(bool)
+        tok = on["completion_tokens"].fillna(0)
+        # share of the reasoning-on output tokens spent by the runs that reached the limit (results.tex, RQ1 cost)
+        r = {"dataset": ds, "domain": dom, "model": m, "fallback_pct": 100 * float(fbm.mean()),
+             "fallback_tok_pct": 100 * float(tok[fbm].sum() / tok.sum())}
         for key, d in [("with", on), ("own", own)]:
             _, sB = mpt._qwk_items(d)
             dist = mpt._boot_dist(sA, sB)

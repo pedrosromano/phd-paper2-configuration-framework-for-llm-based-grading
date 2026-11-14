@@ -9,7 +9,7 @@
 Every setting of the guide except scope and conversation state is supported on at least one of the three
 public datasets, whose human grades are independent of the authors. Scope and the conversation sub-study rest on
 PT-CS alone, the only source of complete exams, and its exams are short, so the scope result holds for exams of a
-few questions. The PT-CS grades were set jointly by two of the authors when they taught the course, before the
+few questions. The PT-CS grades were set jointly by two of the authors when they taught these units, before the
 study was designed: no agreement ceiling between teachers can be computed on them, but they could not be shaped
 by its results.
 
@@ -24,7 +24,10 @@ instead of five; Qwen3.5 on Mohler, RIAYN, and PT-CS code and GPT-5.1 on RIAYN a
 
 The results depend on the providers that served the models, which differ in quantisation (the numeric precision
 at which a model is run), inference software, and hardware, so what carries over to another provider is the
-comparison between configurations rather than the absolute scores. The prompts of the follow-up experiment were
+comparison between configurations rather than the absolute scores. The open models were called at temperature 0 in both modes, while Qwen3.5's model
+card~\cite{qwen_qwen35_2026} recommends sampling in thinking mode (temperature 0.6 to 1.0, and at 1.0 a presence
+penalty against repetition); with those settings fewer of its runs might exhaust the output limit, and its
+reasoning cost would be lower. The prompts of the follow-up experiment were
 written after the zero-collapse had been found, and other prompts may do better or worse. The code prompt was
 developed on two of the study's code sets with two models, and which prompt the guide uses for each type of answer
 was decided after seeing the results. On rubric-graded

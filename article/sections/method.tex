@@ -21,7 +21,7 @@ the repetitions, and cost are measured together.
 
 
 
-The study varies seven configuration choices (Table~\ref{tab:design}).%
+The study varies seven configuration choices (Table~\ref{tab:design}). %
 %% Defined right after the sentence that first refers to it, inside the paragraph (float rule, CLAUDE.md S9): after the
 %% heading it landed above its reference and after the paragraph two pages away, as the reference moved between pages
 %% 3 and 4 (2026-11-06); here it can take the bottom of the reference's page or the top of the next. Table 1 as a map (Pedro, 2026-11-04, his main criticism): which choice was compared with which model on
@@ -121,7 +121,7 @@ reference solutions, and we wrote none.
 \subsection{Datasets and Human Grades}
 \label{sec:datasets}
 
-Table~\ref{tab:datasets} summarises the four datasets. The \emph{human grade} is the grade a model's score is
+Table~\ref{tab:datasets} summarises the four datasets, with PT-CS split into its code and short answers. The \emph{human grade} is the grade a model's score is
 compared against. PT-CS holds code and short answers, which we analyse separately, so per-dataset results cover
 five sets: Mohler, SemEval, RIAYN, PT-CS code, and PT-CS short answers.
 
@@ -138,8 +138,9 @@ algorithms to a practice website. We use 149 of its 150 submissions (one lacks a
 Python. Each question has its own rubric, which marks each step of one or more accepted solution paths, and two
 graders scored each submission in consensus.
 
-\emph{PT-CS} consists of 97 complete Java exams in Portuguese from a course at Iscte, with 634 answers.
-Each question has its own rubric and no reference solution. Two of the authors, who taught the course,
+\emph{PT-CS} consists of 97 complete Java exams in Portuguese from three course units at Iscte (Java programming, concurrent programming,
+and back-end development with Spring), with 634 answers.
+Each question has its own rubric and no reference solution. Two of the authors, who taught these units,
 manually graded 379 of these answers (295 code answers and 84 short answers on theory) before this study was
 designed, as a joint decision with no per-teacher record; these are PT-CS's human grades. The other answers were
 not graded by the teachers and have no grade. They are graded by the models only where complete exams are needed,
@@ -228,9 +229,9 @@ output limit without returning a grade takes the grade the same model gave that 
 keep these hard answers in the comparison, as a grading system would retry with a cheaper call. The scope
 contrast uses the 295 PT-CS code answers graded within whole exams.
 
-We report each difference with a 95\% confidence interval (CI) from 10,000 bootstrap resamples: the answers are
-drawn again at random, with replacement, 10,000 times, the difference is recomputed on each draw, and the CI
-spans the middle 95\% of the results. A difference is significant when its interval excludes zero; its p-value,
+Each difference is reported with a confidence interval (CI) obtained by bootstrap: the answers are drawn again at
+random, with replacement, 10,000 times, and the difference is recomputed on each draw. The CI is the range that
+holds the middle 95\% of these 10,000 differences, so its confidence level is 95\%. A difference is significant when its interval excludes zero; its p-value,
 used by Holm's correction below, is twice the share of draws in which the difference falls on the other side of
 zero. Two checks in the supplementary material repeat every comparison in other ways: drawing whole questions
 instead of answers, because answers to the same question tend to resemble each other, and computing QWK on each
@@ -238,7 +239,7 @@ single run instead of on the mean of the $k$ grades. Within each group of
 related comparisons (reasoning, guidance, prompt, scope, and decomposition) we also apply Holm's correction, which
 keeps the chance of any false positive in the group at 5\%. Where equivalence matters, we test it with the two
 one-sided tests procedure (TOST): two settings count as equivalent when the 90\% CI of their difference lies
-within $\pm0.05$ QWK, a margin we fixed in advance, in the project's internal record, as too small to change any
+within $\pm0.05$ QWK, a margin we defined in advance, in the project's internal record, as too small to change any
 recommendation. The conversation sub-study's intervals resample
 whole exams, because the answers of one exam, graded in one conversation, are not independent.
 
@@ -338,8 +339,7 @@ non-empty answers to its three code questions, with the instructors' mean as the
 On both datasets, each model graded every answer three times with the guide, with the baseline configuration,
 and with reasoning on, which was graded with the partial-credit prompt and, on SAF, only on the first 150 of the 300
 answers, in their fixed random order. As in the main comparison, a reasoning run that returned no grade takes the
-grade the same model gave that answer with reasoning off. Before any of these answers was graded, we fixed, in the
-same internal record, the criterion the guide had to meet: on each dataset and with every model, the guide had to
+grade the same model gave that answer with reasoning off. Before any of these answers was graded, we defined, in the same internal record, the criterion the guide had to meet: on each dataset and with every model, the guide had to
 agree with the human grades at least as well as every alternative without reasoning, so that no alternative agreed
 significantly better. Besides the baseline, these alternatives were no guidance and, on code, a score per criterion
 (with the code prompt) and the partial-credit prompt. Claude Sonnet 4.6 graded only with reasoning off and one
