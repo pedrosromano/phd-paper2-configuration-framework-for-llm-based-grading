@@ -2005,6 +2005,27 @@ Status legend: ⬜ open · 🔧 in progress · ✅ resolved (record the decision
     QWK on average on those two datasets" (HARMOGEN-R alone is 0.071); Threats "recommends sampling in thinking mode
     (temperature 0.6 to 1.0, and at 1.0 a presence penalty against repetition); with those settings fewer of its runs
     might exhaust the output limit, and its reasoning cost would be lower".
+- ✅ **The two comparisons with reasoning made explicit (Pedro, 2026-11-14, after a discussion with another agent; text
+  only, no new runs). Validated by Pedro and committed on 2026-11-14; the submission set is final.** The tests and the validation answer different questions, and the text now says
+  so. Tests: reasoning on keeps the baseline's strict prompt, so the comparison asks "does a better prompt alone reach
+  what reasoning reaches from the same starting point?" (Pedro's aim: reasoning's agreement without its cost).
+  Validation: reasoning on was graded with the partial-credit prompt, so it asks "what does reasoning still add once
+  the prompt is improved?" (+0.067 QWK on average). Applied: VI-B (two sentences, one per question; "the closer
+  comparison" removed); VI-D "Reasoning on, with the partial-credit prompt, agreed significantly better ..."; VI-D last
+  sentence (Pedro's wording, final) "The guide reached most of reasoning's agreement without its cost (0.76 against
+  0.83 QWK on average); reasoning, with the partial-credit prompt, stayed 0.067 QWK ahead, at 3.2 to 55 times the cost
+  per grade." (means of the 8 validation comparisons, also in the caption of the supplement's guide-vs-references
+  table); VI-C "On code, where reasoning had repaired the zero-collapse, the guide matched it, 0.027 QWK ahead on
+  average; on short answers reasoning stayed 0.021 ahead." (mean of the unrounded QWK differences, reasoning on minus
+  the guide, tests; printed in the caption of the supplement's guide-vs-references table by
+  `supplementary.references_section`; NB the mean of the rounded row values is exactly 0.0275, the unrounded one
+  0.0274); Conclusion "... within 0.07 QWK of it on the validation datasets, where reasoning also had the
+  partial-credit prompt, ...". For the record (Table 15, same answers): the guide recovers 88% of reasoning's gain over
+  the baseline on RIAYN, more than all of it on PT-CS code, 54% on HARMOGEN-R; never write that the validation tests
+  the "prompt instead of reasoning" question.
+- **Final check-up before submission (2026-11-14):** three fixes proposed and applied (Table 3 "significantly", Fig. 10
+  caption "On the study's datasets, GLM-5.1 ...", Conclusion "single institutions"), then REVERTED at Pedro's request
+  ("estava bem antes"). Do not re-propose them. The cover letter takes the build date (\today): rebuild on submission day.
 - **Ethics statement facts (Pedro, 2026-10-18):** PT-CS comes from exams of the UpSkill professional
   requalification course at Iscte, graded on the platform for real, with the answers reused later. The
   platform's terms said answers could be used for research; students knew it was an academic platform and that

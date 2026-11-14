@@ -172,9 +172,10 @@ switched off through the model's settings, and the prompt does not mention it.}
 %% testes tambem").
 The guide leaves the model open, so it is judged model by model against two references from the results. The
 first is the baseline configuration, the starting point of every comparison, which differs from the guide only in
-its prompt: it grades strictly. The second is the same baseline with reasoning on, the most expensive setting. It keeps the baseline's strict
-prompt, so the tests set the guide against reasoning as the study ran it; in the validation, reasoning on uses the
-partial-credit prompt, which is the closer comparison. To be
+its prompt: it grades strictly. The second is the same baseline with reasoning on, the most expensive setting. In the tests it keeps the baseline's strict prompt, so the comparison asks
+whether a better prompt alone reaches what reasoning reaches from the same starting point. In the validation,
+reasoning on was graded with the partial-credit prompt, so there the comparison asks what reasoning still adds once
+the prompt is improved. To be
 considered good, the guide should agree better than the baseline and almost as well as reasoning, at a much lower cost. All three
 configurations come from runs already reported, so nothing was graded again. Each comparison uses the answers both
 configurations graded, which with reasoning on are the sampled answers, and the bootstrap of the results, without
@@ -213,7 +214,9 @@ to zero.
 The guide, which always has reasoning off, was almost as good as reasoning. Averaged over the 17 comparisons, the
 two agreed equally well: the difference was 0.002 QWK, in the guide's favour. Reasoning on agreed significantly
 better in four, three of them for Qwen3.5, and significantly worse in two, both
-for DeepSeek-V4-Flash on code; on code it beat the guide only once, for Qwen3.5 on RIAYN. It made grades less
+for DeepSeek-V4-Flash on code; on code it beat the guide only once, for Qwen3.5 on RIAYN. On code, where reasoning had
+repaired the zero-collapse, the guide matched it, 0.027 QWK ahead on average; on short answers reasoning stayed
+0.021 ahead. It made grades less
 consistent than the guide in 13 of the 17 comparisons, including all nine on short answers, and cost 2.6 to 179
 times as much per grade (Fig.~\ref{fig:guiderefs}c).
 
@@ -241,7 +244,7 @@ agreed with the instructors' mean as closely as each instructor agrees with the 
 against 0.90 to 0.93), and four of the five models gave zero to 5 to 10\% of the code answers, close to the
 instructors' 7\%.
 
-Reasoning on agreed significantly better than the guide in 4 of the 8 comparisons: twice for Qwen3.5, by 0.092 and
+Reasoning on, with the partial-credit prompt, agreed significantly better than the guide in 4 of the 8 comparisons: twice for Qwen3.5, by 0.092 and
 0.197 QWK, and once each for DeepSeek-V4-Flash and GPT-5.1, by 0.092 and 0.095. It never agreed worse, was 0.067 QWK ahead on average, and made grades
 less consistent in 5 of the 8 comparisons. Its main drawback was the cost: 3.2 to 55 times as much per grade as the
 guide.
@@ -254,4 +257,5 @@ material).
 
 Overall, the guide held up on data it was not built from. It never did worse than the baseline, and with every model
 but Qwen3.5 it came within 0.1 QWK of reasoning, with no significant difference in four of those six comparisons.
-The guide thus kept most of the agreement that reasoning brought, without its cost.
+The guide reached most of reasoning's agreement without its cost (0.76 against 0.83 QWK on average);
+reasoning, with the partial-credit prompt, stayed 0.067 QWK ahead, at 3.2 to 55 times the cost per grade.

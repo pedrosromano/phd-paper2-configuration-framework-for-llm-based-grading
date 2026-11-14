@@ -383,6 +383,16 @@ def references_section() -> str:
            "deviation across repetitions, reference / guide, on the model's own grades; EUR is the cost per 1000 "
            "grades, reference / guide. SAF and HARMOGEN-R are the validation datasets; the others are the tests. On "
            "the validation datasets, reasoning on was graded with the partial-credit prompt.")
+    # Section VI-C prose: the mean of reasoning on minus the guide, on the tests, per task (unrounded QWK difference)
+    tr = r[(r.part == "tests") & (r.ref == "reasoning on")]
+    code = tr.set.isin({"RIAYN", "PT-CS code"})
+    dq = tr.q_ref - tr.q_guide
+    cap += (f" On the tests, reasoning on minus the guide averages {_sg(dq[code].mean())} QWK on code and "
+            f"{_sg(dq[~code].mean())} on short answers.")
+    # Section VI-D prose: mean QWK of reasoning on and of the guide on the validation datasets, and their difference
+    vr = r[(r.part == "validation") & (r.ref == "reasoning on")]
+    cap += (f" On the validation datasets, the mean QWK is {vr.q_ref.mean():.2f} with reasoning on and "
+            f"{vr.q_guide.mean():.2f} with the guide, a difference of {(vr.q_ref - vr.q_guide).mean():.3f}.")
     return r"\section{The guide against the baseline and reasoning on}\label{sec:guiderefs}" + "\n" + _table(
         cap, ["Dataset", "Model", "Reference", "N", "QWK", r"$\Delta$QWK", "95\\% CI", "SD", "EUR"],
         rows, "lllrrrlrr")
